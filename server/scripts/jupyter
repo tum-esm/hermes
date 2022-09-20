@@ -1,0 +1,3 @@
+#!/bin/sh
+
+poetry run python -m jupyterlab --no-browser --port 8020
