@@ -8,6 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 paho-mqtt = "^1.6.1"
+starlette = "^0.21.0"
+uvicorn = {extras = ["standard"], version = "^0.18.3"}
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^3.4.7"

@@ -1,7 +1,6 @@
 #!/bin/sh
 
-set -a
-source .env
-set +a
+COMMIT_SHA="$(git rev-parse --verify HEAD)"
+BRANCH_NAME="$(git branch --show-current)"
 
-poetry run python app/main.py
+COMMIT_SHA="$COMMIT_SHA" BRANCH_NAME="${BRANCH_NAME:-none}" poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --env-file .env --reload --log-level debug
