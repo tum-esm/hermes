@@ -12,6 +12,7 @@ async def get_status(request):
         {
             "commit_sha": settings.COMMIT_SHA,
             "branch_name": settings.BRANCH_NAME,
+            "start_time": settings.START_TIME,
         }
     )
 

@@ -1,5 +1,7 @@
 import os
 
+import app.utils as utils
+
 
 # check that required environment variables are set
 _VARS = [
@@ -17,7 +19,7 @@ COMMIT_SHA = os.getenv("COMMIT_SHA")
 # git branch name
 BRANCH_NAME = os.getenv("BRANCH_NAME")
 # timestamp of when the server was started
-# START_TIME = utils.timestamp()
+START_TIME = utils.timestamp()
 # MQTT broker URL
 MQTT_URL = os.getenv("MQTT_URL")
 # MQTT identifier of this server
