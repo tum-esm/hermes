@@ -3,6 +3,7 @@ import starlette.routing
 import starlette.responses
 
 import app.settings as settings
+import app.mqtt as mqtt
 
 
 async def get_status(request):
@@ -22,5 +23,7 @@ app = starlette.applications.Starlette(
             endpoint=get_status,
             methods=["GET"],
         ),
-    ]
+    ],
+    on_startup=[mqtt.startup],
+    on_shutdown=[mqtt.shutdown],
 )

@@ -1,6 +1,6 @@
 import paho.mqtt.client as mqtt
 
-import settings
+import app.settings as settings
 
 
 def on_connect(client, userdata, flags, reason_code, properties=None):
@@ -18,7 +18,6 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
     also see the official documentation at
     https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901031
     from https://mqtt.org/mqtt-specification/ which lists different reason codes?
-
     """
     print(f"[CONNECTED] reason_code={reason_code}")
     # TODO quit if unsuccessful > set flag, stop in main loop
@@ -49,7 +48,6 @@ def on_publish(client, userdata, message_id):
     """The callback on PUBACK (resp. PUBCOMP for QoS=2?) message from broker.
 
     Messages sent with QoS=0 are acknowledged by the sending client instead.
-
     """
     pass
 
@@ -60,18 +58,29 @@ def on_disconnect(client, userdata, reason_code):
     # TODO on abnormal disconnect > set flag, try to reconnect in main loop
 
 
+def startup():
+    """Create and start an MQTT client.
+
+    This client saves published sensor measurements and in turn publishes sensor
+    configurations.
+    """
+    # enable TLS for secure connection
+    client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
+    # set username and password
+    client.username_pw_set(settings.MQTT_IDENTIFIER, settings.MQTT_PASSWORD)
+    # connect on port 8883 (the default for MQTT)
+    client.connect(settings.MQTT_URL, port=8883, keepalive=60)
+    # start the network loop
+    client.loop_start()
+
+
+def shutdown():
+    """Safely shut down the MQTT client."""
+    client.loop_stop()
+
+
 client = mqtt.Client(client_id="", userdata=None, protocol=mqtt.MQTTv5)
 client.on_connect = on_connect
 client.on_subscribe = on_subscribe
 client.on_message = on_message
 client.on_publish = on_publish
-
-# enable TLS for secure connection
-client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
-# set username and password
-client.username_pw_set(settings.MQTT_IDENTIFIER, settings.MQTT_PASSWORD)
-# connect on port 8883 (the default for MQTT)
-client.connect(settings.MQTT_URL, port=8883, keepalive=60)
-
-
-client.loop_forever()
