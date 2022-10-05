@@ -3,6 +3,7 @@ import ssl
 
 import app.asyncio_mqtt as amqtt
 import app.settings as settings
+import app.logs as logs
 
 
 async def startup():
@@ -22,8 +23,10 @@ async def startup():
             async with client.unfiltered_messages() as messages:
                 await client.subscribe("measurements")
                 async for message in messages:
-                    print(message.topic)
-                    print(message.payload.decode())
+                    logs.logger.info(
+                        f"Received message: {message.payload.decode()} "
+                        f"(topic: {message.topic})"
+                    )
 
     # wait for messages in (unawaited) asyncio task
     loop = asyncio.get_event_loop()
