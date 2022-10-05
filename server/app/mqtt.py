@@ -1,3 +1,4 @@
+import multiprocessing
 import paho.mqtt.client as mqtt
 
 import app.settings as settings
@@ -58,12 +59,17 @@ def on_disconnect(client, userdata, reason_code):
     # TODO on abnormal disconnect > set flag, try to reconnect in main loop
 
 
-def startup():
-    """Create and start an MQTT client.
+def listen_and_write():
 
-    This client saves published sensor measurements and in turn publishes sensor
-    configurations.
+    # create fresh mqtt client and database connection
+
     """
+    client = mqtt.Client(client_id="", userdata=None, protocol=mqtt.MQTTv5)
+    client.on_connect = on_connect
+    client.on_subscribe = on_subscribe
+    client.on_message = on_message
+    client.on_publish = on_publish
+
     # enable TLS for secure connection
     client.tls_set(tls_version=mqtt.ssl.PROTOCOL_TLS)
     # set username and password
@@ -72,15 +78,58 @@ def startup():
     client.connect(settings.MQTT_URL, port=8883, keepalive=60)
     # start the network loop
     client.loop_start()
+    """
+
+    # listen and write until the end of time
+
+    import time
+
+    counter = 0
+    while True:
+        print(counter)
+        counter += 1
+        time.sleep(10)
+
+
+async def startup():
+    """TODO"""
+    # multiprocessing.set_start_method("spawn")
+
+    """
+    process = multiprocessing.Process(target=listen_and_write)
+    process.start()
+    print("mqtt process started")
+    """
+
+    # TODO set TLS parameters?
+
+    import asyncio
+    import ssl
+    import app.asyncio_mqtt as amqtt
+
+    async def helper():
+
+        async with amqtt.Client(
+            hostname=settings.MQTT_URL,
+            port=8883,
+            protocol=amqtt.ProtocolVersion.V5,
+            username=settings.MQTT_IDENTIFIER,
+            password=settings.MQTT_PASSWORD,
+            tls_params=amqtt.TLSParameters(
+                tls_version=ssl.PROTOCOL_TLS,
+            ),
+        ) as client:
+            async with client.unfiltered_messages() as messages:
+                await client.subscribe("measurements")
+                async for message in messages:
+                    print(message.topic)
+                    print(message.payload.decode())
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(helper())
 
 
 def shutdown():
-    """Safely shut down the MQTT client."""
-    client.loop_stop()
-
-
-client = mqtt.Client(client_id="", userdata=None, protocol=mqtt.MQTTv5)
-client.on_connect = on_connect
-client.on_subscribe = on_subscribe
-client.on_message = on_message
-client.on_publish = on_publish
+    """Safely shut down the MQTT listener process."""
+    pass
+    # process.terminate()
