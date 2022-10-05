@@ -10,6 +10,7 @@ python = "^3.10"
 paho-mqtt = "^1.6.1"
 starlette = "^0.21.0"
 uvicorn = {extras = ["standard"], version = "^0.18.3"}
+asyncio-mqtt = "^0.12.1"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^3.4.7"
