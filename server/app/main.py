@@ -3,10 +3,12 @@ import starlette.routing
 import starlette.responses
 import asyncio
 import ssl
+import json
 
 import app.asyncio_mqtt as amqtt
 import app.settings as settings
 import app.mqtt as mqtt
+import app.utils as utils
 
 
 async def get_status(request):
@@ -23,8 +25,11 @@ async def get_status(request):
             tls_version=ssl.PROTOCOL_TLS,
         ),
     ) as client:
-        message = "test"
-        await client.publish("measurements", payload=message.encode())
+
+        import random
+
+        message = {"timestamp": utils.timestamp(), "value": random.randint(0, 2**10)}
+        await client.publish("measurements", payload=json.dumps(message).encode())
 
     return starlette.responses.JSONResponse(
         {
