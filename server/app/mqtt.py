@@ -1,6 +1,7 @@
 import asyncio
 import ssl
 import json
+import sqlalchemy
 
 import app.asyncio_mqtt as aiomqtt
 import app.settings as settings
@@ -51,13 +52,12 @@ async def startup():
                     # write measurement to database
                     async with database.conn.transaction():
                         await database.conn.execute(
-                            f"""
-                            INSERT INTO measurements VALUES(
-                                {payload['timestamp']},
-                                {utils.timestamp()},
-                                {payload['value']}
-                            );
-                        """
+                            query=database.measurements.insert(),
+                            values={
+                                "timestamp_measurement": payload["timestamp"],
+                                "timestamp_receipt": utils.timestamp(),
+                                "value": payload["value"],
+                            },
                         )
 
     # wait for messages in (unawaited) asyncio task

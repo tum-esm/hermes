@@ -19,7 +19,7 @@ async def get_status(request):
     import random
 
     payload = {"timestamp": utils.timestamp(), "value": random.randint(0, 2**10)}
-    mqtt.send(message, "measurements")
+    await mqtt.send(payload, "measurements")
 
     return starlette.responses.JSONResponse(
         {
@@ -40,6 +40,6 @@ app = starlette.applications.Starlette(
     ],
     # startup MQTT client for listening to sensor measurements
     # TODO either limit to one for multiple workers, or use shared subscriptions
-    on_startup=[mqtt.startup, database.startup],
+    on_startup=[database.startup, mqtt.startup],
     on_shutdown=[database.shutdown],
 )
