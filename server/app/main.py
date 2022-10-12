@@ -5,31 +5,21 @@ import asyncio
 import ssl
 import json
 
-import app.asyncio_mqtt as amqtt
+import app.asyncio_mqtt as aiomqtt
 import app.settings as settings
 import app.mqtt as mqtt
 import app.utils as utils
+import app.database as database
 
 
 async def get_status(request):
     """Return some status information about the server."""
 
-    # test mqtt message
-    async with amqtt.Client(
-        hostname=settings.MQTT_URL,
-        port=8883,
-        protocol=amqtt.ProtocolVersion.V5,
-        username=settings.MQTT_IDENTIFIER,
-        password=settings.MQTT_PASSWORD,
-        tls_params=amqtt.TLSParameters(
-            tls_version=ssl.PROTOCOL_TLS,
-        ),
-    ) as client:
+    # send a test mqtt message
+    import random
 
-        import random
-
-        message = {"timestamp": utils.timestamp(), "value": random.randint(0, 2**10)}
-        await client.publish("measurements", payload=json.dumps(message).encode())
+    payload = {"timestamp": utils.timestamp(), "value": random.randint(0, 2**10)}
+    mqtt.send(message, "measurements")
 
     return starlette.responses.JSONResponse(
         {
@@ -50,5 +40,6 @@ app = starlette.applications.Starlette(
     ],
     # startup MQTT client for listening to sensor measurements
     # TODO either limit to one for multiple workers, or use shared subscriptions
-    on_startup=[mqtt.startup],
+    on_startup=[mqtt.startup, database.startup],
+    on_shutdown=[database.shutdown],
 )

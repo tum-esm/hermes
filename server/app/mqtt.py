@@ -1,12 +1,38 @@
 import asyncio
 import ssl
-import asyncpg as pg
 import json
 
 import app.asyncio_mqtt as aiomqtt
 import app.settings as settings
 import app.logs as logs
 import app.utils as utils
+import app.database as database
+
+
+def _encode_payload(payload):
+    """Encode python dict into utf-8 JSON bytestring."""
+    return json.dumps(payload).encode()
+
+
+def _decode_payload(payload):
+    """Decode python dict from utf-8 JSON bytestring."""
+    return json.loads(payload.decode())
+
+
+CLIENT_SETTINGS = {
+    "hostname": settings.MQTT_URL,
+    "port": 8883,
+    "protocol": aiomqtt.ProtocolVersion.V5,
+    "username": settings.MQTT_IDENTIFIER,
+    "password": settings.MQTT_PASSWORD,
+    "tls_params": aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS),
+}
+
+
+async def send(payload, topic):
+    """Publish a JSON message to a topic."""
+    async with aiomqtt.Client(**CLIENT_SETTINGS) as client:
+        await client.publish("measurements", payload=_encode_payload(payload))
 
 
 async def startup():
@@ -14,44 +40,17 @@ async def startup():
 
     async def listen_and_write():
 
-        connection = await pg.connect(
-            dsn=settings.POSTGRESQL_URL,
-            user=settings.POSTGRESQL_IDENTIFIER,
-            password=settings.POSTGRESQL_PASSWORD,
-        )
-
-        async with aiomqtt.Client(
-            hostname=settings.MQTT_URL,
-            port=8883,
-            protocol=aiomqtt.ProtocolVersion.V5,
-            username=settings.MQTT_IDENTIFIER,
-            password=settings.MQTT_PASSWORD,
-            tls_params=aiomqtt.TLSParameters(
-                tls_version=ssl.PROTOCOL_TLS,
-            ),
-        ) as client:
+        async with aiomqtt.Client(**CLIENT_SETTINGS) as client:
             async with client.unfiltered_messages() as messages:
                 await client.subscribe("measurements")
                 async for message in messages:
-
-                    payload = json.loads(message.payload.decode())
-
+                    payload = _decode_payload(message.payload)
                     logs.logger.info(
                         f"Received message: {payload} (topic: {message.topic})"
                     )
-
-                    # write to database
-                    async with connection.transaction():
-                        await connection.execute(
-                            f"""
-                            CREATE TABLE IF NOT EXISTS measurements (
-                                timestamp_measurement   integer,
-                                timestamp_receipt       integer,
-                                value                   integer
-                            );
-                        """
-                        )
-                        await connection.execute(
+                    # write measurement to database
+                    async with database.conn.transaction():
+                        await database.conn.execute(
                             f"""
                             INSERT INTO measurements VALUES(
                                 {payload['timestamp']},
@@ -60,8 +59,6 @@ async def startup():
                             );
                         """
                         )
-
-        await connection.close()
 
     # wait for messages in (unawaited) asyncio task
     loop = asyncio.get_event_loop()
