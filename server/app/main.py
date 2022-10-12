@@ -30,11 +30,26 @@ async def get_status(request):
     )
 
 
+async def get_measurements(request):
+    """Return sensor measurements sorted chronologically, optionally filtered"""
+    async with database.conn.transaction():
+        measurements = await database.conn.fetch_all(
+            query=database.measurements.select(),
+        )
+    measurements = [dict(record) for record in measurements]
+    return starlette.responses.JSONResponse(measurements)
+
+
 app = starlette.applications.Starlette(
     routes=[
         starlette.routing.Route(
             path="/status",
             endpoint=get_status,
+            methods=["GET"],
+        ),
+        starlette.routing.Route(
+            path="/measurements",
+            endpoint=get_measurements,
             methods=["GET"],
         ),
     ],
