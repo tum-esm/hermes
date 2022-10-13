@@ -1,13 +1,12 @@
 import asyncio
 import ssl
 import json
-import sqlalchemy
 
 import app.asyncio_mqtt as aiomqtt
 import app.settings as settings
 import app.logs as logs
 import app.utils as utils
-import app.database as database
+import app.database as db
 
 
 def _encode_payload(payload):
@@ -49,10 +48,10 @@ async def startup():
                     logs.logger.info(
                         f"Received message: {payload} (topic: {message.topic})"
                     )
-                    # write measurement to database
-                    async with database.conn.transaction():
-                        await database.conn.execute(
-                            query=database.measurements.insert(),
+                    # write measurement to db
+                    async with db.conn.transaction():
+                        await db.conn.execute(
+                            query=db.measurements.insert(),
                             values={
                                 "timestamp_measurement": payload["timestamp"],
                                 "timestamp_receipt": utils.timestamp(),

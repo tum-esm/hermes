@@ -1,22 +1,22 @@
 import asyncio
-import databases as dbs
-import sqlalchemy
+import databases
+import sqlalchemy as sqla
 
 import app.settings as settings
 
 
-conn = dbs.Database(
+conn = databases.Database(
     url=settings.POSTGRESQL_URL,
     user=settings.POSTGRESQL_IDENTIFIER,
     password=settings.POSTGRESQL_PASSWORD,
 )
 
-measurements = sqlalchemy.Table(
+measurements = sqla.Table(
     "measurements",
-    sqlalchemy.MetaData(),
-    sqlalchemy.Column("timestamp_measurement", sqlalchemy.Integer),
-    sqlalchemy.Column("timestamp_receipt", sqlalchemy.Integer),
-    sqlalchemy.Column("value", sqlalchemy.Integer),
+    sqla.MetaData(),
+    sqla.Column("timestamp_measurement", sqla.Integer),
+    sqla.Column("timestamp_receipt", sqla.Integer),
+    sqla.Column("value", sqla.Integer),
 )
 
 
