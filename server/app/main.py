@@ -4,12 +4,13 @@ import starlette.responses
 import asyncio
 import ssl
 import json
+import sqlalchemy as sqla
 
 import app.asyncio_mqtt as aiomqtt
 import app.settings as settings
 import app.mqtt as mqtt
 import app.utils as utils
-import app.database as database
+import app.database as db
 
 
 async def get_status(request):
@@ -31,11 +32,54 @@ async def get_status(request):
 
 
 async def get_measurements(request):
-    """Return sensor measurements sorted chronologically, optionally filtered"""
-    async with database.conn.transaction():
-        measurements = await database.conn.fetch_all(
-            query=database.measurements.select(),
+    """Return sensor measurements sorted chronologically, optionally filtered.
+
+    Valid query parameters are:
+    ================================
+    station
+    timestamp_start
+    timestamp_end
+    limit
+    values
+
+    """
+
+    # TODO validate query parameters
+
+    async with db.conn.transaction():
+        # build query from query parameters
+        columns = [db.measurements.c.timestamp_measurement]
+        conditions = []
+        limit = None
+        if "values" in request.query_params:
+            if "value" in request.query_params["values"]:
+                columns.append(db.measurements.c.value)
+        if "station" in request.query_params:
+            # TODO add station identifier column to database table
+            pass
+        if "timestamp_start" in request.query_params:
+            conditions.append(
+                db.measurements.c.timestamp_measurement
+                >= int(request.query_params["timestamp_start"])
+            )
+        if "timestamp_end" in request.query_params:
+            conditions.append(
+                db.measurements.c.timestamp_measurement
+                < int(request.query_params["timestamp_end"])
+            )
+        if "limit" in request.query_params:
+            limit = int(request.query_params["limit"])
+
+        # think about streaming results here
+        measurements = await db.conn.fetch_all(
+            query=(
+                sqla.select(columns)
+                .where(sqla.and_(*conditions))
+                .order_by(sqla.asc(db.measurements.c.timestamp_measurement))
+                .limit(limit)
+            )
         )
+
     measurements = [dict(record) for record in measurements]
     return starlette.responses.JSONResponse(measurements)
 
@@ -55,6 +99,6 @@ app = starlette.applications.Starlette(
     ],
     # startup MQTT client for listening to sensor measurements
     # TODO either limit to one for multiple workers, or use shared subscriptions
-    on_startup=[database.startup, mqtt.startup],
-    on_shutdown=[database.shutdown],
+    on_startup=[db.startup, mqtt.startup],
+    on_shutdown=[db.shutdown],
 )
