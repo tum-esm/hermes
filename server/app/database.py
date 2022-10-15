@@ -14,8 +14,8 @@ conn = databases.Database(
 measurements = sqla.Table(
     "measurements",
     sqla.MetaData(),
-    sqla.Column("timestamp_measurement", sqla.Integer),
-    sqla.Column("timestamp_receipt", sqla.Integer),
+    sqla.Column("measurement_timestamp", sqla.Integer),
+    sqla.Column("receipt_timestamp", sqla.Integer),
     sqla.Column("value", sqla.Integer),
 )
 

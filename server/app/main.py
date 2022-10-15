@@ -11,6 +11,7 @@ import app.settings as settings
 import app.mqtt as mqtt
 import app.utils as utils
 import app.database as db
+import app.errors as errors
 
 
 async def get_status(request):
@@ -32,51 +33,43 @@ async def get_status(request):
 
 
 async def get_measurements(request):
-    """Return sensor measurements sorted chronologically, optionally filtered.
+    """Return sensor measurements sorted chronologically, optionally filtered."""
 
-    Valid query parameters are:
-    ================================
-    station
-    timestamp_start
-    timestamp_end
-    limit
-    values
+    # TODO simplify this part somehow so that we don't have to duplicate it
+    try:
+        # TODO use one model for body/query/...
+        request = models.GetMeasurementsRequest(**request.query_params)
+    except pydantic.ValidationError:
+        log.error.warning("GET /measurements: InvalidSyntaxError")
+        raise errors.InvalidSyntaxError()
 
-    """
+    # build query from query parameters
+    columns = [db.measurements.c.measurement_timestamp]
+    conditions = []
 
-    # TODO validate query parameters
+    if request.nodes is not None:
+        # TODO add node identifier column to database table
+        pass
+    if request.values is not None:
+        if "value" in request.values:
+            columns.append(db.measurements.c.value)
+    if request.start_timestamp is not None:
+        conditions.append(
+            db.measurements.c.measurement_timestamp >= int(request.start_timestamp)
+        )
+    if request.end_timestamp is not None:
+        conditions.append(
+            db.measurements.c.measurement_timestamp < int(request.end_timestamp)
+        )
 
     async with db.conn.transaction():
-        # build query from query parameters
-        columns = [db.measurements.c.timestamp_measurement]
-        conditions = []
-        limit = None
-        if "values" in request.query_params:
-            if "value" in request.query_params["values"]:
-                columns.append(db.measurements.c.value)
-        if "station" in request.query_params:
-            # TODO add station identifier column to database table
-            pass
-        if "timestamp_start" in request.query_params:
-            conditions.append(
-                db.measurements.c.timestamp_measurement
-                >= int(request.query_params["timestamp_start"])
-            )
-        if "timestamp_end" in request.query_params:
-            conditions.append(
-                db.measurements.c.timestamp_measurement
-                < int(request.query_params["timestamp_end"])
-            )
-        if "limit" in request.query_params:
-            limit = int(request.query_params["limit"])
-
-        # think about streaming results here
+        # TODO think about streaming results here
         measurements = await db.conn.fetch_all(
             query=(
                 sqla.select(columns)
                 .where(sqla.and_(*conditions))
-                .order_by(sqla.asc(db.measurements.c.timestamp_measurement))
-                .limit(limit)
+                .order_by(sqla.asc(db.measurements.c.measurement_timestamp))
+                .limit(request.limit)
             )
         )
 
