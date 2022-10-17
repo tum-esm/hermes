@@ -2,16 +2,18 @@ import starlette.applications
 import starlette.routing
 import starlette.responses
 import asyncio
-import ssl
-import json
-import sqlalchemy as sqla
+import sqlalchemy as sa
+import pydantic
 
 import app.asyncio_mqtt as aiomqtt
 import app.settings as settings
 import app.mqtt as mqtt
 import app.utils as utils
-import app.database as db
 import app.errors as errors
+import app.models as models
+
+from app.logs import logger
+from app.database import database, MEASUREMENTS
 
 
 async def get_status(request):
@@ -40,42 +42,51 @@ async def get_measurements(request):
         # TODO use one model for body/query/...
         request = models.GetMeasurementsRequest(**request.query_params)
     except pydantic.ValidationError:
-        log.error.warning("GET /measurements: InvalidSyntaxError")
+        # TODO include specific pydantic error message
+        logger.warning("GET /measurements: InvalidSyntaxError")
         raise errors.InvalidSyntaxError()
 
-    # build query from query parameters
-    columns = [db.measurements.c.measurement_timestamp]
+    # define default columns and conditions
+    columns = [
+        column
+        for column in MEASUREMENTS.columns
+        if column.key not in ["receipt_timestamp"]
+    ]
     conditions = []
 
+    # build customized database query from query parameters
     if request.nodes is not None:
-        # TODO add node identifier column to database table
-        pass
+        for node in request.nodes:
+            conditions.append(MEASUREMENTS.columns.node == node)
     if request.values is not None:
-        if "value" in request.values:
-            columns.append(db.measurements.c.value)
+        columns = [
+            MEASUREMENTS.columns.measurement_timestamp,
+            *[sa.column(value) for value in request.values],
+        ]
     if request.start_timestamp is not None:
         conditions.append(
-            db.measurements.c.measurement_timestamp >= int(request.start_timestamp)
+            MEASUREMENTS.columns.measurement_timestamp >= int(request.start_timestamp)
         )
     if request.end_timestamp is not None:
         conditions.append(
-            db.measurements.c.measurement_timestamp < int(request.end_timestamp)
+            MEASUREMENTS.columns.measurement_timestamp < int(request.end_timestamp)
         )
 
-    async with db.conn.transaction():
-        # TODO think about streaming results here
-        measurements = await db.conn.fetch_all(
-            query=(
-                sqla.select(columns)
-                .where(sqla.and_(*conditions))
-                .order_by(sqla.asc(db.measurements.c.measurement_timestamp))
-                .limit(request.limit)
-            )
+    # execute query and return results
+    # TODO think about streaming here
+    result = await database.fetch_all(
+        query=(
+            sa.select(columns)
+            .where(sa.and_(*conditions))
+            .order_by(sa.asc(MEASUREMENTS.columns.measurement_timestamp))
+            .limit(request.limit)
         )
+    )
+    result = [dict(record) for record in result]
+    return starlette.responses.JSONResponse(result)
 
-    measurements = [dict(record) for record in measurements]
-    return starlette.responses.JSONResponse(measurements)
 
+import app.database as db
 
 app = starlette.applications.Starlette(
     routes=[

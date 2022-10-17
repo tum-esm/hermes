@@ -22,9 +22,9 @@ class Pattern(str, enum.Enum):
 ########################################################################################
 
 
-NodeIdentifier = pydantic.constr(strict=True, regex=Pattern.NODE_IDENTIFIER.value)
-ValueIdentifier = pydantic.constr(strict=True, regex=Pattern.VALUE_IDENTIFIER.value)
-Timestamp = pydantic.conint(strict=True, ge=0, lt=Length.B)
+NodeIdentifier = pydantic.constr(regex=Pattern.NODE_IDENTIFIER.value)
+ValueIdentifier = pydantic.constr(regex=Pattern.VALUE_IDENTIFIER.value)
+Timestamp = pydantic.conint(ge=0, lt=Length.B)
 
 
 ########################################################################################
@@ -47,7 +47,13 @@ class GetMeasurementsRequest(BaseModel):
     values: pydantic.conlist(item_type=ValueIdentifier, unique_items=True) = None
     start_timestamp: Timestamp = None
     end_timestamp: Timestamp = None
-    limit: pydantic.conint(strict=True, ge=0, lt=Length.B) = None
+    limit: pydantic.conint(ge=0, lt=Length.B) = None
+
+    @pydantic.validator("nodes", "values", pre=True)
+    def transform_string_to_list(cls, v, values):
+        if isinstance(v, str):
+            return v.split(",")
+        return v
 
     @pydantic.validator("end_timestamp")
     def validate_end_timestamp(cls, v, values):

@@ -4,9 +4,10 @@ import json
 
 import app.asyncio_mqtt as aiomqtt
 import app.settings as settings
-import app.logs as logs
 import app.utils as utils
-import app.database as db
+
+from app.logs import logger
+from app.database import database, MEASUREMENTS
 
 
 def _encode_payload(payload):
@@ -45,19 +46,16 @@ async def startup():
                 await client.subscribe("measurements")
                 async for message in messages:
                     payload = _decode_payload(message.payload)
-                    logs.logger.info(
-                        f"Received message: {payload} (topic: {message.topic})"
+                    logger.info(f"Received message: {payload} (topic: {message.topic})")
+                    # write measurement to database
+                    await database.execute(
+                        query=db.MEASUREMENTS.insert(),
+                        values={
+                            "timestamp_measurement": payload["timestamp"],
+                            "timestamp_receipt": utils.timestamp(),
+                            "value": payload["value"],
+                        },
                     )
-                    # write measurement to db
-                    async with db.conn.transaction():
-                        await db.conn.execute(
-                            query=db.measurements.insert(),
-                            values={
-                                "timestamp_measurement": payload["timestamp"],
-                                "timestamp_receipt": utils.timestamp(),
-                                "value": payload["value"],
-                            },
-                        )
 
     # wait for messages in (unawaited) asyncio task
     loop = asyncio.get_event_loop()
