@@ -1,4 +1,3 @@
-import asyncio
 import ssl
 import json
 
@@ -7,7 +6,17 @@ import app.settings as settings
 import app.utils as utils
 
 from app.logs import logger
-from app.data import database, MEASUREMENTS
+from app.database import MEASUREMENTS
+
+
+CONFIGURATION = {
+    "hostname": settings.MQTT_URL,
+    "port": 8883,
+    "protocol": aiomqtt.ProtocolVersion.V5,
+    "username": settings.MQTT_IDENTIFIER,
+    "password": settings.MQTT_PASSWORD,
+    "tls_params": aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS),
+}
 
 
 def _encode_payload(payload):
@@ -20,45 +29,26 @@ def _decode_payload(payload):
     return json.loads(payload.decode())
 
 
-CLIENT_SETTINGS = {
-    "hostname": settings.MQTT_URL,
-    "port": 8883,
-    "protocol": aiomqtt.ProtocolVersion.V5,
-    "username": settings.MQTT_IDENTIFIER,
-    "password": settings.MQTT_PASSWORD,
-    "tls_params": aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS),
-}
+async def send(mqtt_client, payload, topic):
+    """Publish a JSON message to the specified topic."""
+    await mqtt_client.publish("measurements", payload=_encode_payload(payload))
 
 
-async def send(payload, topic):
-    """Publish a JSON message to a topic."""
-    async with aiomqtt.Client(**CLIENT_SETTINGS) as client:
-        await client.publish("measurements", payload=_encode_payload(payload))
-
-
-async def startup():
-    """Set up the MQTT client and start listening to incoming sensor measurements."""
-
-    async def listen_and_write():
-
-        async with aiomqtt.Client(**CLIENT_SETTINGS) as client:
-            async with client.unfiltered_messages() as messages:
-                await client.subscribe("measurements")
-                logger.info(f'Subscribed to MQTT topic "measurements"')
-                async for message in messages:
-                    payload = _decode_payload(message.payload)
-                    logger.info(f"Received message: {payload} (topic: {message.topic})")
-                    # write measurement to database
-                    await database.execute(
-                        query=MEASUREMENTS.insert(),
-                        values={
-                            "node": payload["node"],
-                            "measurement_timestamp": payload["timestamp"],
-                            "receipt_timestamp": utils.timestamp(),
-                            "value": payload["value"],
-                        },
-                    )
-
-    # wait for messages in (unawaited) asyncio task
-    loop = asyncio.get_event_loop()
-    loop.create_task(listen_and_write())
+async def listen_and_write(database_client, mqtt_client):
+    """Listen to incoming sensor measurements and write them to the database."""
+    async with mqtt_client.unfiltered_messages() as messages:
+        await mqtt_client.subscribe("measurements")
+        logger.info(f'Subscribed to MQTT topic "measurements"')
+        async for message in messages:
+            payload = _decode_payload(message.payload)
+            logger.info(f"Received message: {payload} (topic: {message.topic})")
+            # write measurement to database
+            await database_client.execute(
+                query=MEASUREMENTS.insert(),
+                values={
+                    "node": payload["node"],
+                    "measurement_timestamp": payload["timestamp"],
+                    "receipt_timestamp": utils.timestamp(),
+                    "value": payload["value"],
+                },
+            )
