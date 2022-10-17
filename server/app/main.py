@@ -78,8 +78,6 @@ async def get_measurements(request):
             MEASUREMENTS.columns.measurement_timestamp < int(request.end_timestamp)
         )
 
-    # TODO add skip
-
     # execute query and return results
     # TODO think about streaming here
     result = await database.fetch_all(
@@ -87,6 +85,7 @@ async def get_measurements(request):
             sa.select(columns)
             .where(sa.and_(*conditions))
             .order_by(sa.asc(MEASUREMENTS.columns.measurement_timestamp))
+            .offset(request.skip)
             .limit(request.limit)
         )
     )

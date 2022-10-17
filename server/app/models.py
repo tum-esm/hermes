@@ -47,6 +47,7 @@ class GetMeasurementsRequest(BaseModel):
     values: pydantic.conlist(item_type=ValueIdentifier, unique_items=True) = None
     start_timestamp: Timestamp = None
     end_timestamp: Timestamp = None
+    skip: pydantic.conint(ge=0, lt=Length.B) = None
     limit: pydantic.conint(ge=0, lt=Length.B) = None
 
     @pydantic.validator("nodes", "values", pre=True)
