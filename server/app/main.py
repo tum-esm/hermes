@@ -54,8 +54,8 @@ async def get_measurements(request):
     # define default columns and conditions
     columns = [
         column
-        for column in MEASUREMENTS.columns
-        if column.key not in ["receipt_timestamp"]
+        for column in MEASUREMENTS.columns.keys()
+        if column not in ["receipt_timestamp"]
     ]
     conditions = []
 
@@ -66,8 +66,15 @@ async def get_measurements(request):
         )
     if request.values is not None:
         columns = [
+            MEASUREMENTS.columns.node,
             MEASUREMENTS.columns.measurement_timestamp,
-            *[sa.column(value) for value in request.values],
+            *[
+                sa.column(value)
+                for value in request.values
+                if value
+                in set(MEASUREMENTS.columns.keys())
+                - {"node", "measurement_timestamp", "receipt_timestamp"}
+            ],
         ]
     if request.start_timestamp is not None:
         conditions.append(
