@@ -11,9 +11,10 @@ import app.mqtt as mqtt
 import app.utils as utils
 import app.errors as errors
 import app.models as models
+import app.data as data
 
 from app.logs import logger
-from app.database import database, MEASUREMENTS
+from app.data import database, MEASUREMENTS
 
 
 async def get_status(request):
@@ -22,7 +23,11 @@ async def get_status(request):
     # send a test mqtt message
     import random
 
-    payload = {"timestamp": utils.timestamp(), "value": random.randint(0, 2**10)}
+    payload = {
+        "node": "kabuto",
+        "timestamp": utils.timestamp(),
+        "value": random.randint(0, 2**10),
+    }
     await mqtt.send(payload, "measurements")
 
     return starlette.responses.JSONResponse(
@@ -82,11 +87,8 @@ async def get_measurements(request):
             .limit(request.limit)
         )
     )
-    result = [dict(record) for record in result]
-    return starlette.responses.JSONResponse(result)
+    return starlette.responses.JSONResponse(data.dictify(result))
 
-
-import app.database as db
 
 app = starlette.applications.Starlette(
     routes=[
@@ -103,6 +105,6 @@ app = starlette.applications.Starlette(
     ],
     # startup MQTT client for listening to sensor measurements
     # TODO either limit to one for multiple workers, or use shared subscriptions
-    on_startup=[db.startup, mqtt.startup],
-    on_shutdown=[db.shutdown],
+    on_startup=[data.startup, mqtt.startup],
+    on_shutdown=[data.shutdown],
 )

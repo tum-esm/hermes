@@ -7,7 +7,7 @@ import app.settings as settings
 import app.utils as utils
 
 from app.logs import logger
-from app.database import database, MEASUREMENTS
+from app.data import database, MEASUREMENTS
 
 
 def _encode_payload(payload):
@@ -44,15 +44,17 @@ async def startup():
         async with aiomqtt.Client(**CLIENT_SETTINGS) as client:
             async with client.unfiltered_messages() as messages:
                 await client.subscribe("measurements")
+                logger.info(f'Subscribed to MQTT topic "measurements"')
                 async for message in messages:
                     payload = _decode_payload(message.payload)
                     logger.info(f"Received message: {payload} (topic: {message.topic})")
                     # write measurement to database
                     await database.execute(
-                        query=db.MEASUREMENTS.insert(),
+                        query=MEASUREMENTS.insert(),
                         values={
-                            "timestamp_measurement": payload["timestamp"],
-                            "timestamp_receipt": utils.timestamp(),
+                            "node": payload["node"],
+                            "measurement_timestamp": payload["timestamp"],
+                            "receipt_timestamp": utils.timestamp(),
                             "value": payload["value"],
                         },
                     )

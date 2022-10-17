@@ -5,6 +5,11 @@ import sqlalchemy as sa
 import app.settings as settings
 
 
+def dictify(result):
+    """Cast a database SELECT result into a list of dictionaries."""
+    return [dict(record) for record in result]
+
+
 database = databases.Database(
     url=settings.POSTGRESQL_URL,
     user=settings.POSTGRESQL_IDENTIFIER,
