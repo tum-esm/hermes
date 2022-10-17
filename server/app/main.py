@@ -61,8 +61,9 @@ async def get_measurements(request):
 
     # build customized database query from query parameters
     if request.nodes is not None:
-        for node in request.nodes:
-            conditions.append(MEASUREMENTS.columns.node == node)
+        conditions.append(
+            sa.or_(*[MEASUREMENTS.columns.node == node for node in request.nodes])
+        )
     if request.values is not None:
         columns = [
             MEASUREMENTS.columns.measurement_timestamp,
@@ -76,6 +77,8 @@ async def get_measurements(request):
         conditions.append(
             MEASUREMENTS.columns.measurement_timestamp < int(request.end_timestamp)
         )
+
+    # TODO add skip
 
     # execute query and return results
     # TODO think about streaming here
