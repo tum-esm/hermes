@@ -6,8 +6,8 @@ import sqlalchemy as sa
 import pydantic
 import contextlib
 import databases
+import asyncio_mqtt as aiomqtt
 
-import app.asyncio_mqtt as aiomqtt
 import app.settings as settings
 import app.mqtt as mqtt
 import app.utils as utils

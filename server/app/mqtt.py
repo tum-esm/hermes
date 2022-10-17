@@ -1,7 +1,7 @@
 import ssl
 import json
+import asyncio_mqtt as aiomqtt
 
-import app.asyncio_mqtt as aiomqtt
 import app.settings as settings
 import app.utils as utils
 

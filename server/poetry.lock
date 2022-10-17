@@ -69,6 +69,17 @@ six = "*"
 test = ["astroid (<=2.5.3)", "pytest"]
 
 [[package]]
+name = "asyncio-mqtt"
+version = "0.13.0"
+description = "Idomatic asyncio wrapper around paho-mqtt."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+paho-mqtt = ">=1.6.0"
+
+[[package]]
 name = "asyncpg"
 version = "0.26.0"
 description = "An asyncio PostgreSQL driver"
@@ -1263,7 +1274,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "d874abb7be0a09d88df9447118f38adfadc047ce963eccb7b2aaaef1af97f36d"
+content-hash = "eec556ae85229455ea0db12f5ec3c15cc025430a3aed0e69cf18d22358bad534"
 
 [metadata.files]
 anyio = [
@@ -1304,6 +1315,10 @@ argon2-cffi-bindings = [
 asttokens = [
     {file = "asttokens-2.0.8-py2.py3-none-any.whl", hash = "sha256:e3305297c744ae53ffa032c45dc347286165e4ffce6875dc662b205db0623d86"},
     {file = "asttokens-2.0.8.tar.gz", hash = "sha256:c61e16246ecfb2cde2958406b4c8ebc043c9e6d73aaa83c941673b35e5d3a76b"},
+]
+asyncio-mqtt = [
+    {file = "asyncio_mqtt-0.13.0-py3-none-any.whl", hash = "sha256:438842f57e27b85e3daf65a4d4001460ba6d46ed3b85923c44a1bd75e56d5d53"},
+    {file = "asyncio_mqtt-0.13.0.tar.gz", hash = "sha256:f3bee8dfdd080524e93feccec562c644786314ae4bb47ef6d2bd9a667970b825"},
 ]
 asyncpg = [
     {file = "asyncpg-0.26.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:2ed3880b3aec8bda90548218fe0914d251d641f798382eda39a17abfc4910af0"},
