@@ -1,44 +1,31 @@
 import asyncio
 import databases
-import sqlalchemy as sqla
+import sqlalchemy as sa
 
 import app.settings as settings
 
 
-conn = databases.Database(
+database = databases.Database(
     url=settings.POSTGRESQL_URL,
     user=settings.POSTGRESQL_IDENTIFIER,
     password=settings.POSTGRESQL_PASSWORD,
 )
 
-measurements = sqla.Table(
+metadata = sa.MetaData()
+
+MEASUREMENTS = sa.Table(
     "measurements",
-    sqla.MetaData(),
-    sqla.Column("measurement_timestamp", sqla.Integer),
-    sqla.Column("receipt_timestamp", sqla.Integer),
-    sqla.Column("value", sqla.Integer),
+    metadata,
+    sa.Column("node", sa.String(length=32)),
+    sa.Column("measurement_timestamp", sa.Integer),
+    sa.Column("receipt_timestamp", sa.Integer),
+    sa.Column("value", sa.Integer),
 )
 
 
 async def startup():
-    await conn.connect()
+    await database.connect()
 
 
 async def shutdown():
-    await conn.disconnect()
-
-
-'''
-# set up the measurements table
-asyncio.get_running_loop().run_until_complete(
-    conn.execute(
-        f"""
-        CREATE TABLE IF NOT EXISTS measurements (
-            timestamp_measurement   integer,
-            timestamp_receipt       integer,
-            value                   integer
-        );
-    """
-    )
-)
-'''
+    await database.disconnect()
