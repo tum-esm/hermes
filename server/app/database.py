@@ -1,5 +1,3 @@
-import asyncio
-import databases
 import sqlalchemy as sa
 
 import app.settings as settings
@@ -10,11 +8,17 @@ def dictify(result):
     return [dict(record) for record in result]
 
 
-database = databases.Database(
-    url=settings.POSTGRESQL_URL,
-    user=settings.POSTGRESQL_IDENTIFIER,
-    password=settings.POSTGRESQL_PASSWORD,
-)
+CONFIGURATION = {
+    "url": settings.POSTGRESQL_URL,
+    "user": settings.POSTGRESQL_IDENTIFIER,
+    "password": settings.POSTGRESQL_PASSWORD,
+}
+
+
+########################################################################################
+# Table schemas
+########################################################################################
+
 
 metadata = sa.MetaData()
 
@@ -26,11 +30,3 @@ MEASUREMENTS = sa.Table(
     sa.Column("receipt_timestamp", sa.Integer),
     sa.Column("value", sa.Integer),
 )
-
-
-async def startup():
-    await database.connect()
-
-
-async def shutdown():
-    await database.disconnect()

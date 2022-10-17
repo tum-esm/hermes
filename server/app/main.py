@@ -4,6 +4,8 @@ import starlette.responses
 import asyncio
 import sqlalchemy as sa
 import pydantic
+import contextlib
+import databases
 
 import app.asyncio_mqtt as aiomqtt
 import app.settings as settings
@@ -11,10 +13,10 @@ import app.mqtt as mqtt
 import app.utils as utils
 import app.errors as errors
 import app.models as models
-import app.data as data
+import app.database as database
 
 from app.logs import logger
-from app.data import database, MEASUREMENTS
+from app.database import MEASUREMENTS
 
 
 async def get_status(request):
@@ -28,7 +30,7 @@ async def get_status(request):
         "timestamp": utils.timestamp(),
         "value": random.randint(0, 2**10),
     }
-    await mqtt.send(payload, "measurements")
+    await mqtt.send(mqtt_client, payload, "measurements")
 
     return starlette.responses.JSONResponse(
         {
@@ -87,7 +89,7 @@ async def get_measurements(request):
 
     # execute query and return results
     # TODO think about streaming here
-    result = await database.fetch_all(
+    result = await database_client.fetch_all(
         query=(
             sa.select(columns)
             .where(sa.and_(*conditions))
@@ -96,7 +98,25 @@ async def get_measurements(request):
             .limit(request.limit)
         )
     )
-    return starlette.responses.JSONResponse(data.dictify(result))
+    return starlette.responses.JSONResponse(database.dictify(result))
+
+
+database_client = None
+mqtt_client = None
+
+
+@contextlib.asynccontextmanager
+async def lifespan(app):
+    global database_client
+    global mqtt_client
+    async with databases.Database(**database.CONFIGURATION) as x:
+        async with aiomqtt.Client(**mqtt.CONFIGURATION) as y:
+            database_client = x
+            mqtt_client = y
+            # start MQTT listener in (unawaited) asyncio task
+            loop = asyncio.get_event_loop()
+            loop.create_task(mqtt.listen_and_write(database_client, mqtt_client))
+            yield
 
 
 app = starlette.applications.Starlette(
@@ -112,8 +132,6 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
     ],
-    # startup MQTT client for listening to sensor measurements
-    # TODO either limit to one for multiple workers, or use shared subscriptions
-    on_startup=[data.startup, mqtt.startup],
-    on_shutdown=[data.shutdown],
+    # TODO limit to one MQTT instance for multiple workers, or use shared subscriptions
+    lifespan=lifespan,
 )
