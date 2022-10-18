@@ -113,6 +113,13 @@ async def lifespan(app):
         async with aiomqtt.Client(**mqtt.CONFIGURATION) as y:
             database_client = x
             mqtt_client = y
+            # create database tables if they don't exist yet
+            for table in database.metadata.tables.values():
+                await database_client.execute(
+                    query=database.compile(
+                        sa.schema.CreateTable(table, if_not_exists=True)
+                    )
+                )
             # start MQTT listener in (unawaited) asyncio task
             loop = asyncio.get_event_loop()
             loop.create_task(mqtt.listen_and_write(database_client, mqtt_client))
