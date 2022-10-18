@@ -43,7 +43,6 @@ async def listen_and_write(database_client, mqtt_client):
     - TODO allow nodes to send measurements for only part of all values (e.g. when
       one of multiple sensors breaks, different node architectures, etc.)
     - TODO use sender ID as "node" value?
-
     """
     async with mqtt_client.unfiltered_messages() as messages:
         await mqtt_client.subscribe("measurements")

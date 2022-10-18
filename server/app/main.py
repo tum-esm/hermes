@@ -107,6 +107,12 @@ mqtt_client = None
 
 @contextlib.asynccontextmanager
 async def lifespan(app):
+    """Manage lifetime of database client and MQTT client.
+
+    This creates the necessary database tables if they don't exist yet. It also starts
+    a new asyncio task that listens for incoming sensor measurements over MQTT messages
+    and stores them in the database.
+    """
     global database_client
     global mqtt_client
     async with databases.Database(**database.CONFIGURATION) as x:
