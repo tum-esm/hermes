@@ -17,7 +17,7 @@ def dictify(result: typing.List[databases.interfaces.Record]) -> typing.List[dic
     return [dict(record) for record in result]
 
 
-def compile(query: sa.sql.elements.CompilerElement) -> str:
+def compile(query: sa.sql.elements.ClauseElement) -> str:
     """Compile an SQLAlchemy core schema into a query string."""
     return str(query.compile(dialect=dialect))
 
