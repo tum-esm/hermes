@@ -1,22 +1,12 @@
-import ssl
 import json
+import ssl
+
 import asyncio_mqtt as aiomqtt
 
 import app.settings as settings
 import app.utils as utils
-
-from app.logs import logger
 from app.database import MEASUREMENTS
-
-
-CONFIGURATION = {
-    "hostname": settings.MQTT_URL,
-    "port": 8883,
-    "protocol": aiomqtt.ProtocolVersion.V5,
-    "username": settings.MQTT_IDENTIFIER,
-    "password": settings.MQTT_PASSWORD,
-    "tls_params": aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS),
-}
+from app.logs import logger
 
 
 def _encode_payload(payload):
@@ -27,6 +17,16 @@ def _encode_payload(payload):
 def _decode_payload(payload):
     """Decode python dict from utf-8 JSON bytestring."""
     return json.loads(payload.decode())
+
+
+CONFIGURATION = {
+    "hostname": settings.MQTT_URL,
+    "port": 8883,
+    "protocol": aiomqtt.ProtocolVersion.V5,
+    "username": settings.MQTT_IDENTIFIER,
+    "password": settings.MQTT_PASSWORD,
+    "tls_params": aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS),
+}
 
 
 async def send(mqtt_client, payload, topic):

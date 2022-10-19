@@ -1,6 +1,6 @@
-import pydantic
 import enum
 
+import pydantic
 
 ########################################################################################
 # Constants

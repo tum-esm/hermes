@@ -2,7 +2,6 @@ import os
 
 import app.utils as utils
 
-
 # check that required environment variables are set
 _VARS = [
     "COMMIT_SHA",

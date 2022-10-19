@@ -3,7 +3,6 @@ import sqlalchemy.dialects.postgresql
 
 import app.settings as settings
 
-
 CONFIGURATION = {
     "url": settings.POSTGRESQL_URL,
     "user": settings.POSTGRESQL_IDENTIFIER,
