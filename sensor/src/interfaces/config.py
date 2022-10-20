@@ -26,6 +26,6 @@ class ConfigInterface:
         except json.JSONDecodeError:
             raise ConfigInterface.FileIsInvalid("file not in a valid json format")
         except Exception as e:
-            raise ConfigInterface.FileIsInvalid(e)
+            raise ConfigInterface.FileIsInvalid(e.args[0])
 
         return validated_config
