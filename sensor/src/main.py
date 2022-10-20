@@ -1,4 +1,4 @@
-from src import types, utils
+from src import types, utils, interfaces
 
 
 def run():
@@ -6,4 +6,5 @@ def run():
     entry point of the mainloop running continuously
     on the sensor node
     """
-    print("Hello")
+    config = interfaces.ConfigInterface.read()
+    print(f"Hello! config = {config}")
