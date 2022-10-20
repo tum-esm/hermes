@@ -19,7 +19,8 @@ class ConfigInterface:
         try:
             with open(CONFIG_PATH, "r") as f:
                 config = json.load(f)
-            # TODO: validate structure
+                types.validate_config_dict(config)
+                validated_config: types.ConfigDict = config
         except FileNotFoundError:
             raise ConfigInterface.FileIsMissing()
         except json.JSONDecodeError:
@@ -27,4 +28,4 @@ class ConfigInterface:
         except Exception as e:
             raise ConfigInterface.FileIsInvalid(e)
 
-        return config
+        return validated_config
