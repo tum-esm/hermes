@@ -1,7 +1,9 @@
 import json
 import ssl
+import typing
 
 import asyncio_mqtt as aiomqtt
+import databases
 
 import app.settings as settings
 import app.utils as utils
@@ -9,12 +11,12 @@ from app.database import MEASUREMENTS
 from app.logs import logger
 
 
-def _encode_payload(payload):
+def _encode_payload(payload: typing.Dict[str, typing.Any]) -> bytes:
     """Encode python dict into utf-8 JSON bytestring."""
     return json.dumps(payload).encode()
 
 
-def _decode_payload(payload):
+def _decode_payload(payload: bytes) -> typing.Dict[str, typing.Any]:
     """Decode python dict from utf-8 JSON bytestring."""
     return json.loads(payload.decode())
 
@@ -29,12 +31,19 @@ CONFIGURATION = {
 }
 
 
-async def send(mqtt_client, payload, topic):
+async def send(
+    mqtt_client: aiomqtt.Client,
+    payload: typing.Dict[str, typing.Any],
+    topic: str,
+) -> None:
     """Publish a JSON message to the specified topic."""
     await mqtt_client.publish("measurements", payload=_encode_payload(payload))
 
 
-async def listen_and_write(database_client, mqtt_client):
+async def listen_and_write(
+    database_client: databases.Database,
+    mqtt_client: aiomqtt.Client,
+) -> typing.NoReturn:
     """Listen to incoming sensor measurements and write them to the database.
 
     - measurements cannot really be meaningfully validated except for their schema

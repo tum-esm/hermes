@@ -1,7 +1,8 @@
+import typing
+
+import databases.interfaces
 import sqlalchemy as sa
 import sqlalchemy.dialects.postgresql
-import typing
-import databases.interfaces
 
 import app.settings as settings
 
@@ -12,7 +13,7 @@ CONFIGURATION = {
 }
 
 
-def dictify(result: typing.List[databases.interfaces.Record]) -> typing.List[dict]:
+def dictify(result: typing.Sequence[databases.interfaces.Record]) -> typing.List[dict]:
     """Cast a database SELECT result into a list of dictionaries."""
     return [dict(record) for record in result]
 
