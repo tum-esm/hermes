@@ -1,6 +1,0 @@
-#!/bin/sh
-
-poetry run black --preview ./app
-poetry run docformatter --in-place -r --wrap-summaries 87 --wrap-descriptions 87 ./app
-poetry run isort ./app
-# poetry run mypy ./app

@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# color definitions
+RESTORE='\033[0m'
+GREEN='\033[01;32m'
+
+printf "[..] Running black"
+# capture program output in variable
+output=$(script -q /dev/null poetry run black --preview ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
+printf "\r${GREEN}[OK]${RESTORE} Running black\n"
+# if there's output, print it
+[ -z "$output" ] || echo "\n$output\n"
+
+printf "[..] Running docformatter"
+output=$(script -q /dev/null poetry run docformatter --in-place -r --wrap-summaries 87 --wrap-descriptions 87 ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
+printf "\r${GREEN}[OK]${RESTORE} Running docformatter\n"
+[ -z "$output" ] || echo "\n$output\n"
+
+printf "[..] Running isort"
+output=$(script -q /dev/null poetry run isort ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
+printf "\r${GREEN}[OK]${RESTORE} Running isort\n"
+[ -z "$output" ] || echo "\n$output\n"
+
+printf "[..] Running mypy"
+output=$(script -q /dev/null poetry run mypy ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
+printf "\r${GREEN}[OK]${RESTORE} Running mypy\n"
+[ -z "$output" ] || echo "\n$output\n"
