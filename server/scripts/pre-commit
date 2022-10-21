@@ -17,7 +17,7 @@ printf "\r${GREEN}[OK]${RESTORE} Running docformatter\n"
 [ -z "$output" ] || echo "\n$output\n"
 
 printf "[..] Running isort"
-output=$(script -q /dev/null poetry run isort ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
+output=$(script -q /dev/null poetry run isort --profile black ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
 printf "\r${GREEN}[OK]${RESTORE} Running isort\n"
 [ -z "$output" ] || echo "\n$output\n"
 
