@@ -6,7 +6,7 @@ GREEN='\033[01;32m'
 
 printf "[..] Running black"
 # capture program output in variable
-output=$(script -q /dev/null poetry run black --preview ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
+output=$(script -q /dev/null poetry run black --quiet --preview ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
 printf "\r${GREEN}[OK]${RESTORE} Running black\n"
 # if there's output, print it
 [ -z "$output" ] || echo "\n$output\n"
