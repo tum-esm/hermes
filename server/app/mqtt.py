@@ -46,12 +46,12 @@ async def listen_and_write(
 ) -> typing.NoReturn:
     """Listen to incoming sensor measurements and write them to the database.
 
-    - measurements cannot really be meaningfully validated except for their schema
-    - TODO dump messages that don't pass validation > log > show in status as timestamp
+    - Measurements cannot really be meaningfully validated except for their schema
+    - TODO Dump messages that don't pass validation > log > show in status as timestamp
       of last message, but also that last message was faulty
-    - TODO allow nodes to send measurements for only part of all values (e.g. when one
+    - TODO Allow nodes to send measurements for only part of all values (e.g. when one
       of multiple sensors breaks, different node architectures, etc.)
-    - TODO use sender ID as "node" value?
+    - TODO Use sender ID as "node" value?
     """
     async with mqtt_client.unfiltered_messages() as messages:
         await mqtt_client.subscribe("measurements")

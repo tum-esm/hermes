@@ -2,7 +2,7 @@ import os
 
 import app.utils as utils
 
-# check that required environment variables are set
+# Check that required environment variables are set
 _VARS = [
     "COMMIT_SHA",
     "BRANCH_NAME",
@@ -16,11 +16,11 @@ _VARS = [
 for var in _VARS:
     assert os.getenv(var), f"environment variable {var} not set"
 
-# git commit hash
+# Git commit hash
 COMMIT_SHA = os.getenv("COMMIT_SHA")
-# git branch name
+# Git branch name
 BRANCH_NAME = os.getenv("BRANCH_NAME")
-# timestamp of when the server was started
+# Timestamp of server startup
 START_TIME = utils.timestamp()
 
 # PostgreSQL connection details

@@ -22,7 +22,7 @@ from app.logs import logger
 async def get_status(request):
     """Return some status information about the server."""
 
-    # send a test mqtt message
+    # Send a test mqtt message
     import random
 
     payload = {
@@ -44,16 +44,16 @@ async def get_status(request):
 async def get_measurements(request):
     """Return sensor measurements sorted chronologically, optionally filtered."""
 
-    # TODO simplify this part somehow so that we don't have to duplicate it
+    # TODO Simplify this part somehow so that we don't have to duplicate it
     try:
-        # TODO use one model for body/query/...
+        # TODO Use one model for body/query/...
         request = models.GetMeasurementsRequest(**request.query_params)
     except pydantic.ValidationError:
-        # TODO include specific pydantic error message
+        # TODO Include specific pydantic error message
         logger.warning("GET /measurements: InvalidSyntaxError")
         raise errors.InvalidSyntaxError()
 
-    # define default columns and conditions
+    # Define default columns and conditions
     columns = [
         column
         for column in MEASUREMENTS.columns.keys()
@@ -61,7 +61,7 @@ async def get_measurements(request):
     ]
     conditions = []
 
-    # build customized database query from query parameters
+    # Build customized database query from query parameters
     if request.nodes is not None:
         conditions.append(
             sa.or_(*[MEASUREMENTS.columns.node == node for node in request.nodes])
@@ -87,8 +87,8 @@ async def get_measurements(request):
             MEASUREMENTS.columns.measurement_timestamp < int(request.end_timestamp)
         )
 
-    # execute query and return results
-    # TODO think about streaming here
+    # Execute query and return results
+    # TODO Think about streaming here
     result = await database_client.fetch_all(
         query=(
             sa.select(columns)
@@ -119,14 +119,14 @@ async def lifespan(app):
         async with aiomqtt.Client(**mqtt.CONFIGURATION) as y:
             database_client = x
             mqtt_client = y
-            # create database tables if they don't exist yet
+            # Create database tables if they don't exist yet
             for table in database.metadata.tables.values():
                 await database_client.execute(
                     query=database.compile(
                         sa.schema.CreateTable(table, if_not_exists=True)
                     )
                 )
-            # start MQTT listener in (unawaited) asyncio task
+            # Start MQTT listener in (unawaited) asyncio task
             loop = asyncio.get_event_loop()
             loop.create_task(mqtt.listen_and_write(database_client, mqtt_client))
             yield
@@ -145,6 +145,6 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
     ],
-    # TODO limit to one MQTT instance for multiple workers, or use shared subscriptions
+    # TODO Limit to one MQTT instance for multiple workers, or use shared subscriptions
     lifespan=lifespan,
 )
