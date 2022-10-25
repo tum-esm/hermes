@@ -1,8 +1,10 @@
+import typing
+
+import databases.interfaces
 import sqlalchemy as sa
 import sqlalchemy.dialects.postgresql
 
 import app.settings as settings
-
 
 CONFIGURATION = {
     "url": settings.POSTGRESQL_URL,
@@ -11,12 +13,12 @@ CONFIGURATION = {
 }
 
 
-def dictify(result):
+def dictify(result: typing.Sequence[databases.interfaces.Record]) -> typing.List[dict]:
     """Cast a database SELECT result into a list of dictionaries."""
     return [dict(record) for record in result]
 
 
-def compile(query):
+def compile(query: sa.sql.elements.ClauseElement) -> str:
     """Compile an SQLAlchemy core schema into a query string."""
     return str(query.compile(dialect=dialect))
 

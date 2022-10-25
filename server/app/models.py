@@ -1,20 +1,20 @@
-import pydantic
 import enum
 
+import pydantic
 
 ########################################################################################
 # Constants
 ########################################################################################
 
 
-class Length(int, enum.Enum):
-    A = 2**5  # 32
-    B = 2**31  # max value signed 32-bit integer + 1
+class Limit(int, enum.Enum):
+    MEDIUM = 2**6  # 64
+    MAXINT4 = 2**31  # Maximum value signed 32-bit integer + 1
 
 
 class Pattern(str, enum.Enum):
-    NODE_IDENTIFIER = r"^(?!-)(?!.*--)[a-z0-9-]{1,32}(?<!-)$"
-    VALUE_IDENTIFIER = r"^(?!_)(?!.*__)[a-z0-9_]{1,32}(?<!_)$"
+    NODE_IDENTIFIER = r"^(?!-)(?!.*--)[a-z0-9-]{1,64}(?<!-)$"
+    VALUE_IDENTIFIER = r"^(?!_)(?!.*__)[a-z0-9_]{1,64}(?<!_)$"
 
 
 ########################################################################################
@@ -24,7 +24,7 @@ class Pattern(str, enum.Enum):
 
 NodeIdentifier = pydantic.constr(regex=Pattern.NODE_IDENTIFIER.value)
 ValueIdentifier = pydantic.constr(regex=Pattern.VALUE_IDENTIFIER.value)
-Timestamp = pydantic.conint(ge=0, lt=Length.B)
+Timestamp = pydantic.conint(ge=0, lt=Limit.MAXINT4)
 
 
 ########################################################################################
@@ -47,8 +47,8 @@ class GetMeasurementsRequest(BaseModel):
     values: pydantic.conlist(item_type=ValueIdentifier, unique_items=True) = None
     start_timestamp: Timestamp = None
     end_timestamp: Timestamp = None
-    skip: pydantic.conint(ge=0, lt=Length.B) = None
-    limit: pydantic.conint(ge=0, lt=Length.B) = None
+    skip: pydantic.conint(ge=0, lt=Limit.MAXINT4) = None
+    limit: pydantic.conint(ge=0, lt=Limit.MAXINT4) = None
 
     @pydantic.validator("nodes", "values", pre=True)
     def transform_string_to_list(cls, v, values):

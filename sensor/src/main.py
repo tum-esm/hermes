@@ -1,6 +1,5 @@
 from src import interfaces
 
-
 def run():
     """
     entry point of the mainloop running continuously
