@@ -2,5 +2,11 @@
     "version": "0.1.0",
     "general": {
         "node_id": "a-unique-node-id"
+    },
+    "mqtt": {
+        "base_topic": "/.../...",
+        "url": "...",
+        "identifier": "...",
+        "password": "..."
     }
 }
