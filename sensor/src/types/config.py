@@ -6,43 +6,23 @@ import attrs.validators as val
 @attrs.define(frozen=True)
 class ConfigSectionGeneral:
     node_id: str = attrs.field(
-        validator=[
-            val.instance_of(str),
-            val.min_len(3),
-            val.max_len(64),
-        ]
+        validator=[val.instance_of(str), val.min_len(3), val.max_len(64)]
     )
 
 
 @attrs.define(frozen=True)
 class ConfigSectionMQTT:
     base_topic: str = attrs.field(
-        validator=[
-            val.instance_of(str),
-            val.min_len(1),
-            val.max_len(256),
-        ]
+        validator=[val.instance_of(str), val.min_len(1), val.max_len(256)]
     )
     url: str = attrs.field(
-        validator=[
-            val.instance_of(str),
-            val.min_len(3),
-            val.max_len(256),
-        ]
+        validator=[val.instance_of(str), val.min_len(3), val.max_len(256)]
     )
     identifier: str = attrs.field(
-        validator=[
-            val.instance_of(str),
-            val.min_len(3),
-            val.max_len(256),
-        ]
+        validator=[val.instance_of(str), val.min_len(3), val.max_len(256)]
     )
     password: str = attrs.field(
-        validator=[
-            val.instance_of(str),
-            val.min_len(8),
-            val.max_len(256),
-        ]
+        validator=[val.instance_of(str), val.min_len(8), val.max_len(256)]
     )
 
 
@@ -51,10 +31,7 @@ class Config:
     """The config.json for each sensor"""
 
     version: Literal["0.1.0"] = attrs.field(
-        validator=[
-            val.instance_of(str),
-            val.in_(["0.1.0"]),
-        ]
+        validator=[val.instance_of(str), val.in_(["0.1.0"])]
     )
     general: ConfigSectionGeneral = attrs.field(
         converter=lambda x: ConfigSectionGeneral(**x),
@@ -65,7 +42,7 @@ class Config:
 
 
 if __name__ == "__main__":
-    a = Config(
+    config = Config(
         **{
             "version": "0.1.0",
             "general": {"node_id": "a-unique-node-id"},
@@ -73,11 +50,10 @@ if __name__ == "__main__":
                 "base_topic": "/.../...",
                 "url": "...",
                 "identifier": "...",
-                "password": "...",
+                "password": "........",
             },
         }
     )
 
-    print(a.mqtt.identifier)
-
-    a.mqtt.identifier = "0.2.0"
+    print(config)
+    print(config.mqtt.base_topic)
