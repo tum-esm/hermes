@@ -1,6 +1,6 @@
 {
     "version": "0.1.0",
     "general": {
-        "sensor-id": "a-unique-node-id"
+        "node_id": "a-unique-node-id"
     }
 }

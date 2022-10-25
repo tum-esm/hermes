@@ -1,30 +1,34 @@
-from typing import Any, Literal, TypedDict
-
-from .typing_utils import TypingUtils
-
-
-class _ConfigDictGeneral(TypedDict):
-    node_id: str
+from typing import Literal
+import attrs
 
 
-class ConfigDict(TypedDict):
+@attrs.define(frozen=True)
+class ConfigSectionGeneral:
+    node_id: str = attrs.field(
+        validator=[
+            attrs.validators.instance_of(str),
+            attrs.validators.min_len(3),
+            attrs.validators.max_len(128),
+        ]
+    )
+
+
+@attrs.define(frozen=True)
+class Config:
     """The config.json for each sensor"""
 
-    version: Literal["0.1.0"]
-    general: _ConfigDictGeneral
-
-
-def validate_config_dict(config: Any) -> None:
-    """
-    Check, whether a given object is a correct ConfigDict
-    Raises a ConfigValidationError if the object is invalid.
-    This should always be used when loading the object from a
-    JSON file!
-    """
-    TypingUtils.validate_typed_dict(config, "config")
-    TypingUtils.parse_assertions(
-        [
-            lambda: TypingUtils.assert_str_len(config, "general.node_id", 3, 128),
-        ],
-        "config",
+    version: Literal["0.1.0"] = attrs.field(
+        validator=[
+            attrs.validators.instance_of(str),
+            attrs.validators.in_(["0.1.0"]),
+        ]
     )
+    general: ConfigSectionGeneral = attrs.field(
+        converter=lambda x: ConfigSectionGeneral(**x)
+    )
+
+
+if __name__ == "__main__":
+    a = Config(**{"version": "0.1.0", "general": {"node_id": "a"}})
+
+    print(a.general.node_id)

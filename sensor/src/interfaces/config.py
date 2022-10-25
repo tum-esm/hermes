@@ -15,17 +15,14 @@ class ConfigInterface:
         """raised when config.json is not in a valid format"""
 
     @staticmethod
-    def read() -> types.ConfigDict:
+    def read() -> types.Config:
         try:
             with open(CONFIG_PATH, "r") as f:
                 config = json.load(f)
-                types.validate_config_dict(config)
-                validated_config: types.ConfigDict = config
+                return types.Config(**config)
         except FileNotFoundError:
             raise ConfigInterface.FileIsMissing()
         except json.JSONDecodeError:
             raise ConfigInterface.FileIsInvalid("file not in a valid json format")
         except Exception as e:
             raise ConfigInterface.FileIsInvalid(e.args[0])
-
-        return validated_config
