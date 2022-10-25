@@ -1,10 +1,10 @@
 import json
 import os
+import pathlib
 from src import types
 
-dir = os.path.dirname
-PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
-CONFIG_PATH = os.path.join(PROJECT_DIR, "config.json")
+PROJECT_DIR = pathlib.Path(os.path.abspath(__file__)).parents[2]
+CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.json")
 
 
 class ConfigInterface:
