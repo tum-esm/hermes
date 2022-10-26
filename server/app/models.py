@@ -1,8 +1,7 @@
 import enum
 
-import pydantic
 import attrs
-
+import pydantic
 
 ########################################################################################
 # Constants
@@ -65,11 +64,29 @@ class GetMeasurementsRequest(BaseModel):
         return v
 
 
+TIMESTAMP_VALIDATOR = [
+    attrs.validators.instance_of(int),
+    attrs.validators.ge(0),
+    attrs.validators.lt(Limit.MAXINT4),
+]
+NODE_IDENTIFIER_VALIDATOR = [
+    attrs.validators.instance_of(str),
+    attrs.validators.matches_re(Pattern.NODE_IDENTIFIER),
+]
+VALUE_IDENTIFIER_VALIDATOR = [
+    attrs.validators.instance_of(str),
+    attrs.validators.matches_re(Pattern.VALUE_IDENTIFIER),
+]
+
+
 @attrs.frozen
 class Measurement:
-
-    # TODO validate
-
-    node: NodeIdentifier
-    timestamp: Timestamp
-    values: dict[ValueIdentifier, float]
+    node: str = attrs.field(validator=NODE_IDENTIFIER_VALIDATOR)
+    timestamp: int = attrs.field(validator=TIMESTAMP_VALIDATOR)
+    values: dict[str, int | float] = attrs.field(
+        validator=attrs.validators.deep_mapping(
+            mapping_validator=attrs.validators.instance_of(dict),
+            key_validator=attrs.validators.and_(*VALUE_IDENTIFIER_VALIDATOR),
+            value_validator=attrs.validators.instance_of(int | float),
+        )
+    )
