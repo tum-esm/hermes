@@ -7,6 +7,7 @@ import databases
 
 import app.settings as settings
 import app.utils as utils
+import app.models as models
 from app.database import MEASUREMENTS
 from app.logs import logger
 
@@ -40,6 +41,30 @@ async def send(
     await mqtt_client.publish("measurements", payload=_encode_payload(payload))
 
 
+async def _process_measurement_payload(
+    database_client: databases.Database,
+    payload: dict[str, typing.Any],
+) -> None:
+    """Validate a measurement message and write it to the database."""
+    try:
+        measurement = models.Measurement(**payload)
+        receipt_timestamp = utils.timestamp()
+        for key, value in measurement.values.items():
+            # TODO choose corresponding table based on key
+            await database_client.execute(
+                query=MEASUREMENTS.insert(),
+                values={
+                    "node": measurement.node,
+                    "measurement_timestamp": measurement.timestamp,
+                    "receipt_timestamp": receipt_timestamp,
+                    key: value,
+                },
+            )
+    except:
+        # TODO log validation/database error and rollback
+        pass
+
+
 async def listen_and_write(
     database_client: databases.Database,
     mqtt_client: aiomqtt.Client,
@@ -54,18 +79,16 @@ async def listen_and_write(
     - TODO Use sender ID as "node" value?
     """
     async with mqtt_client.unfiltered_messages() as messages:
+
         await mqtt_client.subscribe("measurements")
-        logger.info(f'Subscribed to MQTT topic "measurements"')
+        logger.info(f"[MQTT] Subscribed to topic: measurements")
+        # TODO subscribe to more topics here
+
         async for message in messages:
             payload = _decode_payload(message.payload)
-            logger.info(f"Received message: {payload} (topic: {message.topic})")
-            # write measurement to database
-            await database_client.execute(
-                query=MEASUREMENTS.insert(),
-                values={
-                    "node": payload["node"],
-                    "measurement_timestamp": payload["timestamp"],
-                    "receipt_timestamp": utils.timestamp(),
-                    "value": payload["value"],
-                },
-            )
+            logger.info(f"[MQTT] Received message on {message.topic}: {payload}")
+            match message.topic:
+                case "measurements":
+                    await _process_measurement_payload(database_client, payload)
+                case _:
+                    logger.warning(f"[MQTT] Did not process message")

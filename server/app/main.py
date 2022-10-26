@@ -28,7 +28,7 @@ async def get_status(request):
     payload = {
         "node": "kabuto",
         "timestamp": utils.timestamp(),
-        "value": random.randint(0, 2**10),
+        "values": {"value": random.randint(0, 2**10)},
     }
     await mqtt.send(mqtt_client, payload, "measurements")
 
