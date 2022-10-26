@@ -1,6 +1,8 @@
 import enum
 
 import pydantic
+import attrs
+
 
 ########################################################################################
 # Constants
@@ -61,3 +63,10 @@ class GetMeasurementsRequest(BaseModel):
         if "start_timestamp" in values and v < values["start_timestamp"]:
             raise ValueError("end_timestamp must be >= start_timestamp")
         return v
+
+
+@attrs.frozen
+class Measurement:
+    node: NodeIdentifier
+    timestamp: Timestamp
+    values: dict[ValueIdentifier, float]
