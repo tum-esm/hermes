@@ -33,12 +33,12 @@ CONFIGURATION = {
 
 
 async def send(
-    mqtt_client: aiomqtt.Client,
-    payload: typing.Dict[str, typing.Any],
+    payload: dict[str, typing.Any],
     topic: str,
+    mqtt_client: aiomqtt.Client,
 ) -> None:
     """Publish a JSON message to the specified topic."""
-    await mqtt_client.publish("measurements", payload=_encode_payload(payload))
+    await mqtt_client.publish(topic, payload=_encode_payload(payload))
 
 
 async def _process_measurement_payload(
@@ -54,19 +54,19 @@ async def _process_measurement_payload(
             await database_client.execute(
                 query=MEASUREMENTS.insert(),
                 values={
-                    "node_identifier": measurement.node,
+                    "node_identifier": measurement.node_identifier,
                     "measurement_timestamp": measurement.timestamp,
                     "receipt_timestamp": receipt_timestamp,
                     key: value,
                 },
             )
-    except (TypeError, ValueError) as error:
+    except (TypeError, ValueError) as e:
         # TODO still save `node_identifier` and `receipt_timestamp` in database?
         # -> works only if node_identifier is inferred from sender ID
-        logger.warning(f"[MQTT] [TOPIC:measurements] Invalid message: {error}")
-    except:
+        logger.warning(f"[MQTT] [TOPIC:measurements] Invalid message: {e}")
+    except Exception as e:
         # TODO log database error and rollback
-        pass
+        logger.warning(f"[MQTT] [TOPIC:measurements] Failed to write: {e}")
 
 
 async def listen_and_write(
