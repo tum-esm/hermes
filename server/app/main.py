@@ -26,11 +26,11 @@ async def get_status(request):
     import random
 
     payload = {
-        "node": "kabuto",
+        "node_identifier": "kabuto",
         "timestamp": utils.timestamp(),
         "values": {"value": random.randint(0, 2**10)},
     }
-    await mqtt.send(mqtt_client, payload, "measurements")
+    await mqtt.send(payload, "measurements", mqtt_client)
 
     return starlette.responses.JSONResponse(
         {
@@ -65,18 +65,23 @@ async def get_measurements(request):
     # Build customized database query from query parameters
     if request.nodes is not None:
         conditions.append(
-            sa.or_(*[MEASUREMENTS.columns.node == node for node in request.nodes])
+            sa.or_(
+                *[
+                    MEASUREMENTS.columns.node_identifier == node_identifier
+                    for node_identifier in request.nodes
+                ]
+            )
         )
     if request.values is not None:
         columns = [
-            MEASUREMENTS.columns.node,
+            MEASUREMENTS.columns.node_identifier,
             MEASUREMENTS.columns.measurement_timestamp,
             *[
                 sa.column(value)
-                for value in request.values
-                if value
+                for value_identifier in request.values
+                if value_identifier
                 in set(MEASUREMENTS.columns.keys())
-                - {"node", "measurement_timestamp", "receipt_timestamp"}
+                - {"node_identifier", "measurement_timestamp", "receipt_timestamp"}
             ],
         ]
     if request.start_timestamp is not None:
@@ -93,6 +98,7 @@ async def get_measurements(request):
     result = await database_client.fetch_all(
         query=(
             sa.select(columns)
+            .select_from(MEASUREMENTS)
             .where(sa.and_(*conditions))
             .order_by(sa.asc(MEASUREMENTS.columns.measurement_timestamp))
             .offset(request.skip)

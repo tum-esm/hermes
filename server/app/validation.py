@@ -81,7 +81,7 @@ VALUE_IDENTIFIER_VALIDATOR = [
 
 @attrs.frozen
 class Measurement:
-    node: str = attrs.field(validator=NODE_IDENTIFIER_VALIDATOR)
+    node_identifier: str = attrs.field(validator=NODE_IDENTIFIER_VALIDATOR)
     timestamp: int = attrs.field(validator=TIMESTAMP_VALIDATOR)
     values: dict[str, int | float] = attrs.field(
         validator=attrs.validators.deep_mapping(

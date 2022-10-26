@@ -12,12 +12,12 @@ from app.database import MEASUREMENTS
 from app.logs import logger
 
 
-def _encode_payload(payload: typing.Dict[str, typing.Any]) -> bytes:
+def _encode_payload(payload: dict[str, typing.Any]) -> bytes:
     """Encode python dict into utf-8 JSON bytestring."""
     return json.dumps(payload).encode()
 
 
-def _decode_payload(payload: bytes) -> typing.Dict[str, typing.Any]:
+def _decode_payload(payload: bytes) -> dict[str, typing.Any]:
     """Decode python dict from utf-8 JSON bytestring."""
     return json.loads(payload.decode())
 
@@ -42,8 +42,8 @@ async def send(
 
 
 async def _process_measurement_payload(
-    database_client: databases.Database,
     payload: dict[str, typing.Any],
+    database_client: databases.Database,
 ) -> None:
     """Validate a measurement message and write it to the database."""
     try:
@@ -54,13 +54,15 @@ async def _process_measurement_payload(
             await database_client.execute(
                 query=MEASUREMENTS.insert(),
                 values={
-                    "node": measurement.node,
+                    "node_identifier": measurement.node,
                     "measurement_timestamp": measurement.timestamp,
                     "receipt_timestamp": receipt_timestamp,
                     key: value,
                 },
             )
     except (TypeError, ValueError) as error:
+        # TODO still save `node_identifier` and `receipt_timestamp` in database?
+        # -> works only if node_identifier is inferred from sender ID
         logger.warning(f"[MQTT] [TOPIC:measurements] Invalid message: {error}")
     except:
         # TODO log database error and rollback
@@ -79,6 +81,7 @@ async def listen_and_write(
     - TODO Use sender ID as "node" value?
     """
     async with mqtt_client.unfiltered_messages() as messages:
+
         await mqtt_client.subscribe("measurements")
         logger.info(f"[MQTT] [TOPIC:measurements] Subscribed")
         # TODO subscribe to more topics here
@@ -88,7 +91,7 @@ async def listen_and_write(
             logger.info(f"[MQTT] [TOPIC:{message.topic}] Received message: {payload}")
             match message.topic:
                 case "measurements":
-                    await _process_measurement_payload(database_client, payload)
+                    await _process_measurement_payload(payload, database_client)
                 case _:
                     logger.warning(
                         f"[MQTT] [TOPIC:{message.topic}] Could not match topic"

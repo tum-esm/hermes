@@ -35,7 +35,7 @@ dialect = sa.dialects.postgresql.dialect()
 MEASUREMENTS = sa.Table(
     "measurements",
     metadata,
-    sa.Column("node", sa.String(length=32)),
+    sa.Column("node_identifier", sa.String(length=32)),
     sa.Column("measurement_timestamp", sa.Integer),
     sa.Column("receipt_timestamp", sa.Integer),
     sa.Column("value", sa.Integer),
