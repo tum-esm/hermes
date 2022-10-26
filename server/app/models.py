@@ -67,6 +67,9 @@ class GetMeasurementsRequest(BaseModel):
 
 @attrs.frozen
 class Measurement:
+
+    # TODO validate
+
     node: NodeIdentifier
     timestamp: Timestamp
     values: dict[ValueIdentifier, float]

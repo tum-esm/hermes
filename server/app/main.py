@@ -54,8 +54,9 @@ async def get_measurements(request):
         raise errors.InvalidSyntaxError()
 
     # Define default columns and conditions
+    # TODO move this into validation, and set some sensible defaults, e.g. limit=64
     columns = [
-        column
+        sa.column(column)
         for column in MEASUREMENTS.columns.keys()
         if column not in ["receipt_timestamp"]
     ]
