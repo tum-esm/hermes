@@ -11,10 +11,10 @@ import starlette.routing
 
 import app.database as database
 import app.errors as errors
-import app.models as models
 import app.mqtt as mqtt
 import app.settings as settings
 import app.utils as utils
+import app.validation as validation
 from app.database import MEASUREMENTS
 from app.logs import logger
 
@@ -47,7 +47,7 @@ async def get_measurements(request):
     # TODO Simplify this part somehow so that we don't have to duplicate it
     try:
         # TODO Use one model for body/query/...
-        request = models.GetMeasurementsRequest(**request.query_params)
+        request = validation.GetMeasurementsRequest(**request.query_params)
     except pydantic.ValidationError:
         # TODO Include specific pydantic error message
         logger.warning("GET /measurements: InvalidSyntaxError")
