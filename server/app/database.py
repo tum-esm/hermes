@@ -5,6 +5,7 @@ import sqlalchemy as sa
 import sqlalchemy.dialects.postgresql
 
 import app.settings as settings
+import app.validation as validation
 
 
 def dictify(result: typing.Sequence[databases.interfaces.Record]) -> typing.List[dict]:
@@ -36,7 +37,11 @@ dialect = sa.dialects.postgresql.dialect()
 CONFIGURATIONS = sa.Table(
     "configurations",
     metadata,
-    sa.Column("node_identifier", sa.String(length=64), primary_key=True),
+    sa.Column(
+        "node_identifier",
+        sa.String(length=validation.Limit.MEDIUM),
+        primary_key=True,
+    ),
     sa.Column("creation_timestamp", sa.Integer, nullable=False),
     sa.Column("update_timestamp", sa.Integer, nullable=False),
     sa.Column("configuration", sa.JSON, nullable=False),
@@ -47,7 +52,7 @@ MEASUREMENTS = sa.Table(
     metadata,
     sa.Column(
         "node_identifier",
-        sa.String(length=64),
+        sa.String(length=validation.Limit.MEDIUM),
         sa.ForeignKey(
             CONFIGURATIONS.columns.node_identifier,
             onupdate="CASCADE",
