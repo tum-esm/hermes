@@ -2,7 +2,7 @@ import time
 from src import interfaces
 
 
-def run():
+def run() -> None:
     """
     entry point of the mainloop running continuously
     on the sensor node
