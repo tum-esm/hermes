@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 paho-mqtt = "^1.6.1"
+psutil = "^5.9.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
