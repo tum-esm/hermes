@@ -36,7 +36,7 @@ jobs:
               id: cached-poetry-dependencies
               uses: actions/cache@v3
               with:
-                  path: .venv
+                  path: sensor/.venv
                   key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('sensor/poetry.lock') }}
 
             # install dependencies if cache does not exist
