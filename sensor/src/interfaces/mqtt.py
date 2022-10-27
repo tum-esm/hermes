@@ -1,62 +1,38 @@
-from datetime import datetime
-import time
 from typing import Any
 from src import types
 from paho.mqtt.client import Client
 import ssl
+import queue
+
+mqtt_message_queue = queue.Queue(maxsize=1024)
 
 
-def log(message: str) -> None:
-    with open("send.log", "a") as f:
-        f.write(f"{datetime.now()} {message}\n")
-
-
-# TODO: Put message into global queue (shared between threads)
 def on_message(*args: Any, **kwargs: dict[str, Any]) -> None:
-    log(f"on_message: {args}, {kwargs}")
-
-
-# TODO: Log as debug line
-def on_connect(*args: Any, **kwargs: dict[str, Any]) -> None:
-    log(f"on_connect: {args}, {kwargs}")
-
-
-# TODO: Log as debug line
-def on_publish(*args: Any, **kwargs: dict[str, Any]) -> None:
-    log(f"on_publish: {args}, {kwargs}")
-
-
-# TODO: Log as debug line
-def on_subscribe(*args: Any, **kwargs: dict[str, Any]) -> None:
-    log(f"on_subscribe: {args}, {kwargs}")
+    mqtt_message_queue.put(f"on_message: {args}, {kwargs}")
 
 
 class MQTTInterface:
     def __init__(self, config: types.Config) -> None:
-        # TODO: initialize shared queue
+        self.config = config
+        self.client = Client(client_id=self.config.general.node_id)
 
-        client = Client(client_id=config.general.node_id)
-        client.username_pw_set(config.mqtt.identifier, config.mqtt.password)
-        client.tls_set(certfile=None, keyfile=None, cert_reqs=ssl.CERT_REQUIRED)
+        self.client.username_pw_set(config.mqtt.identifier, config.mqtt.password)
+        self.client.tls_set(certfile=None, keyfile=None, cert_reqs=ssl.CERT_REQUIRED)
+        self.client.on_message = on_message
 
-        # TODO: pass shared queue to on_message function
-        client.on_message = on_message
-        client.on_connect = on_connect
-        client.on_publish = on_publish
-        client.on_subscribe = on_subscribe
+        # TODO: Move port into config
+        self.client.connect(config.mqtt.url, port=8883, keepalive=60)
+        self.client.subscribe(
+            config.mqtt.base_topic + "/initial-setup-test",
+        )
+        self.client.loop_start()
 
-        client.connect(config.mqtt.url, port=8883, keepalive=60)
-        log("client connected")
-
-        client.subscribe("/development/moritz/initial-setup-test")
-
-        client.loop_start()
-        log("loop started")
-
+    def get_messages(self) -> list[Any]:
+        new_messages = []
         while True:
-            time.sleep(10)
+            try:
+                new_messages.append(mqtt_message_queue.get(block=False))
+            except queue.Empty:
+                break
 
-    @staticmethod
-    def get_messages(config: types.Config) -> list[Any]:
-        # TODO: return messages from shared queue
-        return []
+        return new_messages

@@ -5,7 +5,7 @@ import ssl
 from src import interfaces
 
 config = interfaces.ConfigInterface.read()
-client = Client(client_id=config.general.node_id)
+client = Client(client_id="test-sender")
 client.username_pw_set(config.mqtt.identifier, config.mqtt.password)
 client.tls_set(certfile=None, keyfile=None, cert_reqs=ssl.CERT_REQUIRED)
 client.connect(config.mqtt.url, port=8883, keepalive=60)
