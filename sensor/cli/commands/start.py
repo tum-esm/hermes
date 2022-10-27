@@ -1,7 +1,7 @@
 import time
 import click
 import os
-from .. import utils
+import utils
 
 
 @click.command(
@@ -13,7 +13,7 @@ def start() -> None:
     if current_pid is not None:
         utils.print_red(f"Background process already exists with PID {current_pid}")
     else:
-        os.system(f"nohup {utils.INTERPRETER_PATH} {utils.CRIPT_PATH} &")
+        os.system(f"nohup {utils.INTERPRETER_PATH} {utils.SCRIPT_PATH} &")
         time.sleep(0.5)
         new_pid = utils.process_is_running()
         if new_pid is None:

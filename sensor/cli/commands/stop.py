@@ -1,5 +1,5 @@
 import click
-from .. import utils
+import utils
 
 
 @click.command(help="Stop the automation's background process")
