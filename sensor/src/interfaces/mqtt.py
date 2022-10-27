@@ -5,7 +5,8 @@ from paho.mqtt.client import Client, MQTTMessage
 import ssl
 import queue
 
-mqtt_message_queue = queue.Queue(maxsize=1024)
+# TODO: statically type messages
+mqtt_message_queue = queue.Queue(maxsize=1024)  # type:ignore
 
 
 # print message, useful for checking if it was successful
