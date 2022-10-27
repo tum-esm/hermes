@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import pytest
 
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
@@ -10,6 +11,7 @@ sys.path.append(PROJECT_DIR)
 from src.types import Config
 
 
+@pytest.mark.ci
 def test_default_config():
     with open(DEFAULT_CONFIG_PATH, "r") as f:
         default_config = json.load(f)
