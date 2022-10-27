@@ -231,6 +231,14 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "types-paho-mqtt"
+version = "1.6.0.1"
+description = "Typing stubs for paho-mqtt"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "types-psutil"
 version = "5.9.5.4"
 description = "Typing stubs for psutil"
@@ -249,7 +257,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "daac1031597cadf25f7a0f0677810cefc02ff4a76358dc036c558224759bc8d4"
+content-hash = "d6f18f04c90e56774888d5a3245480baa6ad874bfef169b1121a71d3b7443b76"
 
 [metadata.files]
 attrs = [
@@ -449,6 +457,10 @@ pytest-cov = [
 tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+types-paho-mqtt = [
+    {file = "types-paho-mqtt-1.6.0.1.tar.gz", hash = "sha256:55fedd890cf5a4cad4f968f6dde43a0fa886d8896a1936d3f14b6348655c20b5"},
+    {file = "types_paho_mqtt-1.6.0.1-py3-none-any.whl", hash = "sha256:6f6eace42fe2db311ee9a8a4ef5574a9c2f2fa95815d7acdce1574449b158af3"},
 ]
 types-psutil = [
     {file = "types-psutil-5.9.5.4.tar.gz", hash = "sha256:aa09102b80c65a3b4573216614372398dab78972d650488eaff1ff05482cc18f"},
