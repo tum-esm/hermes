@@ -1,5 +1,5 @@
 import click
-from .. import utils
+import utils
 
 
 @click.command(help="Checks whether the background process is running")
