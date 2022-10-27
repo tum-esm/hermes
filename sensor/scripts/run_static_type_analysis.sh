@@ -1,2 +1,2 @@
-mypy run.py
-mypy cli/main.py
+mypy run.py && mypy cli/main.py
+exit $?

@@ -66,4 +66,4 @@ if __name__ == "__main__":
     config = Config(**example_config)  # type: ignore
 
     print(config)
-    print(config.mqtt.base_topic * 1.7)
+    # print(config.mqtt.base_topic * 1.7)  # this should throw an error "str * float"
