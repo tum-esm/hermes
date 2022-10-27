@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import pytest
 
 dir = os.path.dirname
 ROOT_DIR = dir(dir(dir(dir(os.path.abspath(__file__)))))
@@ -13,6 +14,7 @@ SENSOR_DEFAULT_CONFIG = os.path.join(
 # TODO: test version number of dashboard
 
 
+@pytest.mark.ci
 def test_version_numbers():
     assert os.path.isfile(SERVER_PYPROJECT_TOML)
     assert os.path.isfile(SENSOR_PYPROJECT_TOML)
