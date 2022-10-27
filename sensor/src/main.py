@@ -10,4 +10,6 @@ def run() -> None:
     while True:
         config = interfaces.ConfigInterface.read()
         print(f"Hello! config = {config}")
+        interfaces.MQTTInterface(config)
+
         time.sleep(10)
