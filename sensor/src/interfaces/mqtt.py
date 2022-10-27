@@ -1,14 +1,21 @@
+import json
 from typing import Any
 from src import types
-from paho.mqtt.client import Client
+from paho.mqtt.client import Client, MQTTMessage
 import ssl
 import queue
 
 mqtt_message_queue = queue.Queue(maxsize=1024)
 
 
-def on_message(*args: Any, **kwargs: dict[str, Any]) -> None:
-    mqtt_message_queue.put(f"on_message: {args}, {kwargs}")
+# print message, useful for checking if it was successful
+def on_message(client: Client, userdata: Any, msg: MQTTMessage) -> None:
+    try:
+        payload = json.loads(msg.payload.decode())
+        mqtt_message_queue.put({"topic": msg.topic, "qos": msg.qos, "payload": payload})
+    except json.JSONDecodeError:
+        # TODO: log
+        pass
 
 
 class MQTTInterface:
