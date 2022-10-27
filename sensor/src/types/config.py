@@ -12,11 +12,12 @@ class ConfigSectionGeneral:
 
 @attr.define(frozen=True)
 class ConfigSectionMQTT:
-    base_topic: str = attr.field(
-        validator=[val.instance_of(str), val.min_len(1), val.max_len(256)]  # type: ignore
-    )
     url: str = attr.field(
         validator=[val.instance_of(str), val.min_len(3), val.max_len(256)]  # type: ignore
+    )
+    port: int = attr.field(validator=[val.instance_of(int), val.ge(0)])  # type: ignore
+    base_topic: str = attr.field(
+        validator=[val.instance_of(str), val.min_len(1), val.max_len(256)]  # type: ignore
     )
     identifier: str = attr.field(
         validator=[val.instance_of(str), val.min_len(3), val.max_len(256)]  # type: ignore
@@ -57,10 +58,11 @@ if __name__ == "__main__":
         "version": "0.1.0",
         "general": {"node_id": "a-unique-node-id"},
         "mqtt": {
-            "base_topic": "/.../...",
             "url": "...",
+            "port": 8883,
             "identifier": "...",
             "password": "........",
+            "base_topic": "/.../...",
         },
     }
     config = Config(**example_config)  # type: ignore

@@ -20,8 +20,7 @@ class MQTTInterface:
         self.client.tls_set(certfile=None, keyfile=None, cert_reqs=ssl.CERT_REQUIRED)
         self.client.on_message = on_message
 
-        # TODO: Move port into config
-        self.client.connect(config.mqtt.url, port=8883, keepalive=60)
+        self.client.connect(config.mqtt.url, port=config.mqtt.port, keepalive=60)
         self.client.subscribe(
             config.mqtt.base_topic + "/initial-setup-test",
         )
