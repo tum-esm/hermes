@@ -41,6 +41,25 @@ async def get_status(request):
     )
 
 
+async def get_nodes(request):
+    """Return status and configuration of nodes."""
+
+    # TODO Implement filtering on node_identifier and subsequent request validation
+    # TODO Include last seen timestamp / last measurement timestamp
+
+    conditions = []
+
+    result = await database_client.fetch_all(
+        query=(
+            sa.select(CONFIGURATIONS.columns)
+            .select_from(CONFIGURATIONS)
+            .where(sa.and_(*conditions))
+            .order_by(sa.asc(CONFIGURATIONS.columns.node_identifier))
+        )
+    )
+    return starlette.responses.JSONResponse(database.dictify(result))
+
+
 async def get_measurements(request):
     """Return measurements sorted chronologically, optionally filtered."""
 
@@ -144,6 +163,11 @@ app = starlette.applications.Starlette(
         starlette.routing.Route(
             path="/status",
             endpoint=get_status,
+            methods=["GET"],
+        ),
+        starlette.routing.Route(
+            path="/nodes",
+            endpoint=get_nodes,
             methods=["GET"],
         ),
         starlette.routing.Route(
