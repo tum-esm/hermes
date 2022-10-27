@@ -63,6 +63,8 @@ async def _process_measurement_payload(
     except (TypeError, ValueError) as e:
         # TODO still save `node_identifier` and `receipt_timestamp` in database?
         # -> works only if node_identifier is inferred from sender ID
+        # Like this, we can show the timestamp of last message in the node status, even
+        # if it was invalid
         logger.warning(f"[MQTT] [TOPIC:measurements] Invalid message: {e}")
     except Exception as e:
         # TODO log database error and rollback
@@ -75,13 +77,11 @@ async def listen_and_write(
 ) -> typing.NoReturn:
     """Listen to incoming sensor measurements and write them to the database.
 
-    - TODO In node status show timestamp of last message, even if it was invalid
     - TODO Allow nodes to send measurements for only part of all values (e.g. when one
       of multiple sensors breaks, different node architectures, etc.)
     - TODO Use sender ID as "node" value?
     """
     async with mqtt_client.unfiltered_messages() as messages:
-
         await mqtt_client.subscribe("measurements")
         logger.info(f"[MQTT] [TOPIC:measurements] Subscribed")
         # TODO subscribe to more topics here

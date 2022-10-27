@@ -6,12 +6,6 @@ import sqlalchemy.dialects.postgresql
 
 import app.settings as settings
 
-CONFIGURATION = {
-    "url": settings.POSTGRESQL_URL,
-    "user": settings.POSTGRESQL_IDENTIFIER,
-    "password": settings.POSTGRESQL_PASSWORD,
-}
-
 
 def dictify(result: typing.Sequence[databases.interfaces.Record]) -> typing.List[dict]:
     """Cast a database SELECT result into a list of dictionaries."""
@@ -23,6 +17,13 @@ def compile(query: sa.sql.elements.ClauseElement) -> str:
     return str(query.compile(dialect=dialect))
 
 
+CONFIGURATION = {
+    "url": settings.POSTGRESQL_URL,
+    "user": settings.POSTGRESQL_IDENTIFIER,
+    "password": settings.POSTGRESQL_PASSWORD,
+}
+
+
 ########################################################################################
 # Table schemas
 ########################################################################################
@@ -32,11 +33,29 @@ metadata = sa.MetaData()
 dialect = sa.dialects.postgresql.dialect()
 
 
+CONFIGURATIONS = sa.Table(
+    "configurations",
+    metadata,
+    sa.Column("node_identifier", sa.String(length=64), primary_key=True),
+    sa.Column("creation_timestamp", sa.Integer, nullable=False),
+    sa.Column("update_timestamp", sa.Integer, nullable=False),
+    sa.Column("configuration", sa.JSON, nullable=False),
+)
+
 MEASUREMENTS = sa.Table(
     "measurements",
     metadata,
-    sa.Column("node_identifier", sa.String(length=32)),
-    sa.Column("measurement_timestamp", sa.Integer),
-    sa.Column("receipt_timestamp", sa.Integer),
-    sa.Column("value", sa.Integer),
+    sa.Column(
+        "node_identifier",
+        sa.String(length=64),
+        sa.ForeignKey(
+            CONFIGURATIONS.columns.node_identifier,
+            onupdate="CASCADE",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    ),
+    sa.Column("measurement_timestamp", sa.Integer, nullable=False),
+    sa.Column("receipt_timestamp", sa.Integer, nullable=False),
+    sa.Column("value", sa.Integer, nullable=False),
 )
