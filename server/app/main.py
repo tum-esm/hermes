@@ -15,7 +15,7 @@ import app.mqtt as mqtt
 import app.settings as settings
 import app.utils as utils
 import app.validation as validation
-from app.database import MEASUREMENTS
+from app.database import CONFIGURATIONS, MEASUREMENTS
 from app.logs import logger
 
 
@@ -42,23 +42,23 @@ async def get_status(request):
 
 
 async def get_measurements(request):
-    """Return sensor measurements sorted chronologically, optionally filtered."""
+    """Return measurements sorted chronologically, optionally filtered."""
 
     # TODO Simplify this part somehow so that we don't have to duplicate it
     try:
-        # TODO Use one model for body/query/...
+        # TODO Use one model for body/query/... (with inheritance?)
         request = validation.GetMeasurementsRequest(**request.query_params)
     except pydantic.ValidationError:
-        # TODO Include specific pydantic error message
+        # TODO Include specific pydantic/attrs error message
         logger.warning("GET /measurements: InvalidSyntaxError")
         raise errors.InvalidSyntaxError()
 
     # Define default columns and conditions
     # TODO move this into validation, and set some sensible defaults, e.g. limit=64
     columns = [
-        sa.column(column)
-        for column in MEASUREMENTS.columns.keys()
-        if column not in ["receipt_timestamp"]
+        column
+        for column in MEASUREMENTS.columns
+        if column not in [MEASUREMENTS.columns.receipt_timestamp]
     ]
     conditions = []
 
