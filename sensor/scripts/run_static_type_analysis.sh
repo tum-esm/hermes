@@ -1,2 +1,3 @@
-mypy run.py && mypy cli/main.py
-exit $?
+set -o errexit
+mypy run.py
+mypy cli/main.py

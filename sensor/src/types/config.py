@@ -1,27 +1,27 @@
 from typing import Any, Literal
-import attr
-import attr.validators as val
+import attrs
+import attrs.validators as val
 
 
-@attr.define(frozen=True)
+@attrs.frozen
 class ConfigSectionGeneral:
-    node_id: str = attr.field(
+    node_id: str = attrs.field(
         validator=[val.instance_of(str), val.min_len(3), val.max_len(64)]  # type: ignore
     )
 
 
-@attr.define(frozen=True)
+@attrs.frozen
 class ConfigSectionMQTT:
-    base_topic: str = attr.field(
+    base_topic: str = attrs.field(
         validator=[val.instance_of(str), val.min_len(1), val.max_len(256)]  # type: ignore
     )
-    url: str = attr.field(
+    url: str = attrs.field(
         validator=[val.instance_of(str), val.min_len(3), val.max_len(256)]  # type: ignore
     )
-    identifier: str = attr.field(
+    identifier: str = attrs.field(
         validator=[val.instance_of(str), val.min_len(3), val.max_len(256)]  # type: ignore
     )
-    password: str = attr.field(
+    password: str = attrs.field(
         validator=[val.instance_of(str), val.min_len(8), val.max_len(256)]  # type: ignore
     )
 
@@ -36,18 +36,18 @@ def get_config_section_mqtt(x: Any) -> ConfigSectionMQTT:
     return ConfigSectionMQTT(**x)
 
 
-@attr.define(frozen=True)
+@attrs.frozen
 class Config:
     """The config.json for each sensor"""
 
-    version: Literal["0.1.0"] = attr.field(
+    version: Literal["0.1.0"] = attrs.field(
         validator=[val.instance_of(str), val.in_(["0.1.0"])]
     )
 
-    general: ConfigSectionGeneral = attr.field(
+    general: ConfigSectionGeneral = attrs.field(
         converter=get_config_section_general,
     )
-    mqtt: ConfigSectionMQTT = attr.field(
+    mqtt: ConfigSectionMQTT = attrs.field(
         converter=get_config_section_mqtt,
     )
 
