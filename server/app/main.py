@@ -44,10 +44,26 @@ async def get_status(request):
 async def get_nodes(request):
     """Return status and configuration of nodes."""
 
-    # TODO Implement filtering on node_identifier and subsequent request validation
     # TODO Include last seen timestamp / last measurement timestamp
 
+    try:
+        request = validation.GetNodesRequest(**request.query_params)
+    except (TypeError, ValueError) as e:
+        logger.warning(f"[HTTP] [GET /nodes] Invalid request: {e}")
+        raise errors.InvalidSyntaxError()
+
     conditions = []
+
+    # duplicated from get_measurements -> move to some own query (builder) module?
+    if request.nodes is not None:
+        conditions.append(
+            sa.or_(
+                *[
+                    CONFIGURATIONS.columns.node_identifier == node_identifier
+                    for node_identifier in request.nodes
+                ]
+            )
+        )
 
     result = await database_client.fetch_all(
         query=(
