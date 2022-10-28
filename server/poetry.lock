@@ -96,7 +96,7 @@ test = ["flake8 (>=3.9.2,<3.10.0)", "pycodestyle (>=2.7.0,<2.8.0)", "uvloop (>=0
 name = "attrs"
 version = "22.1.0"
 description = "Classes Without Boilerplate"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.5"
 
@@ -1391,7 +1391,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "d8b7a557cf21a1c958bcf5fc72affe6c92a08034a7546fd4c7a28c1a2eed9358"
+content-hash = "ebe9a4f424da6e0ea2942a1a11613371905f0c884495d3b499778d88948ae4b4"
 
 [metadata.files]
 anyio = [

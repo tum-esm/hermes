@@ -7,16 +7,17 @@ import databases
 
 import app.settings as settings
 import app.utils as utils
+import app.validation as validation
 from app.database import MEASUREMENTS
 from app.logs import logger
 
 
-def _encode_payload(payload: typing.Dict[str, typing.Any]) -> bytes:
+def _encode_payload(payload: dict[str, typing.Any]) -> bytes:
     """Encode python dict into utf-8 JSON bytestring."""
     return json.dumps(payload).encode()
 
 
-def _decode_payload(payload: bytes) -> typing.Dict[str, typing.Any]:
+def _decode_payload(payload: bytes) -> dict[str, typing.Any]:
     """Decode python dict from utf-8 JSON bytestring."""
     return json.loads(payload.decode())
 
@@ -32,12 +33,42 @@ CONFIGURATION = {
 
 
 async def send(
-    mqtt_client: aiomqtt.Client,
-    payload: typing.Dict[str, typing.Any],
+    payload: dict[str, typing.Any],
     topic: str,
+    mqtt_client: aiomqtt.Client,
 ) -> None:
     """Publish a JSON message to the specified topic."""
-    await mqtt_client.publish("measurements", payload=_encode_payload(payload))
+    await mqtt_client.publish(topic, payload=_encode_payload(payload))
+
+
+async def _process_measurement_payload(
+    payload: dict[str, typing.Any],
+    database_client: databases.Database,
+) -> None:
+    """Validate a measurement message and write it to the database."""
+    try:
+        measurement = validation.Measurement(**payload)
+        receipt_timestamp = utils.timestamp()
+        for key, value in measurement.values.items():
+            # TODO choose corresponding table based on key
+            await database_client.execute(
+                query=MEASUREMENTS.insert(),
+                values={
+                    "node_identifier": measurement.node_identifier,
+                    "measurement_timestamp": measurement.timestamp,
+                    "receipt_timestamp": receipt_timestamp,
+                    key: value,
+                },
+            )
+    except (TypeError, ValueError) as e:
+        # TODO still save `node_identifier` and `receipt_timestamp` in database?
+        # -> works only if node_identifier is inferred from sender ID
+        # Like this, we can show the timestamp of last message in the node status, even
+        # if it was invalid
+        logger.warning(f"[MQTT] [TOPIC:measurements] Invalid message: {e}")
+    except Exception as e:
+        # TODO log database error and rollback
+        logger.warning(f"[MQTT] [TOPIC:measurements] Failed to write: {e}")
 
 
 async def listen_and_write(
@@ -46,26 +77,22 @@ async def listen_and_write(
 ) -> typing.NoReturn:
     """Listen to incoming sensor measurements and write them to the database.
 
-    - Measurements cannot really be meaningfully validated except for their schema
-    - TODO Dump messages that don't pass validation > log > show in status as timestamp
-      of last message, but also that last message was faulty
     - TODO Allow nodes to send measurements for only part of all values (e.g. when one
       of multiple sensors breaks, different node architectures, etc.)
     - TODO Use sender ID as "node" value?
     """
     async with mqtt_client.unfiltered_messages() as messages:
         await mqtt_client.subscribe("measurements")
-        logger.info(f'Subscribed to MQTT topic "measurements"')
+        logger.info(f"[MQTT] [TOPIC:measurements] Subscribed")
+        # TODO subscribe to more topics here
+
         async for message in messages:
             payload = _decode_payload(message.payload)
-            logger.info(f"Received message: {payload} (topic: {message.topic})")
-            # write measurement to database
-            await database_client.execute(
-                query=MEASUREMENTS.insert(),
-                values={
-                    "node": payload["node"],
-                    "measurement_timestamp": payload["timestamp"],
-                    "receipt_timestamp": utils.timestamp(),
-                    "value": payload["value"],
-                },
-            )
+            logger.info(f"[MQTT] [TOPIC:{message.topic}] Received message: {payload}")
+            match message.topic:
+                case "measurements":
+                    await _process_measurement_payload(payload, database_client)
+                case _:
+                    logger.warning(
+                        f"[MQTT] [TOPIC:{message.topic}] Could not match topic"
+                    )

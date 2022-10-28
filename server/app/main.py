@@ -11,11 +11,11 @@ import starlette.routing
 
 import app.database as database
 import app.errors as errors
-import app.models as models
 import app.mqtt as mqtt
 import app.settings as settings
 import app.utils as utils
-from app.database import MEASUREMENTS
+import app.validation as validation
+from app.database import CONFIGURATIONS, MEASUREMENTS
 from app.logs import logger
 
 
@@ -26,11 +26,11 @@ async def get_status(request):
     import random
 
     payload = {
-        "node": "kabuto",
+        "node_identifier": "kabuto",
         "timestamp": utils.timestamp(),
-        "value": random.randint(0, 2**10),
+        "values": {"value": random.randint(0, 2**10)},
     }
-    await mqtt.send(mqtt_client, payload, "measurements")
+    await mqtt.send(payload, "measurements", mqtt_client)
 
     return starlette.responses.JSONResponse(
         {
@@ -42,40 +42,46 @@ async def get_status(request):
 
 
 async def get_measurements(request):
-    """Return sensor measurements sorted chronologically, optionally filtered."""
+    """Return measurements sorted chronologically, optionally filtered."""
 
     # TODO Simplify this part somehow so that we don't have to duplicate it
     try:
-        # TODO Use one model for body/query/...
-        request = models.GetMeasurementsRequest(**request.query_params)
+        # TODO Use one model for body/query/... (with inheritance?)
+        request = validation.GetMeasurementsRequest(**request.query_params)
     except pydantic.ValidationError:
-        # TODO Include specific pydantic error message
+        # TODO Include specific pydantic/attrs error message
         logger.warning("GET /measurements: InvalidSyntaxError")
         raise errors.InvalidSyntaxError()
 
     # Define default columns and conditions
+    # TODO move this into validation, and set some sensible defaults, e.g. limit=64
     columns = [
         column
-        for column in MEASUREMENTS.columns.keys()
-        if column not in ["receipt_timestamp"]
+        for column in MEASUREMENTS.columns
+        if column not in [MEASUREMENTS.columns.receipt_timestamp]
     ]
     conditions = []
 
     # Build customized database query from query parameters
     if request.nodes is not None:
         conditions.append(
-            sa.or_(*[MEASUREMENTS.columns.node == node for node in request.nodes])
+            sa.or_(
+                *[
+                    MEASUREMENTS.columns.node_identifier == node_identifier
+                    for node_identifier in request.nodes
+                ]
+            )
         )
     if request.values is not None:
         columns = [
-            MEASUREMENTS.columns.node,
+            MEASUREMENTS.columns.node_identifier,
             MEASUREMENTS.columns.measurement_timestamp,
             *[
                 sa.column(value)
-                for value in request.values
-                if value
+                for value_identifier in request.values
+                if value_identifier
                 in set(MEASUREMENTS.columns.keys())
-                - {"node", "measurement_timestamp", "receipt_timestamp"}
+                - {"node_identifier", "measurement_timestamp", "receipt_timestamp"}
             ],
         ]
     if request.start_timestamp is not None:
@@ -92,6 +98,7 @@ async def get_measurements(request):
     result = await database_client.fetch_all(
         query=(
             sa.select(columns)
+            .select_from(MEASUREMENTS)
             .where(sa.and_(*conditions))
             .order_by(sa.asc(MEASUREMENTS.columns.measurement_timestamp))
             .offset(request.skip)
