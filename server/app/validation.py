@@ -64,19 +64,23 @@ class GetMeasurementsRequest(BaseModel):
         return v
 
 
-TIMESTAMP_VALIDATOR = [
+def convert_query_string_to_list(string: str) -> list[str]:
+    return string.split(",")
+
+
+TIMESTAMP_VALIDATOR = attrs.validators.and_(
     attrs.validators.instance_of(int),
     attrs.validators.ge(0),
     attrs.validators.lt(Limit.MAXINT4),
-]
-NODE_IDENTIFIER_VALIDATOR = [
+)
+NODE_IDENTIFIER_VALIDATOR = attrs.validators.and_(
     attrs.validators.instance_of(str),
     attrs.validators.matches_re(Pattern.NODE_IDENTIFIER),
-]
-VALUE_IDENTIFIER_VALIDATOR = [
+)
+VALUE_IDENTIFIER_VALIDATOR = attrs.validators.and_(
     attrs.validators.instance_of(str),
     attrs.validators.matches_re(Pattern.VALUE_IDENTIFIER),
-]
+)
 
 
 @attrs.frozen
@@ -86,7 +90,23 @@ class Measurement:
     values: dict[str, int | float] = attrs.field(
         validator=attrs.validators.deep_mapping(
             mapping_validator=attrs.validators.instance_of(dict),
-            key_validator=attrs.validators.and_(*VALUE_IDENTIFIER_VALIDATOR),
+            key_validator=VALUE_IDENTIFIER_VALIDATOR,
+            # TODO validate the values more thoroughly for min and max limits
             value_validator=attrs.validators.instance_of(int | float),
         )
+    )
+
+
+@attrs.frozen
+class GetNodesRequest:
+
+    # TODO split into query and body
+    # TODO make nodes optional
+
+    nodes: list[str] = attrs.field(
+        converter=convert_query_string_to_list,
+        validator=attrs.validators.deep_iterable(
+            iterable_validator=attrs.validators.instance_of(list),
+            member_validator=NODE_IDENTIFIER_VALIDATOR,
+        ),
     )
