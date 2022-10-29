@@ -43,22 +43,9 @@ async def get_status(request):
 
 async def get_sensors(request):
     """Return status and configuration of sensors."""
+    request = await validation.validate(request, validation.GetSensorsRequest)
 
     # TODO Include last seen timestamp / last measurement timestamp
-
-    try:
-        import json
-
-        body = await request.body()
-        body = {} if len(body) == 0 else json.loads(body.decode())
-
-        request = validation.GetSensorsRequest(
-            request.query_params,
-            body,
-        )
-    except (TypeError, ValueError) as e:
-        logger.warning(f"[HTTP] [GET /sensors] Invalid request: {e}")
-        raise errors.InvalidSyntaxError()
 
     conditions = []
 

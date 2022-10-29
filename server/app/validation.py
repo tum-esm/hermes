@@ -1,8 +1,13 @@
-import enum
-
 import abc
+import enum
+import json
+
 import attrs
 import pydantic
+import starlette
+
+import app.errors as errors
+from app.logs import logger
 
 ########################################################################################
 # Constants
@@ -96,7 +101,7 @@ VALUE_IDENTIFIER_VALIDATOR = attrs.validators.and_(
 
 
 ########################################################################################
-# Route validation base classes
+# Route validation base classes and functions
 ########################################################################################
 
 
@@ -120,6 +125,21 @@ class _Request(abc.ABC):
     @abc.abstractmethod
     def body(self) -> _RequestBody:
         pass
+
+
+async def validate(
+    request: starlette.requests.Request,
+    schema: type[_Request],
+) -> _Request:
+    """Validate a request against the given attrs schema."""
+    try:
+        body = await request.body()
+        body = {} if len(body) == 0 else json.loads(body.decode())
+        return schema(request.query_params, body)
+    except (TypeError, ValueError) as e:
+        # TODO Improve log message somehow
+        logger.warning(f"[HTTP] InvalidSyntaxError: {e}")
+        raise errors.InvalidSyntaxError()
 
 
 ########################################################################################
