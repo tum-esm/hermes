@@ -54,17 +54,17 @@ async def _process_measurement_payload(
             await database_client.execute(
                 query=MEASUREMENTS.insert(),
                 values={
-                    "node_identifier": measurement.node_identifier,
+                    "sensor_identifier": measurement.sensor_identifier,
                     "measurement_timestamp": measurement.timestamp,
                     "receipt_timestamp": receipt_timestamp,
                     key: value,
                 },
             )
     except (TypeError, ValueError) as e:
-        # TODO still save `node_identifier` and `receipt_timestamp` in database?
-        # -> works only if node_identifier is inferred from sender ID
-        # Like this, we can show the timestamp of last message in the node status, even
-        # if it was invalid
+        # TODO still save `sensor_identifier` and `receipt_timestamp` in database?
+        # -> works only if sensor_identifier is inferred from sender ID
+        # Like this, we can show the timestamp of last message in the sensor status,
+        # even if it was invalid
         logger.warning(f"[MQTT] [TOPIC:measurements] Invalid message: {e}")
     except Exception as e:
         # TODO log database error and rollback
@@ -77,9 +77,9 @@ async def listen_and_write(
 ) -> typing.NoReturn:
     """Listen to incoming sensor measurements and write them to the database.
 
-    - TODO Allow nodes to send measurements for only part of all values (e.g. when one
-      of multiple sensors breaks, different node architectures, etc.)
-    - TODO Use sender ID as "node" value?
+    - TODO Allow sensors to send measurements for only part of all values (e.g. when one
+      of multiple sensors breaks, different sensor architectures, etc.)
+    - TODO Use sender ID as "sensor" value?
     """
     async with mqtt_client.unfiltered_messages() as messages:
         await mqtt_client.subscribe("measurements")

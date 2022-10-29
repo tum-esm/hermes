@@ -14,7 +14,7 @@ class Limit(int, enum.Enum):
 
 
 class Pattern(str, enum.Enum):
-    NODE_IDENTIFIER = r"^(?!-)(?!.*--)[a-z0-9-]{1,64}(?<!-)$"
+    SENSOR_IDENTIFIER = r"^(?!-)(?!.*--)[a-z0-9-]{1,64}(?<!-)$"
     VALUE_IDENTIFIER = r"^(?!_)(?!.*__)[a-z0-9_]{1,64}(?<!_)$"
 
 
@@ -23,7 +23,7 @@ class Pattern(str, enum.Enum):
 ########################################################################################
 
 
-NodeIdentifier = pydantic.constr(regex=Pattern.NODE_IDENTIFIER.value)
+SensorIdentifier = pydantic.constr(regex=Pattern.SENSOR_IDENTIFIER.value)
 ValueIdentifier = pydantic.constr(regex=Pattern.VALUE_IDENTIFIER.value)
 Timestamp = pydantic.conint(ge=0, lt=Limit.MAXINT4)
 
@@ -44,14 +44,14 @@ class BaseModel(pydantic.BaseModel):
 
 
 class GetMeasurementsRequest(BaseModel):
-    nodes: pydantic.conlist(item_type=NodeIdentifier, unique_items=True) = None
+    sensors: pydantic.conlist(item_type=SensorIdentifier, unique_items=True) = None
     values: pydantic.conlist(item_type=ValueIdentifier, unique_items=True) = None
     start_timestamp: Timestamp = None
     end_timestamp: Timestamp = None
     skip: pydantic.conint(ge=0, lt=Limit.MAXINT4) = None
     limit: pydantic.conint(ge=0, lt=Limit.MAXINT4) = None
 
-    @pydantic.validator("nodes", "values", pre=True)
+    @pydantic.validator("sensors", "values", pre=True)
     def transform_string_to_list(cls, v, values):
         if isinstance(v, str):
             return v.split(",")
@@ -73,9 +73,9 @@ TIMESTAMP_VALIDATOR = attrs.validators.and_(
     attrs.validators.ge(0),
     attrs.validators.lt(Limit.MAXINT4),
 )
-NODE_IDENTIFIER_VALIDATOR = attrs.validators.and_(
+SENSOR_IDENTIFIER_VALIDATOR = attrs.validators.and_(
     attrs.validators.instance_of(str),
-    attrs.validators.matches_re(Pattern.NODE_IDENTIFIER),
+    attrs.validators.matches_re(Pattern.SENSOR_IDENTIFIER),
 )
 VALUE_IDENTIFIER_VALIDATOR = attrs.validators.and_(
     attrs.validators.instance_of(str),
@@ -85,7 +85,7 @@ VALUE_IDENTIFIER_VALIDATOR = attrs.validators.and_(
 
 @attrs.frozen
 class Measurement:
-    node_identifier: str = attrs.field(validator=NODE_IDENTIFIER_VALIDATOR)
+    sensor_identifier: str = attrs.field(validator=SENSOR_IDENTIFIER_VALIDATOR)
     timestamp: int = attrs.field(validator=TIMESTAMP_VALIDATOR)
     values: dict[str, int | float] = attrs.field(
         validator=attrs.validators.deep_mapping(
@@ -98,15 +98,15 @@ class Measurement:
 
 
 @attrs.frozen
-class GetNodesRequest:
+class GetSensorsRequest:
 
     # TODO split into query and body
-    # TODO make nodes optional
+    # TODO make sensors query parameter optional
 
-    nodes: list[str] = attrs.field(
+    sensors: list[str] = attrs.field(
         converter=convert_query_string_to_list,
         validator=attrs.validators.deep_iterable(
             iterable_validator=attrs.validators.instance_of(list),
-            member_validator=NODE_IDENTIFIER_VALIDATOR,
+            member_validator=SENSOR_IDENTIFIER_VALIDATOR,
         ),
     )
