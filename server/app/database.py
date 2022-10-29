@@ -56,7 +56,7 @@ MEASUREMENTS = sa.Table(
         sa.ForeignKey(
             CONFIGURATIONS.columns.sensor_identifier,
             onupdate="CASCADE",
-            ondelete="CASCADE",
+            ondelete="CASCADE",  # cascade is so fucking sexy
         ),
         nullable=False,
     ),
