@@ -1,5 +1,6 @@
 import enum
 
+import abc
 import attrs
 import pydantic
 
@@ -97,10 +98,31 @@ class Measurement:
     )
 
 
-@attrs.frozen
-class GetSensorsRequest:
+class _RequestBody:
+    pass
 
-    # TODO split into query and body
+
+class _RequestQuery:
+    pass
+
+
+class _Request(abc.ABC):
+    """Abstract class for request validation models."""
+
+    @property
+    @abc.abstractmethod
+    def query(self) -> _RequestQuery:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def body(self) -> _RequestBody:
+        pass
+
+
+@attrs.frozen
+class GetSensorsRequestQuery(_RequestQuery):
+
     # TODO make sensors query parameter optional
 
     sensors: list[str] = attrs.field(
@@ -109,4 +131,19 @@ class GetSensorsRequest:
             iterable_validator=attrs.validators.instance_of(list),
             member_validator=SENSOR_IDENTIFIER_VALIDATOR,
         ),
+    )
+
+
+@attrs.frozen
+class GetSensorsRequestBody(_RequestBody):
+    pass
+
+
+@attrs.frozen
+class GetSensorsRequest(_Request):
+    query: GetSensorsRequestQuery = attrs.field(
+        converter=lambda x: GetSensorsRequestQuery(**x),
+    )
+    body: GetSensorsRequestBody = attrs.field(
+        converter=lambda x: GetSensorsRequestBody(**x),
     )
