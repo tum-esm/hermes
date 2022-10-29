@@ -26,7 +26,7 @@ async def get_status(request):
     import random
 
     payload = {
-        "node_identifier": "kabuto",
+        "sensor_identifier": "kabuto",
         "timestamp": utils.timestamp(),
         "values": {"value": random.randint(0, 2**10)},
     }
@@ -41,26 +41,26 @@ async def get_status(request):
     )
 
 
-async def get_nodes(request):
-    """Return status and configuration of nodes."""
+async def get_sensors(request):
+    """Return status and configuration of sensors."""
 
     # TODO Include last seen timestamp / last measurement timestamp
 
     try:
-        request = validation.GetNodesRequest(**request.query_params)
+        request = validation.GetSensorsRequest(**request.query_params)
     except (TypeError, ValueError) as e:
-        logger.warning(f"[HTTP] [GET /nodes] Invalid request: {e}")
+        logger.warning(f"[HTTP] [GET /sensors] Invalid request: {e}")
         raise errors.InvalidSyntaxError()
 
     conditions = []
 
     # duplicated from get_measurements -> move to some own query (builder) module?
-    if request.nodes is not None:
+    if request.sensors is not None:
         conditions.append(
             sa.or_(
                 *[
-                    CONFIGURATIONS.columns.node_identifier == node_identifier
-                    for node_identifier in request.nodes
+                    CONFIGURATIONS.columns.sensor_identifier == sensor_identifier
+                    for sensor_identifier in request.sensors
                 ]
             )
         )
@@ -70,7 +70,7 @@ async def get_nodes(request):
             sa.select(CONFIGURATIONS.columns)
             .select_from(CONFIGURATIONS)
             .where(sa.and_(*conditions))
-            .order_by(sa.asc(CONFIGURATIONS.columns.node_identifier))
+            .order_by(sa.asc(CONFIGURATIONS.columns.sensor_identifier))
         )
     )
     return starlette.responses.JSONResponse(database.dictify(result))
@@ -98,25 +98,25 @@ async def get_measurements(request):
     conditions = []
 
     # Build customized database query from query parameters
-    if request.nodes is not None:
+    if request.sensors is not None:
         conditions.append(
             sa.or_(
                 *[
-                    MEASUREMENTS.columns.node_identifier == node_identifier
-                    for node_identifier in request.nodes
+                    MEASUREMENTS.columns.sensor_identifier == sensor_identifier
+                    for sensor_identifier in request.sensors
                 ]
             )
         )
     if request.values is not None:
         columns = [
-            MEASUREMENTS.columns.node_identifier,
+            MEASUREMENTS.columns.sensor_identifier,
             MEASUREMENTS.columns.measurement_timestamp,
             *[
                 sa.column(value)
                 for value_identifier in request.values
                 if value_identifier
                 in set(MEASUREMENTS.columns.keys())
-                - {"node_identifier", "measurement_timestamp", "receipt_timestamp"}
+                - {"sensor_identifier", "measurement_timestamp", "receipt_timestamp"}
             ],
         ]
     if request.start_timestamp is not None:
@@ -182,8 +182,8 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
         starlette.routing.Route(
-            path="/nodes",
-            endpoint=get_nodes,
+            path="/sensors",
+            endpoint=get_sensors,
             methods=["GET"],
         ),
         starlette.routing.Route(

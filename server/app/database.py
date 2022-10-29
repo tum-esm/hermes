@@ -38,7 +38,7 @@ CONFIGURATIONS = sa.Table(
     "configurations",
     metadata,
     sa.Column(
-        "node_identifier",
+        "sensor_identifier",
         sa.String(length=validation.Limit.MEDIUM),
         primary_key=True,
     ),
@@ -51,10 +51,10 @@ MEASUREMENTS = sa.Table(
     "measurements",
     metadata,
     sa.Column(
-        "node_identifier",
+        "sensor_identifier",
         sa.String(length=validation.Limit.MEDIUM),
         sa.ForeignKey(
-            CONFIGURATIONS.columns.node_identifier,
+            CONFIGURATIONS.columns.sensor_identifier,
             onupdate="CASCADE",
             ondelete="CASCADE",
         ),
