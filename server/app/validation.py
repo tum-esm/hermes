@@ -65,8 +65,19 @@ class GetMeasurementsRequest(BaseModel):
         return v
 
 
+########################################################################################
+# Attrs converters
+########################################################################################
+
+
 def convert_query_string_to_list(string: str) -> list[str]:
-    return string.split(",")
+    # split(",") returns [""] if string is empty, and we don't want that
+    return string.split(",") if string else []
+
+
+########################################################################################
+# Attrs validators
+########################################################################################
 
 
 TIMESTAMP_VALIDATOR = attrs.validators.and_(
@@ -84,25 +95,16 @@ VALUE_IDENTIFIER_VALIDATOR = attrs.validators.and_(
 )
 
 
-@attrs.frozen
-class Measurement:
-    sensor_identifier: str = attrs.field(validator=SENSOR_IDENTIFIER_VALIDATOR)
-    timestamp: int = attrs.field(validator=TIMESTAMP_VALIDATOR)
-    values: dict[str, int | float] = attrs.field(
-        validator=attrs.validators.deep_mapping(
-            mapping_validator=attrs.validators.instance_of(dict),
-            key_validator=VALUE_IDENTIFIER_VALIDATOR,
-            # TODO validate the values more thoroughly for min and max limits
-            value_validator=attrs.validators.instance_of(int | float),
-        )
-    )
-
-
-class _RequestBody:
-    pass
+########################################################################################
+# Route validation base classes
+########################################################################################
 
 
 class _RequestQuery:
+    pass
+
+
+class _RequestBody:
     pass
 
 
@@ -120,12 +122,15 @@ class _Request(abc.ABC):
         pass
 
 
+########################################################################################
+# Route validation
+########################################################################################
+
+
 @attrs.frozen
 class GetSensorsRequestQuery(_RequestQuery):
-
-    # TODO make sensors query parameter optional
-
     sensors: list[str] = attrs.field(
+        default="",
         converter=convert_query_string_to_list,
         validator=attrs.validators.deep_iterable(
             iterable_validator=attrs.validators.instance_of(list),
@@ -146,4 +151,23 @@ class GetSensorsRequest(_Request):
     )
     body: GetSensorsRequestBody = attrs.field(
         converter=lambda x: GetSensorsRequestBody(**x),
+    )
+
+
+########################################################################################
+# MQTT validation
+########################################################################################
+
+
+@attrs.frozen
+class Measurement:
+    sensor_identifier: str = attrs.field(validator=SENSOR_IDENTIFIER_VALIDATOR)
+    timestamp: int = attrs.field(validator=TIMESTAMP_VALIDATOR)
+    values: dict[str, int | float] = attrs.field(
+        validator=attrs.validators.deep_mapping(
+            mapping_validator=attrs.validators.instance_of(dict),
+            key_validator=VALUE_IDENTIFIER_VALIDATOR,
+            # TODO validate the values more thoroughly for min and max limits
+            value_validator=attrs.validators.instance_of(int | float),
+        )
     )
