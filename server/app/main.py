@@ -73,15 +73,7 @@ async def get_sensors(request):
 
 async def get_measurements(request):
     """Return measurements sorted chronologically, optionally filtered."""
-
-    # TODO Simplify this part somehow so that we don't have to duplicate it
-    try:
-        # TODO Use one model for body/query/... (with inheritance?)
-        request = validation.GetMeasurementsRequest(**request.query_params)
-    except pydantic.ValidationError:
-        # TODO Include specific pydantic/attrs error message
-        logger.warning("GET /measurements: InvalidSyntaxError")
-        raise errors.InvalidSyntaxError()
+    request = await validation.validate(request, validation.GetMeasurementsRequest)
 
     # Define default columns and conditions
     # TODO move this into validation, and set some sensible defaults, e.g. limit=64
@@ -93,34 +85,36 @@ async def get_measurements(request):
     conditions = []
 
     # Build customized database query from query parameters
-    if request.sensors is not None:
+    if request.query.sensors is not None:
         conditions.append(
             sa.or_(
                 *[
                     MEASUREMENTS.columns.sensor_identifier == sensor_identifier
-                    for sensor_identifier in request.sensors
+                    for sensor_identifier in request.query.sensors
                 ]
             )
         )
-    if request.values is not None:
+    if request.query.values is not None:
         columns = [
             MEASUREMENTS.columns.sensor_identifier,
             MEASUREMENTS.columns.measurement_timestamp,
             *[
                 sa.column(value)
-                for value_identifier in request.values
+                for value_identifier in request.query.values
                 if value_identifier
                 in set(MEASUREMENTS.columns.keys())
                 - {"sensor_identifier", "measurement_timestamp", "receipt_timestamp"}
             ],
         ]
-    if request.start_timestamp is not None:
+    if request.query.start_timestamp is not None:
         conditions.append(
-            MEASUREMENTS.columns.measurement_timestamp >= int(request.start_timestamp)
+            MEASUREMENTS.columns.measurement_timestamp
+            >= int(request.query.start_timestamp)
         )
-    if request.end_timestamp is not None:
+    if request.query.end_timestamp is not None:
         conditions.append(
-            MEASUREMENTS.columns.measurement_timestamp < int(request.end_timestamp)
+            MEASUREMENTS.columns.measurement_timestamp
+            < int(request.query.end_timestamp)
         )
 
     # Execute query and return results
@@ -131,8 +125,8 @@ async def get_measurements(request):
             .select_from(MEASUREMENTS)
             .where(sa.and_(*conditions))
             .order_by(sa.asc(MEASUREMENTS.columns.measurement_timestamp))
-            .offset(request.skip)
-            .limit(request.limit)
+            .offset(request.query.skip)
+            .limit(request.query.limit)
         )
     )
     return starlette.responses.JSONResponse(database.dictify(result))
