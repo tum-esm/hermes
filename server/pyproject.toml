@@ -11,7 +11,6 @@ starlette = "^0.21.0"
 uvicorn = {extras = ["standard"], version = "^0.18.3"}
 databases = {extras = ["asyncpg"], version = "^0.6.1"}
 SQLAlchemy = {extras = ["mypy"], version = "^1.4.42"}
-pydantic = "^1.10.2"
 asyncio-mqtt = "^0.13.0"
 attrs = "^22.1.0"
 

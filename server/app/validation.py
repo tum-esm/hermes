@@ -3,7 +3,6 @@ import enum
 import json
 
 import attrs
-import pydantic
 import starlette
 
 import app.errors as errors
