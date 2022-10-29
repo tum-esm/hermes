@@ -12,17 +12,18 @@ class ConfigSectionGeneral:
 
 @attrs.frozen
 class ConfigSectionMQTT:
-    base_topic: str = attrs.field(
-        validator=[val.instance_of(str), val.min_len(1), val.max_len(256)]  # type: ignore
-    )
     url: str = attrs.field(
         validator=[val.instance_of(str), val.min_len(3), val.max_len(256)]  # type: ignore
     )
+    port: int = attrs.field(validator=[val.instance_of(int), val.ge(0)])  # type: ignore
     identifier: str = attrs.field(
         validator=[val.instance_of(str), val.min_len(3), val.max_len(256)]  # type: ignore
     )
     password: str = attrs.field(
         validator=[val.instance_of(str), val.min_len(8), val.max_len(256)]  # type: ignore
+    )
+    base_topic: str = attrs.field(
+        validator=[val.instance_of(str), val.min_len(1), val.max_len(256)]  # type: ignore
     )
 
 
@@ -43,7 +44,6 @@ class Config:
     version: Literal["0.1.0"] = attrs.field(
         validator=[val.instance_of(str), val.in_(["0.1.0"])]
     )
-
     general: ConfigSectionGeneral = attrs.field(
         converter=get_config_section_general,
     )
@@ -57,10 +57,11 @@ if __name__ == "__main__":
         "version": "0.1.0",
         "general": {"node_id": "a-unique-node-id"},
         "mqtt": {
-            "base_topic": "/.../...",
             "url": "...",
+            "port": 8883,
             "identifier": "...",
             "password": "........",
+            "base_topic": "/.../...",
         },
     }
     config = Config(**example_config)  # type: ignore

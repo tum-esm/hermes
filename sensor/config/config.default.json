@@ -4,9 +4,10 @@
         "node_id": "a-unique-node-id"
     },
     "mqtt": {
-        "base_topic": "/.../...",
         "url": "...",
+        "port": 8883,
         "identifier": "...",
-        "password": "........"
+        "password": "........",
+        "base_topic": "/.../..."
     }
 }
