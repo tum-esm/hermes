@@ -3,7 +3,6 @@ import contextlib
 
 import asyncio_mqtt as aiomqtt
 import databases
-import pydantic
 import sqlalchemy as sa
 import starlette.applications
 import starlette.responses
