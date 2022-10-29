@@ -47,7 +47,15 @@ async def get_sensors(request):
     # TODO Include last seen timestamp / last measurement timestamp
 
     try:
-        request = validation.GetSensorsRequest(**request.query_params)
+        import json
+
+        body = await request.body()
+        body = {} if len(body) == 0 else json.loads(body.decode())
+
+        request = validation.GetSensorsRequest(
+            request.query_params,
+            body,
+        )
     except (TypeError, ValueError) as e:
         logger.warning(f"[HTTP] [GET /sensors] Invalid request: {e}")
         raise errors.InvalidSyntaxError()
@@ -55,12 +63,12 @@ async def get_sensors(request):
     conditions = []
 
     # duplicated from get_measurements -> move to some own query (builder) module?
-    if request.sensors is not None:
+    if request.query.sensors is not None:
         conditions.append(
             sa.or_(
                 *[
                     CONFIGURATIONS.columns.sensor_identifier == sensor_identifier
-                    for sensor_identifier in request.sensors
+                    for sensor_identifier in request.query.sensors
                 ]
             )
         )
