@@ -13,4 +13,4 @@ class _CustomError(starlette.exceptions.HTTPException):
 
 class InvalidSyntaxError(_CustomError):
     STATUS_CODE = 400
-    DETAIL = "invalid syntax"
+    DETAIL = "Invalid syntax"

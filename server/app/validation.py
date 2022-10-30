@@ -57,7 +57,9 @@ async def validate(
 
 
 class Limit(int, enum.Enum):
-    MEDIUM = 2**6  # 64
+    SMALL = 2**6  # 64
+    MEDIUM = 2**8  # 256
+    LARGE = 2**10  # 1024
     MAXINT4 = 2**31  # Maximum value signed 32-bit integer + 1
 
 
@@ -109,8 +111,9 @@ POSITIVE_INTEGER_VALIDATOR = attrs.validators.and_(
 # Attrs fields
 ########################################################################################
 
-# We could define these with default converters and validators, and optionally
-# pass additional converters and validators than run after the default ones.
+# Maybe we can define these with default converters and validators, and optionally:
+# - pass additional converters and validators than run after the default ones
+# - pass different default values
 
 POSITIVE_INTEGER_QUERY_FIELD = attrs.field(
     default=None,
@@ -168,7 +171,16 @@ class GetMeasurementsRequestQuery(_RequestQuery):
         ),
     )
     skip: int = POSITIVE_INTEGER_QUERY_FIELD
-    limit: int = POSITIVE_INTEGER_QUERY_FIELD
+    limit: int = attrs.field(
+        default=Limit.MEDIUM,
+        converter=attrs.converters.optional(int),
+        validator=attrs.validators.optional(
+            attrs.validators.and_(
+                POSITIVE_INTEGER_VALIDATOR,
+                attrs.validators.le(Limit.LARGE),
+            )
+        ),
+    )
 
 
 @attrs.frozen
