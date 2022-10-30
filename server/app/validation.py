@@ -108,13 +108,12 @@ POSITIVE_INTEGER_VALIDATOR = attrs.validators.and_(
 # Maybe we can define these with default converters and validators, and optionally:
 # - pass additional converters and validators than run after the default ones
 # - pass different default values
+# - automatically set converters and validators optional if default=None is set
 
 POSITIVE_INTEGER_QUERY_FIELD = attrs.field(
-    default=0,
+    default=None,
     converter=attrs.converters.optional(int),
-    validator=attrs.validators.optional(
-        attrs.validators.and_(POSITIVE_INTEGER_VALIDATOR)
-    ),
+    validator=attrs.validators.optional(POSITIVE_INTEGER_VALIDATOR),
 )
 
 
@@ -162,7 +161,7 @@ class GetMeasurementsRequestQuery(_RequestQuery):
     )
     start_timestamp: int = POSITIVE_INTEGER_QUERY_FIELD
     end_timestamp: int = attrs.field(
-        default=constants.Limit.MAXINT4 - 1,
+        default=None,
         converter=attrs.converters.optional(int),
         validator=attrs.validators.optional(
             attrs.validators.and_(
@@ -171,15 +170,17 @@ class GetMeasurementsRequestQuery(_RequestQuery):
             )
         ),
     )
-    skip: int = POSITIVE_INTEGER_QUERY_FIELD
+    skip: int = attrs.field(
+        default=0,
+        converter=int,
+        validator=POSITIVE_INTEGER_VALIDATOR,
+    )
     limit: int = attrs.field(
         default=constants.Limit.MEDIUM,
-        converter=attrs.converters.optional(int),
-        validator=attrs.validators.optional(
-            attrs.validators.and_(
-                POSITIVE_INTEGER_VALIDATOR,
-                attrs.validators.le(constants.Limit.LARGE),
-            )
+        converter=int,
+        validator=attrs.validators.and_(
+            POSITIVE_INTEGER_VALIDATOR,
+            attrs.validators.le(constants.Limit.LARGE),
         ),
     )
 
