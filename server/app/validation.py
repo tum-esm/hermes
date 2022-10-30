@@ -1,12 +1,13 @@
 import abc
-import enum
 import json
 
 import attrs
 import starlette
 
 import app.errors as errors
+import app.constants as constants
 from app.logs import logger
+from app.database import VALUE_IDENTIFIERS
 
 
 ########################################################################################
@@ -52,30 +53,23 @@ async def validate(
 
 
 ########################################################################################
-# Constants
-########################################################################################
-
-
-class Limit(int, enum.Enum):
-    SMALL = 2**6  # 64
-    MEDIUM = 2**8  # 256
-    LARGE = 2**10  # 1024
-    MAXINT4 = 2**31  # Maximum value signed 32-bit integer + 1
-
-
-class Pattern(str, enum.Enum):
-    SENSOR_IDENTIFIER = r"^(?!-)(?!.*--)[a-z0-9-]{1,64}(?<!-)$"
-    VALUE_IDENTIFIER = r"^(?!_)(?!.*__)[a-z0-9_]{1,64}(?<!_)$"
-
-
-########################################################################################
 # Attrs converters
 ########################################################################################
 
 
 def _convert_query_string_to_list(string: str) -> list[str]:
+    """Convert a comma-separated string to a list of strings."""
     # split(",") returns [""] if string is empty, and we don't want that
     return string.split(",") if string else []
+
+
+def _convert_only_existing_value_identifiers(values: list[str]) -> list[str]:
+    """Filter a list of strings for actually existing value identifiers."""
+    return [
+        value_identifier
+        for value_identifier in values
+        if value_identifier in VALUE_IDENTIFIERS
+    ]
 
 
 ########################################################################################
@@ -94,16 +88,16 @@ def _validate_end_timestamp_greater_equal_start_timestamp(
 
 SENSOR_IDENTIFIER_VALIDATOR = attrs.validators.and_(
     attrs.validators.instance_of(str),
-    attrs.validators.matches_re(Pattern.SENSOR_IDENTIFIER),
+    attrs.validators.matches_re(constants.Pattern.SENSOR_IDENTIFIER),
 )
 VALUE_IDENTIFIER_VALIDATOR = attrs.validators.and_(
     attrs.validators.instance_of(str),
-    attrs.validators.matches_re(Pattern.VALUE_IDENTIFIER),
+    attrs.validators.matches_re(constants.Pattern.VALUE_IDENTIFIER),
 )
 POSITIVE_INTEGER_VALIDATOR = attrs.validators.and_(
     attrs.validators.instance_of(int),
     attrs.validators.ge(0),
-    attrs.validators.lt(Limit.MAXINT4),
+    attrs.validators.lt(constants.Limit.MAXINT4),
 )
 
 
@@ -116,7 +110,7 @@ POSITIVE_INTEGER_VALIDATOR = attrs.validators.and_(
 # - pass different default values
 
 POSITIVE_INTEGER_QUERY_FIELD = attrs.field(
-    default=None,
+    default=0,
     converter=attrs.converters.optional(int),
     validator=attrs.validators.optional(
         attrs.validators.and_(POSITIVE_INTEGER_VALIDATOR)
@@ -126,6 +120,10 @@ POSITIVE_INTEGER_QUERY_FIELD = attrs.field(
 
 ########################################################################################
 # Route validation
+#
+# Guidelines:
+# - When lists of values are passed, ignore any invalid values
+# - When a single value is passed, raise an error if it is invalid
 ########################################################################################
 
 
@@ -152,8 +150,11 @@ class GetMeasurementsRequestQuery(_RequestQuery):
         ),
     )
     values: list[str] = attrs.field(
-        default="",
-        converter=_convert_query_string_to_list,
+        default=",".join(VALUE_IDENTIFIERS),
+        converter=attrs.converters.pipe(
+            _convert_query_string_to_list,
+            _convert_only_existing_value_identifiers,
+        ),
         validator=attrs.validators.deep_iterable(
             iterable_validator=attrs.validators.instance_of(list),
             member_validator=VALUE_IDENTIFIER_VALIDATOR,
@@ -161,7 +162,7 @@ class GetMeasurementsRequestQuery(_RequestQuery):
     )
     start_timestamp: int = POSITIVE_INTEGER_QUERY_FIELD
     end_timestamp: int = attrs.field(
-        default=None,
+        default=constants.Limit.MAXINT4 - 1,
         converter=attrs.converters.optional(int),
         validator=attrs.validators.optional(
             attrs.validators.and_(
@@ -172,12 +173,12 @@ class GetMeasurementsRequestQuery(_RequestQuery):
     )
     skip: int = POSITIVE_INTEGER_QUERY_FIELD
     limit: int = attrs.field(
-        default=Limit.MEDIUM,
+        default=constants.Limit.MEDIUM,
         converter=attrs.converters.optional(int),
         validator=attrs.validators.optional(
             attrs.validators.and_(
                 POSITIVE_INTEGER_VALIDATOR,
-                attrs.validators.le(Limit.LARGE),
+                attrs.validators.le(constants.Limit.LARGE),
             )
         ),
     )
