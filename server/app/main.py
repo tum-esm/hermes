@@ -44,27 +44,28 @@ async def get_sensors(request):
     """Return status and configuration of sensors."""
     request = await validation.validate(request, validation.GetSensorsRequest)
 
-    # TODO Include last seen timestamp / last measurement timestamp
+    # TODO Enrich with
+    # - last seen timestamp / last measurement timestamp
+    # - activity timeline
+    # - last measurement
 
-    conditions = []
-
-    # duplicated from get_measurements -> move to some own query (builder) module?
-    if request.query.sensors is not None:
-        conditions.append(
-            sa.or_(
-                *[
-                    CONFIGURATIONS.columns.sensor_identifier == sensor_identifier
-                    for sensor_identifier in request.query.sensors
-                ]
-            )
-        )
-
+    # Define filter by sensor_identifier
+    # Duplicated from get_measurements -> move to some own query (builder) module?
+    conditions = [
+        sa.or_(
+            *[
+                MEASUREMENTS.c.sensor_identifier == sensor_identifier
+                for sensor_identifier in request.query.sensors
+            ]
+        ),
+    ]
+    # Execute query and return results
     result = await database_client.fetch_all(
         query=(
-            sa.select(CONFIGURATIONS.columns)
+            sa.select(CONFIGURATIONS.c)
             .select_from(CONFIGURATIONS)
             .where(sa.and_(*conditions))
-            .order_by(sa.asc(CONFIGURATIONS.columns.sensor_identifier))
+            .order_by(sa.asc(CONFIGURATIONS.c.sensor_identifier))
         )
     )
     return starlette.responses.JSONResponse(database.dictify(result))
@@ -74,48 +75,30 @@ async def get_measurements(request):
     """Return measurements sorted chronologically, optionally filtered."""
     request = await validation.validate(request, validation.GetMeasurementsRequest)
 
-    # Define default columns and conditions
-    # TODO move this into validation, and set some sensible defaults, e.g. limit=64
+    # Define the returned columns
     columns = [
-        column
-        for column in MEASUREMENTS.columns
-        if column not in [MEASUREMENTS.columns.receipt_timestamp]
+        MEASUREMENTS.c.sensor_identifier,
+        MEASUREMENTS.c.measurement_timestamp,
+        *[sa.column(value_identifier) for value_identifier in request.query.values],
     ]
-    conditions = []
-
-    # Build customized database query from query parameters
-    if request.query.sensors is not None:
-        conditions.append(
-            sa.or_(
-                *[
-                    MEASUREMENTS.columns.sensor_identifier == sensor_identifier
-                    for sensor_identifier in request.query.sensors
-                ]
-            )
-        )
-    if request.query.values is not None:
-        columns = [
-            MEASUREMENTS.columns.sensor_identifier,
-            MEASUREMENTS.columns.measurement_timestamp,
+    # Define filter by sensor_identifier
+    conditions = [
+        sa.or_(
             *[
-                sa.column(value)
-                for value_identifier in request.query.values
-                if value_identifier
-                in set(MEASUREMENTS.columns.keys())
-                - {"sensor_identifier", "measurement_timestamp", "receipt_timestamp"}
-            ],
-        ]
+                MEASUREMENTS.c.sensor_identifier == sensor_identifier
+                for sensor_identifier in request.query.sensors
+            ]
+        ),
+    ]
+    # Define filter by measurement_timestamp
     if request.query.start_timestamp is not None:
         conditions.append(
-            MEASUREMENTS.columns.measurement_timestamp
-            >= int(request.query.start_timestamp)
+            MEASUREMENTS.c.measurement_timestamp >= int(request.query.start_timestamp)
         )
     if request.query.end_timestamp is not None:
         conditions.append(
-            MEASUREMENTS.columns.measurement_timestamp
-            < int(request.query.end_timestamp)
+            MEASUREMENTS.c.measurement_timestamp < int(request.query.end_timestamp)
         )
-
     # Execute query and return results
     # TODO Think about streaming here
     result = await database_client.fetch_all(
@@ -123,7 +106,7 @@ async def get_measurements(request):
             sa.select(columns)
             .select_from(MEASUREMENTS)
             .where(sa.and_(*conditions))
-            .order_by(sa.asc(MEASUREMENTS.columns.measurement_timestamp))
+            .order_by(sa.asc(MEASUREMENTS.c.measurement_timestamp))
             .offset(request.query.skip)
             .limit(request.query.limit)
         )
