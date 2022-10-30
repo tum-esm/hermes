@@ -5,7 +5,7 @@ import sqlalchemy as sa
 import sqlalchemy.dialects.postgresql
 
 import app.settings as settings
-import app.validation as validation
+import app.constants as constants
 
 
 def dictify(result: typing.Sequence[databases.interfaces.Record]) -> typing.List[dict]:
@@ -39,7 +39,7 @@ CONFIGURATIONS = sa.Table(
     metadata,
     sa.Column(
         "sensor_identifier",
-        sa.String(length=validation.Limit.MEDIUM),
+        sa.String(length=constants.Limit.MEDIUM),
         primary_key=True,
     ),
     sa.Column("creation_timestamp", sa.Integer, nullable=False),
@@ -52,7 +52,7 @@ MEASUREMENTS = sa.Table(
     metadata,
     sa.Column(
         "sensor_identifier",
-        sa.String(length=validation.Limit.MEDIUM),
+        sa.String(length=constants.Limit.MEDIUM),
         sa.ForeignKey(
             CONFIGURATIONS.columns.sensor_identifier,
             onupdate="CASCADE",
@@ -64,3 +64,9 @@ MEASUREMENTS = sa.Table(
     sa.Column("receipt_timestamp", sa.Integer, nullable=False),
     sa.Column("value", sa.Integer, nullable=False),
 )
+
+VALUE_IDENTIFIERS = set(MEASUREMENTS.columns.keys()) - {
+    "sensor_identifier",
+    "measurement_timestamp",
+    "receipt_timestamp",
+}
