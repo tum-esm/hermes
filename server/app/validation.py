@@ -4,10 +4,10 @@ import json
 import attrs
 import starlette
 
-import app.errors as errors
 import app.constants as constants
-from app.logs import logger
+import app.errors as errors
 from app.database import VALUE_IDENTIFIERS
+from app.logs import logger
 
 
 ########################################################################################

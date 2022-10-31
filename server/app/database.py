@@ -4,8 +4,8 @@ import databases.interfaces
 import sqlalchemy as sa
 import sqlalchemy.dialects.postgresql
 
-import app.settings as settings
 import app.constants as constants
+import app.settings as settings
 
 
 def dictify(result: typing.Sequence[databases.interfaces.Record]) -> typing.List[dict]:
@@ -62,6 +62,7 @@ MEASUREMENTS = sa.Table(
     ),
     sa.Column("measurement_timestamp", sa.Integer, nullable=False),
     sa.Column("receipt_timestamp", sa.Integer, nullable=False),
+    # TODO implement as JSON for maximum flexibility?
     sa.Column("value", sa.Integer, nullable=False),
 )
 
