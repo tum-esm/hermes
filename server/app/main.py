@@ -14,7 +14,7 @@ import app.mqtt as mqtt
 import app.settings as settings
 import app.utils as utils
 import app.validation as validation
-from app.database import CONFIGURATIONS, MEASUREMENTS
+from app.database import CONF, MEAS
 from app.logs import logger
 
 
@@ -45,29 +45,39 @@ async def get_sensors(request):
     request = await validation.validate(request, validation.GetSensorsRequest)
 
     # TODO Enrich with
-    # - last seen timestamp / last measurement timestamp
+    # V last measurement timestamp
     # - activity timeline
     # - last measurement
+    # - last sensor health update
 
     # Define filter by sensor_identifier
-    # Duplicated from get_measurements -> move to some own query (builder) module?
+    # TODO Duplicated from get_measurements -> move to some own query (builder) module?
     conditions = [
         sa.or_(
-            *[
-                MEASUREMENTS.c.sensor_identifier == sensor_identifier
-                for sensor_identifier in request.query.sensors
-            ]
+            MEAS.c.sensor_identifier == sensor_identifier
+            for sensor_identifier in request.query.sensors
         ),
     ]
-    # Execute query and return results
-    result = await database_client.fetch_all(
-        query=(
-            sa.select(CONFIGURATIONS.c)
-            .select_from(CONFIGURATIONS)
-            .where(sa.and_(*conditions))
-            .order_by(sa.asc(CONFIGURATIONS.c.sensor_identifier))
-        )
+    # Build query
+    latest_measurements = (
+        sa.select(MEAS.c)
+        .select_from(MEAS)
+        .order_by(MEAS.c.sensor_identifier.asc(), MEAS.c.measurement_timestamp.asc())
+        .distinct(MEAS.c.sensor_identifier)
     )
+    query = (
+        sa.select([*CONF.c, latest_measurements.c.measurement_timestamp])
+        .select_from(
+            CONF.join(
+                latest_measurements,
+                CONF.c.sensor_identifier == latest_measurements.c.sensor_identifier,
+            )
+        )
+        .where(sa.and_(*conditions))
+        .order_by(CONF.c.sensor_identifier.asc())
+    )
+    # Execute query and return results
+    result = await database_client.fetch_all(query=query)
     return starlette.responses.JSONResponse(database.dictify(result))
 
 
@@ -77,40 +87,38 @@ async def get_measurements(request):
 
     # Define the returned columns
     columns = [
-        MEASUREMENTS.c.sensor_identifier,
-        MEASUREMENTS.c.measurement_timestamp,
+        MEAS.c.sensor_identifier,
+        MEAS.c.measurement_timestamp,
         *[sa.column(value_identifier) for value_identifier in request.query.values],
     ]
     # Define filter by sensor_identifier
     conditions = [
         sa.or_(
-            *[
-                MEASUREMENTS.c.sensor_identifier == sensor_identifier
-                for sensor_identifier in request.query.sensors
-            ]
+            MEAS.c.sensor_identifier == sensor_identifier
+            for sensor_identifier in request.query.sensors
         ),
     ]
     # Define filter by measurement_timestamp
     if request.query.start_timestamp is not None:
         conditions.append(
-            MEASUREMENTS.c.measurement_timestamp >= int(request.query.start_timestamp)
+            MEAS.c.measurement_timestamp >= int(request.query.start_timestamp)
         )
     if request.query.end_timestamp is not None:
         conditions.append(
-            MEASUREMENTS.c.measurement_timestamp < int(request.query.end_timestamp)
+            MEAS.c.measurement_timestamp < int(request.query.end_timestamp)
         )
+    # Build query
+    query = (
+        sa.select(columns)
+        .select_from(MEAS)
+        .where(sa.and_(*conditions))
+        .order_by(MEAS.c.measurement_timestamp.asc())
+        .offset(request.query.skip)
+        .limit(request.query.limit)
+    )
     # Execute query and return results
     # TODO Think about streaming here
-    result = await database_client.fetch_all(
-        query=(
-            sa.select(columns)
-            .select_from(MEASUREMENTS)
-            .where(sa.and_(*conditions))
-            .order_by(sa.asc(MEASUREMENTS.c.measurement_timestamp))
-            .offset(request.query.skip)
-            .limit(request.query.limit)
-        )
-    )
+    result = await database_client.fetch_all(query=query)
     return starlette.responses.JSONResponse(database.dictify(result))
 
 

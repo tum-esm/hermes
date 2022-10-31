@@ -65,6 +65,9 @@ MEASUREMENTS = sa.Table(
     sa.Column("value", sa.Integer, nullable=False),
 )
 
+CONF = CONFIGURATIONS
+MEAS = MEASUREMENTS
+
 VALUE_IDENTIFIERS = set(MEASUREMENTS.columns.keys()) - {
     "sensor_identifier",
     "measurement_timestamp",
