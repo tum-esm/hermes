@@ -62,7 +62,7 @@ async def get_sensors(request):
     latest_measurements = (
         sa.select(MEAS.c)
         .select_from(MEAS)
-        .order_by(MEAS.c.sensor_identifier.asc(), MEAS.c.measurement_timestamp.asc())
+        .order_by(MEAS.c.sensor_identifier.asc(), MEAS.c.measurement_timestamp.desc())
         .distinct(MEAS.c.sensor_identifier)
     )
     query = (
@@ -71,6 +71,7 @@ async def get_sensors(request):
             CONF.join(
                 latest_measurements,
                 CONF.c.sensor_identifier == latest_measurements.c.sensor_identifier,
+                isouter=True,
             )
         )
         .where(sa.and_(*conditions))
