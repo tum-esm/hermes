@@ -21,6 +21,19 @@ isort = "^5.10.1"
 black = "^22.10.0"
 docformatter = "^1.5.0"
 
+[tool.black]
+preview = true
+
+[tool.isort]
+profile = "black"
+lines_after_imports = 2
+
+[tool.docformatter]
+in-place = true
+recursive = true
+wrap-summaries = 87
+wrap-descriptions = 87
+
 [tool.mypy]
 show_error_codes = true
 no_implicit_optional = true
