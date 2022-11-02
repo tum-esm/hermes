@@ -68,15 +68,12 @@ class Logger:
             f"{now} UTC{'' if utc_offset < 0 else '+'}{utc_offset} "
             + f"- {self.origin} - {level} - {message}\n"
         )
-        if self.just_print:
-            print(log_string, end="")
-        else:
-            with open(os.path.join(LOGS_DIR, f"{self.log_file_slug}.log"), "a") as f1:
-                f1.write(log_string)
+        with open(os.path.join(LOGS_DIR, f"{self.log_file_slug}.log"), "a") as f1:
+            f1.write(log_string)
 
         # Archive lines older than 60 minutes, every 10 minutes
         if (now - Logger.last_archive_time).total_seconds() > 600:
-            self.archive(keep_last_hour=True)
+            self.archive()
             Logger.last_archive_time = now
 
     def archive(self) -> None:
@@ -109,7 +106,7 @@ class Logger:
         if len(lines_to_be_archived) == 0:
             return
 
-        archive_log_date_groups: dict[str, dict[str, list[str]]] = {}
+        archive_log_date_groups: dict[str, list[str]] = {}
         line_date = lines_to_be_archived[0][:10].replace("-", "")
         for line in lines_to_be_archived:
             if log_line_has_time(line):
