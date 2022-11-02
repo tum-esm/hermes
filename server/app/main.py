@@ -15,7 +15,7 @@ import app.mqtt as mqtt
 import app.settings as settings
 import app.utils as utils
 import app.validation as validation
-from app.database import CONF, MEAS
+from app.database import CONFIGURATIONS, MEASUREMENTS
 from app.logs import logger
 
 
@@ -51,20 +51,18 @@ async def get_sensors(request):
     # - last measurement
     # - last sensor health update
 
-    # Define filter by sensor_identifier
-    # TODO Duplicated from get_measurements -> move to some own query (builder) module?
-    conditions = [
-        sa.or_(
-            MEAS.c.sensor_identifier == sensor_identifier
-            for sensor_identifier in request.query.sensors
-        ),
-    ]
+    # Define filters
+    conditions = []
+    conditions = database.filter_sensor_identifier(conditions, request)
     # Build query
     latest_measurements = (
-        sa.select(MEAS.c)
-        .select_from(MEAS)
-        .order_by(MEAS.c.sensor_identifier.asc(), MEAS.c.measurement_timestamp.desc())
-        .distinct(MEAS.c.sensor_identifier)
+        sa.select(MEASUREMENTS.c)
+        .select_from(MEASUREMENTS)
+        .order_by(
+            MEASUREMENTS.c.sensor_identifier.asc(),
+            MEASUREMENTS.c.measurement_timestamp.desc(),
+        )
+        .distinct(MEASUREMENTS.c.sensor_identifier)
     )
 
     timestamp = utils.timestamp()
@@ -77,13 +75,13 @@ async def get_sensors(request):
 
     rounded_timestamps = (
         sa.select(
-            MEAS.c.sensor_identifier,
-            sa.cast(func.div(MEAS.c.receipt_timestamp, window), sa.Integer).label(
-                "bucket"
-            ),
+            MEASUREMENTS.c.sensor_identifier,
+            sa.cast(
+                func.div(MEASUREMENTS.c.receipt_timestamp, window), sa.Integer
+            ).label("bucket"),
         )
-        .select_from(MEAS)
-        .where(MEAS.c.receipt_timestamp >= timestamps[0])
+        .select_from(MEASUREMENTS)
+        .where(MEASUREMENTS.c.receipt_timestamp >= timestamps[0])
     )
 
     buckets = (
@@ -108,28 +106,29 @@ async def get_sensors(request):
         .select_from(buckets)
         .group_by(buckets.c.sensor_identifier)
     )
-
     query = (
         sa.select(
-            *CONF.c,
+            *CONFIGURATIONS.c,
             latest_measurements.c.measurement_timestamp,
             activity.c.buckets,
             activity.c.counts,
         )
         .select_from(
-            CONF.join(
+            CONFIGURATIONS.join(
                 latest_measurements,
-                CONF.c.sensor_identifier == latest_measurements.c.sensor_identifier,
+                CONFIGURATIONS.c.sensor_identifier
+                == latest_measurements.c.sensor_identifier,
                 isouter=True,
             ).join(
                 activity,
-                CONF.c.sensor_identifier == activity.c.sensor_identifier,
+                CONFIGURATIONS.c.sensor_identifier == activity.c.sensor_identifier,
                 isouter=True,
             )
         )
         .where(sa.and_(*conditions))
-        .order_by(CONF.c.sensor_identifier.asc())
+        .order_by(CONFIGURATIONS.c.sensor_identifier.asc())
     )
+
     # Execute query and return results
     result = await database_client.fetch_all(query=query)
     return starlette.responses.JSONResponse(database.dictify(result))
@@ -141,32 +140,20 @@ async def get_measurements(request):
 
     # Define the returned columns
     columns = [
-        MEAS.c.sensor_identifier,
-        MEAS.c.measurement_timestamp,
+        MEASUREMENTS.c.sensor_identifier,
+        MEASUREMENTS.c.measurement_timestamp,
         *[sa.column(value_identifier) for value_identifier in request.query.values],
     ]
-    # Define filter by sensor_identifier
-    conditions = [
-        sa.or_(
-            MEAS.c.sensor_identifier == sensor_identifier
-            for sensor_identifier in request.query.sensors
-        ),
-    ]
-    # Define filter by measurement_timestamp
-    if request.query.start_timestamp is not None:
-        conditions.append(
-            MEAS.c.measurement_timestamp >= int(request.query.start_timestamp)
-        )
-    if request.query.end_timestamp is not None:
-        conditions.append(
-            MEAS.c.measurement_timestamp < int(request.query.end_timestamp)
-        )
+    # Define filters
+    conditions = []
+    conditions = database.filter_sensor_identifier(conditions, request)
+    conditions = database.filter_measurement_timestamp(conditions, request)
     # Build query
     query = (
         sa.select(columns)
-        .select_from(MEAS)
+        .select_from(MEASUREMENTS)
         .where(sa.and_(*conditions))
-        .order_by(MEAS.c.measurement_timestamp.asc())
+        .order_by(MEASUREMENTS.c.measurement_timestamp.asc())
         .offset(request.query.skip)
         .limit(request.query.limit)
     )

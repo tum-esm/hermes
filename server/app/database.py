@@ -26,6 +26,35 @@ CONFIGURATION = {
 
 
 ########################################################################################
+# Query helpers
+########################################################################################
+
+
+def filter_sensor_identifier(conditions, request):
+    """Add conditions to constrain the returned sensor identifiers."""
+    return conditions + [
+        sa.or_(
+            MEASUREMENTS.c.sensor_identifier == sensor_identifier
+            for sensor_identifier in request.query.sensors
+        ),
+    ]
+
+
+def filter_measurement_timestamp(conditions, request):
+    """Add conditions to constrain the returned measurement timestamps."""
+    res = []
+    if request.query.start_timestamp is not None:
+        res.append(
+            MEASUREMENTS.c.measurement_timestamp >= int(request.query.start_timestamp)
+        )
+    if request.query.end_timestamp is not None:
+        res.append(
+            MEASUREMENTS.c.measurement_timestamp < int(request.query.end_timestamp)
+        )
+    return conditions + res
+
+
+########################################################################################
 # Table schemas
 ########################################################################################
 
@@ -65,9 +94,6 @@ MEASUREMENTS = sa.Table(
     # TODO implement as JSON for maximum flexibility?
     sa.Column("value", sa.Integer, nullable=False),
 )
-
-CONF = CONFIGURATIONS
-MEAS = MEASUREMENTS
 
 VALUE_IDENTIFIERS = set(MEASUREMENTS.columns.keys()) - {
     "sensor_identifier",
