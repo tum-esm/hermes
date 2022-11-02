@@ -4,6 +4,7 @@ import contextlib
 import asyncio_mqtt as aiomqtt
 import databases
 import sqlalchemy as sa
+from sqlalchemy.sql import func
 import starlette.applications
 import starlette.responses
 import starlette.routing
@@ -65,12 +66,64 @@ async def get_sensors(request):
         .order_by(MEAS.c.sensor_identifier.asc(), MEAS.c.measurement_timestamp.desc())
         .distinct(MEAS.c.sensor_identifier)
     )
+
+    timestamp = utils.timestamp()
+    window = 24 * 60 * 60  # We aggregate over 24 hour buckets
+    # TODO buckets begin at UTC midnight -> maybe simply use last 24 hours?
+    timestamps = list(range((timestamp // window - 27) * window, timestamp, window))
+
+    # TODO remove
+    timestamps[0] = 0
+
+    rounded_timestamps = (
+        sa.select(
+            MEAS.c.sensor_identifier,
+            sa.cast(func.div(MEAS.c.receipt_timestamp, window), sa.Integer).label(
+                "bucket"
+            ),
+        )
+        .select_from(MEAS)
+        .where(MEAS.c.receipt_timestamp >= timestamps[0])
+    )
+
+    buckets = (
+        sa.select(
+            rounded_timestamps.c.sensor_identifier,
+            rounded_timestamps.c.bucket,
+            func.count(rounded_timestamps.c.sensor_identifier).label("count"),
+        )
+        .select_from(rounded_timestamps)
+        .group_by(rounded_timestamps.c.sensor_identifier, rounded_timestamps.c.bucket)
+        .order_by(rounded_timestamps.c.bucket.asc())
+    )
+
+    activity = (
+        sa.select(
+            [
+                buckets.c.sensor_identifier,
+                func.array_agg(buckets.c.bucket).label("buckets"),
+                func.array_agg(buckets.c.count).label("counts"),
+            ]
+        )
+        .select_from(buckets)
+        .group_by(buckets.c.sensor_identifier)
+    )
+
     query = (
-        sa.select([*CONF.c, latest_measurements.c.measurement_timestamp])
+        sa.select(
+            *CONF.c,
+            latest_measurements.c.measurement_timestamp,
+            activity.c.buckets,
+            activity.c.counts,
+        )
         .select_from(
             CONF.join(
                 latest_measurements,
                 CONF.c.sensor_identifier == latest_measurements.c.sensor_identifier,
+                isouter=True,
+            ).join(
+                activity,
+                CONF.c.sensor_identifier == activity.c.sensor_identifier,
                 isouter=True,
             )
         )
