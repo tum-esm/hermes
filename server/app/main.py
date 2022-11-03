@@ -67,7 +67,11 @@ async def get_sensors(request):
 
     timestamp = utils.timestamp()
     window = 24 * 60 * 60  # We aggregate over 24 hour buckets
+
     # TODO buckets begin at UTC midnight -> maybe simply use last 24 hours?
+    # oder stuendlich aggregieren und dann auf dem frontend an die timezone anpassen
+    # oder bei request einfach die timezone mitgeben
+
     timestamps = list(range((timestamp // window - 27) * window, timestamp, window))
 
     # TODO remove
