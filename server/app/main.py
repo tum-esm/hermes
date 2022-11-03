@@ -73,17 +73,60 @@ async def get_sensors(request):
     # TODO remove
     timestamps[0] = 0
 
+    querygg = """
+        WITH latest_measurements AS (
+            SELECT DISTINCT ON (sensor_identifier) *
+            FROM measurements
+            ORDER BY sensor_identifier ASC, measurement_timestamp DESC
+        ),
+        rounded_timestamps AS (
+            SELECT
+                sensor_identifier,
+                DIV(measurement_timestamp, :window)::INTEGER AS bucket
+            FROM measurements
+            WHERE measurement_timestamp >= :start
+        ),
+        buckets_wd AS (
+            SELECT sensor_identifier, bucket, COUNT(*) AS count
+            FROM rounded_timestamps
+            GROUP BY sensor_identifier, bucket
+            ORDER BY bucket ASC
+        ),
+        activity AS (
+            SELECT
+                buckets_wd.sensor_identifier,
+                ARRAY_AGG(buckets_wd.bucket) AS buckets,
+                ARRAY_AGG(buckets_wd.count) AS counts
+            FROM buckets_wd
+            GROUP BY buckets_wd.sensor_identifier
+        )
+        SELECT
+            configurations.sensor_identifier,
+            configurations.creation_timestamp,
+            configurations.update_timestamp,
+            configurations.configuration,
+            latest_measurements.measurement_timestamp,
+            activity.buckets,
+            activity.counts
+        FROM
+            configurations
+            LEFT OUTER JOIN latest_measurements USING (sensor_identifier)
+            JOIN activity USING (sensor_identifier)
+        --WHERE TODO
+        ORDER BY configurations.sensor_identifier ASC
+    """
+
     rounded_timestamps = (
         sa.select(
             MEASUREMENTS.c.sensor_identifier,
             sa.cast(
-                func.div(MEASUREMENTS.c.receipt_timestamp, window), sa.Integer
+                func.div(MEASUREMENTS.c.receipt_timestamp, window),
+                sa.Integer,
             ).label("bucket"),
         )
         .select_from(MEASUREMENTS)
         .where(MEASUREMENTS.c.receipt_timestamp >= timestamps[0])
     )
-
     buckets = (
         sa.select(
             rounded_timestamps.c.sensor_identifier,
@@ -97,11 +140,9 @@ async def get_sensors(request):
 
     activity = (
         sa.select(
-            [
-                buckets.c.sensor_identifier,
-                func.array_agg(buckets.c.bucket).label("buckets"),
-                func.array_agg(buckets.c.count).label("counts"),
-            ]
+            buckets.c.sensor_identifier,
+            func.array_agg(buckets.c.bucket).label("buckets"),
+            func.array_agg(buckets.c.count).label("counts"),
         )
         .select_from(buckets)
         .group_by(buckets.c.sensor_identifier)
@@ -130,7 +171,10 @@ async def get_sensors(request):
     )
 
     # Execute query and return results
-    result = await database_client.fetch_all(query=query)
+    result = await database_client.fetch_all(
+        query=querygg,
+        values={"window": window, "start": timestamps[0]},
+    )
     return starlette.responses.JSONResponse(database.dictify(result))
 
 
