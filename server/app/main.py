@@ -86,11 +86,18 @@ async def get_sensors(request):
             FROM measurements
             WHERE measurement_timestamp >= :start
         ),
-        buckets_wd AS (
+        buckets AS (
             SELECT sensor_identifier, bucket, COUNT(*) AS count
             FROM rounded_timestamps
             GROUP BY sensor_identifier, bucket
             ORDER BY bucket ASC
+        ),
+        buckets_wd AS (
+            SELECT sensor_identifier, bucket, COALESCE(count, 0) AS count
+            FROM
+                UNNEST(ARRAY[0,1,2,3]) bucket
+                CROSS JOIN (SELECT sensor_identifier FROM buckets GROUP BY sensor_identifier) sensors
+                LEFT OUTER JOIN buckets USING (sensor_identifier, bucket)
         ),
         activity AS (
             SELECT
