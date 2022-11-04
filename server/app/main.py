@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import json
 
 import asyncio_mqtt as aiomqtt
 import databases
@@ -177,6 +178,12 @@ async def lifespan(app):
     global database_client
     global mqtt_client
     database_client = await asyncpg.connect(**database.CONFIGURATION)
+    await database_client.set_type_codec(
+        "json",  # TODO switch to jsonb
+        encoder=json.dumps,
+        decoder=json.loads,
+        schema="pg_catalog",
+    )
     async with aiomqtt.Client(**mqtt.CONFIGURATION) as y:
         mqtt_client = y
         # Create database tables if they don't exist yet
