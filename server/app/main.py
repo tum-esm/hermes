@@ -3,13 +3,13 @@ import contextlib
 import json
 
 import asyncio_mqtt as aiomqtt
+import asyncpg
 import databases
 import sqlalchemy as sa
-from sqlalchemy.sql import func
 import starlette.applications
 import starlette.responses
 import starlette.routing
-import asyncpg
+from sqlalchemy.sql import func
 
 import app.database as database
 import app.errors as errors
@@ -79,55 +79,7 @@ async def get_sensors(request):
     # TODO remove
     timestamps[0] = 0
 
-    querygg = """
-        WITH latest_measurements AS (
-            SELECT DISTINCT ON (sensor_identifier) *
-            FROM measurements
-            ORDER BY sensor_identifier ASC, measurement_timestamp DESC
-        ),
-        rounded_timestamps AS (
-            SELECT
-                sensor_identifier,
-                DIV(measurement_timestamp, $1)::INTEGER AS bucket
-            FROM measurements
-            WHERE measurement_timestamp >= $2
-        ),
-        buckets AS (
-            SELECT sensor_identifier, bucket, COUNT(*) AS count
-            FROM rounded_timestamps
-            GROUP BY sensor_identifier, bucket
-            ORDER BY bucket ASC
-        ),
-        buckets_wd AS (
-            SELECT sensor_identifier, bucket, COALESCE(count, 0) AS count
-            FROM
-                UNNEST(ARRAY[0,1,2,3]) bucket
-                CROSS JOIN (SELECT sensor_identifier FROM buckets GROUP BY sensor_identifier) sensors
-                LEFT OUTER JOIN buckets USING (sensor_identifier, bucket)
-        ),
-        activity AS (
-            SELECT
-                buckets_wd.sensor_identifier,
-                ARRAY_AGG(buckets_wd.bucket) AS buckets,
-                ARRAY_AGG(buckets_wd.count) AS counts
-            FROM buckets_wd
-            GROUP BY buckets_wd.sensor_identifier
-        )
-        SELECT
-            configurations.sensor_identifier,
-            configurations.creation_timestamp,
-            configurations.update_timestamp,
-            configurations.configuration,
-            latest_measurements.measurement_timestamp,
-            activity.buckets,
-            activity.counts
-        FROM
-            configurations
-            LEFT OUTER JOIN latest_measurements USING (sensor_identifier)
-            JOIN activity USING (sensor_identifier)
-        --WHERE TODO
-        ORDER BY configurations.sensor_identifier ASC
-    """
+    query = None  # TODO read from SQL file
 
     # Execute query and return results
     result = await database_client.fetch(querygg, window, timestamps[0])
