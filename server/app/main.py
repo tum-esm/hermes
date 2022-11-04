@@ -21,6 +21,14 @@ from app.database import CONFIGURATIONS, MEASUREMENTS
 from app.logs import logger
 
 
+import jinja2
+
+templates = jinja2.Environment(
+    loader=jinja2.PackageLoader(package_name="app", package_path="queries"),
+    autoescape=jinja2.select_autoescape(),
+)
+
+
 async def get_status(request):
     """Return some status information about the server."""
 
@@ -79,10 +87,10 @@ async def get_sensors(request):
     # TODO remove
     timestamps[0] = 0
 
-    query = None  # TODO read from SQL file
+    query = templates.get_template("sensors.sql").render()
 
     # Execute query and return results
-    result = await database_client.fetch(querygg, window, timestamps[0])
+    result = await database_client.fetch(query, window, timestamps[0])
     return starlette.responses.JSONResponse(database.dictify(result))
 
 

@@ -13,6 +13,7 @@ databases = {extras = ["asyncpg"], version = "^0.6.1"}
 SQLAlchemy = {extras = ["mypy"], version = "^1.4.42"}
 asyncio-mqtt = "^0.13.0"
 attrs = "^22.1.0"
+Jinja2 = "^3.1.2"
 
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^3.4.7"
