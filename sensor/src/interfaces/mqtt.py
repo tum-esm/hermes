@@ -1,9 +1,11 @@
 import json
-from typing import Any
-from src import types
-from paho.mqtt.client import Client, MQTTMessage
-import ssl
 import queue
+import ssl
+from typing import Any
+
+from paho.mqtt.client import Client, MQTTMessage
+
+from src import types
 
 # TODO: statically type messages
 mqtt_message_queue = queue.Queue(maxsize=1024)  # type:ignore

@@ -1,4 +1,5 @@
 import time
+
 from src import interfaces
 
 
@@ -15,4 +16,4 @@ def run() -> None:
         print(f"Hello! config = {config}")
 
         print(f"new messages: {mqtt_interface.get_messages()}")
-        time.sleep(10)
+        time.sleep("10")

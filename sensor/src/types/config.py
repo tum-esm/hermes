@@ -1,4 +1,5 @@
 from typing import Any, Literal
+
 import attrs
 import attrs.validators as val
 
