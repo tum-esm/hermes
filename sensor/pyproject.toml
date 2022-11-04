@@ -9,6 +9,10 @@ readme = "README.md"
 python = "^3.10"
 paho-mqtt = "^1.6.1"
 psutil = "^5.9.3"
+smbus = "^1.1.post2"
+pigpio = "^1.78"
+pyserial = "^3.5"
+rpi-gpio = "^0.7.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
