@@ -20,6 +20,7 @@ mypy = "^0.982"
 isort = "^5.10.1"
 black = "^22.10.0"
 docformatter = "^1.5.0"
+sqlfluff = "^1.4.1"
 
 [tool.black]
 preview = true
@@ -37,6 +38,10 @@ wrap-descriptions = 87
 [tool.mypy]
 show_error_codes = true
 no_implicit_optional = true
+
+[tool.sqlfluff.core]
+dialect = "postgres"
+templater = "jinja"
 
 [build-system]
 requires = ["poetry-core"]
