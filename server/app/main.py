@@ -5,6 +5,7 @@ import json
 import asyncio_mqtt as aiomqtt
 import asyncpg
 import databases
+import jinja2
 import sqlalchemy as sa
 import starlette.applications
 import starlette.responses
@@ -20,8 +21,6 @@ import app.validation as validation
 from app.database import CONFIGURATIONS, MEASUREMENTS
 from app.logs import logger
 
-
-import jinja2
 
 templates = jinja2.Environment(
     loader=jinja2.PackageLoader(package_name="app", package_path="queries"),
@@ -87,7 +86,9 @@ async def get_sensors(request):
     # TODO remove
     timestamps[0] = 0
 
-    query = templates.get_template("sensors.sql").render()
+    query = templates.get_template("sensors.sql").render(sensors=request.query.sensors)
+
+    print(query)
 
     # Execute query and return results
     result = await database_client.fetch(query, window, timestamps[0])

@@ -54,5 +54,7 @@ FROM
     configurations
     LEFT OUTER JOIN latest_measurements USING (sensor_identifier)
     JOIN activity USING (sensor_identifier)
---WHERE TODO
+    {%- if sensors %}
+    WHERE {% for sensor_identifier in sensors %}{% if not loop.first %} OR {% endif %} configurations.sensor_identifier = '{{ sensor_identifier }}'{% endfor %}
+    {%- endif %}
 ORDER BY configurations.sensor_identifier ASC

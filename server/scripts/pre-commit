@@ -27,6 +27,6 @@ printf "\r${GREEN}[OK]${RESTORE} Running mypy\n"
 [ -z "$output" ] || echo "\n$output\n"
 
 printf "[..] Running sqlfluff"
-output=$(script -q /dev/null poetry run sqlfluff lint --disable-progress-bar ./app/query 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
+output=$(script -q /dev/null poetry run sqlfluff lint --disable-progress-bar ./app/queries 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
 printf "\r${GREEN}[OK]${RESTORE} Running mypy\n"
 [ -z "$output" ] || echo "\n$output\n"
