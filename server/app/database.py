@@ -19,7 +19,7 @@ def compile(query: sa.sql.elements.ClauseElement) -> str:
 
 
 CONFIGURATION = {
-    "url": settings.POSTGRESQL_URL,
+    "dsn": settings.POSTGRESQL_URL,
     "user": settings.POSTGRESQL_IDENTIFIER,
     "password": settings.POSTGRESQL_PASSWORD,
 }

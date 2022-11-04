@@ -8,6 +8,7 @@ from sqlalchemy.sql import func
 import starlette.applications
 import starlette.responses
 import starlette.routing
+import asyncpg
 
 import app.database as database
 import app.errors as errors
@@ -86,9 +87,9 @@ async def get_sensors(request):
         rounded_timestamps AS (
             SELECT
                 sensor_identifier,
-                DIV(measurement_timestamp, :window)::INTEGER AS bucket
+                DIV(measurement_timestamp, $1)::INTEGER AS bucket
             FROM measurements
-            WHERE measurement_timestamp >= :start
+            WHERE measurement_timestamp >= $2
         ),
         buckets AS (
             SELECT sensor_identifier, bucket, COUNT(*) AS count
@@ -127,65 +128,8 @@ async def get_sensors(request):
         ORDER BY configurations.sensor_identifier ASC
     """
 
-    rounded_timestamps = (
-        sa.select(
-            MEASUREMENTS.c.sensor_identifier,
-            sa.cast(
-                func.div(MEASUREMENTS.c.receipt_timestamp, window),
-                sa.Integer,
-            ).label("bucket"),
-        )
-        .select_from(MEASUREMENTS)
-        .where(MEASUREMENTS.c.receipt_timestamp >= timestamps[0])
-    )
-    buckets = (
-        sa.select(
-            rounded_timestamps.c.sensor_identifier,
-            rounded_timestamps.c.bucket,
-            func.count(rounded_timestamps.c.sensor_identifier).label("count"),
-        )
-        .select_from(rounded_timestamps)
-        .group_by(rounded_timestamps.c.sensor_identifier, rounded_timestamps.c.bucket)
-        .order_by(rounded_timestamps.c.bucket.asc())
-    )
-
-    activity = (
-        sa.select(
-            buckets.c.sensor_identifier,
-            func.array_agg(buckets.c.bucket).label("buckets"),
-            func.array_agg(buckets.c.count).label("counts"),
-        )
-        .select_from(buckets)
-        .group_by(buckets.c.sensor_identifier)
-    )
-    query = (
-        sa.select(
-            *CONFIGURATIONS.c,
-            latest_measurements.c.measurement_timestamp,
-            activity.c.buckets,
-            activity.c.counts,
-        )
-        .select_from(
-            CONFIGURATIONS.join(
-                latest_measurements,
-                CONFIGURATIONS.c.sensor_identifier
-                == latest_measurements.c.sensor_identifier,
-                isouter=True,
-            ).join(
-                activity,
-                CONFIGURATIONS.c.sensor_identifier == activity.c.sensor_identifier,
-                isouter=True,
-            )
-        )
-        .where(sa.and_(*conditions))
-        .order_by(CONFIGURATIONS.c.sensor_identifier.asc())
-    )
-
     # Execute query and return results
-    result = await database_client.fetch_all(
-        query=querygg,
-        values={"window": window, "start": timestamps[0]},
-    )
+    result = await database_client.fetch(querygg, window, timestamps[0])
     return starlette.responses.JSONResponse(database.dictify(result))
 
 
@@ -214,7 +158,7 @@ async def get_measurements(request):
     )
     # Execute query and return results
     # TODO Think about streaming here
-    result = await database_client.fetch_all(query=query)
+    result = await database_client.fetch(query=query)
     return starlette.responses.JSONResponse(database.dictify(result))
 
 
@@ -232,21 +176,21 @@ async def lifespan(app):
     """
     global database_client
     global mqtt_client
-    async with databases.Database(**database.CONFIGURATION) as x:
-        async with aiomqtt.Client(**mqtt.CONFIGURATION) as y:
-            database_client = x
-            mqtt_client = y
-            # Create database tables if they don't exist yet
-            for table in database.metadata.tables.values():
-                await database_client.execute(
-                    query=database.compile(
-                        sa.schema.CreateTable(table, if_not_exists=True)
-                    )
-                )
-            # Start MQTT listener in (unawaited) asyncio task
-            loop = asyncio.get_event_loop()
-            loop.create_task(mqtt.listen_and_write(database_client, mqtt_client))
-            yield
+    database_client = await asyncpg.connect(**database.CONFIGURATION)
+    async with aiomqtt.Client(**mqtt.CONFIGURATION) as y:
+        mqtt_client = y
+        # Create database tables if they don't exist yet
+        """
+        for table in database.metadata.tables.values():
+            await database_client.execute(
+                query=database.compile(sa.schema.CreateTable(table, if_not_exists=True))
+            )
+        """
+        # Start MQTT listener in (unawaited) asyncio task
+        loop = asyncio.get_event_loop()
+        loop.create_task(mqtt.listen_and_write(database_client, mqtt_client))
+        yield
+    await database_client.close()
 
 
 app = starlette.applications.Starlette(
