@@ -78,12 +78,17 @@ async def get_sensors(request):
     # TODO remove
     timestamps[0] = 0
 
-    # TODO make sure this is safe, passing query parameters directly is probably unsafe
-    query = database.templates.get_template("sensors.sql").render(
-        sensors=request.query.sensors
-    )
+    query = database.templates.get_template("fetch_sensors.sql").render(query=query)
+
+    print(query)
+
     # Execute query and return results
-    result = await database_client.fetch(query, window, timestamps[0])
+    result = await database_client.fetch(
+        query,
+        request.query.sensors,
+        window,
+        timestamps[0],
+    )
     return starlette.responses.JSONResponse(database.dictify(result))
 
 
