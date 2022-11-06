@@ -4,7 +4,7 @@ import RPi.GPIO as GPIO
 import time
 import pigpio
 from threading import Thread
-from src.utils import logger, StateInterface
+from src.utils import logger  # , StateInterface
 
 
 PUMP_SPEED_CONTROL = 19
@@ -21,15 +21,15 @@ GPIO.setup(PUMP_TACHO_INPUT, GPIO.IN)
 
 
 class Pump1410:
-    timestamp = 0
-    time_between_cycle = 0
-    pump_cycle = 0
+    timestamp: float = 0
+    time_between_cycle: float = 0
+    pump_cycle: float = 0
 
     pi = pigpio.pi()
     pi_initialized = False
 
     @staticmethod
-    def _init_pump():
+    def _init_pump() -> None:
         if not Pump1410.pi.connected:
             exit()
 
@@ -43,7 +43,7 @@ class Pump1410:
 
     # Callback-Funktion
     @staticmethod
-    def PUMP_TACHO_INPUT_Interrupt(PUMP_TACHO_INPUT):
+    def PUMP_TACHO_INPUT_Interrupt() -> None:
         """ISR for measurment of pump cycle.
         Every 18 falling edges are one full rotation on the pump.
         The function provides the time between the cycles.
@@ -56,7 +56,12 @@ class Pump1410:
             Pump1410.pump_cycle = 0
 
     @staticmethod
-    def pump_control(speed, duration=0, waiting=0, activte_speed_correction=True):
+    def pump_control(
+        speed: float,
+        duration: float = 0,
+        waiting: float = 0,
+        activte_speed_correction: bool = True,
+    ) -> None:
         """Set speed and runtime of air pump
         speed can be set between 0 and 70 rps
         duration defines the runtime of pump
@@ -70,14 +75,14 @@ class Pump1410:
             speed >= 0 and speed <= 100 * 10000 / PUMP_SPEED_TO_DUTY_CYCLE_FACTOR
         ), "Wrong pump speed setting"
 
-        StateInterface.update({"Pump is running": True})
+        # StateInterface.update({"Pump is running": True})
         data = (
             f"Pump speed {int(speed)}rps, "
             + f"Pump duration {duration}s, "
             + f"Waiting after pump {waiting}s"
         )
 
-        logger.system_data_logger.info(data)
+        # logger.system_data_logger.info(data)
         print(data)
 
         Pump1410.pi.hardware_PWM(
@@ -91,19 +96,25 @@ class Pump1410:
         Pump1410.pi.hardware_PWM(PUMP_SPEED_CONTROL, FREQUENCY, 0)
         time.sleep(waiting)
 
-        StateInterface.update({"Pump is running": False, "Start measurement": True})
+        # StateInterface.update({"Pump is running": False, "Start measurement": True})
 
     @staticmethod
-    def _speed_correction(correct_speed, duration, kp=0.3, ki=0.01, kd=0):
+    def _speed_correction(
+        correct_speed: float,
+        duration: float,
+        kp: float = 0.3,
+        ki: float = 0.01,
+        kd: float = 0,
+    ) -> None:
         """controller to correct the speed to the entered speed
         possible is a PID-Controller
         kp is the P-Controller factor
         ki is the I-Controller factor
         kd is the D-Controller factor
         """
-        sum_err = 0
-        last_err = 0
-        last_time_between_cycle = 0
+        sum_err: float = 0
+        last_err: float = 0
+        last_time_between_cycle: float = 0
         duration = time.perf_counter() + duration
 
         while time.perf_counter() < duration:
@@ -142,11 +153,17 @@ class Pump1410:
             time.sleep(0.05)
 
     @staticmethod
-    def start_pump(speed, duration=0, waiting=0, activte_speed_correction=True):
-        """New thread for the pump control
-        kp is the P-Controller factor
-        ki is the I-Controller factor
-        kd is the D-Controller factor
+    def start_pump(
+        speed: float,
+        duration: float = 0,
+        waiting: float = 0,
+        activte_speed_correction: bool = True,
+    ) -> None:
+        """
+        New thread for the pump control
+            * kp is the P-Controller factor
+            * ki is the I-Controller factor
+            * kd is the D-Controller factor
         """
         Pump_control_start = Thread(
             target=Pump1410.pump_control,
@@ -161,10 +178,11 @@ class Pump1410:
         Pump_control_start.start()  # starting of Thread Pump_speed_control
 
     @staticmethod
-    def end_pump_connection():
-        """Set the pump in a save state"""
+    def end_pump_connection() -> None:
+        """
+        Set the pump in a save state. Required to end the
+        Hardware connection.
+        """
         if Pump1410.pi.connected:
-            Pump1410.pi.set_PWM_dutycycle(
-                PUMP_SPEED_CONTROL, 0
-            )  # Needed to end the Hardware connection
+            Pump1410.pi.set_PWM_dutycycle(PUMP_SPEED_CONTROL, 0)
             Pump1410.pi.stop()

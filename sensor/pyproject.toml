@@ -38,5 +38,12 @@ strict = true
 implicit_reexport = true
 no_warn_unused_ignores = true
 
+[[tool.mypy.overrides]]
+module = [
+    "RPi.*",
+    "pigpio",
+]
+ignore_missing_imports = true
+
 [tool.isort]
 profile = "black"
