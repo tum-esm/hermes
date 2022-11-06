@@ -10,7 +10,6 @@ import sqlalchemy as sa
 import starlette.applications
 import starlette.responses
 import starlette.routing
-from sqlalchemy.sql import func
 
 import app.database as database
 import app.errors as errors
@@ -18,14 +17,7 @@ import app.mqtt as mqtt
 import app.settings as settings
 import app.utils as utils
 import app.validation as validation
-from app.database import CONFIGURATIONS, MEASUREMENTS
 from app.logs import logger
-
-
-templates = jinja2.Environment(
-    loader=jinja2.PackageLoader(package_name="app", package_path="queries"),
-    autoescape=jinja2.select_autoescape(),
-)
 
 
 async def get_status(request):
@@ -86,10 +78,10 @@ async def get_sensors(request):
     # TODO remove
     timestamps[0] = 0
 
-    query = templates.get_template("sensors.sql").render(sensors=request.query.sensors)
-
-    print(query)
-
+    # TODO make sure this is safe, passing query parameters directly is probably unsafe
+    query = database.templates.get_template("sensors.sql").render(
+        sensors=request.query.sensors
+    )
     # Execute query and return results
     result = await database_client.fetch(query, window, timestamps[0])
     return starlette.responses.JSONResponse(database.dictify(result))
@@ -139,8 +131,9 @@ async def lifespan(app):
     global database_client
     global mqtt_client
     database_client = await asyncpg.connect(**database.CONFIGURATION)
+    # TODO move to context manager
     await database_client.set_type_codec(
-        "json",  # TODO switch to jsonb
+        typename="jsonb",
         encoder=json.dumps,
         decoder=json.loads,
         schema="pg_catalog",
@@ -148,6 +141,7 @@ async def lifespan(app):
     async with aiomqtt.Client(**mqtt.CONFIGURATION) as y:
         mqtt_client = y
         # Create database tables if they don't exist yet
+        await database.initialize(database_client)
         """
         for table in database.metadata.tables.values():
             await database_client.execute(
