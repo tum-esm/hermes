@@ -95,29 +95,21 @@ async def get_sensors(request):
 async def get_measurements(request):
     """Return measurements sorted chronologically, optionally filtered."""
     request = await validation.validate(request, validation.GetMeasurementsRequest)
-
-    # Define the returned columns
-    columns = [
-        MEASUREMENTS.c.sensor_identifier,
-        MEASUREMENTS.c.measurement_timestamp,
-        *[sa.column(value_identifier) for value_identifier in request.query.values],
-    ]
-    # Define filters
-    conditions = []
-    conditions = database.filter_sensor_identifier(conditions, request)
-    conditions = database.filter_measurement_timestamp(conditions, request)
-    # Build query
-    query = (
-        sa.select(columns)
-        .select_from(MEASUREMENTS)
-        .where(sa.and_(*conditions))
-        .order_by(MEASUREMENTS.c.measurement_timestamp.asc())
-        .offset(request.query.skip)
-        .limit(request.query.limit)
-    )
     # Execute query and return results
     # TODO Think about streaming here
-    result = await database_client.fetch(query=query)
+    query = database.templates.get_template("fetch_measurements.sql").render(
+        request=request
+    )
+    print(query)
+
+    result = await database_client.fetch(
+        query,
+        request.query.sensors,
+        request.query.start,
+        request.query.end,
+        request.query.skip,
+        request.query.limit,
+    )
     return starlette.responses.JSONResponse(database.dictify(result))
 
 
@@ -147,12 +139,6 @@ async def lifespan(app):
         mqtt_client = y
         # Create database tables if they don't exist yet
         await database.initialize(database_client)
-        """
-        for table in database.metadata.tables.values():
-            await database_client.execute(
-                query=database.compile(sa.schema.CreateTable(table, if_not_exists=True))
-            )
-        """
         # Start MQTT listener in (unawaited) asyncio task
         loop = asyncio.get_event_loop()
         loop.create_task(mqtt.listen_and_write(database_client, mqtt_client))
