@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS configurations (
     sensor_identifier TEXT NOT NULL,
-    creation_timestamp INTEGER NOT NULL,
-    update_timestamp INTEGER NOT NULL,
+    creation_timestamp INT NOT NULL,
+    update_timestamp INT NOT NULL,
     configuration JSONB NOT NULL,
     PRIMARY KEY (sensor_identifier)
 );
