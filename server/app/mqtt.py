@@ -8,7 +8,6 @@ import databases
 import app.settings as settings
 import app.utils as utils
 import app.validation as validation
-from app.database import MEASUREMENTS
 from app.logs import logger
 
 
@@ -51,6 +50,7 @@ async def _process_measurement_payload(
         receipt_timestamp = utils.timestamp()
         for key, value in measurement.values.items():
             # TODO choose corresponding table based on key
+            """
             await database_client.execute(
                 query=MEASUREMENTS.insert(),
                 values={
@@ -60,6 +60,7 @@ async def _process_measurement_payload(
                     key: value,
                 },
             )
+            """
     except (TypeError, ValueError) as e:
         # TODO still save `sensor_identifier` and `receipt_timestamp` in database?
         # -> works only if sensor_identifier is inferred from sender ID
