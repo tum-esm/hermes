@@ -6,7 +6,6 @@ import starlette
 
 import app.constants as constants
 import app.errors as errors
-from app.database import VALUE_IDENTIFIERS
 from app.logs import logger
 
 
@@ -63,27 +62,18 @@ def _convert_query_string_to_list(string: str) -> list[str]:
     return string.split(",") if string else []
 
 
-def _convert_only_existing_value_identifiers(values: list[str]) -> list[str]:
-    """Filter a list of strings for actually existing value identifiers."""
-    return [
-        value_identifier
-        for value_identifier in values
-        if value_identifier in VALUE_IDENTIFIERS
-    ]
-
-
 ########################################################################################
 # Attrs validators
 ########################################################################################
 
 
-def _validate_end_timestamp_greater_equal_start_timestamp(
+def _validate_end_greater_equal_start(
     instance: _RequestQuery,
     attribute: attrs.Attribute,
     value: int,
 ) -> None:
-    if instance.start_timestamp > value:
-        raise ValueError("end_timestamp must be >= start_timestamp")
+    if instance.start > value:
+        raise ValueError("end must be >= start")
 
 
 SENSOR_IDENTIFIER_VALIDATOR = attrs.validators.and_(
@@ -149,24 +139,21 @@ class GetMeasurementsRequestQuery(_RequestQuery):
         ),
     )
     values: list[str] = attrs.field(
-        default=",".join(VALUE_IDENTIFIERS),
-        converter=attrs.converters.pipe(
-            _convert_query_string_to_list,
-            _convert_only_existing_value_identifiers,
-        ),
+        default="",
+        converter=_convert_query_string_to_list,
         validator=attrs.validators.deep_iterable(
             iterable_validator=attrs.validators.instance_of(list),
             member_validator=VALUE_IDENTIFIER_VALIDATOR,
         ),
     )
-    start_timestamp: int = POSITIVE_INTEGER_QUERY_FIELD
-    end_timestamp: int = attrs.field(
+    start: int = POSITIVE_INTEGER_QUERY_FIELD
+    end: int = attrs.field(
         default=None,
         converter=attrs.converters.optional(int),
         validator=attrs.validators.optional(
             attrs.validators.and_(
                 POSITIVE_INTEGER_VALIDATOR,
-                _validate_end_timestamp_greater_equal_start_timestamp,
+                _validate_end_greater_equal_start,
             )
         ),
     )
