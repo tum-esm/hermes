@@ -1,9 +1,7 @@
 import typing
 
-import databases.interfaces
-import sqlalchemy as sa
+import asyncpg
 import jinja2
-import sqlalchemy.dialects.postgresql
 
 import app.constants as constants
 import app.settings as settings
@@ -21,9 +19,24 @@ templates = jinja2.Environment(
 )
 
 
-def dictify(result: typing.Sequence[databases.interfaces.Record]) -> typing.List[dict]:
+def dictify(result: typing.Sequence[asyncpg.Record]) -> list[dict]:
     """Cast a database SELECT result into a list of dictionaries."""
     return [dict(record) for record in result]
+
+
+class Serial(dict):
+    def __getitem__(self, key):
+        return f"${list(self.keys()).index(key) + 1}"
+
+
+def build(
+    query: str, parameters: dict[str, typing.Any]
+) -> tuple[str, list[typing.Any]]:
+    """Wrap asyncpg query building to enable named parameters."""
+    for key in list(parameters.keys()):  # copy keys to avoid modifying iterator
+        if f"{{{key}}}" not in query:
+            parameters.pop(key)
+    return query.format_map(Serial(**parameters)), list(parameters.values())
 
 
 async def initialize(database_client):

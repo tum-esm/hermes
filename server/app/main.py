@@ -100,16 +100,17 @@ async def get_measurements(request):
     query = database.templates.get_template("fetch_measurements.sql").render(
         request=request
     )
-    print(query)
-
-    result = await database_client.fetch(
-        query,
-        request.query.sensors,
-        request.query.start,
-        request.query.end,
-        request.query.skip,
-        request.query.limit,
+    query, parameters = database.build(
+        query=query,
+        parameters={
+            "sensor_identifiers": request.query.sensors,
+            "start_timestamp": request.query.start,
+            "end_timestamp": request.query.end,
+            "skip": request.query.skip,
+            "limit": request.query.limit,
+        },
     )
+    result = await database_client.fetch(query, *parameters)
     return starlette.responses.JSONResponse(database.dictify(result))
 
 

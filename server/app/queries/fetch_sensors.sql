@@ -54,5 +54,5 @@ FROM
     configurations
     LEFT OUTER JOIN latest_measurements USING (sensor_identifier)
     JOIN activity USING (sensor_identifier)
-    {% if request.query.sensors %} WHERE configurations.sensor_identifier = ANY($1::TEXT[]) {% endif %}
+    {% if request.query.sensors %} WHERE configurations.sensor_identifier = ANY($1) {% endif %}
 ORDER BY configurations.sensor_identifier ASC
