@@ -30,13 +30,24 @@ class Serial(dict):
 
 
 def build(
-    query: str, parameters: dict[str, typing.Any]
+    template: str,
+    template_parameters: dict[str, typing.Any],
+    query_parameters: dict[str, typing.Any],
 ) -> tuple[str, list[typing.Any]]:
-    """Wrap asyncpg query building to enable named parameters."""
-    for key in list(parameters.keys()):  # copy keys to avoid modifying iterator
+    """Dynamically build asyncpg query.
+
+    1. Render Jinja2 template with the given template parameters
+    2. Translate given named query parameters to unnamed asyncpg query parameters
+
+    """
+    query = templates.get_template(template).render(**template_parameters)
+    for key in list(query_parameters.keys()):  # copy keys to avoid modifying iterator
         if f"{{{key}}}" not in query:
-            parameters.pop(key)
-    return query.format_map(Serial(**parameters)), list(parameters.values())
+            query_parameters.pop(key)
+    return (
+        query.format_map(Serial(**query_parameters)),
+        list(query_parameters.values()),
+    )
 
 
 async def initialize(database_client):

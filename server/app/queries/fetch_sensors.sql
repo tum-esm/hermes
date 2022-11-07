@@ -7,9 +7,9 @@ WITH latest_measurements AS (
 rounded_timestamps AS (
     SELECT
         sensor_identifier,
-        DIV(measurement_timestamp, $1)::INTEGER AS bucket
+        DIV(measurement_timestamp, {window})::INTEGER AS bucket
     FROM measurements
-    WHERE measurement_timestamp >= $2
+    WHERE measurement_timestamp >= {start_timestamp}
 ),
 
 buckets AS (
@@ -54,5 +54,5 @@ FROM
     configurations
     LEFT OUTER JOIN latest_measurements USING (sensor_identifier)
     JOIN activity USING (sensor_identifier)
-    {% if request.query.sensors %} WHERE configurations.sensor_identifier = ANY($1) {% endif %}
+    {% if request.query.sensors %} WHERE configurations.sensor_identifier = ANY({sensor_identifiers}) {% endif %}
 ORDER BY configurations.sensor_identifier ASC

@@ -52,20 +52,6 @@ async def get_sensors(request):
     # - last measurement
     # - last sensor health update
 
-    # Define filters
-    conditions = []
-    conditions = database.filter_sensor_identifier(conditions, request)
-    # Build query
-    latest_measurements = (
-        sa.select(MEASUREMENTS.c)
-        .select_from(MEASUREMENTS)
-        .order_by(
-            MEASUREMENTS.c.sensor_identifier.asc(),
-            MEASUREMENTS.c.measurement_timestamp.desc(),
-        )
-        .distinct(MEASUREMENTS.c.sensor_identifier)
-    )
-
     timestamp = utils.timestamp()
     window = 24 * 60 * 60  # We aggregate over 24 hour buckets
 
@@ -78,31 +64,30 @@ async def get_sensors(request):
     # TODO remove
     timestamps[0] = 0
 
-    query = database.templates.get_template("fetch_sensors.sql").render(query=query)
-
-    print(query)
-
-    # Execute query and return results
-    result = await database_client.fetch(
-        query,
-        request.query.sensors,
-        window,
-        timestamps[0],
+    # Parameterize query
+    query, parameters = database.build(
+        template="fetch_sensors.sql",
+        template_parameters={"request": request},
+        query_parameters={
+            "sensor_identifiers": request.query.sensors,
+            "start_timestamp": timestamps[0],
+            "window": window,
+        },
     )
+    # Execute query and return results
+    result = await database_client.fetch(query, *parameters)
     return starlette.responses.JSONResponse(database.dictify(result))
 
 
 async def get_measurements(request):
     """Return measurements sorted chronologically, optionally filtered."""
     request = await validation.validate(request, validation.GetMeasurementsRequest)
-    # Execute query and return results
-    # TODO Think about streaming here
-    query = database.templates.get_template("fetch_measurements.sql").render(
-        request=request
-    )
+
+    # Parameterize query
     query, parameters = database.build(
-        query=query,
-        parameters={
+        template="fetch_measurements.sql",
+        template_parameters={"request": request},
+        query_parameters={
             "sensor_identifiers": request.query.sensors,
             "start_timestamp": request.query.start,
             "end_timestamp": request.query.end,
@@ -110,6 +95,7 @@ async def get_measurements(request):
             "limit": request.query.limit,
         },
     )
+    # Execute query and return results
     result = await database_client.fetch(query, *parameters)
     return starlette.responses.JSONResponse(database.dictify(result))
 
