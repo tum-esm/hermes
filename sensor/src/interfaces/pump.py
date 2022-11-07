@@ -57,16 +57,13 @@ class PumpInterface:
             Constants.pump.frequency,
             0,
         )
-
         GPIO.add_event_detect(
             Constants.pump.pin_speed_in,
             GPIO.FALLING,
             callback=_pump_speed_measurement_interrupt,
         )
-
-        self.pid = simple_pid.PID(
-            Kp=0.3, Ki=0.01, Kd=0, setpoint=0, output_limits=(0, 100)
-        )
+        self.last_pump_cycle_time: float | None = None
+        self.corrected_input_rps = 0
 
     def set_desired_pump_rps(self, rps: float) -> None:
         self.pi.hardware_PWM(
@@ -76,40 +73,43 @@ class PumpInterface:
         )
 
     def get_actual_pump_rps(self) -> float | None:
-        rps = 0
         while True:
             try:
-                rps = rps_measurement_queue.get_nowait()
+                self.last_pump_cycle_time = rps_measurement_queue.get_nowait()
             except queue.Empty:
                 break
-        return rps
+        return self.last_pump_cycle_time
 
     def run(
         self, desired_rps: float, duration: float, speed_correction: float = True
     ) -> None:
-        assert 0 <= desired_rps <= 70, "pump hardware limitation is 70 rps"
+        assert 2 <= desired_rps <= 70, "pump hardware limitation is 70 rps"
 
         start_time = time.time()
         self.set_desired_pump_rps(desired_rps)
+        self.corrected_input_rps = desired_rps
+        pid = simple_pid.PID(
+            Kp=0.3, Ki=0.1, Kd=0.1, setpoint=desired_rps, output_limits=(0.9, 1.1)
+        )
 
         if speed_correction:
-            self.pid.setpoint = desired_rps
             while True:
-                time.sleep(0.05)
+                time.sleep(0.1)
                 actual_rps = self.get_actual_pump_rps()
-                print(actual_rps)
                 if actual_rps is not None:
-                    corrected_input_rps = self.pid(actual_rps)
-                    if corrected_input_rps is not None:
-                        self.set_desired_pump_rps(corrected_input_rps)
+                    new_corrected_rps = self.corrected_input_rps * pid(actual_rps)
 
-                if (time.time() - start_time) > (duration - 0.025):
+                    print(actual_rps / desired_rps, new_corrected_rps)
+                    if new_corrected_rps is not None:
+                        self.corrected_input_rps = new_corrected_rps
+                        self.set_desired_pump_rps(new_corrected_rps)
+
+                if (time.time() - start_time) > (duration - 0.05):
                     break
         else:
             time.sleep(duration)
 
         self.set_desired_pump_rps(0)
-        self.pid.setpoint = 0
 
     def teardown(self) -> None:
         """
