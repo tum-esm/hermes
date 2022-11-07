@@ -1,23 +1,40 @@
 # TODO: remove missing imports
 
+import queue
 import RPi.GPIO as GPIO
 import time
 import pigpio
 from threading import Thread
-from src.utils import logger  # , StateInterface
-
-
-PUMP_SPEED_CONTROL = 19
-PUMP_TACHO_INPUT = 16
-FREQUENCY = 10000
-# The value is the result of a measurement between duty cycle and input speed
-PUMP_SPEED_TO_DUTY_CYCLE_FACTOR = 1.344973917 * 10000
+from src.utils import Constants
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)  # Broadcom pin-numbering scheme
+GPIO.setup(Constants.pump.pin_control_out, GPIO.OUT)
+GPIO.setup(Constants.pump.pin_speed_in, GPIO.IN)
 
-GPIO.setup(PUMP_SPEED_CONTROL, GPIO.OUT)
-GPIO.setup(PUMP_TACHO_INPUT, GPIO.IN)
+
+rps_measurement_queue: queue.Queue[float] = queue.Queue()
+last_rps_measurement_time: float | None = None
+rps_measurement_count: int = 0
+
+
+def pump_speed_measurement_interrupt() -> None:
+    """ISR for measurement of pump cycle.
+    Every 18 falling edges are one full rotation on the pump.
+    """
+    rps_measurement_count += 1
+    if rps_measurement_count < 18:
+        return
+    else:
+        rps_measurement_count = 0
+
+    if last_rps_measurement_time is None:
+        last_rps_measurement_time = time.perf_counter()
+    else:
+        cycle_time = time.perf_counter() - last_rps_measurement_time
+        last_rps_measurement_time += cycle_time
+        rps = 1 / cycle_time
+        rps_measurement_queue.put(rps)
 
 
 class Pump1410:
@@ -25,35 +42,23 @@ class Pump1410:
     time_between_cycle: float = 0
     pump_cycle: float = 0
 
-    pi = pigpio.pi()
-    pi_initialized = False
+    def __init__(self) -> None:
+        self.pi = pigpio.pi()
+        assert (
+            self.pi.connected
+        ), 'pigpio is not connected, please run "sudo pigpiod -n 127.0.0.1"'
 
-    @staticmethod
-    def _init_pump() -> None:
-        if not Pump1410.pi.connected:
-            exit()
-
-        Pump1410.pi.hardware_PWM(PUMP_SPEED_CONTROL, FREQUENCY, 0)  # Initial
-
-        # Interrupt-Event fuer Pumpe hinzufuegen, fallende Flanke
-        GPIO.add_event_detect(
-            PUMP_TACHO_INPUT, GPIO.FALLING, callback=Pump1410.PUMP_TACHO_INPUT_Interrupt
+        self.pi.hardware_PWM(
+            Constants.pump.pin_control_out,
+            Constants.pump.frequency,
+            0,
         )
-        Pump1410.pi_initialized = True
 
-    # Callback-Funktion
-    @staticmethod
-    def PUMP_TACHO_INPUT_Interrupt() -> None:
-        """ISR for measurment of pump cycle.
-        Every 18 falling edges are one full rotation on the pump.
-        The function provides the time between the cycles.
-        """
-        Pump1410.pump_cycle += 1
-        if Pump1410.pump_cycle >= 18:  # 18 peaks are one full rotaion
-            Pump1410.time_between_cycle = time.perf_counter() - Pump1410.timestamp
-            # print(1/Pump1410.time_between_cycle)
-            Pump1410.timestamp = time.perf_counter()
-            Pump1410.pump_cycle = 0
+        GPIO.add_event_detect(
+            Constants.pump.pin_speed_in,
+            GPIO.FALLING,
+            callback=pump_speed_measurement_interrupt,
+        )
 
     @staticmethod
     def pump_control(
@@ -137,6 +142,7 @@ class Pump1410:
 
             new_speed = input_speed + current_err * kp + ki * sum_err + kd * diff_err
             new_duty_cycle = int(new_speed * PUMP_SPEED_TO_DUTY_CYCLE_FACTOR)
+
             # Limit to max pump settings
             if new_duty_cycle >= 1000000:
                 new_duty_cycle = 1000000
