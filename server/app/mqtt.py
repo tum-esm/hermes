@@ -83,7 +83,7 @@ async def listen_and_write(
     - TODO Use sender ID as "sensor" value?
     """
     async with mqtt_client.unfiltered_messages() as messages:
-        await mqtt_client.subscribe("measurements")
+        await mqtt_client.subscribe("measurements", qos=1, timeout=10)
         logger.info(f"[MQTT] [TOPIC:measurements] Subscribed")
         # TODO subscribe to more topics here
 
