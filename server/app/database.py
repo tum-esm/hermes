@@ -39,6 +39,16 @@ def build(
     1. Render Jinja2 template with the given template parameters
     2. Translate given named query parameters to unnamed asyncpg query parameters
 
+    I don't like how this looks, but I can't find a library that does what I want.
+    I think what I'm searching for is a templating library that understands SQL, and
+    that outputs SQL strings that can be passed directly to whatever engine I'm using,
+    without additional parametrization.
+
+    Using jinja2 seems kind of hacky, because it doesn't help with avoiding SQL
+    injections. asyncpg doesn't support named parameters, adding them seems taped on.
+    I tried SQLAlchemy, but found it too unflexible and slow to program. I want to
+    write directly in SQL and have the queries in separate files.
+
     """
     query = templates.get_template(template).render(**template_parameters)
     for key in list(query_parameters.keys()):  # copy keys to avoid modifying iterator
