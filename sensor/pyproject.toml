@@ -44,6 +44,7 @@ no_warn_unused_ignores = true
 module = [
     "RPi.*",
     "pigpio",
+    "bme280",
 ]
 ignore_missing_imports = true
 

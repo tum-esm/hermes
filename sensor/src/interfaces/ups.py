@@ -48,17 +48,17 @@ class UPSInterface:
     def _battery_is_ready() -> bool:
         """The pin goes high if the battery of the UPS is finished loading and
         when the battery voltage is below the threshold set in the UPS software."""
-        return GPIO.input(Constants.ups.pin_ready_in) == 1
+        return GPIO.input(Constants.ups.pin_ready_in) == 1  # type: ignore
 
     @staticmethod
     def _battery_is_active() -> bool:
         """The pin goes high if the system is powered by the UPS battery."""
-        return GPIO.input(Constants.ups.pin_battery_mode_in) == 1
+        return GPIO.input(Constants.ups.pin_battery_mode_in) == 1  # type: ignore
 
     @staticmethod
     def _battery_alarm_is_set() -> bool:
         """The pin goes high if the battery has any error or has been disconected."""
-        return GPIO.input(Constants.ups.pin_alarm_in) == 1
+        return GPIO.input(Constants.ups.pin_alarm_in) == 1  # type: ignore
 
     @staticmethod
     def _interrupt_callback_ready(input_pin: int) -> None:
@@ -66,9 +66,9 @@ class UPSInterface:
         if UPSInterface._battery_is_ready():
 
             # check twice whether power is out
-            no_power = UPSInterface.battery_is_active()
+            no_power = UPSInterface._battery_is_active()
             time.sleep(1)
-            no_power = no_power and UPSInterface.battery_is_active()
+            no_power = no_power and UPSInterface._battery_is_active()
 
             if no_power:
                 log_message_queue.put(("error", "battery voltage is under threshold"))
@@ -81,7 +81,7 @@ class UPSInterface:
         if UPSInterface._battery_is_active():
             log_message_queue.put(("warning", "system is powered by battery"))
         else:
-            log_message_queue.info(("info", "system is powered externally"))
+            log_message_queue.put(("info", "system is powered externally"))
 
     @staticmethod
     def _interrupt_callback_alarm(input_pin: int) -> None:
