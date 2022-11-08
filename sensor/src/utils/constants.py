@@ -10,3 +10,8 @@ class Constants:
         pin_2_out = 24
         pin_3_out = 23
         pin_4_out = 22
+
+    class ups:
+        pin_ready_in = 5
+        pin_battery_mode_in = 10
+        pin_alarm_in = 7
