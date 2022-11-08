@@ -22,7 +22,7 @@ class I2CInterface:
 
     def write(self, data: list[bytes | int]) -> None:
         """Write data to device"""
-        self.dev_i2c.write(bytes(data))
+        self.i2c_device.write(bytes(data))
 
     def read(self, size: int) -> bytes:
         """Read bytes from I2C device

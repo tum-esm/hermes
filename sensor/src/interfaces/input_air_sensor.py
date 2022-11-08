@@ -20,7 +20,7 @@ class InputAirSensorInterface:
 
         t = self._read_temperature()
         rh = self._read_humidity()
-        self.i2c.close()
+        self.i2c_interface.close()
 
         message = f"temperatur = {t}°C, humidity = {rh}%"
         if logger:
@@ -56,7 +56,7 @@ class InputAirSensorInterface:
         else:
             return None
 
-    def _check_crc(data, length) -> bool:
+    def _check_crc(self, data, length) -> bool:
         """Calculates checksum for n bytes of data and compares it with expected"""
         crc = 0
         for i in range(length):
