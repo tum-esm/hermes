@@ -52,7 +52,7 @@ class PumpInterface:
             int(rps * Constants.pump.base_rps_factor),
         )
 
-    def get_pump_cycle_count(self) -> float | None:
+    def get_pump_cycle_count(self) -> float:
         count = 0
         while True:
             try:
