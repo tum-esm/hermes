@@ -15,3 +15,6 @@ class Constants:
         pin_ready_in = 5
         pin_battery_mode_in = 10
         pin_alarm_in = 7
+
+    class mainboard_sensor:
+        i2c_address = 0x76
