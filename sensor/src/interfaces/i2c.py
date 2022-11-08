@@ -20,7 +20,7 @@ class I2CInterface:
     def close(self) -> None:
         self.i2c_device.close()
 
-    def write(self, data: list[bytes | int]) -> None:
+    def write(self, data: list[int]) -> None:
         """Write data to device"""
         self.i2c_device.write(bytes(data))
 

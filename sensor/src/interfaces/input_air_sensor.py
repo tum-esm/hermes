@@ -11,7 +11,7 @@ class InputAirSensorInterface:
         self.i2c_interface = I2CInterface(0x40, 1)
         self.logger = utils.Logger(config, origin="input-air-sensor")
 
-    def run(self, logger: bool = True):
+    def run(self, logger: bool = True) -> None:
         """Complete cycle including open, measurement und close, return tuple of temperature and humidity"""
         self.i2c_interface.write(
             [0xFE]
@@ -28,15 +28,13 @@ class InputAirSensorInterface:
         else:
             print(message)
 
-        return [t, rh]
-
     def _read_temperature(self) -> float | None:
         """Temperature measurement (no hold master), blocking for ~ 88ms !!!"""
         self.i2c_interface.write([0xF3])
         time.sleep(0.086)  # wait, typ=66ms, max=85ms @ 14Bit resolution
         data = self.i2c_interface.read(3)
         if self._check_crc(data, 2):
-            t = ((data[0] << 8) + data[1]) & 0xFFFC  # set status bits to zero
+            t: float = ((data[0] << 8) + data[1]) & 0xFFFC  # set status bits to zero
             t = -46.82 + ((t * 175.72) / 65536)  # T = 46.82 + (175.72 * ST/2^16 )
             return round(t, 1)
         else:
@@ -48,7 +46,7 @@ class InputAirSensorInterface:
         time.sleep(0.03)  # wait, typ=22ms, max=29ms @ 12Bit resolution
         data = self.i2c_interface.read(3)
         if self._check_crc(data, 2):
-            rh = ((data[0] << 8) + data[1]) & 0xFFFC  # zero the status bits
+            rh: float = ((data[0] << 8) + data[1]) & 0xFFFC  # zero the status bits
             rh = -6 + ((125 * rh) / 65536)
             if rh > 100:
                 rh = 100
@@ -56,7 +54,7 @@ class InputAirSensorInterface:
         else:
             return None
 
-    def _check_crc(self, data, length) -> bool:
+    def _check_crc(self, data: bytes, length: int) -> bool:
         """Calculates checksum for n bytes of data and compares it with expected"""
         crc = 0
         for i in range(length):
