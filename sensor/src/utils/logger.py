@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from src import types
 
 dir = os.path.dirname
-PROJECT_DIR = dir(dir(dir(dir(os.path.abspath(__file__)))))
+PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
 LOGS_DIR = os.path.join(PROJECT_DIR, "logs")
 
 # The logging module behaved very weird with the setup we have
