@@ -40,8 +40,10 @@ class MainboardSensorInterface:
         if logger:
             self.logger.info(message_1)
             self.logger.info(message_2)
+            if data.temperature > 40:
+                self.logger.warning("mainboard temperature is very high")
+            if cpu_temperature > 70:
+                self.logger.warning("cpu temperature is very high")
         else:
             print(message_1)
             print(message_2)
-
-        # TODO: if main_temp > 40 or cpu_temp > 70: logger.system_data_logger.warning(data)
