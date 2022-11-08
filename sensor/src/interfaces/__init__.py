@@ -8,3 +8,4 @@ from .mqtt import MQTTInterface
 from .pump import PumpInterface
 from .valve import ValveInterface
 from .input_air_sensor import InputAirSensorInterface
+from .ups import UPSInterface
