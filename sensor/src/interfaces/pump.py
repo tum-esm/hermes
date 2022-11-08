@@ -5,6 +5,7 @@ import RPi.GPIO as GPIO
 import time
 import pigpio
 from typing import Any
+from src import utils, types
 from src.utils import Constants
 
 GPIO.setwarnings(False)
@@ -21,8 +22,10 @@ def _pump_speed_measurement_interrupt(*args: Any) -> None:
 
 
 class PumpInterface:
-    def __init__(self) -> None:
+    def __init__(self, config: types.Config) -> None:
         self.pi = pigpio.pi()
+        self.config = config
+        self.logger = utils.Logger(config, "pump")
         assert (
             self.pi.connected
         ), 'pigpio is not connected, please run "sudo pigpiod -n 127.0.0.1"'
@@ -59,17 +62,22 @@ class PumpInterface:
                 break
         return count / 18
 
-    def run(self, desired_rps: float, duration: float) -> None:
+    def run(self, desired_rps: float, duration: float, logger: float = True) -> None:
         assert 2 <= desired_rps <= 70, "pump hardware limitation is 70 rps"
-        self.get_pump_cycle_count()
+        self.get_pump_cycle_count()  # empty rps_measurement_queue
+
         self.set_desired_pump_rps(desired_rps)
-        self.corrected_input_rps = desired_rps
         time.sleep(duration)
-
-        average_rps = self.get_pump_cycle_count() / duration
-        print(f"desired rps = {desired_rps}, average rps = {average_rps}")
-
         self.set_desired_pump_rps(0)
+
+        message = (
+            f"duration = {duration}, rps = {desired_rps}, actual"
+            + f"average rps = {self.get_pump_cycle_count() / duration}"
+        )
+        if logger:
+            self.logger.info(message)
+        else:
+            print(message)
 
     def teardown(self) -> None:
         """

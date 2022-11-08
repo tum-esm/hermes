@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
