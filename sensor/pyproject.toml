@@ -13,7 +13,6 @@ smbus = "^1.1.post2"
 pigpio = "^1.78"
 pyserial = "^3.5"
 rpi-gpio = "^0.7.1"
-simple-pid = "^1.0.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"

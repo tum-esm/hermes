@@ -264,17 +264,6 @@ optional = false
 python-versions = "*"
 
 [[package]]
-name = "simple-pid"
-version = "1.0.1"
-description = "A simple, easy to use PID controller"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.extras]
-docs = ["m2r", "sphinx-rtd-theme"]
-
-[[package]]
 name = "smbus"
 version = "1.1.post2"
 description = "Python bindings for Linux SMBus access through i2c-dev"
@@ -317,7 +306,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "5fedadb00a67fd41d98132b8fbec668184dd2a2394abb5e5df46082aafd30b78"
+content-hash = "4a3a03db9abab50f156bdd8a005d94e2f60a587dc38fd0bb994cdbeb43aa7639"
 
 [metadata.files]
 attrs = [
@@ -533,10 +522,6 @@ rpi-gpio = [
     {file = "RPi.GPIO-0.7.1-cp38-cp38-linux_armv6l.whl", hash = "sha256:29226823da8b5ccb9001d795a944f2e00924eeae583490f0bc7317581172c624"},
     {file = "RPi.GPIO-0.7.1-cp39-cp39-linux_armv6l.whl", hash = "sha256:15311d3b063b71dee738cd26570effc9985a952454d162937c34e08c0fc99902"},
     {file = "RPi.GPIO-0.7.1.tar.gz", hash = "sha256:cd61c4b03c37b62bba4a5acfea9862749c33c618e0295e7e90aa4713fb373b70"},
-]
-simple-pid = [
-    {file = "simple-pid-1.0.1.tar.gz", hash = "sha256:60d6b3a7c3f19734d33bbc5938293c4924d7cfea74176def03306057b3f99524"},
-    {file = "simple_pid-1.0.1-py2.py3-none-any.whl", hash = "sha256:99254d8f9a630062264ce4842ef1e90443558f336697268d16b9de52d3baec0b"},
 ]
 smbus = [
     {file = "smbus-1.1.post2-cp27-cp27mu-linux_armv7l.whl", hash = "sha256:529f9effc383b6381534d1d845eaf1078bdd2d4e625c945b23cf274d5cf1c306"},
