@@ -1,8 +1,8 @@
-import typing
-import attrs
 import json
+import typing
 
 import asyncpg
+import attrs
 import jinja2
 
 import app.constants as constants
@@ -50,7 +50,6 @@ def build(
     injections. asyncpg doesn't support named parameters, adding them seems taped on.
     I tried SQLAlchemy, but found it too unflexible and slow to program. I want to
     write directly in SQL and have the queries in separate files.
-
     """
     query = templates.get_template(template).render(**template_parameters)
     for key in list(query_parameters.keys()):  # copy keys to avoid modifying iterator
