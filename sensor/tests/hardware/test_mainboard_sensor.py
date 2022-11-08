@@ -8,6 +8,7 @@ sys.path.append(PROJECT_DIR)
 from src import interfaces
 
 
-sensor = interfaces.MainboardSensorInterface()
+config = interfaces.ConfigInterface.read()
+sensor = interfaces.MainboardSensorInterface(config)
 
 sensor.log_system_data(logger=False)
