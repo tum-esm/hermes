@@ -1,5 +1,3 @@
-# TODO: remove missing imports
-
 import queue
 import RPi.GPIO as GPIO
 import time
@@ -8,8 +6,6 @@ from typing import Any
 from src import utils, types
 from src.utils import Constants
 
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)  # Broadcom pin-numbering scheme
 GPIO.setup(Constants.pump.pin_control_out, GPIO.OUT)
 GPIO.setup(Constants.pump.pin_speed_in, GPIO.IN)
 

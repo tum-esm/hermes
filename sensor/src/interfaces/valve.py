@@ -4,10 +4,6 @@ from src import utils, types
 from src.utils import Constants
 
 
-# TODO: move inot __init__
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)  # Broadcom pin-numbering scheme
-
 GPIO.setup(Constants.valves.pin_1_out, GPIO.OUT)
 GPIO.setup(Constants.valves.pin_2_out, GPIO.OUT)
 GPIO.setup(Constants.valves.pin_3_out, GPIO.OUT)
