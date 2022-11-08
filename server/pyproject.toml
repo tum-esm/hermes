@@ -8,7 +8,7 @@ authors = ["Felix Böhm <felix@felixboehm.dev>"]
 python = "^3.10"
 paho-mqtt = "^1.6.1"
 starlette = "^0.21.0"
-uvicorn = {extras = ["standard"], version = "^0.18.3"}
+uvicorn = {extras = ["standard"], version = "^0.19.0"}
 databases = {extras = ["asyncpg"], version = "^0.6.1"}
 SQLAlchemy = {extras = ["mypy"], version = "^1.4.42"}
 asyncio-mqtt = "^0.13.0"
