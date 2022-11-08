@@ -1,4 +1,6 @@
 import typing
+import attrs
+import json
 
 import asyncpg
 import jinja2
@@ -60,7 +62,7 @@ def build(
     )
 
 
-async def initialize(database_client):
+async def initialize(database_client: asyncpg.Connection) -> None:
     """Create tables, and error out if existing tables don't match the schema."""
     await database_client.execute(
         query=templates.get_template("create_table_configurations.sql").render()
@@ -68,3 +70,26 @@ async def initialize(database_client):
     await database_client.execute(
         query=templates.get_template("create_table_measurements.sql").render()
     )
+    # TODO Error out if existing tables don't match the schema
+
+
+class Client:
+    """Custom context manager for asyncpg database connection."""
+
+    def __init__(self, **kwargs):
+        self.connection = None
+        self.kwargs = kwargs
+
+    async def __aenter__(self, **kwargs):
+        self.connection = await asyncpg.connect(**self.kwargs)
+        # Automatically encode/decode JSONB fields to and from str
+        await self.connection.set_type_codec(
+            typename="jsonb",
+            encoder=json.dumps,
+            decoder=json.loads,
+            schema="pg_catalog",
+        )
+        return self.connection
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.connection.close()
