@@ -3,7 +3,7 @@ try:
 
     GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BCM)  # Broadcom pin-numbering scheme
-except ImportError:
+except (ImportError, RuntimeError):
     pass
 
 from .config import ConfigInterface
