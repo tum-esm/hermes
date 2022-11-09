@@ -3,7 +3,7 @@ import ssl
 import typing
 
 import asyncio_mqtt as aiomqtt
-import databases
+import asyncpg
 
 import app.settings as settings
 import app.utils as utils
@@ -42,7 +42,7 @@ async def send(
 
 async def _process_measurement_payload(
     payload: dict[str, typing.Any],
-    database_client: databases.Database,
+    database_client: asyncpg.connection.Connection,
 ) -> None:
     """Validate a measurement message and write it to the database."""
     try:
@@ -74,7 +74,7 @@ async def _process_measurement_payload(
 
 
 async def listen_and_write(
-    database_client: databases.Database,
+    database_client: asyncpg.connection.Connection,
     mqtt_client: aiomqtt.Client,
 ) -> typing.NoReturn:
     """Listen to incoming sensor measurements and write them to the database.
