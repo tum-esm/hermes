@@ -1,7 +1,14 @@
 import json
+import os
+import sys
 import time
 from paho.mqtt.client import Client
 import ssl
+
+dir = os.path.dirname
+PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
+sys.path.append(PROJECT_DIR)
+
 from src import interfaces
 
 config = interfaces.ConfigInterface.read()
