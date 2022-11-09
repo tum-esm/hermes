@@ -1,13 +1,17 @@
 import queue
-import RPi.GPIO as GPIO
 import time
-import pigpio
 from typing import Any
 from src import utils, types
 from src.utils import Constants
 
-GPIO.setup(Constants.pump.pin_control_out, GPIO.OUT)
-GPIO.setup(Constants.pump.pin_speed_in, GPIO.IN)
+try:
+    import pigpio
+    import RPi.GPIO as GPIO
+
+    GPIO.setup(Constants.pump.pin_control_out, GPIO.OUT)
+    GPIO.setup(Constants.pump.pin_speed_in, GPIO.IN)
+except ImportError:
+    pass
 
 
 rps_measurement_queue: queue.Queue[float] = queue.Queue()

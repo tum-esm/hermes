@@ -1,13 +1,16 @@
 from typing import Literal
-import RPi.GPIO as GPIO
 from src import utils, types
 from src.utils import Constants
 
+try:
+    import RPi.GPIO as GPIO
 
-GPIO.setup(Constants.valves.pin_1_out, GPIO.OUT)
-GPIO.setup(Constants.valves.pin_2_out, GPIO.OUT)
-GPIO.setup(Constants.valves.pin_3_out, GPIO.OUT)
-GPIO.setup(Constants.valves.pin_4_out, GPIO.OUT)
+    GPIO.setup(Constants.valves.pin_1_out, GPIO.OUT)
+    GPIO.setup(Constants.valves.pin_2_out, GPIO.OUT)
+    GPIO.setup(Constants.valves.pin_3_out, GPIO.OUT)
+    GPIO.setup(Constants.valves.pin_4_out, GPIO.OUT)
+except ImportError:
+    pass
 
 
 class ValveInterface:

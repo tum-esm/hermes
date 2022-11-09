@@ -1,7 +1,10 @@
-import RPi.GPIO as GPIO
+try:
+    import RPi.GPIO as GPIO
 
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)  # Broadcom pin-numbering scheme
+    GPIO.setwarnings(False)
+    GPIO.setmode(GPIO.BCM)  # Broadcom pin-numbering scheme
+except ImportError:
+    pass
 
 from .config import ConfigInterface
 from .input_air_sensor import InputAirSensorInterface

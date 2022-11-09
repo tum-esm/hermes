@@ -1,13 +1,17 @@
 import queue
 from typing import Literal
-import RPi.GPIO as GPIO
 import time
 from src import utils, types
 from src.utils import Constants
 
-GPIO.setup(Constants.ups.pin_ready_in, GPIO.IN)
-GPIO.setup(Constants.ups.pin_battery_mode_in, GPIO.IN)
-GPIO.setup(Constants.ups.pin_alarm_in, GPIO.IN)
+try:
+    import RPi.GPIO as GPIO
+
+    GPIO.setup(Constants.ups.pin_ready_in, GPIO.IN)
+    GPIO.setup(Constants.ups.pin_battery_mode_in, GPIO.IN)
+    GPIO.setup(Constants.ups.pin_alarm_in, GPIO.IN)
+except ImportError:
+    pass
 
 log_message_queue: queue.Queue[
     tuple[Literal["info", "warning", "error"], str]
