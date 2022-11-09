@@ -10,7 +10,7 @@ try:
     GPIO.setup(Constants.ups.pin_ready_in, GPIO.IN)
     GPIO.setup(Constants.ups.pin_battery_mode_in, GPIO.IN)
     GPIO.setup(Constants.ups.pin_alarm_in, GPIO.IN)
-except ImportError:
+except (ImportError, RuntimeError):
     pass
 
 log_message_queue: queue.Queue[

@@ -10,7 +10,7 @@ try:
 
     GPIO.setup(Constants.pump.pin_control_out, GPIO.OUT)
     GPIO.setup(Constants.pump.pin_speed_in, GPIO.IN)
-except ImportError:
+except (ImportError, RuntimeError):
     pass
 
 

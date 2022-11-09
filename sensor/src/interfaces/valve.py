@@ -9,7 +9,7 @@ try:
     GPIO.setup(Constants.valves.pin_2_out, GPIO.OUT)
     GPIO.setup(Constants.valves.pin_3_out, GPIO.OUT)
     GPIO.setup(Constants.valves.pin_4_out, GPIO.OUT)
-except ImportError:
+except (ImportError, RuntimeError):
     pass
 
 

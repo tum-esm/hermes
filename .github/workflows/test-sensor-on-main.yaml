@@ -5,11 +5,13 @@ on:
             - main
         paths:
             - 'sensor/**'
+            - '.github/workflows/test-sensor-on-main.yaml'
     pull_request:
         branches:
             - main
         paths:
             - 'sensor/**'
+            - '.github/workflows/test-sensor-on-main.yaml'
 
 jobs:
     test-sensor-codebase:

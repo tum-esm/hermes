@@ -2,9 +2,7 @@ import json
 import queue
 import ssl
 from typing import Any
-
 from paho.mqtt.client import Client, MQTTMessage
-
 from src import types
 
 # TODO: statically type messages
