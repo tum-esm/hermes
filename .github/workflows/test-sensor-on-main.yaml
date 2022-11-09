@@ -1,11 +1,15 @@
-name: 'test-on-main'
+name: 'test-sensor-on-main'
 on:
     push:
         branches:
             - main
+        paths:
+            - 'sensor/**'
     pull_request:
         branches:
             - main
+        paths:
+            - 'sensor/**'
 
 jobs:
     test-sensor-codebase:
