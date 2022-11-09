@@ -46,7 +46,8 @@ async def _process_measurement_payload(
 ) -> None:
     """Validate a measurement message and write it to the database."""
     try:
-        measurement = validation.Measurement(**payload)
+        # TODO move validation/exception logic into validation module
+        measurement = validation.MeasurementMessage(**payload)
         receipt_timestamp = utils.timestamp()
         for key, value in measurement.values.items():
             # TODO choose corresponding table based on key
