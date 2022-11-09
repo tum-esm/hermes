@@ -9,12 +9,11 @@ readme = "README.md"
 python = "^3.10"
 paho-mqtt = "^1.6.1"
 psutil = "^5.9.3"
-smbus = "^1.1.post2"
-pigpio = "^1.78"
 pyserial = "^3.5"
-rpi-gpio = "^0.7.1"
-smbus2 = "^0.4.2"
-rpi-bme280 = "^0.2.4"
+pigpio = {version = "^1.78", markers = "sys.platform == 'linux'"}
+rpi-gpio = {version = "^0.7.1", markers = "sys.platform == 'linux'"}
+smbus2 = {version = "^0.4.2", markers = "sys.platform == 'linux'"}
+rpi-bme280 = {version = "^0.2.4", markers = "sys.platform == 'linux'"}
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
