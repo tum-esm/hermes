@@ -89,6 +89,17 @@ POSITIVE_INTEGER_VALIDATOR = attrs.validators.and_(
     attrs.validators.ge(0),
     attrs.validators.lt(constants.Limit.MAXINT4),
 )
+JSON_VALIDATOR = attrs.validators.and_(
+    attrs.validators.instance_of(dict),
+    attrs.validators.deep_mapping(
+        # TODO Enforce some max number of keys
+        mapping_validator=attrs.validators.instance_of(dict),
+        # Note that this validator disallows nested JSON
+        key_validator=VALUE_IDENTIFIER_VALIDATOR,
+        # TODO Validate the values more thoroughly for min and max limits/lengths
+        value_validator=attrs.validators.instance_of(int | float | str | bool | None),
+    ),
+)
 
 
 ########################################################################################
@@ -100,20 +111,31 @@ POSITIVE_INTEGER_VALIDATOR = attrs.validators.and_(
 # - pass different default values
 # - automatically set converters and validators optional if default=None is set
 
+# Query fields are parsed from strings and are always optional
 POSITIVE_INTEGER_QUERY_FIELD = attrs.field(
     default=None,
     converter=attrs.converters.optional(int),
     validator=attrs.validators.optional(POSITIVE_INTEGER_VALIDATOR),
 )
 
+# Standard fields are taken as is and are by default required
+JSON_FIELD = attrs.field(
+    validator=JSON_VALIDATOR,
+)
+
 
 ########################################################################################
 # Route validation
 #
-# Guidelines:
-# - When lists of values are passed, ignore any invalid values
-# - When a single value is passed, raise an error if it is invalid
+# Guidelines for syntactically correct, but otherwise somehow invalid values:
+# - When lists of values are passed, ignore any invalid ones
+# - When a single value is passed, raise an error
 ########################################################################################
+
+
+@attrs.frozen
+class PostSensorsRequestQuery(_RequestQuery):
+    pass
 
 
 @attrs.frozen
@@ -173,6 +195,11 @@ class GetMeasurementsRequestQuery(_RequestQuery):
 
 
 @attrs.frozen
+class PostSensorsRequestBody(_RequestBody):
+    configuration: dict[str, int | float | str | bool | None] = JSON_FIELD
+
+
+@attrs.frozen
 class GetSensorsRequestBody(_RequestBody):
     pass
 
@@ -180,6 +207,17 @@ class GetSensorsRequestBody(_RequestBody):
 @attrs.frozen
 class GetMeasurementsRequestBody(_RequestBody):
     pass
+
+
+# TODO Can we automatically generate these?
+@attrs.frozen
+class PostSensorsRequest(_Request):
+    query: PostSensorsRequestQuery = attrs.field(
+        converter=lambda x: PostSensorsRequestQuery(**x),
+    )
+    body: PostSensorsRequestBody = attrs.field(
+        converter=lambda x: PostSensorsRequestBody(**x),
+    )
 
 
 @attrs.frozen
@@ -211,11 +249,4 @@ class GetMeasurementsRequest(_Request):
 class Measurement:
     sensor_identifier: str = attrs.field(validator=SENSOR_IDENTIFIER_VALIDATOR)
     timestamp: int = attrs.field(validator=POSITIVE_INTEGER_VALIDATOR)
-    values: dict[str, int | float] = attrs.field(
-        validator=attrs.validators.deep_mapping(
-            mapping_validator=attrs.validators.instance_of(dict),
-            key_validator=VALUE_IDENTIFIER_VALIDATOR,
-            # TODO validate the values more thoroughly for min and max limits
-            value_validator=attrs.validators.instance_of(int | float),
-        )
-    )
+    values: dict[str, int | float | str | bool | None] = JSON_FIELD
