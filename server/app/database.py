@@ -5,7 +5,6 @@ import asyncpg
 import attrs
 import jinja2
 
-import app.constants as constants
 import app.settings as settings
 
 

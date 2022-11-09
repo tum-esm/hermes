@@ -1,6 +1,6 @@
 import attrs
 
-import app.constants as constants
+import app.validation.constants as constants
 from app.validation.core import _Request, _RequestBody, _RequestQuery
 from app.validation.fields import (
     JSON_FIELD,

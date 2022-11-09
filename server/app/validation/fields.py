@@ -1,6 +1,6 @@
 import attrs
 
-import app.constants as constants
+import app.validation.constants as constants
 from app.validation.core import _RequestQuery
 
 
