@@ -78,7 +78,7 @@ class Client:
         self.connection = None
         self.kwargs = kwargs
 
-    async def __aenter__(self, **kwargs):
+    async def __aenter__(self):
         self.connection = await asyncpg.connect(**self.kwargs)
         # Automatically encode/decode JSONB fields to and from str
         await self.connection.set_type_codec(
