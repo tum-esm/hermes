@@ -1,4 +1,6 @@
-On the sensor the codebase layout will look like this:
+## Code location on the Raspi
+
+On the sensor, the codebase layout will look like this:
 
 ```bash
 📁 Documents
