@@ -3,9 +3,6 @@ import contextlib
 
 import asyncio_mqtt as aiomqtt
 import asyncpg
-import databases
-import jinja2
-import sqlalchemy as sa
 import starlette.applications
 import starlette.responses
 import starlette.routing
@@ -28,7 +25,7 @@ async def get_status(request):
     payload = {
         "sensor_identifier": "kabuto",
         "timestamp": utils.timestamp(),
-        "values": {"value": random.randint(0, 2**10)},
+        "measurement": {"value": random.randint(0, 2**10)},
     }
     await mqtt.send(payload, "measurements", mqtt_client)
 
@@ -39,6 +36,39 @@ async def get_status(request):
             "start_time": settings.START_TIME,
         }
     )
+
+
+async def post_sensors(request):
+    """Create a new sensor."""
+    request = await validation.validate(request, validation.PostSensorsRequest)
+
+    timestamp = utils.timestamp()
+
+    # Parameterize query
+    query, parameters = database.build(
+        template="insert_configuration.sql",
+        template_parameters={},
+        query_parameters={
+            "sensor_identifier": request.body.sensor_identifier,
+            "creation_timestamp": timestamp,
+            "update_timestamp": timestamp,
+            "configuration": request.body.configuration,
+        },
+    )
+    # Execute query and return response
+    # TODO fail correctly if sensor already exists
+    await database_client.execute(query, *parameters)
+
+    # Send MQTT message
+    # TODO sending MQTT message and database query have to either both succeed or rollback
+    await mqtt.publish(
+        mqtt_client=mqtt_client,
+        payload=request.body.configuration,
+        topic=f"configurations/{request.body.sensor_identifier}",
+        qos=1,
+        retain=True,
+    )
+    return starlette.responses.JSONResponse(status_code=201, content={})
 
 
 async def get_sensors(request):
@@ -74,7 +104,7 @@ async def get_sensors(request):
             "window": window,
         },
     )
-    # Execute query and return results
+    # Execute query and return response
     result = await database_client.fetch(query, *parameters)
     return starlette.responses.JSONResponse(database.dictify(result))
 
@@ -95,7 +125,7 @@ async def get_measurements(request):
             "limit": request.query.limit,
         },
     )
-    # Execute query and return results
+    # Execute query and return response
     result = await database_client.fetch(query, *parameters)
     return starlette.responses.JSONResponse(database.dictify(result))
 
@@ -132,6 +162,11 @@ app = starlette.applications.Starlette(
             path="/status",
             endpoint=get_status,
             methods=["GET"],
+        ),
+        starlette.routing.Route(
+            path="/sensors",
+            endpoint=post_sensors,
+            methods=["POST"],
         ),
         starlette.routing.Route(
             path="/sensors",
