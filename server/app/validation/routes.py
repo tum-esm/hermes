@@ -5,6 +5,7 @@ from app.validation.core import _Request, _RequestBody, _RequestQuery
 from app.validation.fields import (
     JSON_FIELD,
     POSITIVE_INTEGER_QUERY_FIELD,
+    SENSOR_IDENTIFIER_FIELD,
     POSITIVE_INTEGER_VALIDATOR,
     SENSOR_IDENTIFIER_VALIDATOR,
     VALUE_IDENTIFIER_VALIDATOR,
@@ -81,6 +82,7 @@ class _GetMeasurementsRequestQuery(_RequestQuery):
 
 @attrs.frozen
 class _PostSensorsRequestBody(_RequestBody):
+    sensor_identifier: str = SENSOR_IDENTIFIER_FIELD
     configuration: dict[str, int | float | str | bool | None] = JSON_FIELD
 
 

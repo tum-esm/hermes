@@ -72,6 +72,9 @@ POSITIVE_INTEGER_QUERY_FIELD = attrs.field(
 )
 
 # Standard fields are taken as is and are by default required
+SENSOR_IDENTIFIER_FIELD = attrs.field(
+    validator=SENSOR_IDENTIFIER_VALIDATOR,
+)
 JSON_FIELD = attrs.field(
     validator=JSON_VALIDATOR,
 )

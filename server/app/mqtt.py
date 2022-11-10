@@ -50,7 +50,6 @@ async def _process_measurement_payload(
         measurement = validation.MeasurementMessage(**payload)
         receipt_timestamp = utils.timestamp()
         for key, value in measurement.values.items():
-            # TODO choose corresponding table based on key
             """
             await database_client.execute(
                 query=MEASUREMENTS.insert(),
