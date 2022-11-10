@@ -148,6 +148,7 @@ class CO2SensorInterface:
 
         # TODO: read receiver queue
         # TODO: possibly restart co2 measurements
+        # TODO: log
 
         return "hh:mm:ss"
 
@@ -156,13 +157,13 @@ class CO2SensorInterface:
         self.rs232_interface.write(f"range {upper_limit}", send_esc=True, save_eeprom=save_eeprom, sleep=1)
         # TODO: log
 
-    @staticmethod
     def set_formatting_message(
-        raw_data=True,
-        with_compensation_data=True,
-        filtered_data=True,
-        echo=True,
-        save_eeprom=False,
+        self,
+        raw_data: bool = True,
+        with_compensation_data: bool = True,
+        filtered_data: bool = True,
+        echo: bool = True,
+        save_eeprom: bool = False,
     ) -> None:
         """Send the commands to format the measurement messages
         raw_data is the raw data before any compensations and filters (True or False)
@@ -171,26 +172,23 @@ class CO2SensorInterface:
         filtered_data is the data after the compensations and enabled filters (True or False)
         echo defines if the sensor returns the sended commands (True or False)
         """
-        formatting_string = "form "
+        # TODO: possibly stop co2 measurements
+        # TODO: flush receiver cache
+
+        format_list: list[str] = []
         if raw_data:
-            formatting_string += '"Raw"CO2RAWUC"ppm"'
-            if with_compensation_data or filtered_data:
-                formatting_string += '"; "'
+            format_list.append('"Raw"CO2RAWUC"ppm"')
         if with_compensation_data:
-            formatting_string += '"Comp"CO2RAW"ppm"'
-            if filtered_data:
-                formatting_string += '"; "'
+            format_list.append('"Comp"CO2RAW"ppm"')
         if filtered_data:
-            formatting_string += '"Filt"CO2"ppm"'
-        formatting_string += "#r#n"
+            format_list.append('"Filt"CO2"ppm"')
+        formatting_string = "form " + ("; ".join(format_list)) + "#r#n"
 
-        RS232.write(f"\x1B {formatting_string}\r\n".encode("utf-8"))
-        RS232.write(f"\x1B echo {'on' if echo else 'off'}\r\n".encode("utf-8"))
+        self.rs232_interface.write(formatting_string, send_esc=True)
+        self.rs232_interface.write(f"echo {'on' if echo else 'off'}", send_esc=True, save_eeprom=save_eeprom, sleep=1)
 
-        if save_eeprom:
-            RS232.write("save\r\n".encode("utf-8"))
-        RS232.flush()
-        time.sleep(1)
+        # TODO: possibly restart co2 measurements
+        # TODO: log
 
     @staticmethod
     def get_info(
@@ -222,21 +220,3 @@ class CO2SensorInterface:
 
         return received_serial_cache.decode("cp1252")
 
-    def _receive_serial_cache(thread_receiving_data: bool):
-        """Internal class function that can stop or start the receiving data
-        in the deamon thread. Also empty the serial cache and returns the bytearray
-        """
-        if not thread_receiving_data:
-            GMP343.thread_receiving_data = thread_receiving_data
-            time.sleep(0.05)  # max runtime of one cycle in receiving data loop
-
-        received_serial_cache = bytearray(0)
-        while RS232.inWaiting() > 0:
-            received_serial_cache = RS232.read(RS232.inWaiting())
-
-        if thread_receiving_data:
-            # stop/start the deamon thread until the return value
-            GMP343.thread_receiving_data = thread_receiving_data
-            time.sleep(0.05)  # max runtime of one cycle in receiving data loop
-
-        return received_serial_cache
