@@ -5,7 +5,7 @@ import time
 from src import utils, types
 from .i2c import I2CInterface
 
-
+# TODO rename to inflow-air-sensor
 class InputAirSensorInterface:
     def __init__(self, config: types.Config) -> None:
         self.i2c_interface = I2CInterface(0x40, 1)

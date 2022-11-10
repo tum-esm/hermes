@@ -79,6 +79,8 @@ class PumpInterface:
         else:
             print(message)
 
+        # TODO: log when avg rps is differing more than 5% from the desired rps
+
     def teardown(self) -> None:
         """
         Set the pump in a save state. Required to end the

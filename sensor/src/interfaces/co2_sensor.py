@@ -205,8 +205,6 @@ class CO2SensorInterface:
         # TODO: possibly stop co2 measurements
         # TODO: flush receiver cache
 
-        self.rs232_interface
-
         if device_info:
             self.rs232_interface.write("??")
         if software_version:

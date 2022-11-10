@@ -13,6 +13,7 @@ try:
 except (ImportError, RuntimeError):
     pass
 
+# TODO: Send logs right away
 log_message_queue: queue.Queue[
     tuple[Literal["info", "warning", "error"], str]
 ] = queue.Queue()
