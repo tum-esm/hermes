@@ -19,7 +19,7 @@ class RS232Interface:
 
     def __init__(self) -> None:
         self.serial_interface = serial.Serial("/dev/ttySC0", 19200)
-    
+
     def write(
         self,
         message: str,
@@ -28,13 +28,15 @@ class RS232Interface:
         save_eeprom: bool = False,
     ) -> None:
         # TODO: add thread lock
-        self.serial_interface.write(f"{'\x1B' if send_esc else ''}{message}\r\n".encode("utf-8"))
+        self.serial_interface.write(
+            (("\x1B " if send_esc else "") + message + "\r\n").encode("utf-8")
+        )
         if save_eeprom:
             self.rs232_interface.write("save\r\n".encode("utf-8"))
         self.serial_interface.flush()
         if sleep is not None:
             time.sleep(sleep)
-    
+
     def read(self) -> str:
         # TODO: add thread lock
         waiting_bytes_count = self.serial_interface.inWaiting()
@@ -43,7 +45,7 @@ class RS232Interface:
             if received_bytes[0] != 0:
                 return received_bytes.decode("cp1252").replace(";", ",")
         return ""
-    
+
     @staticmethod
     def data_receiving_loop():
         """Receiving all the data that is send over RS232 and print it.
@@ -57,8 +59,9 @@ class RS232Interface:
             for received_line in splitted_serial_stream[:-1]:
                 RS232Interface.receiving_queue.put(received_line)
             accumulating_serial_stream = splitted_serial_stream[-1]
-            
+
             time.sleep(0.001)
+
 
 class CO2SensorInterface:
     def __init__(self, config: types.Config) -> None:
@@ -68,7 +71,7 @@ class CO2SensorInterface:
     def start_polling_measurements(self):
         self.rs232_interface.write("r", sleep=0.1)
         self.logger.info("started polling")
-    
+
     def stop_polling_measurements(self):
         self.rs232_interface.write("s", sleep=0.1)
         self.logger.info("stopped polling")
@@ -110,10 +113,7 @@ class CO2SensorInterface:
         self.rs232_interface.write(f"smooth {smooth}", send_esc=True)
         self.rs232_interface.write(f"median {median}", send_esc=True)
         self.rs232_interface.write(
-            f"linear {'on' if linear else 'off'}",
-            send_esc=True,
-            save_eeprom=save_eeprom,
-            sleep=0.5
+            f"linear {'on' if linear else 'off'}", send_esc=True, save_eeprom=save_eeprom, sleep=0.5
         )
 
         # TODO: log
@@ -131,10 +131,15 @@ class CO2SensorInterface:
         self.rs232_interface.write(f"intv {value} {unit}", save_eeprom=save_eeprom, sleep=0.2)
 
         # TODO: log
-    
+
     def set_time(self, save_eeprom: bool = False) -> None:
         """The function set the time of the CO2"""
-        self.rs232_interface.write(f"time {datetime.now().strftime('%H:%M:%S')}", send_esc=True, save_eeprom=save_eeprom, sleep=0.1)
+        self.rs232_interface.write(
+            f"time {datetime.now().strftime('%H:%M:%S')}",
+            send_esc=True,
+            save_eeprom=save_eeprom,
+            sleep=0.1,
+        )
         # TODO: log
 
     def get_time(self) -> str:
@@ -152,9 +157,15 @@ class CO2SensorInterface:
 
         return "hh:mm:ss"
 
-    def set_measurement_range(self, upper_limit: Literal[1000, 2000, 3000, 4000, 5000, 20000] = 1000, save_eeprom: bool = False) -> None:
+    def set_measurement_range(
+        self,
+        upper_limit: Literal[1000, 2000, 3000, 4000, 5000, 20000] = 1000,
+        save_eeprom: bool = False,
+    ) -> None:
         """Set the measurement range of the sensors"""
-        self.rs232_interface.write(f"range {upper_limit}", send_esc=True, save_eeprom=save_eeprom, sleep=1)
+        self.rs232_interface.write(
+            f"range {upper_limit}", send_esc=True, save_eeprom=save_eeprom, sleep=1
+        )
         # TODO: log
 
     def set_formatting_message(
@@ -185,14 +196,19 @@ class CO2SensorInterface:
         formatting_string = "form " + ("; ".join(format_list)) + "#r#n"
 
         self.rs232_interface.write(formatting_string, send_esc=True)
-        self.rs232_interface.write(f"echo {'on' if echo else 'off'}", send_esc=True, save_eeprom=save_eeprom, sleep=1)
+        self.rs232_interface.write(
+            f"echo {'on' if echo else 'off'}", send_esc=True, save_eeprom=save_eeprom, sleep=1
+        )
 
         # TODO: possibly restart co2 measurements
         # TODO: log
 
     def get_info(
         self,
-        device_info: bool = True, software_version: bool = False, errors: bool = False, corrections: bool = False
+        device_info: bool = True,
+        software_version: bool = False,
+        errors: bool = False,
+        corrections: bool = False,
     ) -> str:
         """Send diffrent information about the versions and settings of the CO2 sensor
         device_info shows name/software version, serien number, last calibration,
@@ -221,4 +237,3 @@ class CO2SensorInterface:
         # TODO: log
 
         return "something"
-
