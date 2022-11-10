@@ -190,10 +190,10 @@ class CO2SensorInterface:
         # TODO: possibly restart co2 measurements
         # TODO: log
 
-    @staticmethod
     def get_info(
-        device_info=True, software_version=False, errors=False, corrections=False
-    ):
+        self,
+        device_info: bool = True, software_version: bool = False, errors: bool = False, corrections: bool = False
+    ) -> str:
         """Send diffrent information about the versions and settings of the CO2 sensor
         device_info shows name/software version, serien number, last calibration,
             measurment span, pressure, humidity, oxygen, compensations, interface
@@ -202,21 +202,25 @@ class CO2SensorInterface:
         corrections shows the last linear and multipoint correction value
         return: string of the complete answer of the CO2 sensor
         """
-        GMP343._receive_serial_cache(False)
+        # TODO: possibly stop co2 measurements
+        # TODO: flush receiver cache
+
+        self.rs232_interface
 
         if device_info:
-            RS232.write("??\r\n".encode("utf-8"))
+            self.rs232_interface.write("??")
         if software_version:
-            RS232.write("vers\r\n".encode("utf-8"))
+            self.rs232_interface.write("vers")
         if errors:
-            RS232.write("errs\r\n".encode("utf-8"))
+            self.rs232_interface.write("errs")
         if corrections:
-            RS232.write("corr\r\n".encode("utf-8"))
+            self.rs232_interface.write("corr")
 
-        RS232.flush()
         time.sleep(1)
 
-        received_serial_cache = GMP343._receive_serial_cache(True)
+        # TODO: receive infos
+        # TODO: possibly restart co2 measurements
+        # TODO: log
 
-        return received_serial_cache.decode("cp1252")
+        return "something"
 
