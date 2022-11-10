@@ -44,6 +44,7 @@ module = [
     "RPi.*",
     "pigpio",
     "bme280",
+    "gpiozero",
 ]
 ignore_missing_imports = true
 
