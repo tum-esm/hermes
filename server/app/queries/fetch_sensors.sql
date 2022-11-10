@@ -29,7 +29,7 @@ buckets_wd AS (
         COALESCE(count, 0) AS count
     FROM
         UNNEST(ARRAY[0, 1, 2, 3]) bucket
-    CROSS JOIN (SELECT sensor_identifier FROM buckets GROUP BY sensor_identifier) sensors
+    CROSS JOIN (SELECT sensor_identifier FROM configurations GROUP BY sensor_identifier) sensors
     LEFT OUTER JOIN buckets USING (sensor_identifier, bucket)
 ),
 
