@@ -1,16 +1,7 @@
 from typing import Literal
 from src import utils, types
 from src.utils import Constants
-
-try:
-    import RPi.GPIO as GPIO
-
-    GPIO.setup(Constants.valves.pin_1_out, GPIO.OUT)
-    GPIO.setup(Constants.valves.pin_2_out, GPIO.OUT)
-    GPIO.setup(Constants.valves.pin_3_out, GPIO.OUT)
-    GPIO.setup(Constants.valves.pin_4_out, GPIO.OUT)
-except (ImportError, RuntimeError):
-    pass
+import gpiozero
 
 
 class ValveInterface:
@@ -19,20 +10,27 @@ class ValveInterface:
         self.logger = utils.Logger(config, "valves")
         self.set_active_input(1)
 
-    def set_active_input(self, no: Literal[1, 2, 3, 4], logger: bool = True) -> None:
-        if no == 1:
-            valve_signal = [GPIO.LOW, GPIO.LOW, GPIO.LOW, GPIO.LOW]
-        if no == 2:
-            valve_signal = [GPIO.HIGH, GPIO.HIGH, GPIO.LOW, GPIO.LOW]
-        if no == 3:
-            valve_signal = [GPIO.HIGH, GPIO.LOW, GPIO.HIGH, GPIO.LOW]
-        if no == 4:
-            valve_signal = [GPIO.HIGH, GPIO.LOW, GPIO.LOW, GPIO.HIGH]
+        self.valves: dict[Literal[1, 2, 3, 4], gpiozero.OutputDevice] = {
+            1: gpiozero.OutputDevice(
+                Constants.valves.pin_1_out, active_high=False, initial_value=True
+            ),
+            2: gpiozero.OutputDevice(
+                Constants.valves.pin_2_out, active_high=True, initial_value=False
+            ),
+            3: gpiozero.OutputDevice(
+                Constants.valves.pin_3_out, active_high=True, initial_value=False
+            ),
+            4: gpiozero.OutputDevice(
+                Constants.valves.pin_4_out, active_high=True, initial_value=False
+            ),
+        }
 
-        GPIO.output(Constants.valves.pin_1_out, valve_signal[0])
-        GPIO.output(Constants.valves.pin_2_out, valve_signal[1])
-        GPIO.output(Constants.valves.pin_3_out, valve_signal[2])
-        GPIO.output(Constants.valves.pin_4_out, valve_signal[3])
+    def set_active_input(self, no: Literal[1, 2, 3, 4], logger: bool = True) -> None:
+        for number, device in self.valves.items():
+            if number == no:
+                device.on()
+            else:
+                device.off()
 
         message = f"switching to valve {no}"
         if logger:
