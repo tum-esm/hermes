@@ -11,9 +11,10 @@ paho-mqtt = "^1.6.1"
 psutil = "^5.9.3"
 pyserial = "^3.5"
 pigpio = {version = "^1.78", markers = "platform_machine == 'aarch64'"}
-rpi-gpio = {version = "^0.7.1", markers = "platform_machine == 'aarch64'"}
+"RPi.GPIO" = {version = "^0.7.1", markers = "platform_machine == 'aarch64'"}
 smbus2 = {version = "^0.4.2", markers = "platform_machine == 'aarch64'"}
 rpi-bme280 = {version = "^0.2.4", markers = "platform_machine == 'aarch64'"}
+gpiozero = "^1.6.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
@@ -48,3 +49,6 @@ ignore_missing_imports = true
 
 [tool.isort]
 profile = "black"
+
+[tool.black]
+line-length = 100
