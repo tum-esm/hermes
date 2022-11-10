@@ -31,13 +31,20 @@ CONFIGURATION = {
 }
 
 
-async def send(
-    payload: dict[str, typing.Any],
-    topic: str,
+async def publish(
     mqtt_client: aiomqtt.Client,
+    topic: str,
+    payload: dict[str, typing.Any],
+    qos: int = 0,
+    retain: bool = False,
 ) -> None:
     """Publish a JSON message to the specified topic."""
-    await mqtt_client.publish(topic, payload=_encode_payload(payload))
+    await mqtt_client.publish(
+        topic=topic,
+        payload=_encode_payload(payload),
+        qos=qos,
+        retain=retain,
+    )
 
 
 async def _process_measurement_payload(
