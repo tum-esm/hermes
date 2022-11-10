@@ -45,6 +45,7 @@ module = [
     "pigpio",
     "bme280",
     "gpiozero",
+    "smbus2",
 ]
 ignore_missing_imports = true
 
