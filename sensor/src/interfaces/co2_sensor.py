@@ -1,3 +1,4 @@
+from datetime import datetime
 import queue
 from typing import Literal
 import serial
@@ -60,11 +61,6 @@ class RS232Interface:
             time.sleep(0.001)
 
 class CO2SensorInterface:
-    thread_receiving_data = True
-    last_oxygen = None
-    last_pressure = None
-    last_humidity = None
-
     def __init__(self, config: types.Config) -> None:
         self.rs232_interface = RS232Interface()
         self.logger = utils.Logger(config, origin="co2-sensor")
@@ -127,58 +123,35 @@ class CO2SensorInterface:
         value: int = 1,
         unit: Literal["s", "min", "h"] = "s",
         save_eeprom: bool = False,
-    ):
+    ) -> None:
         """Send the command to set the time between the automatic measurment
         value can be selected between 1 to 1000."""
 
         assert 1 <= value <= 1000, "invalid interval setting"
-        self.rs232_interface.write(f"intv {value} {unit}")
-        if save_eeprom:
-           self.rs232_interface.write("save")
-        time.sleep(0.2)
+        self.rs232_interface.write(f"intv {value} {unit}", save_eeprom=save_eeprom, sleep=0.2)
 
         # TODO: log
+    
+    def set_time(self, save_eeprom: bool = False) -> None:
+        """The function set the time of the CO2"""
+        self.rs232_interface.write(f"time {datetime.now().strftime('%H:%M:%S')}", send_esc=True, save_eeprom=save_eeprom, sleep=0.1)
+        # TODO: log
 
-    @staticmethod
-    def set_time(clock_time: str, save_eeprom=False):
-        """The function set the time of the CO2 Sensor.
-        clock time is a string like "12:15:00"
-        """
-        clock_time_check = list(map(int, clock_time.split(":")))
-        assert (
-            clock_time_check[0] >= 0
-            and clock_time_check[0] < 24
-            and clock_time_check[1] >= 0
-            and clock_time_check[1] < 60
-            and clock_time_check[2] >= 0
-            and clock_time_check[2] < 60
-        ), "Wrong calibration setting"
-        RS232.write(f"\x1B time {clock_time}\r\n".encode("utf-8"))
-
-        if save_eeprom:
-            RS232.write("save\r\n".encode("utf-8"))
-        RS232.flush()
-        time.sleep(0.1)
-
-        logger.system_data_logger.info(f"Setting clock time {clock_time}")
-
-    @staticmethod
-    def get_time():
+    def get_time(self) -> str:
         """The function get the time of the CO2 Sensor since the last reset.
         return: String in the format of "12:10:04"
         """
-        GMP343._receive_serial_cache(False)
-        time.sleep(0.05)  # max runtime of one cycle in receiving data loop
+        # TODO: possibly stop co2 measurements
+        # TODO: flush receiver cache
 
-        RS232.write("time\r\n".encode("utf-8"))
-        RS232.flush()
-        time.sleep(0.1)
+        self.rs232_interface.write("time", sleep=0.1)
 
-        received_serial_cache = GMP343._receive_serial_cache(True)
+        # TODO: read receiver queue
+        # TODO: possibly restart co2 measurements
 
-        return received_serial_cache[6:14].decode("cp1252")
+        return "hh:mm:ss"
 
-    def set_measurement_range(self, upper_limit: Literal[1000, 2000, 3000, 4000, 5000, 20000] = 1000, save_eeprom: bool = False):
+    def set_measurement_range(self, upper_limit: Literal[1000, 2000, 3000, 4000, 5000, 20000] = 1000, save_eeprom: bool = False) -> None:
         """Set the measurement range of the sensors"""
         self.rs232_interface.write(f"range {upper_limit}", send_esc=True, save_eeprom=save_eeprom, sleep=1)
         # TODO: log
@@ -190,7 +163,7 @@ class CO2SensorInterface:
         filtered_data=True,
         echo=True,
         save_eeprom=False,
-    ):
+    ) -> None:
         """Send the commands to format the measurement messages
         raw_data is the raw data before any compensations and filters (True or False)
         with_compensation_data is the data before the filters but with the
