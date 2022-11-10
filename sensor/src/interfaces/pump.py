@@ -23,7 +23,7 @@ def _pump_speed_measurement_interrupt(*args: Any) -> None:
 
 class PumpInterface:
     def __init__(self, config: types.Config) -> None:
-        self.pi = pigpio.pi()
+        self.pi = pigpio.pi("127.0.0.1")
         self.config = config
         self.logger = utils.Logger(config, "pump")
         assert (

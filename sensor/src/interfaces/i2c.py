@@ -5,8 +5,6 @@ import fcntl
 
 
 class I2CInterface:
-    """Wrapper class for I2C with raspberry Pi"""
-
     def __init__(self, addr: int = 0, dev: int = 1) -> None:
         """Open I2C-Port
 
@@ -18,15 +16,13 @@ class I2CInterface:
         fcntl.ioctl(self.i2c_device, 0x0706, addr)  # I2C Address
 
     def close(self) -> None:
+        """close connection"""
         self.i2c_device.close()
 
     def write(self, data: list[int]) -> None:
-        """Write data to device"""
+        """write data to device"""
         self.i2c_device.write(bytes(data))
 
-    def read(self, size: int) -> bytes:
-        """Read bytes from I2C device
-
-        size: number of bytes to read
-        """
-        return self.i2c_device.read(size)
+    def read(self, n: int) -> bytes:
+        """read n bytes from I2C device"""
+        return self.i2c_device.read(n)
