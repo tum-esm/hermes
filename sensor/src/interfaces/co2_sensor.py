@@ -1,3 +1,4 @@
+from typing import Literal
 import serial
 import time
 import fnmatch
@@ -8,42 +9,59 @@ from src.utils import logger
 
 RS232 = serial.Serial("/dev/ttySC0", 19200)
 
+# TODO: add pressure calibration
+# TODO: add humidity calibration
+
+"""One way to improve robustness is to send an extra ESC (\x1B) character
+before each command. This should ensure that GMP343 will be ready for a new command
+in case of the previous command was not completed for some reason"""
+
+class RS232Interface:
+    def __init__(self) -> None:
+        self.serial_interface = serial.Serial("/dev/ttySC0", 19200)
+    
+    def write(
+        self,
+        message: str,
+        sleep: float | None = None,
+        send_esc: bool=False,
+        save_eeprom: bool = False,
+    ) -> None:
+        self.serial_interface.write(f"{'\x1B' if send_esc else ''}{message}\r\n".encode("utf-8"))
+        if save_eeprom:
+            self.rs232_interface.write("save\r\n".encode("utf-8"))
+        self.serial_interface.flush()
+        if sleep is not None:
+            time.sleep(sleep)
 
 class GMP343:
-    """One way to improve robustness is to send an extra ESC (\x1B) character
-    before each command. This should ensure that GMP343 will be ready for a new command
-    in case of the previous command was not completed for some reason"""
-
     thread_receiving_data = True
     last_oxygen = None
     last_pressure = None
     last_humidity = None
 
-    @staticmethod
-    def set_start_polling_meas():
-        """Send the command to start the automatic measurment
-        of the CO2 sensor. The intervall can be selected with INTV_setting().
+    def __init__(self) -> None:
+        self.rs232_interface = RS232Interface()
+
+    def set_start_polling_meas(self):
+        """Send the command to start the automatic measurement
+        of the CO2 sensor. The interval can be selected with INTV_setting().
         If the mode is started it has to be end with stop_polling_meas() before
         any setting can be adjusted
         """
         print("CO2 measurment has started...")
-        RS232.write("r\r\n".encode("utf-8"))
-        RS232.flush()
-        time.sleep(0.1)
+        self.rs232_interface.write("r", sleep=0.1)
 
-    @staticmethod
-    def set_stop_polling_meas():
+    def set_stop_polling_meas(self):
         """Send the command to stop the automatic measurment
         of the CO2 sensor. More information on start_polling_meas().
         FIXME there is probably a problem with the hardware (Mainboard)
         the command "s" is correct
         """
-        RS232.write("s\r\n".encode("utf-8"))
-        RS232.flush()
-        print("CO2 measurment has stoped.")
+        self.rs232_interface.write("s")
+        print("CO2 measurement has stopped.")
 
-    @staticmethod
-    def get_one_measurement():
+    def get_one_measurement(self):
         """Send the command to get one measurment
         of the CO2 sensor. The function is only
         intended for formatting with all three values from the CO2 sensor (Raw, Comp, Filt)
@@ -51,9 +69,8 @@ class GMP343:
         return: is the three measurement values of the CO2 sensor (Raw, Comp, Filt) in an array
         """
         GMP343._receive_serial_cache(False)
-        RS232.write("send\r\n".encode("utf-8"))
-        RS232.flush()
-        time.sleep(0.3)  # time for answer needed
+
+        self.rs232_interface.write("send", sleep=0.3)
 
         received_serial_cache = GMP343._receive_serial_cache(True)
 
@@ -76,8 +93,7 @@ class GMP343:
         print(f"Raw  {data[0]}ppm, Comp  {data[1]}ppm, Filt  {data[2]}ppm")
         return data
 
-    @staticmethod
-    def receiving_data():
+    def receiveing_data(self):
         """Receiving all the data that is send over RS232 and print it.
         If the data is a CO2 measurement it will be safed in sensor log
         """
@@ -109,8 +125,7 @@ class GMP343:
                     received_serial_cache = bytearray(10)
             time.sleep(0.001)
 
-    @staticmethod
-    def start_receiving_data():
+    def start_receiving_data(self):
         """Start new thread for the receiving data over RS232
         it is a deamon thread that will be ended if the main thread is killed
         """
@@ -118,12 +133,16 @@ class GMP343:
         UART_RS232_receiving.setDaemon(True)  # change UART_RS232_receiving to daemon
         UART_RS232_receiving.start()  # starting of Thread UART_RS232_receiving
 
-    @staticmethod
     def set_filter_setting(
-        median=0, average=10, smoothing=0, linearization=True, save_eeprom=False
+        self,
+        median: int = 0,
+        average: int = 10,
+        smooth: int = 0,
+        linear: bool = True,
+        save_eeprom: bool = False,
     ):
         """Send the command for the filter settings
-        Median first filster in chain, removing random peak values. Number of
+        Median first filters in chain, removing random peak values. Number of
         measurements is set by Median command (0 to 13 measurments)
         Averaging filter calculates moving average over period of time.
         Can be set from 0 to 60 seconds for longer averaging times use smoothing.
@@ -137,46 +156,37 @@ class GMP343:
             a signal proportioal to the absorption (True or False)
         """
         assert average >= 0 and average <= 60, "Wrong calibration setting"
-        RS232.write(f"\x1B average {average}\r\n".encode("utf-8"))
-        assert smoothing >= 0 and smoothing <= 255, "Wrong calibration setting"
-        RS232.write(f"\x1B smooth {smoothing}\r\n".encode("utf-8"))
+        assert smooth >= 0 and smooth <= 255, "Wrong calibration setting"
         assert median >= 0 and median <= 13, "Wrong calibration setting"
-        RS232.write(f"\x1B median {median}\r\n".encode("utf-8"))
-        assert (
-            linearization == True or linearization == False
-        ), "Wrong calibration setting"
-        RS232.write(
-            f"\x1B linear {'on' if linearization else 'off'}\r\n".encode("utf-8")
-        )
+
+        self.rs232_interface.write(f"average {average}", send_esc=True)
+        self.rs232_interface.write(f"smooth {smooth}", send_esc=True)
+        self.rs232_interface.write(f"median {median}", send_esc=True)
+        self.rs232_interface.write(f"linear {'on' if linear else 'off'}", send_esc=True)
 
         if save_eeprom:
-            RS232.write("save\r\n".encode("utf-8"))
-        RS232.flush()
+            self.rs232_interface.write("save")
+
         time.sleep(0.5)
 
-        logger.system_data_logger.info(
-            f"Calibration setting (filter); "
-            + f"median: {median}, "
-            + f"average: {average}, "
-            + f"smoothing: {smoothing}, "
-            + f"linearization: {linearization}"
-        )
+        # TODO: log
 
-    @staticmethod
-    def set_INTV_setting(value=1, unit="s", save_eeprom=False):
+    def set_measurement_interval(
+        self,
+        value: int = 1,
+        unit: Literal["s", "min", "h"] = "s",
+        save_eeprom: bool = False,
+    ):
         """Send the command to set the time between the automatic measurment
-        value can be selected between 1 to 1000
-        unit can be set to "s"; "min"; "h"
-        More information on start_polling_meas()
-        """
-        assert value >= 1 and value <= 1000, "Wrong INTV setting"
-        assert unit in ["s", "min", "h"], "Wrong INTV setting"
-        RS232.write(f"\x1B intv {value} {unit}\r\n".encode("utf-8"))
+        value can be selected between 1 to 1000."""
 
+        assert 1 <= value <= 1000, "invalid interval setting"
+        self.rs232_interface.write(f"intv {value} {unit}")
         if save_eeprom:
-            RS232.write("save\r\n".encode("utf-8"))
-        RS232.flush()
+           self.rs232_interface.write("save")
         time.sleep(0.2)
+
+        # TODO: log
 
     @staticmethod
     def set_oxygen_calibration_setting(oxygen=20.95, save_eeprom=False):
