@@ -62,12 +62,11 @@ def build(
 
 async def initialize(database_client: asyncpg.Connection) -> None:
     """Create tables, and error out if existing tables don't match the schema."""
-    await database_client.execute(
-        query=templates.get_template("create_table_configurations.sql").render()
-    )
-    await database_client.execute(
-        query=templates.get_template("create_table_measurements.sql").render()
-    )
+    tables = ["sensors", "configurations", "measurements"]
+    for table in tables:
+        await database_client.execute(
+            query=templates.get_template(f"create_table_{table}.sql").render()
+        )
     # TODO Error out if existing tables don't match the schema
 
 
