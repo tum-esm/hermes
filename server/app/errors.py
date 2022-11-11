@@ -14,3 +14,8 @@ class InvalidSyntaxError(_CustomError):
 class ResourceExistsError(_CustomError):
     STATUS_CODE = 409
     DETAIL = "Resource Exists"
+
+
+class InternalServerError(_CustomError):
+    STATUS_CODE = 500
+    DETAIL = "Internal Server Error"

@@ -29,6 +29,7 @@ async def get_status(request):
     }
     await mqtt.send(payload, "measurements", mqtt_client)
 
+    # Return successful response
     return starlette.responses.JSONResponse(
         {
             "commit_sha": settings.COMMIT_SHA,
@@ -44,7 +45,7 @@ async def post_sensors(request):
 
     timestamp = utils.timestamp()
 
-    # Parameterize query
+    # Parameterize database query
     query, parameters = database.build(
         template="insert_configuration.sql",
         template_parameters={},
@@ -55,21 +56,25 @@ async def post_sensors(request):
             "configuration": request.body.configuration,
         },
     )
-    # Execute query
     try:
+        # Execute database query
         await database_client.execute(query, *parameters)
+        # Send MQTT message
+        # TODO implement acknowledgement and retry logic to avoid corrupted state
+        await mqtt.publish(
+            mqtt_client=mqtt_client,
+            payload=request.body.configuration,
+            topic=f"configurations/{request.body.sensor_identifier}",
+            qos=1,
+            retain=True,
+        )
     except asyncpg.exceptions.UniqueViolationError:
-        # Error out if configuration already exists
+        logger.warning("[POST /sensors] Configuration already exists")
         raise errors.ResourceExistsError()
-    # Send MQTT message
-    # TODO sending MQTT message and database query have to either both succeed or rollback
-    await mqtt.publish(
-        mqtt_client=mqtt_client,
-        payload=request.body.configuration,
-        topic=f"configurations/{request.body.sensor_identifier}",
-        qos=1,
-        retain=True,
-    )
+    except aiomqtt.MqttError:
+        logger.warning("[POST /sensors] MQTT message could not be published")
+        raise errors.InternalServerError()
+    # Return successful response
     return starlette.responses.JSONResponse(status_code=201, content={})
 
 
@@ -96,7 +101,7 @@ async def get_sensors(request):
     # TODO remove
     timestamps[0] = 0
 
-    # Parameterize query
+    # Parameterize database query
     query, parameters = database.build(
         template="fetch_sensors.sql",
         template_parameters={"request": request},
@@ -106,8 +111,9 @@ async def get_sensors(request):
             "window": window,
         },
     )
-    # Execute query and return response
+    # Execute database query
     result = await database_client.fetch(query, *parameters)
+    # Return successful response
     return starlette.responses.JSONResponse(database.dictify(result))
 
 
@@ -115,7 +121,7 @@ async def get_measurements(request):
     """Return measurements sorted chronologically, optionally filtered."""
     request = await validation.validate(request, validation.GetMeasurementsRequest)
 
-    # Parameterize query
+    # Parameterize database query
     query, parameters = database.build(
         template="fetch_measurements.sql",
         template_parameters={"request": request},
@@ -127,8 +133,12 @@ async def get_measurements(request):
             "limit": request.query.limit,
         },
     )
-    # Execute query and return response
+    # Execute database query
+    # TODO limiting size and paginating is fine for now, but we should also
+    # either implement streaming or some other way to export the data in different
+    # formats
     result = await database_client.fetch(query, *parameters)
+    # Return successful response
     return starlette.responses.JSONResponse(database.dictify(result))
 
 
