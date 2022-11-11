@@ -27,3 +27,10 @@ The `insert-name-here-cli.sh` will point to the currently used version. Upgradin
 6. Update the `insert-name-here-cli.sh` to point to the new version
 7. Call `insert-name-here-cli start` using the `at in 1 minute` command
 8. Call `sys.exit()`
+
+Set individual output pins to high/low:
+
+```
+pigs w 19 0
+pigs w 19 1
+```

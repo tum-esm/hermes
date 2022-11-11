@@ -6,6 +6,7 @@ try:
 except (ImportError, RuntimeError):
     pass
 
+from .co2_sensor import CO2SensorInterface
 from .config import ConfigInterface
 from .input_air_sensor import InputAirSensorInterface
 from .mainboard_sensor import MainboardSensorInterface
