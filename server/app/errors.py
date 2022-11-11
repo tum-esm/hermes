@@ -6,11 +6,11 @@ class _CustomError(starlette.exceptions.HTTPException):
         super().__init__(self.STATUS_CODE, self.DETAIL)
 
 
-########################################################################################
-# 400 Bad request
-########################################################################################
-
-
 class InvalidSyntaxError(_CustomError):
     STATUS_CODE = 400
-    DETAIL = "Invalid syntax"
+    DETAIL = "Invalid Syntax"
+
+
+class ResourceExistsError(_CustomError):
+    STATUS_CODE = 409
+    DETAIL = "Resource Exists"

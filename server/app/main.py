@@ -55,10 +55,12 @@ async def post_sensors(request):
             "configuration": request.body.configuration,
         },
     )
-    # Execute query and return response
-    # TODO fail correctly if sensor already exists
-    await database_client.execute(query, *parameters)
-
+    # Execute query
+    try:
+        await database_client.execute(query, *parameters)
+    except asyncpg.exceptions.UniqueViolationError:
+        # Error out if configuration already exists
+        raise errors.ResourceExistsError()
     # Send MQTT message
     # TODO sending MQTT message and database query have to either both succeed or rollback
     await mqtt.publish(
