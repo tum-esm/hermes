@@ -43,22 +43,25 @@ async def post_sensors(request):
     """Create a new sensor."""
     request = await validation.validate(request, validation.PostSensorsRequest)
 
-    timestamp = utils.timestamp()
-
-    # Parameterize database query
-    query, parameters = database.build(
-        template="insert_configuration.sql",
-        template_parameters={},
-        query_parameters={
-            "sensor_identifier": request.body.sensor_identifier,
-            "creation_timestamp": timestamp,
-            "update_timestamp": timestamp,
-            "configuration": request.body.configuration,
-        },
-    )
     try:
-        # Execute database query
-        await database_client.execute(query, *parameters)
+        async with database_client.transaction():
+            # Insert sensor
+            query, parameters = database.build(
+                template="insert_sensor.sql",
+                template_parameters={},
+                query_parameters={"sensor_identifier": request.body.sensor_identifier},
+            )
+            await database_client.execute(query, *parameters)
+            # Insert configuration
+            query, parameters = database.build(
+                template="insert_configuration.sql",
+                template_parameters={},
+                query_parameters={
+                    "sensor_identifier": request.body.sensor_identifier,
+                    "configuration": request.body.configuration,
+                },
+            )
+            await database_client.execute(query, *parameters)
         # Send MQTT message
         # TODO implement acknowledgement and retry logic to avoid corrupted state
         await mqtt.publish(
@@ -73,6 +76,9 @@ async def post_sensors(request):
         raise errors.ResourceExistsError()
     except aiomqtt.MqttError:
         logger.error("[POST /sensors] MQTT message could not be published")
+        raise errors.InternalServerError()
+    except:
+        logger.error("[POST /sensors] Unknown error")
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(status_code=201, content={})
