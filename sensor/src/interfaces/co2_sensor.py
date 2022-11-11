@@ -40,16 +40,11 @@ class _RS232Interface:
             time.sleep(sleep)
 
     def read(self) -> str:
-        waiting_bytes_count = self.serial_interface.inWaiting()
-        if waiting_bytes_count == 0:
-            return ""
-        received_bytes = self.serial_interface.read(waiting_bytes_count)
-
-        if received_bytes[0] != 0:
-            return received_bytes.decode("cp1252").replace(";", ",")
+        received_bytes: bytes = self.serial_interface.read(self.serial_interface.in_waiting)
+        return received_bytes.decode(encoding="cp1252").replace(";", ",")
 
     @staticmethod
-    def data_receiving_loop(queue: queue.Queue[str]):
+    def data_receiving_loop(queue: queue.Queue[str]) -> None:
         """Receiving all the data that is send over RS232 and print it.
         If the data is a CO2 measurement it will be safed in sensor log
         """
@@ -76,11 +71,11 @@ class CO2SensorInterface:
         ).start()
         self.logger.info("started RS232 receiver thread")
 
-    def start_polling_measurements(self):
+    def start_polling_measurements(self) -> None:
         self.rs232_interface.write("r", sleep=0.1)
         self.logger.info("started polling")
 
-    def stop_polling_measurements(self):
+    def stop_polling_measurements(self) -> None:
         self.rs232_interface.write("s", sleep=0.1)
         self.logger.info("stopped polling")
 
@@ -100,7 +95,7 @@ class CO2SensorInterface:
         smooth: int = 0,
         linear: bool = True,
         save_eeprom: bool = False,
-    ):
+    ) -> None:
         """Send the command for the filter settings
         Median first filters in chain, removing random peak values. Number of
         measurements is set by Median command (0 to 13 measurments)

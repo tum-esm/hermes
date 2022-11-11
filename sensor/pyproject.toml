@@ -46,6 +46,7 @@ module = [
     "bme280",
     "gpiozero",
     "smbus2",
+    "serial",
 ]
 ignore_missing_imports = true
 
