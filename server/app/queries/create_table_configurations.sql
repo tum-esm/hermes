@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS configurations (
     sensor_identifier TEXT NOT NULL REFERENCES sensors (sensor_identifier) ON UPDATE CASCADE ON DELETE CASCADE,
-    revision SERIAL NOT NULL,
+    revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     acknowledgement_timestamp TIMESTAMPTZ,
     -- Add more pre-defined values here (needed if we want to visualize them in the dashboard)
