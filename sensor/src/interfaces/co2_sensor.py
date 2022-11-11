@@ -14,6 +14,9 @@ from src import utils, types
 # TODO: verify received CO2 values with regex
 
 
+rs232_lock = threading.Lock()
+
+
 class RS232Interface:
     receiving_queue: queue.Queue[str] = queue.Queue()
 
@@ -27,34 +30,38 @@ class RS232Interface:
         send_esc: bool = False,
         save_eeprom: bool = False,
     ) -> None:
-        # TODO: add thread lock
-        self.serial_interface.write(
-            (("\x1B " if send_esc else "") + message + "\r\n").encode("utf-8")
-        )
-        if save_eeprom:
-            self.rs232_interface.write("save\r\n".encode("utf-8"))
-        self.serial_interface.flush()
+        with rs232_lock:
+            self.serial_interface.write(
+                (("\x1B " if send_esc else "") + message + "\r\n").encode("utf-8")
+            )
+            if save_eeprom:
+                self.rs232_interface.write("save\r\n".encode("utf-8"))
+            self.serial_interface.flush()
+
         if sleep is not None:
             time.sleep(sleep)
 
     def read(self) -> str:
-        # TODO: add thread lock
-        waiting_bytes_count = self.serial_interface.inWaiting()
-        if waiting_bytes_count > 0:
+        with rs232_lock:
+            waiting_bytes_count = self.serial_interface.inWaiting()
+            if waiting_bytes_count == 0:
+                return ""
             received_bytes = self.serial_interface.read(waiting_bytes_count)
-            if received_bytes[0] != 0:
-                return received_bytes.decode("cp1252").replace(";", ",")
-        return ""
+
+        if received_bytes[0] != 0:
+            return received_bytes.decode("cp1252").replace(";", ",")
 
     @staticmethod
-    def data_receiving_loop():
+    def data_receiving_loop(lock: threading.Lock):
         """Receiving all the data that is send over RS232 and print it.
         If the data is a CO2 measurement it will be safed in sensor log
         """
         accumulating_serial_stream = ""
         rs232_interface = RS232Interface()
         while True:
-            accumulating_serial_stream += rs232_interface.read()
+            with lock:
+                accumulating_serial_stream += rs232_interface.read()
+
             splitted_serial_stream = accumulating_serial_stream.split("\n")
             for received_line in splitted_serial_stream[:-1]:
                 RS232Interface.receiving_queue.put(received_line)
@@ -80,7 +87,9 @@ class CO2SensorInterface:
         """Start new thread for the receiving data over RS232
         it is a deamon thread that will be ended if the main thread is killed
         """
-        threading.Thread(target=RS232Interface.data_receiving_loop, daemon=True).start()
+        threading.Thread(
+            target=RS232Interface.data_receiving_loop, daemon=True, args=(rs232_lock,)
+        ).start()
         # TODO: log
 
     def set_filter_setting(
