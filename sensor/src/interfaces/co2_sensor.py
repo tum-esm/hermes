@@ -74,7 +74,7 @@ class CO2SensorInterface:
         threading.Thread(
             target=_RS232Interface.data_receiving_loop, args=(rs232_receiving_queue,), daemon=True
         ).start()
-        # TODO: log
+        self.logger.info("started RS232 receiver thread")
 
     def start_polling_measurements(self):
         self.rs232_interface.write("r", sleep=0.1)
@@ -125,8 +125,10 @@ class CO2SensorInterface:
         self.rs232_interface.write(
             f"linear {'on' if linear else 'off'}", send_esc=True, save_eeprom=save_eeprom, sleep=0.5
         )
-
-        # TODO: log
+        self.logger.info(
+            f"set filter settings: average = {average}, smooth = {smooth}, "
+            + f"median = {median}, linear = {linear}"
+        )
 
     def set_measurement_interval(
         self,
@@ -139,18 +141,18 @@ class CO2SensorInterface:
 
         assert 1 <= value <= 1000, "invalid interval setting"
         self.rs232_interface.write(f"intv {value} {unit}", save_eeprom=save_eeprom, sleep=0.2)
-
-        # TODO: log
+        self.logger.info(f"set measurement interval: {value} {unit}")
 
     def set_time(self, save_eeprom: bool = False) -> None:
-        """The function set the time of the CO2"""
+        """The function set the time of the CO2 sensor"""
+        new_value = datetime.now().strftime("%H:%M:%S")
         self.rs232_interface.write(
-            f"time {datetime.now().strftime('%H:%M:%S')}",
+            f"time {new_value}",
             send_esc=True,
             save_eeprom=save_eeprom,
             sleep=0.1,
         )
-        # TODO: log
+        self.logger.info(f"set time since last reset: {new_value}")
 
     def get_time(self) -> str:
         """The function get the time of the CO2 Sensor since the last reset.
@@ -160,10 +162,10 @@ class CO2SensorInterface:
         # TODO: flush receiver cache
 
         self.rs232_interface.write("time", sleep=0.1)
+        self.logger.debug("requested info: time")
 
         # TODO: read receiver queue
         # TODO: possibly restart co2 measurements
-        # TODO: log
 
         return "hh:mm:ss"
 
@@ -176,13 +178,13 @@ class CO2SensorInterface:
         self.rs232_interface.write(
             f"range {upper_limit}", send_esc=True, save_eeprom=save_eeprom, sleep=1
         )
-        # TODO: log
+        self.logger.info(f"set measurement range: 0 - {upper_limit} ppm")
 
     def set_formatting_message(
         self,
-        raw_data: bool = True,
-        with_compensation_data: bool = True,
-        filtered_data: bool = True,
+        output_raw: bool = True,
+        output_with_compensation: bool = True,
+        output_filtered: bool = True,
         echo: bool = True,
         save_eeprom: bool = False,
     ) -> None:
@@ -197,11 +199,11 @@ class CO2SensorInterface:
         # TODO: flush receiver cache
 
         format_list: list[str] = []
-        if raw_data:
+        if output_raw:
             format_list.append('"Raw"CO2RAWUC"ppm"')
-        if with_compensation_data:
+        if output_with_compensation:
             format_list.append('"Comp"CO2RAW"ppm"')
-        if filtered_data:
+        if output_filtered:
             format_list.append('"Filt"CO2"ppm"')
         formatting_string = "form " + ("; ".join(format_list)) + "#r#n"
 
@@ -211,7 +213,10 @@ class CO2SensorInterface:
         )
 
         # TODO: possibly restart co2 measurements
-        # TODO: log
+        self.logger.info(
+            f"set formatting: output_raw = {output_raw}, output_with_compensation = "
+            + f"{output_with_compensation}, output_filtered = {output_filtered}, echo = {echo}"
+        )
 
     def get_info(
         self,
@@ -233,17 +238,20 @@ class CO2SensorInterface:
 
         if device_info:
             self.rs232_interface.write("??")
+            self.logger.debug("requested info: device info")
         if software_version:
             self.rs232_interface.write("vers")
+            self.logger.debug("requested info: software version")
         if errors:
             self.rs232_interface.write("errs")
+            self.logger.debug("requested info: errors")
         if corrections:
             self.rs232_interface.write("corr")
+            self.logger.debug("requested info: corrections")
 
         time.sleep(1)
 
         # TODO: receive infos
         # TODO: possibly restart co2 measurements
-        # TODO: log
 
         return "something"
