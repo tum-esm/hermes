@@ -5,8 +5,8 @@ from app.validation.core import _Request, _RequestBody, _RequestQuery
 from app.validation.fields import (
     JSON_FIELD,
     POSITIVE_INTEGER_QUERY_FIELD,
-    SENSOR_IDENTIFIER_FIELD,
     POSITIVE_INTEGER_VALIDATOR,
+    SENSOR_IDENTIFIER_FIELD,
     SENSOR_IDENTIFIER_VALIDATOR,
     VALUE_IDENTIFIER_VALIDATOR,
     _convert_query_string_to_list,

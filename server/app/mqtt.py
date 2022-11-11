@@ -54,8 +54,9 @@ async def _process_measurement_payload(
     """Validate a measurement message and write it to the database."""
     try:
         # TODO move validation/exception logic into validation module
-        measurement = validation.MeasurementMessage(**payload)
+        measurement = validation.MeasurementsMessage(**payload)
         receipt_timestamp = utils.timestamp()
+        # TODO handle new measurementsmessage format with multiple measurements
         for key, value in measurement.values.items():
             """
             await database_client.execute(
@@ -79,7 +80,7 @@ async def _process_measurement_payload(
         logger.warning(f"[MQTT] [TOPIC:measurements] Failed to write: {e}")
 
 
-async def listen_and_write(
+async def listen(
     database_client: asyncpg.connection.Connection,
     mqtt_client: aiomqtt.Client,
 ) -> typing.NoReturn:

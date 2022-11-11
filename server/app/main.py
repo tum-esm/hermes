@@ -72,7 +72,7 @@ async def post_sensors(request):
         logger.warning("[POST /sensors] Configuration already exists")
         raise errors.ResourceExistsError()
     except aiomqtt.MqttError:
-        logger.warning("[POST /sensors] MQTT message could not be published")
+        logger.error("[POST /sensors] MQTT message could not be published")
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(status_code=201, content={})
@@ -164,7 +164,7 @@ async def lifespan(app):
             await database.initialize(database_client)
             # Start MQTT listener in (unawaited) asyncio task
             loop = asyncio.get_event_loop()
-            loop.create_task(mqtt.listen_and_write(database_client, mqtt_client))
+            loop.create_task(mqtt.listen(database_client, mqtt_client))
             yield
 
 
