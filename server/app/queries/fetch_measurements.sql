@@ -1,7 +1,7 @@
 SELECT
     sensor_identifier,
     measurement_timestamp,
-    measurement  -- implement selecting different values of this JSONB column
+    measurement  -- implement selecting different values of this JSONB column, or not?
 FROM measurements
 {%- if request.query.sensors or request.query.start is not none or request.query.end is not none %}
 WHERE
