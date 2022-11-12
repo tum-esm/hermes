@@ -6,6 +6,7 @@ import asyncio_mqtt as aiomqtt
 import asyncpg
 import pydantic
 
+import app.database as database
 import app.settings as settings
 import app.utils as utils
 import app.validation as validation
@@ -46,6 +47,7 @@ async def publish(
         qos=qos,
         retain=retain,
     )
+    logger.info(f"[MQTT] [PUB] [TOPIC:{topic}] Published message: {payload}")
 
 
 async def _process_measurement_payload(
@@ -54,30 +56,29 @@ async def _process_measurement_payload(
 ) -> None:
     """Validate a measurement message and write it to the database."""
     try:
-        # TODO move validation/exception logic into validation module
-        measurement = validation.MeasurementsMessage(**payload)
-        receipt_timestamp = utils.timestamp()
-        for key, value in measurement.values.items():
-            """
-            await database_client.execute(
-                query=MEASUREMENTS.insert(),
-                values={
-                    "sensor_identifier": measurement.sensor_identifier,
+        # TODO Move validation/exception logic into validation module
+        message = validation.MeasurementsMessage(**payload)
+        # TODO Insert everything in one execution call
+        for measurement in message.measurements:
+            query, parameters = database.build(
+                template="insert_measurement.sql",
+                template_parameters={},
+                query_parameters={
+                    "sensor_identifier": message.sensor_identifier,
                     "measurement_timestamp": measurement.timestamp,
-                    "receipt_timestamp": receipt_timestamp,
-                    key: value,
+                    "measurement": measurement.values,
                 },
             )
-            """
+            await database_client.execute(query, *parameters)
     except pydantic.ValidationError as e:
         # TODO still save `sensor_identifier` and `receipt_timestamp` in database?
         # -> works only if sensor_identifier is inferred from sender ID
         # Like this, we can show the timestamp of last message in the sensor status,
         # even if it was invalid
-        logger.warning(f"[MQTT] [TOPIC:measurements] Invalid message: {e}")
+        logger.warning(f"[MQTT] [SUB] [TOPIC:measurements] Invalid message: {e}")
     except Exception as e:
-        # TODO log database error and rollback
-        logger.warning(f"[MQTT] [TOPIC:measurements] Failed to write: {e}")
+        # TODO divide into more specific exceptions
+        logger.error(f"[MQTT] [SUB] [TOPIC:measurements] Database error: {e}")
 
 
 async def listen(
@@ -92,16 +93,18 @@ async def listen(
     """
     async with mqtt_client.unfiltered_messages() as messages:
         await mqtt_client.subscribe("measurements", qos=1, timeout=10)
-        logger.info(f"[MQTT] [TOPIC:measurements] Subscribed")
+        logger.info(f"[MQTT] [SUB] [TOPIC:measurements] Subscribed")
         # TODO subscribe to more topics here
 
         async for message in messages:
             payload = _decode_payload(message.payload)
-            logger.info(f"[MQTT] [TOPIC:{message.topic}] Received message: {payload}")
+            logger.info(
+                f"[MQTT] [SUB] [TOPIC:{message.topic}] Received message: {payload}"
+            )
             match message.topic:
                 case "measurements":
                     await _process_measurement_payload(payload, database_client)
                 case _:
                     logger.warning(
-                        f"[MQTT] [TOPIC:{message.topic}] Could not match topic"
+                        f"[MQTT] [SUB] [TOPIC:{message.topic}] Could not match topic"
                     )

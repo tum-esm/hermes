@@ -18,18 +18,6 @@ from app.logs import logger
 
 async def get_status(request):
     """Return some status information about the server."""
-
-    # Send a test mqtt message
-    import random
-
-    payload = {
-        "sensor_identifier": "kabuto",
-        "timestamp": utils.timestamp(),
-        "measurement": {"value": random.randint(0, 2**10)},
-    }
-    await mqtt.send(payload, "measurements", mqtt_client)
-
-    # Return successful response
     return starlette.responses.JSONResponse(
         {
             "commit_sha": settings.COMMIT_SHA,
@@ -77,7 +65,7 @@ async def post_sensors(request):
     except aiomqtt.MqttError:
         logger.error("[POST /sensors] MQTT message could not be published")
         raise errors.InternalServerError()
-    except:
+    except Exception:
         logger.error("[POST /sensors] Unknown error")
         raise errors.InternalServerError()
     # Return successful response
