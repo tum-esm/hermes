@@ -4,6 +4,7 @@ import typing
 import asyncpg
 import attrs
 import jinja2
+import pendulum
 
 import app.settings as settings
 
@@ -86,7 +87,6 @@ class Client:
             encoder=json.dumps,
             decoder=json.loads,
         )
-        """
         # Automatically encode/decode TIMSTAMPTZ fields to/from pendulum.DateTime
         await self.connection.set_type_codec(
             typename="timestamptz",
@@ -94,7 +94,6 @@ class Client:
             encoder=lambda x: x.isoformat(),
             decoder=pendulum.parse,
         )
-        """
         return self.connection
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):

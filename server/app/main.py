@@ -185,6 +185,6 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
     ],
-    # TODO Limit to one MQTT instance for multiple workers, or use shared subscriptions
+    # TODO Use shared subscriptions for multiple workers
     lifespan=lifespan,
 )
