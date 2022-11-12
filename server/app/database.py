@@ -79,13 +79,22 @@ class Client:
 
     async def __aenter__(self):
         self.connection = await asyncpg.connect(**self.kwargs)
-        # Automatically encode/decode JSONB fields to and from str
+        # Automatically encode/decode JSONB fields to/from str
         await self.connection.set_type_codec(
             typename="jsonb",
+            schema="pg_catalog",
             encoder=json.dumps,
             decoder=json.loads,
-            schema="pg_catalog",
         )
+        """
+        # Automatically encode/decode TIMSTAMPTZ fields to/from pendulum.DateTime
+        await self.connection.set_type_codec(
+            typename="timestamptz",
+            schema="pg_catalog",
+            encoder=lambda x: x.isoformat(),
+            decoder=pendulum.parse,
+        )
+        """
         return self.connection
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
