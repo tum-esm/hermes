@@ -1,58 +1,73 @@
-WITH latest_measurements AS (
+-- Most recent measurement for each sensor identifier
+WITH most_recent_measurements AS (
     SELECT DISTINCT ON (sensor_identifier) *
     FROM measurements
     ORDER BY sensor_identifier ASC, measurement_timestamp DESC
 ),
 
-rounded_timestamps AS (
+-- Most recent configuration for each sensor identifier
+most_recent_configurations AS (
+    SELECT DISTINCT ON (sensor_identifier) *
+    FROM configurations
+    ORDER BY sensor_identifier ASC, revision DESC
+),
+
+-- Every start of the day for the last 28 days
+dates AS (
+    SELECT date_trunc('day', (now() - generate_series * '1 day'::INTERVAL), {timezone}) AS date
+    FROM generate_series(27, 0, -1)
+),
+
+-- Every sensor identifier with every start of the day for the last 28 days
+defaults AS (
     SELECT
         sensor_identifier,
-        DIV(measurement_timestamp, {window})::INTEGER AS bucket
+        date
+    FROM sensors
+    CROSS JOIN dates
+),
+
+-- Every sensor identifier with the count of measurements per day for days where there was at least one measurement for the last 28 days
+counts AS (
+    SELECT
+        sensor_identifier,
+        date_trunc('day', measurement_timestamp, {timezone}) AS date,
+        count(*) AS count
     FROM measurements
-    WHERE measurement_timestamp >= {start_timestamp}
+    GROUP BY (sensor_identifier, date)
 ),
 
-buckets AS (
+-- Every sensor identifier with the count of measurements per day for the last 28 days
+counts_with_defaults AS (
     SELECT
         sensor_identifier,
-        bucket,
-        COUNT(*) AS count
-    FROM rounded_timestamps
-    GROUP BY sensor_identifier, bucket
-    ORDER BY bucket ASC
+        date,
+        coalesce(count, 0) AS count
+    FROM defaults
+    LEFT JOIN counts USING (sensor_identifier, date)
+    ORDER BY date ASC
 ),
 
-buckets_wd AS (
-    SELECT
-        sensor_identifier,
-        bucket,
-        COALESCE(count, 0) AS count
-    FROM
-        UNNEST(ARRAY[0, 1, 2, 3]) bucket
-    CROSS JOIN (SELECT sensor_identifier FROM configurations GROUP BY sensor_identifier) sensors
-    LEFT OUTER JOIN buckets USING (sensor_identifier, bucket)
-),
-
+-- Every sensor identifier with the count of measurements per day for the last 28 days in an array
 activity AS (
     SELECT
-        buckets_wd.sensor_identifier,
-        ARRAY_AGG(buckets_wd.bucket) AS buckets,
-        ARRAY_AGG(buckets_wd.count) AS counts
-    FROM buckets_wd
-    GROUP BY buckets_wd.sensor_identifier
+        sensor_identifier,
+        array_agg(extract(epoch from date at time zone 'utc')::DOUBLE PRECISION) AS dates,
+        array_agg(count) AS counts
+    FROM counts_with_defaults
+    GROUP BY sensor_identifier
 )
 
 SELECT
-    configurations.sensor_identifier,
-    configurations.creation_timestamp,
-    configurations.update_timestamp,
-    configurations.configuration,
-    latest_measurements.measurement_timestamp,
-    activity.buckets,
+    sensor_identifier,
+    revision,
+    extract(epoch from acknowledgement_timestamp at time zone 'utc')::DOUBLE PRECISION AS acknowledgement_timestamp,
+    configuration,
+    extract(epoch from most_recent_measurements.measurement_timestamp at time zone 'utc')::DOUBLE PRECISION AS measurement_timestamp,
+    activity.dates,
     activity.counts
-FROM
-    configurations
-    LEFT OUTER JOIN latest_measurements USING (sensor_identifier)
-    JOIN activity USING (sensor_identifier)
-    {% if request.query.sensors %} WHERE configurations.sensor_identifier = ANY({sensor_identifiers}) {% endif %}
-ORDER BY configurations.sensor_identifier ASC
+FROM most_recent_configurations
+LEFT JOIN most_recent_measurements USING (sensor_identifier)
+JOIN activity USING (sensor_identifier)
+{%- if request.query.sensors -%} WHERE sensor_identifier = ANY({sensor_identifiers}) {%- endif %}
+ORDER BY sensor_identifier ASC

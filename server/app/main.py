@@ -78,22 +78,9 @@ async def get_sensors(request):
 
     # TODO Enrich with
     # V last measurement timestamp
-    # - activity timeline
+    # V activity timeline
     # - last measurement
     # - last sensor health update
-
-    timestamp = utils.timestamp()
-    window = 24 * 60 * 60  # We aggregate over 24 hour buckets
-
-    # TODO buckets begin at UTC midnight -> maybe simply use last 24 hours?
-    # oder stuendlich aggregieren und dann auf dem frontend an die timezone anpassen
-    # oder bei request einfach die timezone mitgeben
-    # Also: interpolate partial days?
-
-    timestamps = list(range((timestamp // window - 27) * window, timestamp, window))
-
-    # TODO remove
-    timestamps[0] = 0
 
     # Parameterize database query
     query, parameters = database.build(
@@ -101,8 +88,7 @@ async def get_sensors(request):
         template_parameters={"request": request},
         query_parameters={
             "sensor_identifiers": request.query.sensors,
-            "start_timestamp": timestamps[0],
-            "window": window,
+            "timezone": "Europe/Berlin",
         },
     )
     # Execute database query
