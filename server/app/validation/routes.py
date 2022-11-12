@@ -6,6 +6,8 @@ from app.validation.fields import (
     JSON_FIELD,
     POSITIVE_INTEGER_QUERY_FIELD,
     POSITIVE_INTEGER_VALIDATOR,
+    POSITIVE_FLOAT_QUERY_FIELD,
+    POSITIVE_FLOAT_VALIDATOR,
     SENSOR_IDENTIFIER_FIELD,
     SENSOR_IDENTIFIER_VALIDATOR,
     VALUE_IDENTIFIER_VALIDATOR,
@@ -54,13 +56,13 @@ class _GetMeasurementsRequestQuery(_RequestQuery):
             member_validator=VALUE_IDENTIFIER_VALIDATOR,
         ),
     )
-    start: int = POSITIVE_INTEGER_QUERY_FIELD
+    start: int = POSITIVE_FLOAT_QUERY_FIELD
     end: int = attrs.field(
         default=None,
         converter=attrs.converters.optional(int),
         validator=attrs.validators.optional(
             attrs.validators.and_(
-                POSITIVE_INTEGER_VALIDATOR,
+                POSITIVE_FLOAT_VALIDATOR,
                 _validate_end_greater_equal_start,
             )
         ),

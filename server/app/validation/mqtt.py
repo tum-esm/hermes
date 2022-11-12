@@ -12,7 +12,8 @@ ValueIdentifier = pydantic.constr(
     strict=True,
     regex=constants.Pattern.VALUE_IDENTIFIER.value,
 )
-# TODO what's the real max value here?
+# TODO what are the real min/max values here? How do we handle overflow?
+# During validation somehow, or by handling the database error?
 Timestamp = pydantic.confloat(strict=True, ge=0, lt=constants.Limit.MAXINT4)
 
 

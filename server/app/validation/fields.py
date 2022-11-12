@@ -54,6 +54,11 @@ POSITIVE_INTEGER_VALIDATOR = attrs.validators.and_(
     attrs.validators.ge(0),
     attrs.validators.lt(constants.Limit.MAXINT4),
 )
+POSITIVE_FLOAT_VALIDATOR = attrs.validators.and_(
+    attrs.validators.instance_of(float),
+    attrs.validators.ge(0),
+    attrs.validators.lt(constants.Limit.MAXINT4),
+)
 JSON_VALIDATOR = attrs.validators.deep_mapping(
     # TODO Enforce some max number of keys
     mapping_validator=attrs.validators.instance_of(dict),
@@ -78,6 +83,11 @@ POSITIVE_INTEGER_QUERY_FIELD = attrs.field(
     default=None,
     converter=attrs.converters.optional(int),
     validator=attrs.validators.optional(POSITIVE_INTEGER_VALIDATOR),
+)
+POSITIVE_FLOAT_QUERY_FIELD = attrs.field(
+    default=None,
+    converter=attrs.converters.optional(float),
+    validator=attrs.validators.optional(POSITIVE_FLOAT_VALIDATOR),
 )
 
 # Standard fields are taken as is and are by default required
