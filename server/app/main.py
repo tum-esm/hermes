@@ -40,7 +40,7 @@ async def get_status(request):
 
 
 async def post_sensors(request):
-    """Create a new sensor."""
+    """Create a new sensor and configuration."""
     request = await validation.validate(request, validation.PostSensorsRequest)
 
     try:

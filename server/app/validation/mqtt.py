@@ -1,28 +1,32 @@
-import attrs
+import pydantic
 
 import app.validation.constants as constants
-from app.validation.fields import (
-    JSON_VALIDATOR,
-    POSITIVE_INTEGER_VALIDATOR,
-    SENSOR_IDENTIFIER_VALIDATOR,
-    JSONValues,
-    _validate_contains_timestamp,
+
+
+SensorIdentifier = pydantic.constr(
+    strict=True, regex=constants.Pattern.SENSOR_IDENTIFIER
 )
+ValueIdentifier = pydantic.constr(strict=True, regex=constants.Pattern.VALUE_IDENTIFIER)
+Timestamp = pydantic.confloat(strict=True, ge=0, lt=constants.Length.MAXINT4)
 
 
-@attrs.frozen
-class MeasurementsMessage:
-    sensor_identifier: str = attrs.field(validator=SENSOR_IDENTIFIER_VALIDATOR)
-    measurements: list[dict[str, JSONValues]] = attrs.field(
-        validator=attrs.validators.deep_iterable(
-            iterable_validator=attrs.validators.and_(
-                attrs.validators.instance_of(list),
-                attrs.validators.min_len(1),
-                attrs.validators.max_len(constants.Limit.MEDIUM - 1),
-            ),
-            member_validator=attrs.validators.and_(
-                JSON_VALIDATOR,
-                _validate_contains_timestamp,
-            ),
-        )
+class _BaseModel(pydantic.BaseModel):
+    class Config:
+        max_anystr_length = constants.Length.LARGE
+        extra = pydantic.Extra["forbid"]
+        frozen = True
+
+
+class Measurement(_BaseModel):
+    timestamp: Timestamp
+    # TODO Validate the values more thoroughly for min and max limits/lengths
+    values: dict[ValueIdentifier, JSONValues]
+
+
+class MeasurementsMessage(_BaseModel):
+    sensor_identifier: SensorIdentifier
+    measurements: pydantic.conlist(
+        item_type=Measurement,
+        min_items=1,
+        max_items=constants.Length.MEDIUM - 1,
     )

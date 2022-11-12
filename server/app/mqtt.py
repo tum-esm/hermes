@@ -4,6 +4,7 @@ import typing
 
 import asyncio_mqtt as aiomqtt
 import asyncpg
+import pydantic
 
 import app.settings as settings
 import app.utils as utils
@@ -56,7 +57,6 @@ async def _process_measurement_payload(
         # TODO move validation/exception logic into validation module
         measurement = validation.MeasurementsMessage(**payload)
         receipt_timestamp = utils.timestamp()
-        # TODO handle new measurementsmessage format with multiple measurements
         for key, value in measurement.values.items():
             """
             await database_client.execute(
@@ -69,7 +69,7 @@ async def _process_measurement_payload(
                 },
             )
             """
-    except (TypeError, ValueError) as e:
+    except pydantic.ValidationError as e:
         # TODO still save `sensor_identifier` and `receipt_timestamp` in database?
         # -> works only if sensor_identifier is inferred from sender ID
         # Like this, we can show the timestamp of last message in the sensor status,
