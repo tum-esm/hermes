@@ -87,9 +87,7 @@ async def listen(
 ) -> typing.NoReturn:
     """Listen to incoming sensor measurements and write them to the database.
 
-    - TODO Allow sensors to send measurements for only part of all values (e.g. when one
-      of multiple sensors breaks, different sensor architectures, etc.)
-    - TODO Use sender ID as "sensor" value?
+    - TODO Use sender ID as sensor_identifier value?
     """
     async with mqtt_client.unfiltered_messages() as messages:
         await mqtt_client.subscribe("measurements", qos=1, timeout=10)

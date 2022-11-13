@@ -88,6 +88,7 @@ async def get_sensors(request):
         template_parameters={"request": request},
         query_parameters={
             "sensor_identifiers": request.query.sensors,
+            # TODO make this a query parameter; validate with `try: pendulum.timezone()`
             "timezone": "Europe/Berlin",
         },
     )
