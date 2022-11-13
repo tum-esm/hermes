@@ -85,10 +85,7 @@ async def listen(
     database_client: asyncpg.connection.Connection,
     mqtt_client: aiomqtt.Client,
 ) -> typing.NoReturn:
-    """Listen to incoming sensor measurements and write them to the database.
-
-    - TODO Use sender ID as sensor_identifier value?
-    """
+    """Listen to incoming sensor messages and process them."""
     async with mqtt_client.unfiltered_messages() as messages:
         await mqtt_client.subscribe("measurements", qos=1, timeout=10)
         logger.info(f"[MQTT] [SUB] [TOPIC:measurements] Subscribed")
@@ -99,6 +96,8 @@ async def listen(
             logger.info(
                 f"[MQTT] [SUB] [TOPIC:{message.topic}] Received message: {payload}"
             )
+            # TODO match by measurements/+ wildcard here and use + as sensor_identifier
+            # instead of requiring it in the message
             match message.topic:
                 case "measurements":
                     await _process_measurement_payload(payload, database_client)
