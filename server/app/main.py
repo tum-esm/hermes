@@ -27,10 +27,9 @@ async def get_status(request):
     )
 
 
+@validation.validate(schema=validation.PostSensorsRequest)
 async def post_sensors(request):
     """Create a new sensor and configuration."""
-    request = await validation.validate(request, validation.PostSensorsRequest)
-
     try:
         async with database_client.transaction():
             # Insert sensor
@@ -72,9 +71,9 @@ async def post_sensors(request):
     return starlette.responses.JSONResponse(status_code=201, content={})
 
 
+@validation.validate(schema=validation.GetSensorsRequest)
 async def get_sensors(request):
     """Return status and configuration of sensors."""
-    request = await validation.validate(request, validation.GetSensorsRequest)
 
     # TODO Enrich with
     # V last measurement timestamp
@@ -98,9 +97,9 @@ async def get_sensors(request):
     return starlette.responses.JSONResponse(database.dictify(result))
 
 
+@validation.validate(schema=validation.GetMeasurementsRequest)
 async def get_measurements(request):
     """Return measurements sorted chronologically, optionally filtered."""
-    request = await validation.validate(request, validation.GetMeasurementsRequest)
 
     # Parameterize database query
     query, parameters = database.build(
