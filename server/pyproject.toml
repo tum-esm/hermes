@@ -5,7 +5,7 @@ description = ""
 authors = ["Felix Böhm <felix@felixboehm.dev>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "3.10.8"
 starlette = "^0.21.0"
 uvicorn = {extras = ["standard"], version = "^0.19.0"}
 asyncio-mqtt = "^0.14.0"
