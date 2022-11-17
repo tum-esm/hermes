@@ -1,6 +1,7 @@
 #!/bin/sh
 
+ENVIRONMENT="development"
 COMMIT_SHA="$(git rev-parse --verify HEAD)"
 BRANCH_NAME="$(git branch --show-current)"
 
-COMMIT_SHA="$COMMIT_SHA" BRANCH_NAME="${BRANCH_NAME:-none}" poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --env-file .env --reload --reload-include "*.sql" --log-level debug
+ENVIRONMENT="$ENVIRONMENT" COMMIT_SHA="$COMMIT_SHA" BRANCH_NAME="${BRANCH_NAME:-none}" poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --env-file .env --reload --reload-include "*.sql" --log-level debug

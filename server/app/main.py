@@ -19,6 +19,7 @@ async def get_status(request):
     """Return some status information about the server."""
     return starlette.responses.JSONResponse(
         {
+            "environment": settings.ENVIRONMENT,
             "commit_sha": settings.COMMIT_SHA,
             "branch_name": settings.BRANCH_NAME,
             "start_time": settings.START_TIME,

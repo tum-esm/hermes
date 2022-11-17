@@ -5,6 +5,7 @@ import app.utils as utils
 
 # Check that required environment variables are set
 _VARS = [
+    "ENVIRONMENT",
     "COMMIT_SHA",
     "BRANCH_NAME",
     "POSTGRESQL_URL",
@@ -17,6 +18,8 @@ _VARS = [
 for var in _VARS:
     assert os.getenv(var), f"environment variable {var} not set"
 
+# Environment: test, development, production
+ENVIRONMENT = os.getenv("ENVIRONMENT")
 # Git commit hash
 COMMIT_SHA = os.getenv("COMMIT_SHA")
 # Git branch name

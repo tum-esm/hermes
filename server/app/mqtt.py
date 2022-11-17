@@ -42,6 +42,8 @@ async def publish(
     retain: bool = False,
 ) -> None:
     """Publish a JSON message to the specified topic."""
+    if settings.ENVIRONMENT != "production":
+        topic = f"{settings.ENVIRONMENT}/{topic}"
     await mqtt_client.publish(
         topic=topic,
         payload=_encode_payload(payload),
@@ -87,9 +89,12 @@ async def listen(
     mqtt_client: aiomqtt.Client,
 ) -> typing.NoReturn:
     """Listen to incoming sensor messages and process them."""
+    topic_measurements = "measurements"  # TODO change to measurements/+ everywhere
+    if settings.ENVIRONMENT != "production":
+        topic_measurements = f"{settings.ENVIRONMENT}/{topic_measurements}"
     async with mqtt_client.unfiltered_messages() as messages:
-        await mqtt_client.subscribe("measurements", qos=1, timeout=10)
-        logger.info(f"[MQTT] [SUB] [TOPIC:measurements] Subscribed")
+        await mqtt_client.subscribe(topic_measurements, qos=1, timeout=10)
+        logger.info(f"[MQTT] [SUB] [TOPIC:{topic_measurements}] Subscribed")
         # TODO subscribe to more topics here
 
         async for message in messages:
@@ -99,10 +104,9 @@ async def listen(
             )
             # TODO match by measurements/+ wildcard here and use + as sensor_identifier
             # instead of requiring it in the message
-            match message.topic:
-                case "measurements":
-                    await _process_measurement_payload(payload, database_client)
-                case _:
-                    logger.warning(
-                        f"[MQTT] [SUB] [TOPIC:{message.topic}] Could not match topic"
-                    )
+            if message.topic == topic_measurements:
+                await _process_measurement_payload(payload, database_client)
+            else:
+                logger.warning(
+                    f"[MQTT] [SUB] [TOPIC:{message.topic}] Could not match topic"
+                )
