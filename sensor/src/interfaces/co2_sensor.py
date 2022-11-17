@@ -4,6 +4,39 @@ import time
 import threading
 from src import utils, types
 
+
+# returned when calling "send"
+measurement_regex = r"Raw\s*\d+\.\dppm;\sComp\s*\d+\.\dppm;\sFilt\s*\d+\.\dppm"
+
+# returned when calling "errs"
+error_regex = r"OK: No errors detected\."
+
+# returned when calling "average x"/"smooth x"/"median x"/"linear x"
+filter_settings_regex = r"(AVERAGE \(s\)|SMOOTH|MEDIAN|LINEAR)\s*:\s(\d{1,3}|ON|OFF)"
+
+# returned when calling "??"
+sensor_info_regex = r"\n".join(
+    [
+        r"GMP343 / \d+\.\d+",
+        r"SNUM           : .*",
+        r"CALIBRATION    : \d{4}\-\d{4}\-\d{4}",
+        r"CAL\. INFO      : .*",
+        r"SPAN \(ppm\)     : 1000",
+        r"PRESSURE \(hPa\) : \d+\.\d+",
+        r"HUMIDITY \(%RH\) : \d+\.\d+",
+        r"OXYGEN \(%\)     : \d+\.\d+",
+        r"PC             : (ON|OFF)",
+        r"RHC            : (ON|OFF)",
+        r"TC             : (ON|OFF)",
+        r"OC             : (ON|OFF)",
+        r"ADDR           : .*",
+        r"ECHO           : OFF",
+        r"SERI           : 19200 8 NONE 1",
+        r"SMODE          : .*",
+        r"INTV           : .*",
+    ]
+)
+
 # TODO: add pressure calibration
 # TODO: add humidity calibration
 # TODO: add oxygen calibration
