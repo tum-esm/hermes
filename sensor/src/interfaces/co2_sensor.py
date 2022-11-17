@@ -141,10 +141,10 @@ class CO2SensorInterface:
             + f"median = {median}, linear = {linear}"
         )
 
-    def get_sensor_info(self):
+    def get_sensor_info(self) -> None:
         self.rs232_interface.write("??")
         self.logger.debug("requested info: device info")
 
-    def get_sensor_errors(self):
+    def get_sensor_errors(self) -> None:
         self.rs232_interface.write("errs")
         self.logger.debug("requested info: errors")
