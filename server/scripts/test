@@ -1,0 +1,7 @@
+#!/bin/sh
+
+ENVIRONMENT="test"
+COMMIT_SHA="$(git rev-parse --verify HEAD)"
+BRANCH_NAME="$(git branch --show-current)"
+
+ENVIRONMENT="$ENVIRONMENT" COMMIT_SHA="$COMMIT_SHA" BRANCH_NAME="${BRANCH_NAME:-none}" env $(grep -v '^#' .env | xargs) poetry run pytest --cov=app --cov-report=term-missing tests "$@"

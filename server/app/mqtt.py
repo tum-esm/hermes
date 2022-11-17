@@ -8,7 +8,6 @@ import pydantic
 
 import app.database as database
 import app.settings as settings
-import app.utils as utils
 import app.validation as validation
 from app.logs import logger
 
