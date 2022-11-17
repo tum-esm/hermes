@@ -1,9 +1,6 @@
-import typing
-
 import attrs
 
 import app.validation.constants as constants
-from app.validation.core import _RequestQuery
 
 
 ########################################################################################

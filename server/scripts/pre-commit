@@ -11,14 +11,9 @@ printf "\r${GREEN}[OK]${RESTORE} Running black\n"
 # If there's output, print it
 [ -z "$output" ] || echo "\n$output\n"
 
-printf "[..] Running isort"
-output=$(script -q /dev/null poetry run isort ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
-printf "\r${GREEN}[OK]${RESTORE} Running isort\n"
-[ -z "$output" ] || echo "\n$output\n"
-
-printf "[..] Running docformatter"
-output=$(script -q /dev/null poetry run docformatter ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
-printf "\r${GREEN}[OK]${RESTORE} Running docformatter\n"
+printf "[..] Running ruff"
+output=$(script -q /dev/null poetry run ruff --fix ./app 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
+printf "\r${GREEN}[OK]${RESTORE} Running ruff\n"
 [ -z "$output" ] || echo "\n$output\n"
 
 printf "[..] Running mypy"

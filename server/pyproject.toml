@@ -18,24 +18,19 @@ pendulum = "^2.1.2"
 [tool.poetry.group.dev.dependencies]
 jupyterlab = "^3.4.7"
 mypy = "^0.982"
-isort = "^5.10.1"
 black = "^22.10.0"
-docformatter = "^1.5.0"
 sqlfluff = "^1.4.1"
 httpx = "^0.23.0"
+ruff = "^0.0.124"
 
 [tool.black]
 preview = true
 
-[tool.isort]
-profile = "black"
-lines_after_imports = 2
-
-[tool.docformatter]
-in-place = true
-recursive = true
-wrap-summaries = 87
-wrap-descriptions = 87
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I"]
+ignore = []
+target-version = "py310"
 
 [tool.mypy]
 show_error_codes = true

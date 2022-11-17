@@ -11,7 +11,6 @@ import app.database as database
 import app.errors as errors
 import app.mqtt as mqtt
 import app.settings as settings
-import app.utils as utils
 import app.validation as validation
 from app.logs import logger
 

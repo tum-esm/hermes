@@ -4,10 +4,9 @@ import app.validation.constants as constants
 from app.validation.core import _Request, _RequestBody, _RequestQuery
 from app.validation.fields import (
     JSON_FIELD,
-    POSITIVE_INTEGER_QUERY_FIELD,
-    POSITIVE_INTEGER_VALIDATOR,
     POSITIVE_FLOAT_QUERY_FIELD,
     POSITIVE_FLOAT_VALIDATOR,
+    POSITIVE_INTEGER_VALIDATOR,
     SENSOR_IDENTIFIER_FIELD,
     SENSOR_IDENTIFIER_VALIDATOR,
     VALUE_IDENTIFIER_VALIDATOR,

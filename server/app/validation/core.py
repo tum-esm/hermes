@@ -2,11 +2,9 @@ import abc
 import json
 import typing
 
-import attrs
 import starlette
 
 import app.errors as errors
-import app.validation.constants as constants
 from app.logs import logger
 
 

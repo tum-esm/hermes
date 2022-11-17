@@ -2,7 +2,6 @@ import json
 import typing
 
 import asyncpg
-import attrs
 import jinja2
 import pendulum
 

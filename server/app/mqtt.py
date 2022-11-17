@@ -30,6 +30,7 @@ CONFIGURATION = {
     "username": settings.MQTT_IDENTIFIER,
     "password": settings.MQTT_PASSWORD,
     "tls_params": aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS),
+    # TODO configure client_id and clean_session to receive missed messages on restart
 }
 
 
@@ -58,7 +59,7 @@ async def _process_measurement_payload(
     try:
         # TODO Move validation/exception logic into validation module
         message = validation.MeasurementsMessage(**payload)
-        # TODO Insert everything in one execution call
+        # TODO Insert everything in one execution call; must adapt templating for this
         for measurement in message.measurements:
             query, parameters = database.build(
                 template="insert_measurement.sql",
