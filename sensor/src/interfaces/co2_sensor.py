@@ -6,7 +6,7 @@ from src import utils, types
 
 
 # returned when calling "send"
-measurement_regex = r"Raw\s*\d+\.\dppm;\sComp\s*\d+\.\dppm;\sFilt\s*\d+\.\dppm"
+measurement_regex = r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
 
 # returned when calling "errs"
 error_regex = r"OK: No errors detected\."
@@ -101,7 +101,7 @@ class CO2SensorInterface:
         for default_setting in [
             "echo off",
             "range 1000",
-            'form "Raw"CO2RAWUC"ppm"; "Comp"CO2RAW"ppm"; "Filt"CO2"ppm"#r#n',
+            'form "Raw " CO2RAWUC " ppm; Comp." CO2RAW " ppm; Filt. " CO2 " ppm" #r#n',
         ]:
             self.rs232_interface.write(default_setting, send_esc=True, save_eeprom=True, sleep=1)
 
