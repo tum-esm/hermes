@@ -1,6 +1,7 @@
 import json
 import ssl
 import typing
+import asyncio
 
 import asyncio_mqtt as aiomqtt
 import asyncpg
@@ -29,7 +30,9 @@ CONFIGURATION = {
     "username": settings.MQTT_IDENTIFIER,
     "password": settings.MQTT_PASSWORD,
     "tls_params": aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS),
-    # TODO configure client_id and clean_session to receive missed messages on restart
+    # Make MQTT connection persistent: Broker retains messages for us on disconnection
+    "clean_start": False,
+    "client_id": "server",
 }
 
 
