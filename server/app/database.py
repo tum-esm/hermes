@@ -3,16 +3,9 @@ import typing
 
 import asyncpg
 import jinja2
-import pendulum
 
 import app.settings as settings
 
-
-CONFIGURATION = {
-    "dsn": settings.POSTGRESQL_URL,
-    "user": settings.POSTGRESQL_IDENTIFIER,
-    "password": settings.POSTGRESQL_PASSWORD,
-}
 
 templates = jinja2.Environment(
     loader=jinja2.PackageLoader(package_name="app", package_path="queries"),
@@ -60,7 +53,7 @@ def build(
     )
 
 
-async def initialize(database_client: asyncpg.Connection) -> None:
+async def setup(database_client: asyncpg.Connection) -> None:
     """Create tables, and error out if existing tables don't match the schema."""
     tables = ["sensors", "configurations", "measurements"]
     for table in tables:
@@ -73,25 +66,21 @@ async def initialize(database_client: asyncpg.Connection) -> None:
 class Client:
     """Custom context manager for asyncpg database connection."""
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.connection = None
-        self.kwargs = kwargs
 
     async def __aenter__(self):
-        self.connection = await asyncpg.connect(**self.kwargs)
+        self.connection = await asyncpg.connect(
+            dsn=settings.POSTGRESQL_URL,
+            user=settings.POSTGRESQL_IDENTIFIER,
+            password=settings.POSTGRESQL_PASSWORD,
+        )
         # Automatically encode/decode JSONB fields to/from str
         await self.connection.set_type_codec(
             typename="jsonb",
             schema="pg_catalog",
             encoder=json.dumps,
             decoder=json.loads,
-        )
-        # Automatically encode/decode TIMSTAMPTZ fields to/from pendulum.DateTime
-        await self.connection.set_type_codec(
-            typename="timestamptz",
-            schema="pg_catalog",
-            encoder=lambda x: x.isoformat(),
-            decoder=pendulum.parse,
         )
         return self.connection
 
