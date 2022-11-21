@@ -1,7 +1,29 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-ENVIRONMENT="test"
-COMMIT_SHA="$(git rev-parse --verify HEAD)"
-BRANCH_NAME="$(git branch --show-current)"
+set -o errexit
+set -o nounset
+set -o pipefail
+# Change to the script's directory
+cd "$(dirname "$0")"
 
-ENVIRONMENT="$ENVIRONMENT" COMMIT_SHA="$COMMIT_SHA" BRANCH_NAME="${BRANCH_NAME:-none}" env $(grep -v '^#' .env | xargs) poetry run pytest --cov=app --cov-report=term-missing tests "$@"
+# Get environment variables from the .env file
+export $(grep -v '^#' ../.env | xargs)
+
+# Set our test environment variables
+export ENVIRONMENT="test"
+export COMMIT_SHA=$(git rev-parse --verify HEAD)
+export BRANCH_NAME=$(git branch --show-current)
+export MQTT_URL="localhost"
+export MQTT_PORT="1883"
+export MQTT_IDENTIFIER="username"
+export MQTT_PASSWORD="12345678"
+
+# Path to our mosquitto configuation
+MOSQUITTO_CONFIGURATION="$(pwd)/../tests/mosquitto.conf"
+
+# Run the mosquitto MQTT broker via docker in the background
+docker run -td --rm --name mosquitto -p 1883:1883 -v $MOSQUITTO_CONFIGURATION:/mosquitto/config/mosquitto.conf eclipse-mosquitto >/dev/null
+# Run the tests
+(cd .. && poetry run pytest --cov=app --cov-report=term-missing tests "$@")
+# Stop and remove the mosquitto docker container
+docker stop mosquitto >/dev/null

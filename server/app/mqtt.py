@@ -29,11 +29,15 @@ class Client(aiomqtt.Client):
     def __init__(self, database_client: asyncpg.Connection) -> None:
         super().__init__(
             hostname=settings.MQTT_URL,
-            port=8883,
+            port=settings.MQTT_PORT,
             protocol=aiomqtt.ProtocolVersion.V5,
             username=settings.MQTT_IDENTIFIER,
             password=settings.MQTT_PASSWORD,
-            tls_params=aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS),
+            tls_params=(
+                aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS)
+                if settings.ENVIRONMENT == "production"
+                else None
+            ),
             # Make the MQTT connection persistent
             # Broker retains messages on topics we subscribed to on disconnection
             clean_start=False,
@@ -45,8 +49,6 @@ class Client(aiomqtt.Client):
         self, topic: str, payload: dict[str, typing.Any], qos: int, retain: bool
     ) -> None:
         """Publish method for sending JSON payloads with added logging."""
-        if settings.ENVIRONMENT != "production":
-            topic = f"{settings.ENVIRONMENT}/{topic}"
         await super().publish(
             topic=topic,
             payload=_encode_payload(payload),
@@ -54,6 +56,9 @@ class Client(aiomqtt.Client):
             retain=retain,
         )
         logger.info(f"[MQTT] Published message: {payload} to topic: {topic}")
+
+    async def publish(self, *args, **kwargs) -> None:
+        raise NotImplementedError
 
     async def publish_configuration(
         self, sensor_identifier: str, configuration: dict[str, typing.Any]
@@ -97,9 +102,8 @@ class Client(aiomqtt.Client):
 
     async def listen(self) -> None:
         """Listen to incoming sensor messages and process them."""
-        topic_measurements = "measurements"  # TODO change to measurements/+ everywhere
-        if settings.ENVIRONMENT != "production":
-            topic_measurements = f"{settings.ENVIRONMENT}/{topic_measurements}"
+        # TODO change to measurements/+ everywhere
+        topic_measurements = "measurements"
         async with self.unfiltered_messages() as messages:
             await self.subscribe(topic_measurements, qos=1, timeout=10)
             logger.info(f"[MQTT] Subscribed to topic: {topic_measurements}")

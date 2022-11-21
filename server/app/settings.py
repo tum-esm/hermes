@@ -19,5 +19,6 @@ POSTGRESQL_PASSWORD = os.environ["POSTGRESQL_PASSWORD"]
 
 # MQTT connection details
 MQTT_URL = os.environ["MQTT_URL"]
+MQTT_PORT = int(os.environ["MQTT_PORT"])
 MQTT_IDENTIFIER = os.environ["MQTT_IDENTIFIER"]
 MQTT_PASSWORD = os.environ["MQTT_PASSWORD"]
