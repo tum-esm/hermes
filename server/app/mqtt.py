@@ -33,6 +33,7 @@ class Client(aiomqtt.Client):
             protocol=aiomqtt.ProtocolVersion.V5,
             username=settings.MQTT_IDENTIFIER,
             password=settings.MQTT_PASSWORD,
+            # TODO it would be nicer to use TLS here for local development as well
             tls_params=(
                 aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS)
                 if settings.ENVIRONMENT == "production"
