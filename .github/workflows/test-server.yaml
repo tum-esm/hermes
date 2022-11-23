@@ -27,7 +27,8 @@ jobs:
         image: eclipse-mosquitto
         ports:
           - 1883:1883
-        options: -c /github/workspace/server/tests/mosquitto.conf
+        volumes:
+          - ${{ github.workspace }}/.ci/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
