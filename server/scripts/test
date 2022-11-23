@@ -3,8 +3,8 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-# Change to the script's directory
-cd "$(dirname "$0")"
+# Change into the project's directory
+cd "$(dirname "$0")/.."
 
 # Set our environment variables
 export ENVIRONMENT="test"
@@ -20,14 +20,14 @@ export MQTT_IDENTIFIER="username"
 export MQTT_PASSWORD="12345678"
 
 # Path to our mosquitto configuation
-MOSQUITTO_CONFIGURATION="$(pwd)/../tests/mosquitto.conf"
+MOSQUITTO_CONFIGURATION="$(pwd)/tests/mosquitto.conf"
 
 # Run PostgreSQL via docker in the background
-docker run -td --rm --name postgres -p 5432:5432 -e POSTGRES_DB="$POSTGRESQL_DATABASE" -e POSTGRES_USER="$POSTGRESQL_IDENTIFIER" -e POSTGRES_PASSWORD="$POSTGRESQL_PASSWORD" postgres:14 >/dev/null
+docker run -td --rm --name postgres -p 5432:5432 -e POSTGRES_USER="$POSTGRESQL_IDENTIFIER" -e POSTGRES_PASSWORD="$POSTGRESQL_PASSWORD" -e POSTGRES_DB="$POSTGRESQL_DATABASE" postgres:14 >/dev/null
 # Run the mosquitto MQTT broker via docker in the background
 docker run -td --rm --name mosquitto -p 1883:1883 -v $MOSQUITTO_CONFIGURATION:/mosquitto/config/mosquitto.conf eclipse-mosquitto >/dev/null
 # Run the tests
-(cd .. && poetry run pytest --cov=app --cov-report=term-missing tests "$@")
+poetry run pytest --cov=app --cov-report=term-missing tests "$@"
 # Stop and remove the mosquitto docker container
 docker stop mosquitto >/dev/null
 # Stop and remove the PostgreSQL docker container
