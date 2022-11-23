@@ -1,5 +1,3 @@
-import time
-
 from src import interfaces
 
 
@@ -13,7 +11,14 @@ def run() -> None:
 
     while True:
         config = interfaces.ConfigInterface.read()
-        print(f"Hello! config = {config}")
 
-        print(f"new messages: {mqtt_interface.get_messages()}")
-        time.sleep(10)
+        """
+        1. read mqtt messages
+        2. if config update request in messages:
+            * run configuration procedure
+            * continue
+        3. if calibration.is_due:
+            * do calbration
+            * continue
+        4. run measurement procedure
+        """
