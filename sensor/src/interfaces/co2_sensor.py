@@ -100,7 +100,7 @@ class _RS232Interface:
                 # reset input stream, on pauses from sensor
                 accumulating_serial_stream = ""
 
-            time.sleep(0.25)
+            time.sleep(0.1)
 
 
 class CO2SensorInterface:
