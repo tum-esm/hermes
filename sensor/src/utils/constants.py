@@ -18,3 +18,6 @@ class Constants:
 
     class mainboard_sensor:
         i2c_address = 0x76
+
+    class co2_sensor:
+        pin_power_out = 20

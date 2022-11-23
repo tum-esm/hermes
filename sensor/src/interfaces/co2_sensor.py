@@ -3,7 +3,7 @@ import serial
 import time
 import threading
 from src import utils, types
-
+import gpiozero
 
 # returned when calling "send"
 measurement_regex = r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
@@ -107,27 +107,26 @@ class CO2SensorInterface:
     def __init__(self, config: types.Config) -> None:
         self.rs232_interface = _RS232Interface()
         self.logger = utils.Logger(config, origin="co2-sensor")
-
-        # TODO: init power pin device with gpiozero
+        self.sensor_power_pin = gpiozero.OutputDevice(pin=utils.Constants.co2_sensor.pin_power_out)
 
         self._init_sensor()
 
+        self.logger.info("starting RS232 receiver thread")
         threading.Thread(
             target=_RS232Interface.data_receiving_loop, args=(rs232_receiving_queue,), daemon=True
         ).start()
-        self.logger.info("started RS232 receiver thread")
 
     def _reset_sensor(self) -> None:
         """will reset the sensors default settings. takes about 6 seconds"""
 
-        # TODO: take power from pin
+        self.logger.info("reinitializing default sensor settings")
 
+        self.logger.debug("powering down sensor")
+        self.sensor_power_pin.off()
         time.sleep(1)
 
-        self.logger.info("Reinitializing default sensor settings")
-
-        # TODO: give power to pin
-
+        self.logger.debug("powering up sensor")
+        self.sensor_power_pin.on()
         time.sleep(3)
 
         for default_setting in [
@@ -136,6 +135,9 @@ class CO2SensorInterface:
             'form "Raw " CO2RAWUC " ppm; Comp." CO2RAW " ppm; Filt. " CO2 " ppm" #r#n',
         ]:
             self.rs232_interface.write(default_setting, send_esc=True, save_eeprom=True, sleep=0.5)
+
+        # set default filters
+        self.set_filter_setting()
 
     def set_filter_setting(
         self,
@@ -162,20 +164,24 @@ class CO2SensorInterface:
             + f" = {smooth}, median = {median}, linear = {linear})"
         )
 
-    def get_current_concentration(self) -> None:
+    def get_current_concentration(self) -> types.CO2SensorData:
         # TODO: flush receiving queue
-        self.logger.debug("Requesting device info")
-        self.rs232_interface.write("??")
+        self.rs232_interface.write("send")
         # TODO: wait for sensor answer in an expected regex
+
+        return types.CO2SensorData(raw=0, compensated=0, filtered=0)
 
     def log_sensor_info(self) -> None:
         # TODO: flush receiving queue
-        self.logger.debug("Requesting device info")
         self.rs232_interface.write("??")
+        # TODO: wait for sensor answer in an expected regex
+
+    def log_sensor_correction_info(self) -> None:
+        # TODO: flush receiving queue
+        self.rs232_interface.write("corr")
         # TODO: wait for sensor answer in an expected regex
 
     def log_sensor_errors(self) -> None:
         # TODO: flush receiving queue
-        self.logger.debug("Requesting device errors")
         self.rs232_interface.write("errs")
         # TODO: wait for sensor answer in an expected regex
