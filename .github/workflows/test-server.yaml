@@ -1,13 +1,13 @@
-name: "test-server"
+name: test-server
 on:
   push:
     paths:
-      - "server/**"
-      - ".github/workflows/test-server.yaml"
+      - server/**
+      - .github/workflows/test-server.yaml
   pull_request:
     paths:
-      - "server/**"
-      - ".github/workflows/test-server.yaml"
+      - server/**
+      - .github/workflows/test-server.yaml
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -27,8 +27,7 @@ jobs:
         image: eclipse-mosquitto
         ports:
           - 1883:1883
-        volumes:
-          - tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
+        options: -c /github/workspace/server/tests/mosquitto.conf
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -56,8 +55,8 @@ jobs:
         run: poetry run pytest -vv --cov=app --cov-report=term-missing tests
         env:
           ENVIRONMENT: test
-          COMMIT_SHA: $GITHUB_SHA
-          BRANCH_NAME: ${GITHUB_REF#refs/heads/}
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           POSTGRESQL_URL: localhost
           POSTGRESQL_IDENTIFIER: username
           POSTGRESQL_PASSWORD: 12345678
