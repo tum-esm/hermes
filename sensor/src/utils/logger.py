@@ -13,13 +13,12 @@ LOGS_DIR = os.path.join(PROJECT_DIR, "logs")
 # manually. Doesn't really make a performance difference
 
 
-def log_line_has_time(log_line: str) -> bool:
+def log_line_has_date(log_line: str) -> bool:
     """Returns true when a give log line (string) starts
     with a valid date. This is not true for exception
     tracebacks. This log line time is used to determine
     which file to archive logs lines into."""
     try:
-        assert len(log_line) >= 10
         datetime.strptime(log_line[:10], "%Y-%m-%d")
         return True
     except:
@@ -59,9 +58,7 @@ class Logger:
         """Format the log line string and write it to "logs/debug.log"
         and possibly "logs/info.log"""
         now = datetime.now()
-        utc_offset = round(
-            (datetime.now() - datetime.utcnow()).total_seconds() / 3600, 1
-        )
+        utc_offset = round((datetime.now() - datetime.utcnow()).total_seconds() / 3600, 1)
         if round(utc_offset) == utc_offset:
             utc_offset = round(utc_offset)
 
@@ -74,10 +71,9 @@ class Logger:
 
         # Archive lines older than 60 minutes, every 10 minutes
         if (now - Logger.last_archive_time).total_seconds() > 600:
-            self.archive()
-            Logger.last_archive_time = now
+            self._archive()
 
-    def archive(self) -> None:
+    def _archive(self) -> None:
         """
         Move old log lines in "logs/sensor-node-{sensor_node_id}.log" into an
         archive file "logs/archive/sensor-node-{sensor_node_id}-YYYYMMDD.log".
@@ -94,7 +90,7 @@ class Logger:
         latest_time = str(datetime.now() - timedelta(hours=1))
         line_time = log_lines_in_file[0][:26]
         for index, line in enumerate(log_lines_in_file):
-            if log_line_has_time(line):
+            if log_line_has_date(line):
                 line_time = line[:26]
             if line_time > latest_time:
                 lines_to_be_archived = log_lines_in_file[:index]
@@ -110,15 +106,15 @@ class Logger:
         archive_log_date_groups: dict[str, list[str]] = {}
         line_date = lines_to_be_archived[0][:10].replace("-", "")
         for line in lines_to_be_archived:
-            if log_line_has_time(line):
+            if log_line_has_date(line):
                 line_date = line[:10].replace("-", "")
             if line_date not in archive_log_date_groups.keys():
                 archive_log_date_groups[line_date] = []
             archive_log_date_groups[line_date].append(line)
 
         for date in archive_log_date_groups.keys():
-            filename = os.path.join(
-                LOGS_DIR, "archive", f"{self.log_file_slug}-{date}.log"
-            )
+            filename = os.path.join(LOGS_DIR, "archive", f"{self.log_file_slug}-{date}.log")
             with open(filename, "a") as f:
                 f.writelines(archive_log_date_groups[date] + [""])
+
+        Logger.last_archive_time = datetime.now()

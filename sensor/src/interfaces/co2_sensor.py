@@ -41,7 +41,6 @@ sensor_info_regex = r"\n".join(
 # TODO: add humidity calibration
 # TODO: add oxygen calibration
 # TODO: add temperature calibration
-# TODO: verify received CO2 values with regex
 
 rs232_lock = threading.Lock()
 rs232_receiving_queue: queue.Queue[str] = queue.Queue()
@@ -69,32 +68,65 @@ class _RS232Interface:
         if sleep is not None:
             time.sleep(sleep)
 
-    def read(self) -> str:
-        received_bytes: bytes = self.serial_interface.read(self.serial_interface.in_waiting)
-        return received_bytes.decode(encoding="cp1252").replace(";", ",")
+    def get_input_buffer(self) -> list[str]:
+        """return the lines that have been received since last calling this function"""
+        lines = []
+        while True:
+            try:
+                lines += rs232_receiving_queue.get_nowait()
+            except queue.Empty:
+                break
+        return lines
 
     @staticmethod
     def data_receiving_loop(queue: queue.Queue[str]) -> None:
-        """Receiving all the data that is send over RS232 and print it.
-        If the data is a CO2 measurement it will be safed in sensor log
-        """
+        """receiving all the data that is send over RS232 and put all completed
+        lines into the rs232_receiving_queue"""
         accumulating_serial_stream = ""
         rs232_interface = _RS232Interface()
         while True:
-            accumulating_serial_stream += rs232_interface.read()
+            waiting_byte_count = rs232_interface.serial_interface.in_waiting
+            if waiting_byte_count > 0:
+                received_bytes: bytes = rs232_interface.serial_interface.read(waiting_byte_count)
+                accumulating_serial_stream += received_bytes.decode(encoding="cp1252").replace(
+                    ";", ","
+                )
 
-            splitted_serial_stream = accumulating_serial_stream.split("\n")
-            for received_line in splitted_serial_stream[:-1]:
-                queue.put(received_line)
-            accumulating_serial_stream = splitted_serial_stream[-1]
+                splitted_serial_stream = accumulating_serial_stream.split("\n")
+                for received_line in splitted_serial_stream[:-1]:
+                    queue.put(received_line)
+                accumulating_serial_stream = splitted_serial_stream[-1]
+            else:
+                # reset input stream, on pauses from sensor
+                accumulating_serial_stream = ""
 
-            time.sleep(0.5)
+            time.sleep(0.25)
 
 
 class CO2SensorInterface:
     def __init__(self, config: types.Config) -> None:
         self.rs232_interface = _RS232Interface()
         self.logger = utils.Logger(config, origin="co2-sensor")
+
+        # TODO: init power pin device with gpiozero
+
+        self._init_sensor()
+
+        threading.Thread(
+            target=_RS232Interface.data_receiving_loop, args=(rs232_receiving_queue,), daemon=True
+        ).start()
+        self.logger.info("started RS232 receiver thread")
+
+    def _reset_sensor(self) -> None:
+        """will reset the sensors default settings. takes about 6 seconds"""
+
+        # TODO: take power from pin
+
+        time.sleep(1)
+
+        self.logger.info("Reinitializing default sensor settings")
+
+        # TODO: give power to pin
 
         time.sleep(3)
 
@@ -103,21 +135,7 @@ class CO2SensorInterface:
             "range 1000",
             'form "Raw " CO2RAWUC " ppm; Comp." CO2RAW " ppm; Filt. " CO2 " ppm" #r#n',
         ]:
-            self.rs232_interface.write(default_setting, send_esc=True, save_eeprom=True, sleep=1)
-
-        threading.Thread(
-            target=_RS232Interface.data_receiving_loop, args=(rs232_receiving_queue,), daemon=True
-        ).start()
-        self.logger.info("started RS232 receiver thread")
-
-    def get_latest_measurements(self) -> list[str]:
-        measurements: list[str] = []
-        while True:
-            try:
-                measurements.append(rs232_receiving_queue.get_nowait())
-            except queue.Empty:
-                break
-        return measurements
+            self.rs232_interface.write(default_setting, send_esc=True, save_eeprom=True, sleep=0.5)
 
     def set_filter_setting(
         self,
@@ -126,6 +144,9 @@ class CO2SensorInterface:
         smooth: int = 0,
         linear: bool = True,
     ) -> None:
+        """update the filter settings on the sensor. These will not
+        be saved to the sensors eeprom"""
+
         # TODO: construct a few opinionated measurement setups
 
         assert average >= 0 and average <= 60, "invalid calibration setting, average not in [0, 60]"
@@ -137,14 +158,24 @@ class CO2SensorInterface:
         self.rs232_interface.write(f"median {median}", send_esc=True)
         self.rs232_interface.write(f"linear {'on' if linear else 'off'}", send_esc=True, sleep=0.5)
         self.logger.info(
-            f"set filter settings: average = {average}, smooth = {smooth}, "
-            + f"median = {median}, linear = {linear}"
+            f"Updating filter settings (average = {average}, smooth"
+            + f" = {smooth}, median = {median}, linear = {linear})"
         )
 
-    def get_sensor_info(self) -> None:
+    def get_current_concentration(self) -> None:
+        # TODO: flush receiving queue
+        self.logger.debug("Requesting device info")
         self.rs232_interface.write("??")
-        self.logger.debug("requested info: device info")
+        # TODO: wait for sensor answer in an expected regex
 
-    def get_sensor_errors(self) -> None:
+    def log_sensor_info(self) -> None:
+        # TODO: flush receiving queue
+        self.logger.debug("Requesting device info")
+        self.rs232_interface.write("??")
+        # TODO: wait for sensor answer in an expected regex
+
+    def log_sensor_errors(self) -> None:
+        # TODO: flush receiving queue
+        self.logger.debug("Requesting device errors")
         self.rs232_interface.write("errs")
-        self.logger.debug("requested info: errors")
+        # TODO: wait for sensor answer in an expected regex
