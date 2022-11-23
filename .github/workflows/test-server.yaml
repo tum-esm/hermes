@@ -1,0 +1,68 @@
+name: "test-server"
+on:
+  push:
+    paths:
+      - "server/**"
+      - ".github/workflows/test-server.yaml"
+  pull_request:
+    paths:
+      - "server/**"
+      - ".github/workflows/test-server.yaml"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    services:
+      postgres:
+        image: postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRESQL_IDENTIFIER: username
+          POSTGRESQL_PASSWORD: 12345678
+          POSTGRESQL_DATABASE: database
+      mosquitto:
+        image: eclipse-mosquitto
+        ports:
+          - 1883:1883
+        volumes:
+          - tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.8
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.2.2
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+      - name: Load cached virtual environment
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: server/.venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('server/poetry.lock') }}
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: poetry install --with dev --no-root --no-interaction
+      - name: Run tests
+        run: poetry run pytest -vv --cov=app --cov-report=term-missing tests
+        env:
+          ENVIRONMENT: test
+          COMMIT_SHA: $GITHUB_SHA
+          BRANCH_NAME: ${GITHUB_REF#refs/heads/}
+          POSTGRESQL_URL: localhost
+          POSTGRESQL_IDENTIFIER: username
+          POSTGRESQL_PASSWORD: 12345678
+          POSTGRESQL_DATABASE: database
+          MQTT_URL: localhost
+          MQTT_PORT: 1883
+          MQTT_IDENTIFIER: username
+          MQTT_PASSWORD: 12345678
