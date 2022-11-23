@@ -1,15 +1,16 @@
 import queue
+import re
 import serial
 import time
 import threading
 from src import utils, types
 import gpiozero
 
-# returned when calling "send"
-measurement_regex = r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
-
 # returned when calling "errs"
 error_regex = r"OK: No errors detected\."
+
+# returned when calling "corr"
+# TODO
 
 # returned when calling "average x"/"smooth x"/"median x"/"linear x"
 filter_settings_regex = r"(AVERAGE \(s\)|SMOOTH|MEDIAN|LINEAR)\s*:\s(\d{1,3}|ON|OFF)"
@@ -43,7 +44,11 @@ sensor_info_regex = r"\n".join(
 # TODO: add temperature calibration
 
 rs232_lock = threading.Lock()
-rs232_receiving_queue: queue.Queue[str] = queue.Queue()
+rs232_receiving_stream: queue.Queue[str] = queue.Queue()
+
+
+class NoAnswer(Exception):
+    """raised when the communication partner doesn't answer as expected"""
 
 
 class _RS232Interface:
@@ -68,52 +73,56 @@ class _RS232Interface:
         if sleep is not None:
             time.sleep(sleep)
 
-    def get_input_buffer(self) -> list[str]:
-        """return the lines that have been received since last calling this function"""
-        lines: list[str] = []
+    def flush_receiver_stream(self) -> None:
         while True:
             try:
-                lines += rs232_receiving_queue.get_nowait()
+                rs232_receiving_stream.get_nowait()
             except queue.Empty:
                 break
-        return lines
+
+    def get_answer(self, wait_time_before_read: float = 0.5, expected_regex: str = ".*") -> str:
+        """look for a regex in the message stream that has been received since last calling this function"""
+        time.sleep(wait_time_before_read)
+
+        answer = ""
+        while True:
+            try:
+                answer += rs232_receiving_stream.get_nowait()
+            except queue.Empty:
+                break
+
+        if re.compile(f"^{expected_regex}$").match(answer) is None:
+            raise NoAnswer(
+                "sensor did not answer as expected: expected_regex "
+                + f"= {expected_regex}, answer = {answer}"
+            )
+        return answer
 
     @staticmethod
     def data_receiving_loop(queue: queue.Queue[str]) -> None:
         """receiving all the data that is send over RS232 and put all completed
         lines into the rs232_receiving_queue"""
-        accumulating_serial_stream = ""
         rs232_interface = _RS232Interface()
         while True:
             waiting_byte_count = rs232_interface.serial_interface.in_waiting
             if waiting_byte_count > 0:
                 received_bytes: bytes = rs232_interface.serial_interface.read(waiting_byte_count)
-                accumulating_serial_stream += received_bytes.decode(encoding="cp1252").replace(
-                    ";", ","
-                )
-
-                splitted_serial_stream = accumulating_serial_stream.split("\n")
-                for received_line in splitted_serial_stream[:-1]:
-                    queue.put(received_line)
-                accumulating_serial_stream = splitted_serial_stream[-1]
-            else:
-                # reset input stream, on pauses from sensor
-                accumulating_serial_stream = ""
-
-            time.sleep(0.1)
+                received_string: str = received_bytes.decode(encoding="cp1252").replace(";", ",")
+                queue.put(received_string)
+            time.sleep(0.05)
 
 
 class CO2SensorInterface:
-    def __init__(self, config: types.Config) -> None:
+    def __init__(self, config: types.Config, logger: utils.Logger = None) -> None:
         self.rs232_interface = _RS232Interface()
-        self.logger = utils.Logger(config, origin="co2-sensor")
-        self.sensor_power_pin = gpiozero.OutputDevice(pin=utils.Constants.co2_sensor.power_pin_out)
+        self.logger = logger if logger is not None else utils.Logger(config, origin="co2-sensor")
+        self.sensor_power_pin = gpiozero.OutputDevice(pin=utils.Constants.co2_sensor.pin_power_out)
 
         self._reset_sensor()
 
         self.logger.info("starting RS232 receiver thread")
         threading.Thread(
-            target=_RS232Interface.data_receiving_loop, args=(rs232_receiving_queue,), daemon=True
+            target=_RS232Interface.data_receiving_loop, args=(rs232_receiving_stream,), daemon=True
         ).start()
 
     def _reset_sensor(self) -> None:
@@ -165,23 +174,25 @@ class CO2SensorInterface:
         )
 
     def get_current_concentration(self) -> types.CO2SensorData:
-        # TODO: flush receiving queue
+        self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.write("send")
-        # TODO: wait for sensor answer in an expected regex
-
+        answer = self.rs232_interface.get_answer(
+            expected_regex=r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
+        )
+        print(answer)
         return types.CO2SensorData(raw=0, compensated=0, filtered=0)
 
     def log_sensor_info(self) -> None:
-        # TODO: flush receiving queue
+        self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.write("??")
         # TODO: wait for sensor answer in an expected regex
 
     def log_sensor_correction_info(self) -> None:
-        # TODO: flush receiving queue
+        self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.write("corr")
         # TODO: wait for sensor answer in an expected regex
 
     def log_sensor_errors(self) -> None:
-        # TODO: flush receiving queue
+        self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.write("errs")
         # TODO: wait for sensor answer in an expected regex

@@ -28,10 +28,13 @@ def log_line_has_date(log_line: str) -> bool:
 class Logger:
     last_archive_time = datetime.now()
 
-    def __init__(self, config: types.Config, origin: str = "pyra.core") -> None:
+    def __init__(
+        self, config: types.Config, origin: str = "pyra.core", print_to_console: bool = False
+    ) -> None:
         self.origin: str = origin
         self.config: types.Config = config
         self.log_file_slug: str = f"sensor-node-{config.general.node_id}"
+        self.print_to_console = print_to_console
 
     def debug(self, message: str) -> None:
         """Write a debug log (to debug only). Used for verbose output"""
@@ -66,12 +69,15 @@ class Logger:
             f"{now} UTC{'' if utc_offset < 0 else '+'}{utc_offset} "
             + f"- {self.origin} - {level} - {message}\n"
         )
-        with open(os.path.join(LOGS_DIR, f"{self.log_file_slug}.log"), "a") as f1:
-            f1.write(log_string)
+        if self.self.print_to_console:
+            print(log_string)
+        else:
+            with open(os.path.join(LOGS_DIR, f"{self.log_file_slug}.log"), "a") as f1:
+                f1.write(log_string)
 
-        # Archive lines older than 60 minutes, every 10 minutes
-        if (now - Logger.last_archive_time).total_seconds() > 600:
-            self._archive()
+            # Archive lines older than 60 minutes, every 10 minutes
+            if (now - Logger.last_archive_time).total_seconds() > 600:
+                self._archive()
 
     def _archive(self) -> None:
         """
