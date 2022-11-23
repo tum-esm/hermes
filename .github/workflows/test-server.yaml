@@ -28,7 +28,7 @@ jobs:
         ports:
           - 1883:1883
         volumes:
-          - ${{ github.workspace }}/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
+          - /home/runner/work/insert-name-here/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
