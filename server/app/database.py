@@ -71,9 +71,10 @@ class Client:
 
     async def __aenter__(self):
         self.connection = await asyncpg.connect(
-            dsn=settings.POSTGRESQL_URL,
+            host=settings.POSTGRESQL_URL,
             user=settings.POSTGRESQL_IDENTIFIER,
             password=settings.POSTGRESQL_PASSWORD,
+            database=settings.POSTGRESQL_DATABASE,
         )
         # Automatically encode/decode JSONB fields to/from str
         await self.connection.set_type_codec(
