@@ -1,5 +1,7 @@
 import os
 import sys
+import time
+import gpiozero
 
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
@@ -8,9 +10,13 @@ sys.path.append(PROJECT_DIR)
 from src import utils, interfaces
 
 
-config = interfaces.ConfigInterface.read()
-co2_sensor = interfaces.CO2SensorInterface(
-    config, logger=utils.Logger(config, origin="co2-sensor", print_to_console=True)
-)
+try:
+    config = interfaces.ConfigInterface.read()
+    co2_sensor = interfaces.CO2SensorInterface(
+        config, logger=utils.Logger(config, origin="co2-sensor", print_to_console=True)
+    )
 
-co2_sensor.get_current_concentration()
+    answer = co2_sensor.get_current_concentration()
+    print(answer)
+finally:
+    os.system(f"pigs w {utils.Constants.pump.pin_control_out} 0")

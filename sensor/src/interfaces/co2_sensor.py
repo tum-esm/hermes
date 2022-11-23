@@ -51,7 +51,7 @@ class NoAnswer(Exception):
     """raised when the communication partner doesn't answer as expected"""
 
 
-class _RS232Interface:
+class RS232Interface:
     def __init__(self) -> None:
         self.serial_interface = serial.Serial("/dev/ttySC0", 19200)
 
@@ -60,14 +60,11 @@ class _RS232Interface:
         message: str,
         sleep: float | None = None,
         send_esc: bool = False,
-        save_eeprom: bool = False,
     ) -> None:
         with rs232_lock:
             self.serial_interface.write(
                 (("\x1B " if send_esc else "") + message + "\r\n").encode("utf-8")
             )
-            if save_eeprom:
-                self.serial_interface.write("save\r\n".encode("utf-8"))
             self.serial_interface.flush()
 
         if sleep is not None:
@@ -79,6 +76,7 @@ class _RS232Interface:
                 rs232_receiving_stream.get_nowait()
             except queue.Empty:
                 break
+        time.sleep(0.2)
 
     def get_answer(self, wait_time_before_read: float = 0.5, expected_regex: str = ".*") -> str:
         """look for a regex in the message stream that has been received since last calling this function"""
@@ -94,27 +92,31 @@ class _RS232Interface:
         if re.compile(f"^{expected_regex}$").match(answer) is None:
             raise NoAnswer(
                 "sensor did not answer as expected: expected_regex "
-                + f"= {expected_regex}, answer = {answer}"
+                + f"= {repr(expected_regex)}, answer = {repr(answer)}"
             )
         return answer
+
+    def read(self) -> str:
+        waiting_byte_count = self.serial_interface.in_waiting
+        if waiting_byte_count == 0:
+            return ""
+        received_bytes: bytes = self.serial_interface.read(waiting_byte_count)
+        received_string: str = received_bytes.decode(encoding="cp1252")
+        return received_string
 
     @staticmethod
     def data_receiving_loop(queue: queue.Queue[str]) -> None:
         """receiving all the data that is send over RS232 and put all completed
         lines into the rs232_receiving_queue"""
-        rs232_interface = _RS232Interface()
+        rs232_interface = RS232Interface()
         while True:
-            waiting_byte_count = rs232_interface.serial_interface.in_waiting
-            if waiting_byte_count > 0:
-                received_bytes: bytes = rs232_interface.serial_interface.read(waiting_byte_count)
-                received_string: str = received_bytes.decode(encoding="cp1252").replace(";", ",")
-                queue.put(received_string)
+            queue.put(rs232_interface.read())
             time.sleep(0.05)
 
 
 class CO2SensorInterface:
     def __init__(self, config: types.Config, logger: utils.Logger = None) -> None:
-        self.rs232_interface = _RS232Interface()
+        self.rs232_interface = RS232Interface()
         self.logger = logger if logger is not None else utils.Logger(config, origin="co2-sensor")
         self.sensor_power_pin = gpiozero.OutputDevice(pin=utils.Constants.co2_sensor.pin_power_out)
 
@@ -122,7 +124,7 @@ class CO2SensorInterface:
 
         self.logger.info("starting RS232 receiver thread")
         threading.Thread(
-            target=_RS232Interface.data_receiving_loop, args=(rs232_receiving_stream,), daemon=True
+            target=RS232Interface.data_receiving_loop, args=(rs232_receiving_stream,), daemon=True
         ).start()
 
     def _reset_sensor(self) -> None:
@@ -136,17 +138,18 @@ class CO2SensorInterface:
 
         self.logger.debug("powering up sensor")
         self.sensor_power_pin.on()
-        time.sleep(3)
+        time.sleep(5)
 
+        self.logger.debug("sending default settings")
         for default_setting in [
             "echo off",
-            "range 1000",
-            'form "Raw " CO2RAWUC " ppm; Comp." CO2RAW " ppm; Filt. " CO2 " ppm" #r#n',
+            "range 1",
+            'form "Raw " CO2RAWUC " ppm; Comp." CO2RAW " ppm; Filt. " CO2 " ppm"',
         ]:
-            self.rs232_interface.write(default_setting, send_esc=True, save_eeprom=True, sleep=0.5)
+            self.rs232_interface.write(default_setting, send_esc=True, sleep=1)
 
         # set default filters
-        self.set_filter_setting()
+        # self.set_filter_setting()
 
     def set_filter_setting(
         self,
@@ -177,10 +180,17 @@ class CO2SensorInterface:
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.write("send")
         answer = self.rs232_interface.get_answer(
-            expected_regex=r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
+            wait_time_before_read=2,
+            expected_regex=r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm>?",
         )
-        print(answer)
-        return types.CO2SensorData(raw=0, compensated=0, filtered=0)
+        for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">"]:
+            answer = answer.replace(s, "")
+        raw_value_string, comp_value_string, filt_value_string = answer.split(";")
+        return types.CO2SensorData(
+            raw=float(raw_value_string),
+            compensated=float(comp_value_string),
+            filtered=float(filt_value_string),
+        )
 
     def log_sensor_info(self) -> None:
         self.rs232_interface.flush_receiver_stream()

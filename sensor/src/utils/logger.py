@@ -69,8 +69,8 @@ class Logger:
             f"{now} UTC{'' if utc_offset < 0 else '+'}{utc_offset} "
             + f"- {self.origin} - {level} - {message}\n"
         )
-        if self.self.print_to_console:
-            print(log_string)
+        if self.print_to_console:
+            print(log_string, end="")
         else:
             with open(os.path.join(LOGS_DIR, f"{self.log_file_slug}.log"), "a") as f1:
                 f1.write(log_string)
