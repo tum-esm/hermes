@@ -70,7 +70,7 @@ class _RS232Interface:
 
     def get_input_buffer(self) -> list[str]:
         """return the lines that have been received since last calling this function"""
-        lines = []
+        lines: list[str] = []
         while True:
             try:
                 lines += rs232_receiving_queue.get_nowait()
@@ -109,7 +109,7 @@ class CO2SensorInterface:
         self.logger = utils.Logger(config, origin="co2-sensor")
         self.sensor_power_pin = gpiozero.OutputDevice(pin=utils.Constants.co2_sensor.pin_power_out)
 
-        self._init_sensor()
+        self._reset_sensor()
 
         self.logger.info("starting RS232 receiver thread")
         threading.Thread(
