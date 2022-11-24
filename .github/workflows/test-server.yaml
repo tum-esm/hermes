@@ -38,13 +38,13 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: poetry install --with dev --no-root --no-interaction
       - name: Start PostgreSQL
-        run: docker run -td --rm --name postgres -p 5432:5432 -e POSTGRES_USER="$POSTGRESQL_IDENTIFIER" -e POSTGRES_PASSWORD="$POSTGRESQL_PASSWORD" -e POSTGRES_DB="$POSTGRESQL_DATABASE" postgres:14
+        run: docker run -td -p 5432:5432 -e POSTGRES_USER="$POSTGRESQL_IDENTIFIER" -e POSTGRES_PASSWORD="$POSTGRESQL_PASSWORD" -e POSTGRES_DB="$POSTGRESQL_DATABASE" postgres:14
         env:
           POSTGRESQL_IDENTIFIER: username
           POSTGRESQL_PASSWORD: 12345678
           POSTGRESQL_DATABASE: database
       - name: Start Mosquitto
-        run: docker run -td --rm --name mosquitto -p 1883:1883 -v ${{ github.workspace }}/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto:latest
+        run: docker run -td -p 1883:1883 -v ${{ github.workspace }}/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto:latest
       - name: Run tests
         run: poetry run pytest -vv --cov=app --cov-report=term-missing tests
         env:
