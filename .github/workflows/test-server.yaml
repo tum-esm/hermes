@@ -4,10 +4,6 @@ on:
     paths:
       - server/**
       - .github/workflows/test-server.yaml
-  pull_request:
-    paths:
-      - server/**
-      - .github/workflows/test-server.yaml
 jobs:
   test:
     runs-on: ubuntu-latest
