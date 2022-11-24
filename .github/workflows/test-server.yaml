@@ -11,9 +11,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server
     services:
       postgres:
         image: postgres:14
@@ -28,7 +25,7 @@ jobs:
         ports:
           - 1883:1883
         volumes:
-          - /home/runner/work/insert-name-here/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
+          - ${{ github.workspace }}/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
