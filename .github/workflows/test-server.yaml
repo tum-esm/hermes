@@ -14,20 +14,9 @@ jobs:
     defaults:
       run:
         working-directory: server
-    services:
-      postgres:
-        image: postgres:14
-        ports:
-          - 5432:5432
-        env:
-          POSTGRESQL_IDENTIFIER: username
-          POSTGRESQL_PASSWORD: 12345678
-          POSTGRESQL_DATABASE: database
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: PWD
-        run: echo $(pwd)
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -48,6 +37,12 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: poetry install --with dev --no-root --no-interaction
+      - name: Start PostgreSQL
+        run: docker docker run -td --rm --name postgres -p 5432:5432 -e POSTGRES_USER="$POSTGRESQL_IDENTIFIER" -e POSTGRES_PASSWORD="$POSTGRESQL_PASSWORD" -e POSTGRES_DB="$POSTGRESQL_DATABASE" postgres:14
+        env:
+          POSTGRESQL_IDENTIFIER: username
+          POSTGRESQL_PASSWORD: 12345678
+          POSTGRESQL_DATABASE: database
       - name: Run tests
         run: poetry run pytest -vv --cov=app --cov-report=term-missing tests
         env:
