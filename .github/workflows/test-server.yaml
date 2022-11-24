@@ -43,6 +43,8 @@ jobs:
           POSTGRESQL_IDENTIFIER: username
           POSTGRESQL_PASSWORD: 12345678
           POSTGRESQL_DATABASE: database
+      - name: Start Mosquitto
+        run: docker run -td --rm --name mosquitto -p 1883:1883 -v ${{ github.workspace }}/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto:latest
       - name: Run tests
         run: poetry run pytest -vv --cov=app --cov-report=term-missing tests
         env:
