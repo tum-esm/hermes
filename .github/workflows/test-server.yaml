@@ -11,6 +11,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
     services:
       postgres:
         image: postgres:14
@@ -20,15 +23,11 @@ jobs:
           POSTGRESQL_IDENTIFIER: username
           POSTGRESQL_PASSWORD: 12345678
           POSTGRESQL_DATABASE: database
-      mosquitto:
-        image: eclipse-mosquitto
-        ports:
-          - 1883:1883
-        volumes:
-          - ${{ github.workspace }}/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - name: PWD
+        run: echo $(pwd)
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
