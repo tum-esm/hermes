@@ -10,6 +10,7 @@ jobs:
     defaults:
       run:
         working-directory: server
+        shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -34,25 +35,5 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: poetry install --with dev --no-root --no-interaction
-      - name: Start PostgreSQL
-        run: docker run -td -p 5432:5432 -e POSTGRES_USER="$POSTGRESQL_IDENTIFIER" -e POSTGRES_PASSWORD="$POSTGRESQL_PASSWORD" -e POSTGRES_DB="$POSTGRESQL_DATABASE" postgres:14
-        env:
-          POSTGRESQL_IDENTIFIER: username
-          POSTGRESQL_PASSWORD: 12345678
-          POSTGRESQL_DATABASE: database
-      - name: Start Mosquitto
-        run: docker run -td -p 1883:1883 -v ${{ github.workspace }}/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto:latest
       - name: Run tests
-        run: poetry run pytest -vv --cov=app --cov-report=term-missing tests
-        env:
-          ENVIRONMENT: test
-          COMMIT_SHA: ${{ github.sha }}
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-          POSTGRESQL_URL: localhost
-          POSTGRESQL_IDENTIFIER: username
-          POSTGRESQL_PASSWORD: 12345678
-          POSTGRESQL_DATABASE: database
-          MQTT_URL: localhost
-          MQTT_PORT: 1883
-          MQTT_IDENTIFIER: username
-          MQTT_PASSWORD: 12345678
+        run: scripts/test
