@@ -4,31 +4,12 @@ on:
     paths:
       - server/**
       - .github/workflows/test-server.yaml
-  pull_request:
-    paths:
-      - server/**
-      - .github/workflows/test-server.yaml
 jobs:
   test:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: server
-    services:
-      postgres:
-        image: postgres:14
-        ports:
-          - 5432:5432
-        env:
-          POSTGRESQL_IDENTIFIER: username
-          POSTGRESQL_PASSWORD: 12345678
-          POSTGRESQL_DATABASE: database
-      mosquitto:
-        image: eclipse-mosquitto
-        ports:
-          - 1883:1883
-        volumes:
-          - ${{ github.workspace }}/.ci/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -52,6 +33,14 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: poetry install --with dev --no-root --no-interaction
+      - name: Start PostgreSQL
+        run: docker run -td -p 5432:5432 -e POSTGRES_USER="$POSTGRESQL_IDENTIFIER" -e POSTGRES_PASSWORD="$POSTGRESQL_PASSWORD" -e POSTGRES_DB="$POSTGRESQL_DATABASE" postgres:14
+        env:
+          POSTGRESQL_IDENTIFIER: username
+          POSTGRESQL_PASSWORD: 12345678
+          POSTGRESQL_DATABASE: database
+      - name: Start Mosquitto
+        run: docker run -td -p 1883:1883 -v ${{ github.workspace }}/server/tests/mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto:latest
       - name: Run tests
         run: poetry run pytest -vv --cov=app --cov-report=term-missing tests
         env:
