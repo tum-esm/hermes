@@ -18,12 +18,13 @@ from app.logs import logger
 async def get_status(request):
     """Return some status information about the server."""
     return starlette.responses.JSONResponse(
-        {
+        status_code=200,
+        content={
             "environment": settings.ENVIRONMENT,
             "commit_sha": settings.COMMIT_SHA,
             "branch_name": settings.BRANCH_NAME,
             "start_time": settings.START_TIME,
-        }
+        },
     )
 
 
@@ -51,12 +52,9 @@ async def post_sensors(request):
             await database_client.execute(query, *parameters)
         # Send MQTT message
         # TODO implement acknowledgement and retry logic to avoid corrupted state
-        await mqtt.publish(
-            mqtt_client=mqtt_client,
-            payload=request.body.configuration,
-            topic=f"configurations/{request.body.sensor_identifier}",
-            qos=1,
-            retain=True,
+        await mqtt_client.publish_configuration(
+            sensor_identifier=request.body.sensor_identifier,
+            configuration=request.body.configuration,
         )
     except asyncpg.exceptions.UniqueViolationError:
         logger.warning("[POST /sensors] Configuration already exists")
@@ -64,8 +62,8 @@ async def post_sensors(request):
     except aiomqtt.MqttError:
         logger.error("[POST /sensors] MQTT message could not be published")
         raise errors.InternalServerError()
-    except Exception:
-        logger.error("[POST /sensors] Unknown error")
+    except Exception as e:
+        logger.error(f"[POST /sensors] Unknown error: {e}")
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(status_code=201, content={})
@@ -144,8 +142,9 @@ async def lifespan(app):
             mqtt_client = y
             # Start MQTT listener in (unawaited) asyncio task
             loop = asyncio.get_event_loop()
-            loop.create_task(mqtt_client.listen())
+            task = loop.create_task(mqtt_client.listen())
             yield
+            task.cancel()
 
 
 app = starlette.applications.Starlette(
