@@ -97,10 +97,7 @@ class RS232Interface:
         return answer
 
     def read(self) -> str:
-        waiting_byte_count = self.serial_interface.in_waiting
-        if waiting_byte_count == 0:
-            return ""
-        received_bytes: bytes = self.serial_interface.read(waiting_byte_count)
+        received_bytes: bytes = self.serial_interface.read_all()
         received_string: str = received_bytes.decode(encoding="cp1252")
         return received_string
 
