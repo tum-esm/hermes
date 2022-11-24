@@ -9,14 +9,15 @@ def run() -> None:
     config = interfaces.ConfigInterface.read()
     mqtt_interface = interfaces.MQTTInterface(config)
 
-    # TODO: init config-procedure-class
-    # TODO: init calibration-procedure-class
-    # TODO: init measurement-procedure-class
+    # TODO: init config-procedure instance
+    # TODO: init calibration-procedure instance
+    # TODO: init measurement-procedure instance
 
     while True:
         config = interfaces.ConfigInterface.read()
 
         """
+        0. system state
         1. read mqtt messages
         2. if config update request in messages:
             * run configuration procedure
@@ -25,4 +26,5 @@ def run() -> None:
             * do calbration
             * continue
         4. run measurement procedure
+
         """

@@ -8,5 +8,8 @@
 5. Do measurements
 """
 
-# TODO: Should I consider pipe length on inlet switches?
-# TODO: Should I consider pipe length for inlet delays?
+# TODO: Should I consider pipe length on inlet switches? yes
+# TODO: Should I consider pipe length for inlet delays? no
+# TODO: Put 50 meter pipe at every inlet. Still configurable.
+
+# class last_measurement_value = datetime.now()
