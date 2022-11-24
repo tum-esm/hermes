@@ -27,7 +27,7 @@ docker run -td --rm --name postgres -p 5432:5432 -e POSTGRES_USER="$POSTGRESQL_I
 # Run the Mosquitto MQTT broker via docker in the background
 docker run -td --rm --name mosquitto -p 1883:1883 -v $MOSQUITTO_CONFIGURATION:/mosquitto/config/mosquitto.conf eclipse-mosquitto >/dev/null
 # Run in development mode
-poetry run poetry run uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --reload-include "*.sql" --log-level debug
+poetry run poetry run uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --reload-include "*.sql" --log-level debug ||:
 # Stop and remove the Mosquitto docker container
 docker stop mosquitto >/dev/null
 # Stop and remove the PostgreSQL docker container

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -o errexit
 set -o nounset
 set -o pipefail
 # Change into the project's directory
@@ -27,7 +26,7 @@ docker run -td --rm --name postgres -p 5432:5432 -e POSTGRES_USER="$POSTGRESQL_I
 # Run the Mosquitto MQTT broker via docker in the background
 docker run -td --rm --name mosquitto -p 1883:1883 -v $MOSQUITTO_CONFIGURATION:/mosquitto/config/mosquitto.conf eclipse-mosquitto >/dev/null
 # Run the tests
-poetry run pytest --cov=app --cov-report=term-missing tests "$@"
+poetry run pytest --cov=app --cov-report=term-missing tests "$@" ||:
 # Stop and remove the Mosquitto docker container
 docker stop mosquitto >/dev/null
 # Stop and remove the PostgreSQL docker container
