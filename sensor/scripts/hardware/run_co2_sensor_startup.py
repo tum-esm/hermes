@@ -19,11 +19,11 @@ try:
     time.sleep(1)
 
     sensor_power_pin.on()
+    interface.serial_interface.write("ZZZZZZZZZZZZ".encode("utf-8"))
+    interface.serial_interface.flush()
     time.sleep(5)
 
-    # TODO: try to bring sensor in service mode from code
-
-    answer = interface.serial_interface.read_all()  # .decode(encoding="cp1252")
+    answer = interface.serial_interface.read_all().decode(encoding="cp1252", errors="ignore")
     print(answer)
 finally:
     os.system(f"pigs w {utils.Constants.pump.pin_control_out} 0")
