@@ -89,7 +89,7 @@ test = ["astroid (<=2.5.3)", "pytest"]
 
 [[package]]
 name = "asyncio-mqtt"
-version = "0.14.0"
+version = "0.15.0"
 description = "Idomatic asyncio wrapper around paho-mqtt"
 category = "main"
 optional = false
@@ -100,7 +100,7 @@ paho-mqtt = ">=1.6.0"
 
 [package.extras]
 format = ["black (>=22.10.0)", "isort (>=5.10.1)"]
-lint = ["flake8 (>=5.0.4)", "mypy (>=0.982)", "types-paho-mqtt (>=1.6.0.1)"]
+lint = ["mypy (>=0.982)", "ruff (>=0.0.124)", "types-paho-mqtt (>=1.6.0.1)"]
 tests = ["anyio (>=3.6.2)", "pytest (>=7.2.0)", "pytest-cov (>=4.0.0)"]
 
 [[package]]
@@ -1544,7 +1544,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.10.8"
-content-hash = "5cc77b0eeff50245103d890a9312432daf53b1c0d9874a8e5a25d5f2d1369790"
+content-hash = "600f045171bbd210b7e44e80fce2a07574a261f5e4cd11ef4ece70efa4d427a3"
 
 [metadata.files]
 anyio = [
@@ -1595,8 +1595,8 @@ asttokens = [
     {file = "asttokens-2.1.0.tar.gz", hash = "sha256:4aa76401a151c8cc572d906aad7aea2a841780834a19d780f4321c0fe1b54635"},
 ]
 asyncio-mqtt = [
-    {file = "asyncio_mqtt-0.14.0-py3-none-any.whl", hash = "sha256:8744fcb1a20349426cf4a8ddf1d5315bcab3d1b07bfe5931c552f58c669713ec"},
-    {file = "asyncio_mqtt-0.14.0.tar.gz", hash = "sha256:0de45018c7261fb7299978384158ce4719308b6679b10b7a74e26b2d17163942"},
+    {file = "asyncio_mqtt-0.15.0-py3-none-any.whl", hash = "sha256:7af6332fe48e68330bb78c89df52b46c50212621095321dfc976e20f9cf73a16"},
+    {file = "asyncio_mqtt-0.15.0.tar.gz", hash = "sha256:7a208a99e7854a5377308872aca1932860392cdf64a1aa2864cb92e558306d62"},
 ]
 asyncpg = [
     {file = "asyncpg-0.27.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:fca608d199ffed4903dce1bcd97ad0fe8260f405c1c225bdf0002709132171c2"},

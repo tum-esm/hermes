@@ -1,6 +1,6 @@
+import asgi_lifespan
 import httpx
 import pytest
-import asgi_lifespan
 
 import app.main as main
 

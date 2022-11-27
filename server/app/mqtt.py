@@ -1,6 +1,6 @@
+import asyncio
 import json
 import ssl
-import asyncio
 import typing
 
 import asyncio_mqtt as aiomqtt
@@ -103,11 +103,10 @@ class Client(aiomqtt.Client):
 
     async def listen(self) -> None:
         """Listen to incoming sensor messages and process them."""
-        # TODO change to measurements/+ everywhere
-        topic_measurements = "measurements"
-        async with self.unfiltered_messages() as messages:
-            await self.subscribe(topic_measurements, qos=1, timeout=10)
-            logger.info(f"[MQTT] Subscribed to topic: {topic_measurements}")
+        wildcard_measurements = "+/measurements"
+        async with self.messages() as messages:
+            await self.subscribe(wildcard_measurements, qos=1, timeout=10)
+            logger.info(f"[MQTT] Subscribed to wildcard: {wildcard_measurements}")
             # TODO subscribe to more topics here
 
             async for message in messages:
@@ -115,9 +114,9 @@ class Client(aiomqtt.Client):
                 logger.info(
                     f"[MQTT] Received message: {payload} on topic: {message.topic}"
                 )
-                # TODO match by measurements/+ wildcard here and use + as sensor_identifier
+                # TODO use + as sensor_identifier
                 # instead of requiring it in the message
-                if message.topic == topic_measurements:
+                if message.topic.matches(wildcard_measurements):
                     await self._process_measurement_payload(payload)
                 else:
                     logger.warning(f"[MQTT] Could not match topic: {message.topic}")
