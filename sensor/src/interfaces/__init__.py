@@ -1,10 +1,6 @@
-try:
-    import RPi.GPIO as GPIO
+import pigpio
 
-    GPIO.setwarnings(False)
-    GPIO.setmode(GPIO.BCM)  # Broadcom pin-numbering scheme
-except (ImportError, RuntimeError):
-    pass
+pigpio.exceptions = False
 
 from .co2_sensor import CO2SensorInterface
 from .config import ConfigInterface

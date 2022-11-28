@@ -14,7 +14,9 @@ smbus2 = "^0.4.2"
 pigpio = "^1.78"
 gpiozero = "^1.6.2"
 rpi-bme280 = "^0.2.4"
-rpi-gpio = {version = "^0.7.1", markers = "platform_machine == 'aarch64'"}
+
+[tool.poetry.group.dev]
+optional = true
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
@@ -41,10 +43,10 @@ no_warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module = [
-    "RPi.*",
     "pigpio",
     "bme280",
     "gpiozero",
+    "gpiozero.*",
     "smbus2",
     "serial",
 ]

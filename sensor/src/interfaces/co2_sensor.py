@@ -107,7 +107,7 @@ class CO2SensorInterface:
     def __init__(self, config: types.Config) -> None:
         self.rs232_interface = _RS232Interface()
         self.logger = utils.Logger(config, origin="co2-sensor")
-        self.sensor_power_pin = gpiozero.OutputDevice(pin=utils.Constants.co2_sensor.pin_power_out)
+        self.sensor_power_pin = gpiozero.OutputDevice(pin=utils.Constants.co2_sensor.power_pin_out)
 
         self._reset_sensor()
 

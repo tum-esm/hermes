@@ -1,9 +1,8 @@
 class Constants:
     class pump:
-        pin_control_out = 19
-        pin_speed_in = 16
+        control_pin_out = 19
+        speed_pin_in = 16
         frequency = 10000
-        base_rps_factor = 13449.73917
 
     class valves:
         pin_1_out = 25
@@ -12,12 +11,12 @@ class Constants:
         pin_4_out = 22
 
     class ups:
-        pin_ready_in = 5
-        pin_battery_mode_in = 10
-        pin_alarm_in = 7
+        ready_pin_in = 5
+        battery_mode_pin_in = 10
+        alarm_pin_in = 7
 
     class mainboard_sensor:
         i2c_address = 0x76
 
     class co2_sensor:
-        pin_power_out = 20
+        power_pin_out = 20

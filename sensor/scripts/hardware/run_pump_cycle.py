@@ -14,7 +14,5 @@ pump = interfaces.PumpInterface(config)
 
 for rps in range(10, 71, 10):
     print(f"setting rps to {rps}")
-    pump.run(desired_rps=rps, duration=10, logger=False)
-    time.sleep(2)
-
-pump.teardown()
+    pump.run(desired_rps=rps, duration=5, logger=False)
+    time.sleep(1)

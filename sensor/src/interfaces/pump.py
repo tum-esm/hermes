@@ -1,56 +1,38 @@
 import queue
 import time
-from typing import Any
+import gpiozero
+import gpiozero.pins.pigpio
 from src import utils, types
 from src.utils import Constants
-
-try:
-    import pigpio
-    import RPi.GPIO as GPIO
-
-    GPIO.setup(Constants.pump.pin_control_out, GPIO.OUT)
-    GPIO.setup(Constants.pump.pin_speed_in, GPIO.IN)
-except (ImportError, RuntimeError):
-    pass
-
 
 rps_measurement_queue: queue.Queue[float] = queue.Queue()
 
 
-def _pump_speed_measurement_interrupt(*args: Any) -> None:
-    rps_measurement_queue.put(1)
-
-
 class PumpInterface:
     def __init__(self, config: types.Config) -> None:
-        self.pi = pigpio.pi("127.0.0.1")
         self.config = config
         self.logger = utils.Logger(config, "pump")
-        assert (
-            self.pi.connected
-        ), 'pigpio is not connected, please run "sudo pigpiod -n 127.0.0.1"'
 
-        self.pi.set_PWM_dutycycle(
-            Constants.pump.pin_control_out,
-            0,
+        self.pin_factory = gpiozero.pins.pigpio.PiGPIOFactory(host="127.0.0.1")
+        pi_error_message = 'pigpio is not connected, please run "sudo pigpiod -n 127.0.0.1"'
+        assert self.pin_factory.connection is not None, pi_error_message
+        assert self.pin_factory.connection.connected, pi_error_message
+
+        self.control_pin = gpiozero.PWMOutputDevice(
+            pin=Constants.pump.control_pin_out,
+            frequency=Constants.pump.frequency,
+            active_high=True,
+            initial_value=0,
+            pin_factory=self.pin_factory,
         )
-        self.pi.hardware_PWM(
-            Constants.pump.pin_control_out,
-            Constants.pump.frequency,
-            0,
+        self.speed_pin = gpiozero.DigitalInputDevice(
+            pin=Constants.pump.speed_pin_in,
+            pin_factory=self.pin_factory,
         )
-        GPIO.add_event_detect(
-            Constants.pump.pin_speed_in,
-            GPIO.FALLING,
-            callback=_pump_speed_measurement_interrupt,
-        )
+        self.speed_pin.when_activated = lambda: rps_measurement_queue.put(1)
 
     def set_desired_pump_rps(self, rps: float) -> None:
-        self.pi.hardware_PWM(
-            Constants.pump.pin_control_out,
-            Constants.pump.frequency,
-            int(rps * Constants.pump.base_rps_factor),
-        )
+        self.control_pin.value = rps / 70
 
     def get_pump_cycle_count(self) -> float:
         count = 0
@@ -71,7 +53,7 @@ class PumpInterface:
         self.set_desired_pump_rps(0)
 
         message = (
-            f"duration = {duration}, rps = {desired_rps}, actual"
+            f"duration = {duration}, rps = {desired_rps}, actual "
             + f"average rps = {self.get_pump_cycle_count() / duration}"
         )
         if logger:
@@ -79,12 +61,10 @@ class PumpInterface:
         else:
             print(message)
 
-        # TODO: log when avg rps is differing more than 5% from the desired rps
+        # TODO: log warning when avg rps is differing more than 10% from the desired rps
 
     def teardown(self) -> None:
-        """
-        Set the pump in a save state. Required to end the
-        Hardware connection.
-        """
-        self.pi.set_PWM_dutycycle(Constants.pump.pin_control_out, 0)
-        self.pi.stop()
+        """End all hardware connections"""
+        self.control_pin.close()
+        self.speed_pin.close()
+        self.pin_factory.close()
