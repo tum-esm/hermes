@@ -1,9 +1,14 @@
+CREATE TYPE status AS ENUM ('info', 'warning', 'error');
+
 CREATE TABLE IF NOT EXISTS statuses (
-    sensor_identifier TEXT NOT NULL REFERENCES sensors (sensor_identifier) ON UPDATE CASCADE ON DELETE CASCADE,
+    sensor_identifier TEXT NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
+    revision INT NOT NULL,
     publication_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
-    revision INT NOT NULL,
 
-    -- metadata JSONB NOT NULL (something to report errors, etc.),
+    status status NOT NULL,
+    message TEXT NOT NULL,
+    details TEXT,
+
     -- keep only the last N statuses?
 );

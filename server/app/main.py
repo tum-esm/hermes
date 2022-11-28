@@ -70,6 +70,13 @@ async def post_sensors(request):
 @validation.validate(schema=validation.PutSensorsRequest)
 async def put_sensors(request):
     """Update an existing sensor's configuration."""
+
+    # TODO create own name for sensors, and let the user set only human readable one.
+    #  - how to we know which sensor that connects is which? -> return id on creation
+    #  - use UUID
+    # TODO Implement sensor_name change
+    # TODO new measurement table for each sensor?
+
     try:
         # Insert configuration
         query, parameters = database.build(
