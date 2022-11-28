@@ -9,9 +9,10 @@ import gpiozero.pins.pigpio
 error_regex = r"OK: No errors detected\."
 
 # returned when powering up the sensor
-startup_regex = (
-    r"(\r\n)*GMP343 \- Version STD \d+\.\d+\r\nCopyright: Vaisala Oyj \d{4} - \d{4}(\r\n)*>"
-)
+startup_regex = r"GMP343 \- Version STD \d+\.\d+\r\nCopyright: Vaisala Oyj \d{4} - \d{4}"
+
+# returned when calling "send"
+concentration_regex = r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
 
 # returned when calling "corr"
 # TODO
@@ -20,25 +21,25 @@ startup_regex = (
 filter_settings_regex = r"(AVERAGE \(s\)|SMOOTH|MEDIAN|LINEAR)\s*:\s(\d{1,3}|ON|OFF)"
 
 # returned when calling "??"
-sensor_info_regex = r"\n".join(
+sensor_info_regex = r"\s*\r\n".join(
     [
-        r"GMP343 / \d+\.\d+",
-        r"SNUM           : .*",
-        r"CALIBRATION    : \d{4}\-\d{4}\-\d{4}",
-        r"CAL\. INFO      : .*",
-        r"SPAN \(ppm\)     : 1000",
-        r"PRESSURE \(hPa\) : \d+\.\d+",
-        r"HUMIDITY \(%RH\) : \d+\.\d+",
-        r"OXYGEN \(%\)     : \d+\.\d+",
-        r"PC             : (ON|OFF)",
-        r"RHC            : (ON|OFF)",
-        r"TC             : (ON|OFF)",
-        r"OC             : (ON|OFF)",
-        r"ADDR           : .*",
-        r"ECHO           : OFF",
-        r"SERI           : 19200 8 NONE 1",
-        r"SMODE          : .*",
-        r"INTV           : .*",
+        r"GMP343 \/ \d+\.\d+",
+        r"SNUM\s*: .*",
+        r"CALIBRATION\s*: \d{4}\-\d{2}\-\d{2}",
+        r"CAL\. INFO\s*: .*",
+        r"SPAN \(ppm\)\s*: 1000",
+        r"PRESSURE \(hPa\)\s*: \d+\.\d+\s*",
+        r"HUMIDITY \(%RH\)\s*: \d+\.\d+\s*",
+        r"OXYGEN \(%\)\s*: \d+\.\d+\s*",
+        r"PC\s*: (ON|OFF)",
+        r"RHC\s*: (ON|OFF)",
+        r"TC\s*: (ON|OFF)",
+        r"OC\s*: (ON|OFF)",
+        r"ADDR\s*: \d*\s*",
+        r"ECHO\s*: OFF",
+        r"SERI\s*: 19200 8 NONE 1",
+        r"SMODE\s*: .*",
+        r"INTV\s*: \d+ .*",
     ]
 )
 
@@ -58,10 +59,7 @@ class RS232Interface:
             stopbits=1,
         )
 
-    def send_command(
-        self,
-        message: str
-    ) -> None:
+    def send_command(self, message: str) -> None:
         """send a command to the sensor. Puts a "\x1B" string before the
         command, which will make the sensor wait until previous commands
         have been processed"""
@@ -74,7 +72,7 @@ class RS232Interface:
         self.serial_interface.read_all()
 
     def wait_for_answer(self, expected_regex: str, timeout: float = 8) -> str:
-        expected_pattern = re.compile(expected_regex)
+        expected_pattern = re.compile(r"^(\r\n|\s)*" + expected_regex + r"(\r\n|\s)*>(\r\n|\s)*$")
         start_time = time.time()
         answer = ""
 
@@ -158,10 +156,8 @@ class CO2SensorInterface:
     def get_current_concentration(self) -> types.CO2SensorData:
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.send_command("send")
-        answer = self.rs232_interface.wait_for_answer(
-            expected_regex=r"^Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm>?$",
-        )
-        for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">"]:
+        answer = self.rs232_interface.wait_for_answer(expected_regex=concentration_regex)
+        for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">", "\r\n"]:
             answer = answer.replace(s, "")
         raw_value_string, comp_value_string, filt_value_string = answer.split(";")
         return types.CO2SensorData(
@@ -170,10 +166,18 @@ class CO2SensorInterface:
             filtered=float(filt_value_string),
         )
 
-    def log_sensor_info(self) -> None:
+    def get_sensor_info(self) -> str:
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.send_command("??")
-        # TODO: wait for sensor answer in an expected regex
+        answer = self.rs232_interface.wait_for_answer(expected_regex=sensor_info_regex)
+        return (
+            answer.strip(" \r\n")
+            .replace("  ", "")
+            .replace(" : ", ": ")
+            .replace(" \r\n", "; ")
+            .replace("\r\n", "; ")
+            .removesuffix("; >")
+        )
 
     def log_sensor_correction_info(self) -> None:
         self.rs232_interface.flush_receiver_stream()
