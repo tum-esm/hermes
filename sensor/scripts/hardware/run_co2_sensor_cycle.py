@@ -22,8 +22,8 @@ print("corr: ", end="")
 correction_info = co2_sensor.get_correction_info()
 print(correction_info)
 
-# print("errs: ", end="")
-# co2_sensor.check_sensor_errors()
+print("errs: ", end="")
+co2_sensor.check_sensor_errors()  # will raise an exception on error
 
 for i in range(10):
     print("send: ", end="")

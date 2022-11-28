@@ -31,7 +31,7 @@ class RS232Interface:
         """send a command to the sensor. Puts a "\x1B" string before the
         command, which will make the sensor wait until previous commands
         have been processed"""
-        self.serial_interface.write((f"\x1B {message}\r\n").encode("utf-8"))
+        self.serial_interface.write((f"{message}\r\n").encode("utf-8"))
         self.serial_interface.flush()
 
     def flush_receiver_stream(self) -> None:
@@ -95,6 +95,7 @@ class CO2SensorInterface:
             'form "Raw " CO2RAWUC " ppm; Comp." CO2RAW " ppm; Filt. " CO2 " ppm"',
         ]:
             self.rs232_interface.send_command(default_setting)
+            self.rs232_interface.wait_for_answer()
 
         # set default filters
         # self.set_filter_setting()
@@ -115,10 +116,16 @@ class CO2SensorInterface:
         assert median >= 0 and median <= 13, "invalid calibration setting, median not in [0, 13]"
 
         self.rs232_interface.send_command(f"average {average}")
+        self.rs232_interface.wait_for_answer()
+
         self.rs232_interface.send_command(f"smooth {smooth}")
+        self.rs232_interface.wait_for_answer()
+
         self.rs232_interface.send_command(f"median {median}")
+        self.rs232_interface.wait_for_answer()
+
         self.rs232_interface.send_command(f"linear {'on' if linear else 'off'}")
-        time.sleep(0.5)
+        self.rs232_interface.wait_for_answer()
 
         self.logger.info(
             f"Updating filter settings (average = {average}, smooth"
