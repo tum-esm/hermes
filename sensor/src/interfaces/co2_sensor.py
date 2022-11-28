@@ -5,43 +5,11 @@ from src import utils, types
 import gpiozero
 import gpiozero.pins.pigpio
 
-# returned when calling "errs"
-error_regex = r"OK: No errors detected\."
-
 # returned when powering up the sensor
 startup_regex = r"GMP343 \- Version STD \d+\.\d+\r\nCopyright: Vaisala Oyj \d{4} - \d{4}"
 
 # returned when calling "send"
 concentration_regex = r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
-
-# returned when calling "corr"
-# TODO
-
-# returned when calling "average x"/"smooth x"/"median x"/"linear x"
-filter_settings_regex = r"(AVERAGE \(s\)|SMOOTH|MEDIAN|LINEAR)\s*:\s(\d{1,3}|ON|OFF)"
-
-# returned when calling "??"
-sensor_info_regex = r"\s*\r\n".join(
-    [
-        r"GMP343 \/ \d+\.\d+",
-        r"SNUM\s*: .*",
-        r"CALIBRATION\s*: \d{4}\-\d{2}\-\d{2}",
-        r"CAL\. INFO\s*: .*",
-        r"SPAN \(ppm\)\s*: 1000",
-        r"PRESSURE \(hPa\)\s*: \d+\.\d+\s*",
-        r"HUMIDITY \(%RH\)\s*: \d+\.\d+\s*",
-        r"OXYGEN \(%\)\s*: \d+\.\d+\s*",
-        r"PC\s*: (ON|OFF)",
-        r"RHC\s*: (ON|OFF)",
-        r"TC\s*: (ON|OFF)",
-        r"OC\s*: (ON|OFF)",
-        r"ADDR\s*: \d*\s*",
-        r"ECHO\s*: OFF",
-        r"SERI\s*: 19200 8 NONE 1",
-        r"SMODE\s*: .*",
-        r"INTV\s*: \d+ .*",
-    ]
-)
 
 # TODO: add pressure calibration
 # TODO: add humidity calibration
@@ -71,7 +39,7 @@ class RS232Interface:
         time.sleep(0.2)  # wait for outstanding answers from previous commands
         self.serial_interface.read_all()
 
-    def wait_for_answer(self, expected_regex: str, timeout: float = 8) -> str:
+    def wait_for_answer(self, expected_regex: str = "[^>]*", timeout: float = 8) -> str:
         expected_pattern = re.compile(r"^(\r\n|\s)*" + expected_regex + r"(\r\n|\s)*>(\r\n|\s)*$")
         start_time = time.time()
         answer = ""
@@ -93,6 +61,9 @@ class RS232Interface:
 
 
 class CO2SensorInterface:
+    class DeviceFailure(Exception):
+        """raised when the CO2 probe "errs" command responds with an error"""
+
     def __init__(self, config: types.Config, logger: utils.Logger | None = None) -> None:
         self.rs232_interface = RS232Interface()
         self.logger = logger if logger is not None else utils.Logger(config, origin="co2-sensor")
@@ -103,7 +74,8 @@ class CO2SensorInterface:
         self._reset_sensor()
 
     def _reset_sensor(self) -> None:
-        """will reset the sensors default settings. takes about 6 seconds"""
+        """reset the sensors default settings by turning it off and on and
+        sending the initial settings again"""
 
         self.logger.info("(re)initializing default sensor settings")
 
@@ -125,7 +97,7 @@ class CO2SensorInterface:
             self.rs232_interface.send_command(default_setting)
 
         # set default filters
-        self.set_filter_setting()
+        # self.set_filter_setting()
 
     def set_filter_setting(
         self,
@@ -134,7 +106,7 @@ class CO2SensorInterface:
         smooth: int = 0,
         linear: bool = True,
     ) -> None:
-        """update the filter settings on the sensor"""
+        """update the filter settings on the CO2 probe"""
 
         # TODO: construct a few opinionated measurement setups
 
@@ -154,6 +126,7 @@ class CO2SensorInterface:
         )
 
     def get_current_concentration(self) -> types.CO2SensorData:
+        """get the current concentration value from the CO2 probe"""
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.send_command("send")
         answer = self.rs232_interface.wait_for_answer(expected_regex=concentration_regex)
@@ -166,28 +139,40 @@ class CO2SensorInterface:
             filtered=float(filt_value_string),
         )
 
-    def get_sensor_info(self) -> str:
-        self.rs232_interface.flush_receiver_stream()
-        self.rs232_interface.send_command("??")
-        answer = self.rs232_interface.wait_for_answer(expected_regex=sensor_info_regex)
+    def _format_raw_answer(self, raw: str) -> str:
+        """replace all useless characters in the CO2 probe's answer"""
         return (
-            answer.strip(" \r\n")
+            raw.strip(" \r\n")
             .replace("  ", "")
             .replace(" : ", ": ")
-            .replace(" \r\n", "; ")
+            .replace(" \r\n", "\r\n")
+            .replace("\r\n\r\n", "\r\n")
             .replace("\r\n", "; ")
             .removesuffix("; >")
         )
 
-    def log_sensor_correction_info(self) -> None:
+    def get_device_info(self) -> str:
+        """runs the "??" command to get a report about the sensor state"""
+        self.rs232_interface.flush_receiver_stream()
+        self.rs232_interface.send_command("??")
+        return self._format_raw_answer(self.rs232_interface.wait_for_answer())
+
+    def get_correction_info(self) -> str:
+        """runs the "corr" command to retrieve information about the correction
+        the CO2 probe currently uses"""
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.send_command("corr")
-        # TODO: wait for sensor answer in an expected regex
+        return self._format_raw_answer(self.rs232_interface.wait_for_answer())
 
-    def log_sensor_errors(self) -> None:
+    def check_sensor_errors(self) -> None:
+        """checks whether the CO2 probe reports any errors. Possibly raises
+        the CO2SensorInterface.DeviceFailure exception"""
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.send_command("errs")
-        # TODO: wait for sensor answer in an expected regex
+        answer = self._format_raw_answer(self.rs232_interface.wait_for_answer())
+
+        if not ("OK: No errors detected" in answer):
+            raise CO2SensorInterface.DeviceFailure(answer)
 
     def teardown(self) -> None:
         """End all hardware connections"""

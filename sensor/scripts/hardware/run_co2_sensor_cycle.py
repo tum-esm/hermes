@@ -14,12 +14,21 @@ co2_sensor = interfaces.CO2SensorInterface(
     config, logger=utils.Logger(config, origin="co2-sensor", print_to_console=True)
 )
 
-sensor_info = co2_sensor.get_sensor_info()
-print(sensor_info)
+print("??: ", end="")
+device_info = co2_sensor.get_device_info()
+print(device_info)
 
-# for i in range(10):
-#     print("send: ", end="")
-#     print(co2_sensor.get_current_concentration())
-#     time.sleep(2)
+print("corr: ", end="")
+correction_info = co2_sensor.get_correction_info()
+print(correction_info)
 
+# print("errs: ", end="")
+# co2_sensor.check_sensor_errors()
+
+for i in range(10):
+    print("send: ", end="")
+    print(co2_sensor.get_current_concentration())
+    time.sleep(2)
+
+print("tearing down interface")
 co2_sensor.teardown()
