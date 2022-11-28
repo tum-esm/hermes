@@ -89,7 +89,6 @@ class Client(aiomqtt.Client):
                         f" {sensor_identifier}, retrying in {backoff} seconds:"
                         f" {repr(e)}"
                     )
-                finally:
                     if backoff < 256:
                         backoff *= 2
                     await asyncio.sleep(backoff)
