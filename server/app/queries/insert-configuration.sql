@@ -9,4 +9,5 @@ VALUES (
     (SELECT COALESCE(MAX(revision) + 1, 0) FROM configurations WHERE sensor_identifier = {sensor_identifier}),
     now(),
     {configuration}
-);
+)
+RETURNING revision;

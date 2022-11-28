@@ -23,6 +23,9 @@ def _decode_payload(payload: bytes) -> dict[str, typing.Any]:
     return json.loads(payload.decode())
 
 
+task_references = set()
+
+
 class Client(aiomqtt.Client):
     """MQTT client with some additional functionality."""
 
@@ -46,31 +49,55 @@ class Client(aiomqtt.Client):
         )
         self.database_client = database_client
 
-    async def _publish_json(
-        self, topic: str, payload: dict[str, typing.Any], qos: int, retain: bool
-    ) -> None:
-        """Publish method for sending JSON payloads with added logging."""
-        await super().publish(
-            topic=topic,
-            payload=_encode_payload(payload),
-            qos=qos,
-            retain=retain,
-        )
-        logger.info(f"[MQTT] Published message: {payload} to topic: {topic}")
-
-    async def publish(self, *args, **kwargs) -> None:
-        raise NotImplementedError
-
     async def publish_configuration(
-        self, sensor_identifier: str, configuration: dict[str, typing.Any]
+        self,
+        sensor_identifier: str,
+        revision: int,
+        configuration: dict[str, typing.Any],
     ) -> None:
         """Publish a configuration to the specified sensor."""
-        await self._publish_json(
-            topic=f"configurations/{sensor_identifier}",
-            payload=configuration,
-            qos=1,
-            retain=True,
-        )
+
+        async def helper(
+            sensor_identifier: str, revision: int, configuration: dict[str, typing.Any]
+        ) -> None:
+            backoff = 1
+            query, parameters = database.build(
+                template="update-configuration-on-publish.sql",
+                template_parameters={},
+                query_parameters={
+                    "sensor_identifier": sensor_identifier,
+                    "revision": revision,
+                },
+            )
+            while True:
+                try:
+                    await self.publish(
+                        topic=f"{sensor_identifier}/configuration",
+                        payload=_encode_payload(configuration),
+                        qos=1,
+                        retain=True,
+                    )
+                    await self.database_client.execute(query, *parameters)
+                    logger.info(
+                        f"[MQTT] Published configuration #{revision} to:"
+                        f" {sensor_identifier}"
+                    )
+                    break
+                except Exception as e:
+                    logger.warning(
+                        f"[MQTT] Failed to publish configuration #{revision} to"
+                        f" {sensor_identifier}, retrying in {backoff} seconds:"
+                        f" {repr(e)}"
+                    )
+                finally:
+                    if backoff < 256:
+                        backoff *= 2
+                    await asyncio.sleep(backoff)
+
+        # Fire-and-forget the retry task, save the reference, and return immediately
+        task = asyncio.create_task(helper(sensor_identifier, revision, configuration))
+        task_references.add(task)
+        task.add_done_callback(task_references.remove)
 
     async def _process_measurement_payload(
         self, payload: dict[str, typing.Any]
@@ -82,7 +109,7 @@ class Client(aiomqtt.Client):
             # TODO Insert in a single execution call; must adapt templating for this
             for measurement in message.measurements:
                 query, parameters = database.build(
-                    template="insert_measurement.sql",
+                    template="insert-measurement.sql",
                     template_parameters={},
                     query_parameters={
                         "sensor_identifier": message.sensor_identifier,
@@ -106,7 +133,7 @@ class Client(aiomqtt.Client):
         wildcard_measurements = "+/measurements"
         async with self.messages() as messages:
             await self.subscribe(wildcard_measurements, qos=1, timeout=10)
-            logger.info(f"[MQTT] Subscribed to wildcard: {wildcard_measurements}")
+            logger.info(f"[MQTT] Subscribed to: {wildcard_measurements}")
             # TODO subscribe to more topics here
 
             async for message in messages:
@@ -119,4 +146,4 @@ class Client(aiomqtt.Client):
                 if message.topic.matches(wildcard_measurements):
                     await self._process_measurement_payload(payload)
                 else:
-                    logger.warning(f"[MQTT] Could not match topic: {message.topic}")
+                    logger.warning(f"[MQTT] Failed to match topic: {message.topic}")

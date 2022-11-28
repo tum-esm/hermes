@@ -35,25 +35,27 @@ async def post_sensors(request):
         async with database_client.transaction():
             # Insert sensor
             query, parameters = database.build(
-                template="insert_sensor.sql",
+                template="insert-sensor.sql",
                 template_parameters={},
                 query_parameters={"sensor_identifier": request.body.sensor_identifier},
             )
             await database_client.execute(query, *parameters)
             # Insert configuration
             query, parameters = database.build(
-                template="insert_configuration.sql",
+                template="insert-configuration.sql",
                 template_parameters={},
                 query_parameters={
                     "sensor_identifier": request.body.sensor_identifier,
                     "configuration": request.body.configuration,
                 },
             )
-            await database_client.execute(query, *parameters)
+            result = await database_client.fetch(query, *parameters)
+            revision = database.dictify(result)[0]["revision"]
         # Send MQTT message
         # TODO implement acknowledgement and retry logic to avoid corrupted state
         await mqtt_client.publish_configuration(
             sensor_identifier=request.body.sensor_identifier,
+            revision=revision,
             configuration=request.body.configuration,
         )
     except asyncpg.exceptions.UniqueViolationError:
@@ -63,7 +65,7 @@ async def post_sensors(request):
         logger.error("[POST /sensors] MQTT message could not be published")
         raise errors.InternalServerError()
     except Exception as e:
-        logger.error(f"[POST /sensors] Unknown error: {e}")
+        logger.error(f"[POST /sensors] Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(status_code=201, content={})
@@ -81,7 +83,7 @@ async def get_sensors(request):
 
     # Parameterize database query
     query, parameters = database.build(
-        template="fetch_sensors.sql",
+        template="fetch-sensors.sql",
         template_parameters={"request": request},
         query_parameters={
             "sensor_identifiers": request.query.sensors,
@@ -101,7 +103,7 @@ async def get_measurements(request):
 
     # Parameterize database query
     query, parameters = database.build(
-        template="fetch_measurements.sql",
+        template="fetch-measurements.sql",
         template_parameters={"request": request},
         query_parameters={
             "sensor_identifiers": request.query.sensors,
@@ -143,6 +145,9 @@ async def lifespan(app):
             # Start MQTT listener in (unawaited) asyncio task
             loop = asyncio.get_event_loop()
             task = loop.create_task(mqtt_client.listen())
+
+            # TODO Spawn tasks for configurations that have not yet been sent
+
             yield
             task.cancel()
 
