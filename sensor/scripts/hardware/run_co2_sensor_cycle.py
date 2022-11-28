@@ -15,6 +15,8 @@ co2_sensor = interfaces.CO2SensorInterface(
 )
 
 for i in range(10):
-    print("send")
+    print("send: ", end="")
     print(co2_sensor.get_current_concentration())
     time.sleep(2)
+
+co2_sensor.teardown()

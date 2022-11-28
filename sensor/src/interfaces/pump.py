@@ -12,11 +12,7 @@ class PumpInterface:
     def __init__(self, config: types.Config) -> None:
         self.config = config
         self.logger = utils.Logger(config, "pump")
-
-        self.pin_factory = gpiozero.pins.pigpio.PiGPIOFactory(host="127.0.0.1")
-        pi_error_message = 'pigpio is not connected, please run "sudo pigpiod -n 127.0.0.1"'
-        assert self.pin_factory.connection is not None, pi_error_message
-        assert self.pin_factory.connection.connected, pi_error_message
+        self.pin_factory = utils.get_pin_factory()
 
         self.control_pin = gpiozero.PWMOutputDevice(
             pin=Constants.pump.control_pin_out,
@@ -65,6 +61,4 @@ class PumpInterface:
 
     def teardown(self) -> None:
         """End all hardware connections"""
-        self.control_pin.close()
-        self.speed_pin.close()
         self.pin_factory.close()

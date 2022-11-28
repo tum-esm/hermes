@@ -1,14 +1,12 @@
-import queue
 import re
 import serial
 import time
-import threading
 from src import utils, types
 import gpiozero
+import gpiozero.pins.pigpio
 
 # returned when calling "errs"
 error_regex = r"OK: No errors detected\."
-
 
 # returned when powering up the sensor
 # TODO
@@ -96,22 +94,25 @@ class CO2SensorInterface:
     def __init__(self, config: types.Config, logger: utils.Logger | None = None) -> None:
         self.rs232_interface = RS232Interface()
         self.logger = logger if logger is not None else utils.Logger(config, origin="co2-sensor")
-        self.sensor_power_pin = gpiozero.OutputDevice(pin=utils.Constants.co2_sensor.power_pin_out)
-
+        self.pin_factory = utils.get_pin_factory()
+        self.power_pin = gpiozero.OutputDevice(
+            pin=utils.Constants.co2_sensor.power_pin_out, pin_factory=self.pin_factory
+        )
         self._reset_sensor()
 
     def _reset_sensor(self) -> None:
         """will reset the sensors default settings. takes about 6 seconds"""
 
-        self.logger.info("reinitializing default sensor settings")
+        self.logger.info("(re)initializing default sensor settings")
 
         self.logger.debug("powering down sensor")
-        self.sensor_power_pin.off()
+        self.power_pin.off()
         time.sleep(1)
 
         self.logger.debug("powering up sensor")
-        self.sensor_power_pin.on()
+        self.power_pin.on()
         time.sleep(5)
+        # TODO: wait for sensor startup message
 
         self.logger.debug("sending default settings")
         for default_setting in [
@@ -122,7 +123,7 @@ class CO2SensorInterface:
             self.rs232_interface.write(default_setting)
 
         # set default filters
-        # self.set_filter_setting()
+        self.set_filter_setting()
 
     def set_filter_setting(
         self,
@@ -142,7 +143,9 @@ class CO2SensorInterface:
         self.rs232_interface.write(f"average {average}")
         self.rs232_interface.write(f"smooth {smooth}")
         self.rs232_interface.write(f"median {median}")
-        self.rs232_interface.write(f"linear {'on' if linear else 'off'}", sleep=0.5)
+        self.rs232_interface.write(f"linear {'on' if linear else 'off'}")
+        time.sleep(0.5)
+
         self.logger.info(
             f"Updating filter settings (average = {average}, smooth"
             + f" = {smooth}, median = {median}, linear = {linear})"
@@ -173,3 +176,7 @@ class CO2SensorInterface:
     def log_sensor_errors(self) -> None:
         self.rs232_interface.write("errs")
         # TODO: wait for sensor answer in an expected regex
+
+    def teardown(self) -> None:
+        """End all hardware connections"""
+        self.pin_factory.close()
