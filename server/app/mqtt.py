@@ -42,8 +42,8 @@ class Client(aiomqtt.Client):
                 if settings.ENVIRONMENT == "production"
                 else None
             ),
-            # Make the MQTT connection persistent
-            # Broker retains messages on topics we subscribed to on disconnection
+            # Make the MQTT connection persistent. The broker will retain messages on
+            # topics we subscribed to in case we disconnect
             clean_start=False,
             client_id="server",
         )
@@ -71,12 +71,14 @@ class Client(aiomqtt.Client):
             )
             while True:
                 try:
+                    # Try to publish the configuration
                     await self.publish(
                         topic=f"{sensor_identifier}/configuration",
                         payload=_encode_payload(configuration),
                         qos=1,
                         retain=True,
                     )
+                    # Try to set the publication timestamp in the database
                     await self.database_client.execute(query, *parameters)
                     logger.info(
                         f"[MQTT] Published configuration #{revision} to:"
@@ -84,11 +86,15 @@ class Client(aiomqtt.Client):
                     )
                     break
                 except Exception as e:
+                    # Retry if something fails. Duplicate messages are not a problem,
+                    # the sensor can ignore them based on the revision number.
+                    # The revision number only increases, never decreases.
                     logger.warning(
                         f"[MQTT] Failed to publish configuration #{revision} to"
                         f" {sensor_identifier}, retrying in {backoff} seconds:"
                         f" {repr(e)}"
                     )
+                    # Backoff exponentially, up until about 5 minutes
                     if backoff < 256:
                         backoff *= 2
                     await asyncio.sleep(backoff)
