@@ -6,14 +6,19 @@ class _CustomError(starlette.exceptions.HTTPException):
         super().__init__(self.STATUS_CODE, self.DETAIL)
 
 
-class InvalidSyntaxError(_CustomError):
+class BadRequestError(_CustomError):
     STATUS_CODE = 400
-    DETAIL = "Invalid Syntax"
+    DETAIL = "Bad Request"
 
 
-class ResourceExistsError(_CustomError):
+class NotFoundError(_CustomError):
+    STATUS_CODE = 404
+    DETAIL = "Not Found"
+
+
+class ConflictError(_CustomError):
     STATUS_CODE = 409
-    DETAIL = "Resource Exists"
+    DETAIL = "Conflict"
 
 
 class InternalServerError(_CustomError):

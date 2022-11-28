@@ -26,6 +26,11 @@ class _PostSensorsRequestQuery(_RequestQuery):
 
 
 @attrs.frozen
+class _PutSensorsRequestQuery(_RequestQuery):
+    pass
+
+
+@attrs.frozen
 class _GetSensorsRequestQuery(_RequestQuery):
     sensors: list[str] = attrs.field(
         default="",
@@ -88,6 +93,12 @@ class _PostSensorsRequestBody(_RequestBody):
 
 
 @attrs.frozen
+class _PutSensorsRequestBody(_RequestBody):
+    sensor_identifier: str = SENSOR_IDENTIFIER_FIELD
+    configuration: dict[str, int | float | str | bool | None] = JSON_FIELD
+
+
+@attrs.frozen
 class _GetSensorsRequestBody(_RequestBody):
     pass
 
@@ -105,6 +116,16 @@ class PostSensorsRequest(_Request):
     )
     body: _PostSensorsRequestBody = attrs.field(
         converter=lambda x: _PostSensorsRequestBody(**x),
+    )
+
+
+@attrs.frozen
+class PutSensorsRequest(_Request):
+    query: _PutSensorsRequestQuery = attrs.field(
+        converter=lambda x: _PutSensorsRequestQuery(**x),
+    )
+    body: _PutSensorsRequestBody = attrs.field(
+        converter=lambda x: _PutSensorsRequestBody(**x),
     )
 
 

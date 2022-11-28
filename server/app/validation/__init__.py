@@ -4,4 +4,5 @@ from app.validation.routes import (
     GetMeasurementsRequest,
     GetSensorsRequest,
     PostSensorsRequest,
+    PutSensorsRequest,
 )

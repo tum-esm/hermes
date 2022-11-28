@@ -52,23 +52,50 @@ async def post_sensors(request):
             result = await database_client.fetch(query, *parameters)
             revision = database.dictify(result)[0]["revision"]
         # Send MQTT message
-        # TODO implement acknowledgement and retry logic to avoid corrupted state
         await mqtt_client.publish_configuration(
             sensor_identifier=request.body.sensor_identifier,
             revision=revision,
             configuration=request.body.configuration,
         )
     except asyncpg.exceptions.UniqueViolationError:
-        logger.warning("[POST /sensors] Configuration already exists")
-        raise errors.ResourceExistsError()
-    except aiomqtt.MqttError:
-        logger.error("[POST /sensors] MQTT message could not be published")
-        raise errors.InternalServerError()
+        logger.warning("[POST /sensors] Sensor already exists")
+        raise errors.ConflictError()
     except Exception as e:
         logger.error(f"[POST /sensors] Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
-    return starlette.responses.JSONResponse(status_code=201, content={})
+    return starlette.responses.JSONResponse(status_code=201, content=None)
+
+
+@validation.validate(schema=validation.PutSensorsRequest)
+async def put_sensors(request):
+    """Update an existing sensor's configuration."""
+    try:
+        # Insert configuration
+        query, parameters = database.build(
+            template="insert-configuration.sql",
+            template_parameters={},
+            query_parameters={
+                "sensor_identifier": request.body.sensor_identifier,
+                "configuration": request.body.configuration,
+            },
+        )
+        result = await database_client.fetch(query, *parameters)
+        revision = database.dictify(result)[0]["revision"]
+        # Send MQTT message
+        await mqtt_client.publish_configuration(
+            sensor_identifier=request.body.sensor_identifier,
+            revision=revision,
+            configuration=request.body.configuration,
+        )
+    except asyncpg.exceptions.ForeignKeyViolationError:
+        logger.warning("[PUT /sensors] Sensor doesn't exist")
+        raise errors.NotFoundError()
+    except Exception as e:
+        logger.error(f"[PUT /sensors] Unknown error: {repr(e)}")
+        raise errors.InternalServerError()
+    # Return successful response
+    return starlette.responses.JSONResponse(status_code=204, content=None)
 
 
 @validation.validate(schema=validation.GetSensorsRequest)
@@ -163,6 +190,11 @@ app = starlette.applications.Starlette(
             path="/sensors",
             endpoint=post_sensors,
             methods=["POST"],
+        ),
+        starlette.routing.Route(
+            path="/sensors",
+            endpoint=put_sensors,
+            methods=["PUT"],
         ),
         starlette.routing.Route(
             path="/sensors",
