@@ -75,7 +75,6 @@ async def put_sensors(request):
     #  - how to we know which sensor that connects is which? -> return id on creation
     #  - use UUID
     # TODO Implement sensor_name change
-    # TODO new measurement table for each sensor?
 
     try:
         # Insert configuration

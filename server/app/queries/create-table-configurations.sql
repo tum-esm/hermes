@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS configurations (
 
     -- Add more pre-defined values here (needed if we want to visualize them in the dashboard)
     -- Something like: lat/long, notes, version commit hash -> most should still be nullable
+    -- lat/long and notes should be in the sensors table though, the configurations table should
+    -- only contain things that are actually sent to the sensor
 
     configuration JSONB NOT NULL,
     PRIMARY KEY (sensor_identifier, revision)
