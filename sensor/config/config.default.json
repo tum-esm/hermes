@@ -9,5 +9,11 @@
         "identifier": "...",
         "password": "........",
         "base_topic": "/.../..."
+    },
+    "valves": {
+        "air_inlets": [
+            {"number": 1, "direction": 300},
+            {"number": 2, "direction": 50}
+        ]
     }
 }
