@@ -56,4 +56,4 @@ ignore_missing_imports = true
 profile = "black"
 
 [tool.black]
-line-length = 100
+line-length = 88

@@ -75,14 +75,16 @@ class MeasurementProcedure:
         else:
             if self.active_valve_number != new_valve.number:
                 if wind_data.speed_avg < 0.2:
-                    self.logger.debug(f"wind speed very low ({wind_data.speed_avg} m/s)")
+                    self.logger.debug(
+                        f"wind speed very low ({wind_data.speed_avg} m/s)"
+                    )
                     self.logger.info(f"staying at air inlet {new_valve}")
                 else:
                     self.logger.info(f"switching to air inlet {new_valve}")
                     self._switch_to_valve_number(new_valve.number)
             else:
                 self.logger.info(f"staying at air inlet {new_valve}")
-    
+
     def _update_input_air_calibration(self) -> None:
         _, humidity = self.input_air_sensor.get_current_values()
         self.co2_sensor_interface.set_calibration_values(humidity=humidity)
@@ -96,9 +98,13 @@ class MeasurementProcedure:
         self.config = config
         # TODO: update config on components
 
-        # TODO: Check whether co2 sensor reports
-        # TODO: Check whether wind sensor reports any issues
+        # check whether the sensors report any errors
+        self.co2_sensor_interface.check_sensor_errors()
+        self.wind_sensor_interface.check_sensor_errors()
+        # TODO: implement shut down and retry logic (if error
+        #       happens 3 times in a row, report)
 
+        # switch to up-to-date valve every two minutes
         self._update_input_valve_for_wind_data()
 
         # run the pump for the whole procedure

@@ -39,9 +39,17 @@ class RS232Interface:
 
 
 class WindSensorInterface:
-    def __init__(self, config: types.Config, logger: utils.Logger | None = None) -> None:
+    class DeviceFailure(Exception):
+        """raised when the wind sensor either reports
+        low voltage or has not sent any data in a while"""
+
+    def __init__(
+        self, config: types.Config, logger: utils.Logger | None = None
+    ) -> None:
         self.rs232_interface = RS232Interface()
-        self.logger = logger if logger is not None else utils.Logger(config, origin="co2-sensor")
+        self.logger = (
+            logger if logger is not None else utils.Logger(config, origin="co2-sensor")
+        )
         self.pin_factory = utils.get_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
             pin=utils.Constants.wind_sensor.power_pin_out, pin_factory=self.pin_factory
@@ -56,7 +64,9 @@ class WindSensorInterface:
         now = round(time.time())
         for m in new_messages:
             if measurement_pattern.match(m) is not None:
-                parsed_message = "".join(c for c in m[4:] if c.isnumeric() or c in [",", "."])
+                parsed_message = "".join(
+                    c for c in m[4:] if c.isnumeric() or c in [",", "."]
+                )
                 dn, dm, dx, sn, sm, sx = [float(v) for v in parsed_message.split(",")]
                 self.wind_measurement = types.WindSensorData(
                     direction_min=dn,
@@ -68,7 +78,9 @@ class WindSensorInterface:
                     last_update_time=now,
                 )
             if device_status_pattern.match(m) is not None:
-                parsed_message = "".join(c for c in m[4:-13] if c.isnumeric() or c in [",", "."])
+                parsed_message = "".join(
+                    c for c in m[4:-13] if c.isnumeric() or c in [",", "."]
+                )
                 th, vh, vs, vr = [float(v) for v in parsed_message.split(",")]
                 self.device_status = types.WindSensorStatus(
                     temperature=th,
@@ -93,6 +105,37 @@ class WindSensorInterface:
         self.power_pin.off()
         self.pin_factory.close()
 
-    # TODO: Add report_issues function
-    #       1. are both data entries not too old
-    #       2. does the system state report reasonable voltage data
+    def check_sensor_errors(self) -> None:
+        """checks whether the wind sensor behaves incorrectly - Possibly
+        raises the WindSensorInterface.DeviceFailure exception"""
+
+        now = time.time()
+
+        if self.wind_measurement is not None:
+            if now - self.wind_measurement.last_update_time > 120:
+                raise WindSensorInterface.DeviceFailure(
+                    "last wind measurement data is older than two minutes"
+                    + f" ({self.wind_measurement})"
+                )
+
+        if self.device_status is not None:
+            if now - self.device_status.last_update_time > 120:
+                raise WindSensorInterface.DeviceFailure(
+                    "last device status data is older than two minutes"
+                    + f" ({self.device_status})"
+                )
+            if not (22 <= self.device_status.heating_voltage <= 26):
+                raise WindSensorInterface.DeviceFailure(
+                    "the heating voltage is off by more than 2 volts"
+                    + f" ({self.device_status})"
+                )
+            if not (22 <= self.device_status.supply_voltage <= 26):
+                raise WindSensorInterface.DeviceFailure(
+                    "the supply voltage is off by more than 2 volts"
+                    + f" ({self.device_status})"
+                )
+            if not (3.2 <= self.device_status.reference_voltage <= 4.0):
+                raise WindSensorInterface.DeviceFailure(
+                    "the reference voltage is off by more than 0.4 volts"
+                    + f" ({self.device_status})"
+                )
