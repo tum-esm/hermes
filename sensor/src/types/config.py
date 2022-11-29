@@ -29,23 +29,6 @@ class ConfigSectionMQTT:
 
 
 @attrs.frozen
-class ConfigSectionAirInlets:
-    directions: list = attrs.field(
-        validator=[val.instance_of(str), val.min_len(3), val.max_len(256)]  # type: ignore
-    )
-    port: int = attrs.field(validator=[val.instance_of(int), val.ge(0)])  # type: ignore
-    identifier: str = attrs.field(
-        validator=[val.instance_of(str), val.min_len(3), val.max_len(256)]  # type: ignore
-    )
-    password: str = attrs.field(
-        validator=[val.instance_of(str), val.min_len(8), val.max_len(256)]  # type: ignore
-    )
-    base_topic: str = attrs.field(
-        validator=[val.instance_of(str), val.min_len(1), val.max_len(256)]  # type: ignore
-    )
-
-
-@attrs.frozen
 class ConfigSectionValvesAirInlet:
     number: Literal[1, 2, 3, 4] = attrs.field(validator=[val.in_([1, 2, 3, 4])])  # type: ignore
     direction: int = attrs.field(
@@ -85,7 +68,9 @@ def get_config_section_valves(x: Any) -> ConfigSectionValves:
 class Config:
     """The config.json for each sensor"""
 
-    version: Literal["0.1.0"] = attrs.field(validator=[val.instance_of(str), val.in_(["0.1.0"])])
+    version: Literal["0.1.0"] = attrs.field(
+        validator=[val.instance_of(str), val.in_(["0.1.0"])]
+    )
     general: ConfigSectionGeneral = attrs.field(
         converter=get_config_section_general,
     )

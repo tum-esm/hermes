@@ -96,7 +96,7 @@ class WindSensorInterface:
         self._update_current_values()
         return self.wind_measurement
 
-    def get_current_device_status(self) -> types.WindSensorData | None:
+    def get_current_device_status(self) -> types.WindSensorStatus | None:
         self._update_current_values()
         return self.device_status
 

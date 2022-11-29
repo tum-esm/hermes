@@ -32,14 +32,17 @@ class Logger:
     last_archive_time = datetime.now()
 
     def __init__(
-        self, config: types.Config, origin: str = "insert-name-here", print_to_console: bool = False
+        self,
+        config: types.Config,
+        origin: str = "insert-name-here",
+        print_to_console: bool = False,
     ) -> None:
         self.origin: str = origin
         self.log_file_slug: str = f"sensor-node-{config.general.node_id}"
         self.print_to_console = print_to_console
 
     def update_config(self, new_config: types.Config) -> None:
-        self.log_file_slug: str = f"sensor-node-{new_config.general.node_id}"
+        self.log_file_slug = f"sensor-node-{new_config.general.node_id}"
 
     def debug(self, message: str) -> None:
         """Write a debug log (to debug only). Used for verbose output"""
@@ -66,7 +69,9 @@ class Logger:
         """Format the log line string and write it to "logs/debug.log"
         and possibly "logs/info.log"""
         now = datetime.now()
-        utc_offset = round((datetime.now() - datetime.utcnow()).total_seconds() / 3600, 1)
+        utc_offset = round(
+            (datetime.now() - datetime.utcnow()).total_seconds() / 3600, 1
+        )
         if round(utc_offset) == utc_offset:
             utc_offset = round(utc_offset)
 
@@ -124,7 +129,9 @@ class Logger:
             archive_log_date_groups[line_date].append(line)
 
         for date in archive_log_date_groups.keys():
-            filename = os.path.join(LOGS_DIR, "archive", f"{self.log_file_slug}-{date}.log")
+            filename = os.path.join(
+                LOGS_DIR, "archive", f"{self.log_file_slug}-{date}.log"
+            )
             with open(filename, "a") as f:
                 f.writelines(archive_log_date_groups[date] + [""])
 

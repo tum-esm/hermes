@@ -37,7 +37,7 @@ class MeasurementProcedure:
         self.input_air_sensor = interfaces.InputAirSensorInterface()
 
         self.co2_sensor_interface = interfaces.CO2SensorInterface(config)
-        self.last_measurement_time = 0
+        self.last_measurement_time: float = 0
 
     def _switch_to_valve_number(self, new_valve_number: Literal[1, 2, 3, 4]) -> None:
         self.valve_interfaces.set_active_input(new_valve_number)
@@ -45,6 +45,17 @@ class MeasurementProcedure:
         self.active_valve_number = new_valve_number
         # TODO: measure airflow and calculate rounds that need
         #       to be pumped for 50 meters of pipe
+
+    def get_current_wind_data(self) -> types.WindSensorData:
+        # fetch wind data
+        while True:
+            wind_data = self.wind_sensor_interface.get_current_wind_measurement()
+            if wind_data is not None:
+                return wind_data
+            self.logger.debug("no current wind data, waiting 2 seconds")
+            time.sleep(2)
+
+        # TODO: Add timeout error
 
     def _update_input_valve(self) -> None:
         """
@@ -54,13 +65,7 @@ class MeasurementProcedure:
         """
 
         # fetch wind data
-        wind_data = None
-        while True:
-            wind_data = self.wind_sensor_interface.get_current_wind_measurement()
-            if wind_data is not None:
-                break
-            self.logger.debug("no current wind data, waiting 2 seconds")
-            time.sleep(2)
+        wind_data = self.get_current_wind_data()
 
         # determine new valve
         new_valve = min(
@@ -105,7 +110,7 @@ class MeasurementProcedure:
         #       happens 3 times in a row, report)
 
         # switch to up-to-date valve every two minutes
-        self._update_input_valve_for_wind_data()
+        self._update_input_valve()
 
         # run the pump for the whole procedure
         self.pump_interface.set_desired_pump_rps(20)

@@ -6,7 +6,9 @@ import gpiozero
 import gpiozero.pins.pigpio
 
 # returned when powering up the sensor
-startup_regex = r"GMP343 \- Version STD \d+\.\d+\r\nCopyright: Vaisala Oyj \d{4} - \d{4}"
+startup_regex = (
+    r"GMP343 \- Version STD \d+\.\d+\r\nCopyright: Vaisala Oyj \d{4} - \d{4}"
+)
 
 # returned when calling "send"
 concentration_regex = r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
@@ -40,7 +42,9 @@ class RS232Interface:
         self.serial_interface.read_all()
 
     def wait_for_answer(self, expected_regex: str = "[^>]*", timeout: float = 8) -> str:
-        expected_pattern = re.compile(r"^(\r\n|\s)*" + expected_regex + r"(\r\n|\s)*>(\r\n|\s)*$")
+        expected_pattern = re.compile(
+            r"^(\r\n|\s)*" + expected_regex + r"(\r\n|\s)*>(\r\n|\s)*$"
+        )
         start_time = time.time()
         answer = ""
 
@@ -64,9 +68,13 @@ class CO2SensorInterface:
     class DeviceFailure(Exception):
         """raised when the CO2 probe "errs" command responds with an error"""
 
-    def __init__(self, config: types.Config, logger: utils.Logger | None = None) -> None:
+    def __init__(
+        self, config: types.Config, logger: utils.Logger | None = None
+    ) -> None:
         self.rs232_interface = RS232Interface()
-        self.logger = logger if logger is not None else utils.Logger(config, origin="co2-sensor")
+        self.logger = (
+            logger if logger is not None else utils.Logger(config, origin="co2-sensor")
+        )
         self.pin_factory = utils.get_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
             pin=utils.Constants.co2_sensor.power_pin_out, pin_factory=self.pin_factory
@@ -115,9 +123,15 @@ class CO2SensorInterface:
 
         # TODO: construct a few opinionated measurement setups
 
-        assert average >= 0 and average <= 60, "invalid calibration setting, average not in [0, 60]"
-        assert smooth >= 0 and smooth <= 255, "invalid calibration setting, smooth not in [0, 255]"
-        assert median >= 0 and median <= 13, "invalid calibration setting, median not in [0, 13]"
+        assert (
+            average >= 0 and average <= 60
+        ), "invalid calibration setting, average not in [0, 60]"
+        assert (
+            smooth >= 0 and smooth <= 255
+        ), "invalid calibration setting, smooth not in [0, 255]"
+        assert (
+            median >= 0 and median <= 13
+        ), "invalid calibration setting, median not in [0, 13]"
 
         self.rs232_interface.send_command(f"average {average}")
         self.rs232_interface.wait_for_answer()
@@ -138,9 +152,9 @@ class CO2SensorInterface:
 
     def set_calibration_values(
         self,
-        pressure: int | None,
-        humidity: int | None,
-        oxygen: int | None,
+        pressure: float | None = None,
+        humidity: float | None = None,
+        oxygen: float | None = None,
     ) -> None:
         """
         update pressure, humidity, and oxygen values in sensor
@@ -157,7 +171,9 @@ class CO2SensorInterface:
             self.rs232_interface.send_command(f"pc off")
             self.rs232_interface.wait_for_answer()
         else:
-            assert 700 <= pressure <= 1300, f"invalid pressure ({pressure} not in [700, 1300])"
+            assert (
+                700 <= pressure <= 1300
+            ), f"invalid pressure ({pressure} not in [700, 1300])"
             self.rs232_interface.send_command(f"pc on")
             self.rs232_interface.wait_for_answer()
             self.rs232_interface.send_command(f"p {round(pressure, 2)}")
@@ -167,7 +183,9 @@ class CO2SensorInterface:
             self.rs232_interface.send_command(f"rhc off")
             self.rs232_interface.wait_for_answer()
         else:
-            assert 0 <= humidity <= 100, f"invalid humidity ({humidity} not in [0, 100])"
+            assert (
+                0 <= humidity <= 100
+            ), f"invalid humidity ({humidity} not in [0, 100])"
             self.rs232_interface.send_command(f"rhc on")
             self.rs232_interface.wait_for_answer()
             self.rs232_interface.send_command(f"rh {round(humidity, 2)}")
@@ -192,7 +210,9 @@ class CO2SensorInterface:
         """get the current concentration value from the CO2 probe"""
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.send_command("send")
-        answer = self.rs232_interface.wait_for_answer(expected_regex=concentration_regex)
+        answer = self.rs232_interface.wait_for_answer(
+            expected_regex=concentration_regex
+        )
         for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">", "\r\n"]:
             answer = answer.replace(s, "")
         raw_value_string, comp_value_string, filt_value_string = answer.split(";")
