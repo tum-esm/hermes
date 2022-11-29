@@ -1,4 +1,5 @@
-from src import interfaces
+import time
+from src import interfaces, procedures
 
 
 def run() -> None:
@@ -7,17 +8,19 @@ def run() -> None:
     on the sensor node
     """
     config = interfaces.ConfigInterface.read()
-    mqtt_interface = interfaces.MQTTInterface(config)
+    # mqtt_interface = interfaces.MQTTInterface(config)
 
-    # TODO: init config-procedure instance
+    system_check_prodecure = procedures.SystemCheckProcedure()
+
+    # TODO: init configuration-procedure instance
     # TODO: init calibration-procedure instance
     # TODO: init measurement-procedure instance
 
     while True:
         config = interfaces.ConfigInterface.read()
+        system_check_prodecure.run(config)
 
         """
-        0. system state
         1. read mqtt messages
         2. if config update request in messages:
             * run configuration procedure
@@ -26,5 +29,7 @@ def run() -> None:
             * do calbration
             * continue
         4. run measurement procedure
-
         """
+
+        # not needed anymore once all procedures have been implemented
+        time.sleep(10)
