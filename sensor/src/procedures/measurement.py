@@ -13,3 +13,15 @@
 # TODO: Put 50 meter pipe at every inlet. Still configurable.
 
 # class last_measurement_value = datetime.now()
+
+from src import types
+
+
+class MeasurementProcedure:
+    """runs every mainloop call"""
+
+    @staticmethod
+    def run(config: types.Config) -> None:
+        pass
+
+        # TODO: implement measurement procedure

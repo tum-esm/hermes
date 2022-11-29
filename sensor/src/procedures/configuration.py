@@ -1,5 +1,3 @@
-# a config change has been requested
-
 """
 if not a version upgrade:
 1. test new config on local hardware
@@ -16,3 +14,14 @@ if version upgrade
 7. Call `insert-name-here-cli start` using the `at in 1 minute` command
 8. Call `sys.exit()`
 """
+
+from src import types
+
+
+class ConfigurationProcedure:
+    """runs when a config change has been requested"""
+
+    @staticmethod
+    def run(current_config: types.Config, mqtt_request: str) -> None:
+        pass
+        # TODO: implement configuration procedure
