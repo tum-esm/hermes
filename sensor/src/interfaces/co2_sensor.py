@@ -20,7 +20,7 @@ concentration_regex = r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\
 class RS232Interface:
     def __init__(self) -> None:
         self.serial_interface = serial.Serial(
-            port="/dev/ttySC0",
+            port=utils.Constants.co2_sensor.serial_port,
             baudrate=19200,
             bytesize=8,
             parity="N",

@@ -20,3 +20,8 @@ class Constants:
 
     class co2_sensor:
         power_pin_out = 20
+        serial_port = "/dev/ttySC0"
+
+    class wind_sensor:
+        power_pin_out = 21
+        serial_port = "/dev/ttySC1"
