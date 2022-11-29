@@ -1,2 +1,2 @@
 from .config import Config
-from .sensor_answers import CO2SensorData
+from .sensor_answers import CO2SensorData, WindSensorData, WindSensorStatus

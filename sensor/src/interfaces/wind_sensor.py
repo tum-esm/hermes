@@ -48,26 +48,41 @@ class WindSensorInterface:
         )
         self.power_pin.on()
 
-        self.last_wind_measurement: str | None = None
-        self.last_wind_measurement_time: float | None = None
-        self.last_device_status: str | None = None
-        self.last_device_status_time: float | None = None
+        self.wind_measurement: types.WindSensorData | None = None
+        self.device_status: types.WindSensorStatus | None = None
 
-    def update(self) -> None:
+    def get_current_values(
+        self,
+    ) -> tuple[types.WindSensorData | None, types.WindSensorStatus | None]:
         new_messages = self.rs232_interface.get_messages()
-        now = time.time()
+        now = round(time.time())
         for m in new_messages:
             if measurement_pattern.match(m) is not None:
-                self.last_wind_measurement_time = now
-                self.last_wind_measurement = m
+                parsed_message = "".join(c for c in m[4:] if c.isnumeric() or c in [",", "."])
+                dn, dm, dx, sn, sm, sx = [float(v) for v in parsed_message.split(",")]
+                self.wind_measurement = types.WindSensorData(
+                    direction_min=dn,
+                    direction_avg=dm,
+                    direction_max=dx,
+                    speed_min=sn,
+                    speed_avg=sm,
+                    speed_max=sx,
+                    last_update_time=now,
+                )
             if device_status_pattern.match(m) is not None:
-                self.last_device_status_time = now
-                self.last_device_status = m
+                parsed_message = "".join(c for c in m[4:-13] if c.isnumeric() or c in [",", "."])
+                th, vh, vs, vr = [float(v) for v in parsed_message.split(",")]
+                self.device_status = types.WindSensorStatus(
+                    temperature=th,
+                    heating_voltage=vh,
+                    supply_voltage=vs,
+                    reference_voltage=vr,
+                    sensor_id=m.split("=")[-1],
+                    last_update_time=now,
+                )
+        # TODO: log warning when last update time on each reaches a certain threshold
 
-    def get_current_values(self) -> None:
-        self.update()
-        print(f"measurement: {self.last_wind_measurement}")
-        print(f"device status: {self.last_device_status}")
+        return self.wind_measurement, self.device_status
 
     def teardown(self) -> None:
         """End all hardware connections"""

@@ -16,7 +16,8 @@ wind_sensor = interfaces.WindSensorInterface(
 
 for i in range(30):
     print("update")
-    wind_sensor.get_current_values()
+    current_values = wind_sensor.get_current_values()
+    print(current_values)
     time.sleep(2)
 
 print("tearing down interface")
