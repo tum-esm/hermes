@@ -93,6 +93,10 @@ class CO2SensorInterface:
             "echo off",
             "range 1",
             'form "Raw " CO2RAWUC " ppm; Comp." CO2RAW " ppm; Filt. " CO2 " ppm"',
+            "tc on",
+            "rhc off",
+            "pc off",
+            "oc off",
         ]:
             self.rs232_interface.send_command(default_setting)
             self.rs232_interface.wait_for_answer()
@@ -130,6 +134,58 @@ class CO2SensorInterface:
         self.logger.info(
             f"Updating filter settings (average = {average}, smooth"
             + f" = {smooth}, median = {median}, linear = {linear})"
+        )
+
+    def set_calibration_values(
+        self,
+        pressure: int | None,
+        humidity: int | None,
+        oxygen: int | None,
+    ) -> None:
+        """
+        update pressure, humidity, and oxygen values in sensor
+        for its internal calibration.
+
+        if any of these value is None, then the calibration is
+        turned off, otherwise it is switched on automatically.
+
+        the internal temperature calibration is enabled by de-
+        fault and uses the built-in temperature sensor.
+        """
+
+        if pressure is None:
+            self.rs232_interface.send_command(f"pc off")
+            self.rs232_interface.wait_for_answer()
+        else:
+            assert 700 <= pressure <= 1300, f"invalid pressure ({pressure} not in [700, 1300])"
+            self.rs232_interface.send_command(f"pc on")
+            self.rs232_interface.wait_for_answer()
+            self.rs232_interface.send_command(f"p {round(pressure, 2)}")
+            self.rs232_interface.wait_for_answer()
+
+        if humidity is None:
+            self.rs232_interface.send_command(f"rhc off")
+            self.rs232_interface.wait_for_answer()
+        else:
+            assert 0 <= humidity <= 100, f"invalid humidity ({humidity} not in [0, 100])"
+            self.rs232_interface.send_command(f"rhc on")
+            self.rs232_interface.wait_for_answer()
+            self.rs232_interface.send_command(f"rh {round(humidity, 2)}")
+            self.rs232_interface.wait_for_answer()
+
+        if oxygen is None:
+            self.rs232_interface.send_command(f"oc off")
+            self.rs232_interface.wait_for_answer()
+        else:
+            assert 0 <= oxygen <= 100, f"invalid oxygen ({oxygen} not in [0, 100])"
+            self.rs232_interface.send_command(f"oc on")
+            self.rs232_interface.wait_for_answer()
+            self.rs232_interface.send_command(f"o {round(oxygen, 2)}")
+            self.rs232_interface.wait_for_answer()
+
+        self.logger.info(
+            f"updating calibration values (pressure = {pressure}, "
+            + f"humidity = {humidity}, oxygen = {oxygen})"
         )
 
     def get_current_concentration(self) -> types.CO2SensorData:

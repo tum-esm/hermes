@@ -82,20 +82,11 @@ class MeasurementProcedure:
                     self._switch_to_valve_number(new_valve.number)
             else:
                 self.logger.info(f"staying at air inlet {new_valve}")
-
+    
     def _update_input_air_calibration(self) -> None:
-        temperature, humidity = self.input_air_sensor.get_current_values()
-
-        if temperature is not None:
-            # TODO: apply sensor calibration
-            self.logger.debug(f"applied temperature calibration to sensor ({temperature} °C)")
-        else:
-            self.logger.warning("could not read temperature value from SHT21")
-
-        if humidity is not None:
-            # TODO: apply sensor calibration
-            self.logger.debug(f"applied humidity calibration to sensor ({humidity} rH)")
-        else:
+        _, humidity = self.input_air_sensor.get_current_values()
+        self.co2_sensor_interface.set_calibration_values(humidity=humidity)
+        if humidity is None:
             self.logger.warning("could not read humidity value from SHT21")
 
     def run(self, config: types.Config) -> None:
