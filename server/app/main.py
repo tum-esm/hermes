@@ -107,7 +107,20 @@ async def put_sensors(request):
 
 @validation.validate(schema=validation.GetSensorsRequest)
 async def get_sensors(request):
-    """Return status and configuration of sensors."""
+    """Return status and configuration of sensors.
+
+    The underlying database query is quite expensive, the best tactic would probably
+    be to cache the results per sensor for a short time, invalidate them when a new
+    measurement in received, and re-aggregate every few minutes.
+
+    The best tactic for the frontend is probably to use websockets. This would allow
+    us to send back cached results immediately and then update them as soon as new
+    aggregations are available.
+
+    To make this more performant on the database we should make sure to have the
+    correct indexes in place. We should also consider using TimescaleDB.
+
+    """
 
     # TODO Enrich with
     # V last measurement timestamp
