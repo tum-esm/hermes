@@ -35,9 +35,11 @@ class Logger:
         self, config: types.Config, origin: str = "insert-name-here", print_to_console: bool = False
     ) -> None:
         self.origin: str = origin
-        self.config: types.Config = config
         self.log_file_slug: str = f"sensor-node-{config.general.node_id}"
         self.print_to_console = print_to_console
+
+    def update_config(self, new_config: types.Config) -> None:
+        self.log_file_slug: str = f"sensor-node-{new_config.general.node_id}"
 
     def debug(self, message: str) -> None:
         """Write a debug log (to debug only). Used for verbose output"""

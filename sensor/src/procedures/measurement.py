@@ -14,13 +14,16 @@
 
 # class last_measurement_value = datetime.now()
 
-from src import types
+from src import types, utils
 
 
 class MeasurementProcedure:
-    """runs every mainloop call"""
+    """runs every mainloop call when no configuration or calibration ran"""
+
+    def __init__(self, config: types.Config) -> None:
+        self.logger = utils.Logger(config, origin="measurements")
 
     def run(self, config: types.Config) -> None:
-        pass
+        self.logger.update_config(config)
 
         # TODO: implement measurement procedure

@@ -5,11 +5,12 @@ from src import interfaces, types, utils
 class SystemCheckProcedure:
     """runs every mainloop call"""
 
-    def __init__(self) -> None:
+    def __init__(self, config: types.Config) -> None:
         self.mainboard_sensor = interfaces.MainboardSensorInterface()
+        self.logger = utils.Logger(config, origin="system-check")
 
     def run(self, config: types.Config) -> None:
-        self.logger = utils.Logger(config, origin="system-check")
+        self.logger.update_config(config)
 
         # evaluate system ambient conditions
         system_data = self.mainboard_sensor.get_system_data()
