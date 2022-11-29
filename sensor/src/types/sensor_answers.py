@@ -9,7 +9,16 @@ class CO2SensorData:
 
 
 # TODO: add sht 21 data
-# TODO: add bm280 data
+
+
+@attrs.frozen
+class MainboardSensorData:
+    """units: °C for temperature, rH for humidity, hPa for pressure"""
+
+    mainboard_temperature: float
+    cpu_temperature: float | None
+    enclosure_humidity: float
+    enclosure_pressure: float
 
 
 @attrs.frozen

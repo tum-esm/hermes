@@ -25,11 +25,14 @@ def log_line_has_date(log_line: str) -> bool:
         return False
 
 
+# TODO: option to send warnings via MQTT as well
+
+
 class Logger:
     last_archive_time = datetime.now()
 
     def __init__(
-        self, config: types.Config, origin: str = "pyra.core", print_to_console: bool = False
+        self, config: types.Config, origin: str = "insert-name-here", print_to_console: bool = False
     ) -> None:
         self.origin: str = origin
         self.config: types.Config = config

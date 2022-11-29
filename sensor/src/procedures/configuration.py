@@ -21,7 +21,6 @@ from src import types
 class ConfigurationProcedure:
     """runs when a config change has been requested"""
 
-    @staticmethod
-    def run(current_config: types.Config, mqtt_request: str) -> None:
+    def run(self, current_config: types.Config, mqtt_request: str) -> None:
         pass
         # TODO: implement configuration procedure

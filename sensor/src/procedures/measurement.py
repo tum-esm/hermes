@@ -20,8 +20,7 @@ from src import types
 class MeasurementProcedure:
     """runs every mainloop call"""
 
-    @staticmethod
-    def run(config: types.Config) -> None:
+    def run(self, config: types.Config) -> None:
         pass
 
         # TODO: implement measurement procedure
