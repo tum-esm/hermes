@@ -51,9 +51,7 @@ class WindSensorInterface:
         self.wind_measurement: types.WindSensorData | None = None
         self.device_status: types.WindSensorStatus | None = None
 
-    def get_current_values(
-        self,
-    ) -> tuple[types.WindSensorData | None, types.WindSensorStatus | None]:
+    def _update_current_values(self) -> None:
         new_messages = self.rs232_interface.get_messages()
         now = round(time.time())
         for m in new_messages:
@@ -82,7 +80,13 @@ class WindSensorInterface:
                 )
         # TODO: log warning when last update time on each reaches a certain threshold
 
-        return self.wind_measurement, self.device_status
+    def get_current_wind_measurement(self) -> types.WindSensorData | None:
+        self._update_current_values()
+        return self.wind_measurement
+
+    def get_current_device_status(self) -> types.WindSensorData | None:
+        self._update_current_values()
+        return self.device_status
 
     def teardown(self) -> None:
         """End all hardware connections"""
