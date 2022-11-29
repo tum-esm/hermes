@@ -4,17 +4,31 @@ from src import interfaces, procedures, utils
 
 
 def run() -> None:
-    """entry point of the mainloop running continuously on the sensor node"""
+    """
+    entry point of the mainloop running continuously on the sensor node
+
+    0. system checks
+    1. read mqtt messages
+    2. if config update request in messages:
+        * run configuration procedure
+        * config = interfaces.ConfigInterface.read()
+        * logger = utils.Logger(config, origin="main")
+        * continue
+    3. if calibration is due:
+        * do calbration
+        * continue
+    4. run measurement procedure
+    """
 
     config = interfaces.ConfigInterface.read()
     logger = utils.Logger(config, origin="main")
     logger.info(f"starting mainloop with process ID {os.getpid()}")
 
-    # mqtt_interface = interfaces.MQTTInterface(config)
-    system_check_prodecure = procedures.SystemCheckProcedure()
+    # TODO: mqtt_interface = interfaces.MQTTInterface(config)
+    system_check_prodecure = procedures.SystemCheckProcedure(config)
     # TODO: init configuration-procedure instance
     # TODO: init calibration-procedure instance
-    # TODO: init measurement-procedure instance
+    measurement_prodecure = procedures.MeasurementProcedure(config)
 
     while True:
         logger.info("starting mainloop iteration")
@@ -22,18 +36,13 @@ def run() -> None:
         logger.info("running system checks")
         system_check_prodecure.run(config)
 
-        """
-        1. read mqtt messages
-        2. if config update request in messages:
-            * run configuration procedure
-            * config = interfaces.ConfigInterface.read()
-            * logger = utils.Logger(config, origin="main")
-            * continue
-        3. if calibration is due:
-            * do calbration
-            * continue
-        4. run measurement procedure
-        """
+        # TODO: read mqtt messages
+        # TODO: optionally call configuration routine
+        # TODO: optionally call calibration routing
+
+        # TODO: if messages are empty, run, skip otherwise
+        logger.info("running measurements")
+        measurement_prodecure.run(config)
 
         logger.info("finished mainloop iteration")
 
