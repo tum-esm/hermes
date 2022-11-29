@@ -10,3 +10,4 @@ from .mqtt import MQTTInterface
 from .pump import PumpInterface
 from .ups import UPSInterface
 from .valve import ValveInterface
+from .wind_sensor import WindSensorInterface
