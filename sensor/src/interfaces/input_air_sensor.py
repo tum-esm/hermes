@@ -2,31 +2,24 @@
 # https://github.com/Tronde/Raspi-SHT21
 
 import time
-from src import utils, types
 from .i2c import I2CInterface
 
 # TODO rename to inflow-air-sensor
 class InputAirSensorInterface:
-    def __init__(self, config: types.Config) -> None:
+    def __init__(self) -> None:
         self.i2c_interface = I2CInterface(0x40, 1)
-        self.logger = utils.Logger(config, origin="input-air-sensor")
 
-    def run(self, logger: bool = True) -> None:
-        """Complete cycle including open, measurement und close, return tuple of temperature and humidity"""
-        self.i2c_interface.write(
-            [0xFE]
-        )  # execute Softreset Command  (default T=14Bit RH=12)
+    def get_current_values(self) -> tuple[float | None, float | None]:
+        """get tuple of temperature and humidity"""
+        # execute Softreset Command  (default T=14Bit RH=12)
+        self.i2c_interface.write([0xFE])
         time.sleep(0.05)
 
-        t = self._read_temperature()
-        rh = self._read_humidity()
+        temperature = self._read_temperature()
+        humidity = self._read_humidity()
         self.i2c_interface.close()
 
-        message = f"temperatur = {t}°C, humidity = {rh}%"
-        if logger:
-            self.logger.info(message)
-        else:
-            print(message)
+        return temperature, humidity
 
     def _read_temperature(self) -> float | None:
         """Temperature measurement (no hold master), blocking for ~ 88ms !!!"""

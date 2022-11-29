@@ -28,6 +28,8 @@ class PumpInterface:
         self.speed_pin.when_activated = lambda: rps_measurement_queue.put(1)
 
     def set_desired_pump_rps(self, rps: float) -> None:
+        """set rps between 0 and 70"""
+        assert 0 <= rps <= 70, f"rps have to be between 0 and 70 (passed {rps})"
         self.control_pin.value = rps / 70
 
     def get_pump_cycle_count(self) -> float:

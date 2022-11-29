@@ -29,10 +29,13 @@ class MeasurementProcedure:
     def __init__(self, config: types.Config) -> None:
         self.logger = utils.Logger(config, origin="measurements")
         self.config = config
+
         self.wind_sensor = interfaces.WindSensorInterface(config)
         self.valve_interfaces = interfaces.ValveInterface(config)
         self.pump_interface = interfaces.PumpInterface(config)
         self.active_valve_number: Literal[1, 2, 3, 4] | None = None
+
+        self.input_air_sensor = interfaces.InputAirSensorInterface()
 
     def _switch_to_valve_number(self, new_valve_number: Literal[1, 2, 3, 4]) -> None:
         self.valve_interfaces.set_active_input(new_valve_number)
@@ -78,10 +81,32 @@ class MeasurementProcedure:
             else:
                 self.logger.info(f"staying at air inlet {new_valve}")
 
+    def _update_input_air_calibration(self) -> None:
+        temperature, humidity = self.input_air_sensor.get_current_values()
+
+        if temperature is not None:
+            # TODO: apply sensor calibration
+            self.logger.debug(f"applied temperature calibration to sensor ({temperature} °C)")
+        else:
+            self.logger.warning("could not read temperature value from SHT21")
+
+        if humidity is not None:
+            # TODO: apply sensor calibration
+            self.logger.debug(f"applied humidity calibration to sensor ({humidity} rH)")
+        else:
+            self.logger.warning("could not read humidity value from SHT21")
+
     def run(self, config: types.Config) -> None:
         self.logger.update_config(config)
         self.config = config
 
         self._update_input_valve_for_wind_data()
 
-        # TODO: implement measurement procedure
+        self.pump_interface.set_desired_pump_rps(10)
+        time.sleep(1)
+
+        self._update_input_air_calibration()
+
+        # TODO: add measurement loop
+
+        self.pump_interface.set_desired_pump_rps(0)
