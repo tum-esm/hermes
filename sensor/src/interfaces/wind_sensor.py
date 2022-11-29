@@ -92,3 +92,7 @@ class WindSensorInterface:
         """End all hardware connections"""
         self.power_pin.off()
         self.pin_factory.close()
+
+    # TODO: Add report_issues function
+    #       1. are both data entries not too old
+    #       2. does the system state report reasonable voltage data
