@@ -5,24 +5,14 @@ import pytest
 import app.main as main
 
 
-########################################################################################
-# Helper functions
-########################################################################################
-
-
-@pytest.fixture(scope="module")
-def anyio_backend():
-    return "asyncio"
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 async def app():
     """Ensure that application startup/shutdown events are called."""
     async with asgi_lifespan.LifespanManager(main.app):
         yield main.app
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 async def client(app):
     """Provide a HTTPX AsyncClient that is properly closed after testing."""
     async with httpx.AsyncClient(app=app, base_url="http://test") as client:
@@ -46,9 +36,9 @@ def returns(response, check):
 
 @pytest.mark.anyio
 async def test_reading_server_status(client):
-    res = await client.get("/status")
-    assert returns(res, 200)
-    assert set(res.json().keys()) == {
+    response = await client.get("/status")
+    assert returns(response, 200)
+    assert set(response.json().keys()) == {
         "environment",
         "commit_sha",
         "branch_name",
@@ -62,9 +52,23 @@ async def test_reading_server_status(client):
 
 
 @pytest.mark.anyio
-async def test_creating_sensor(client):
-    res = await client.post(
+async def test_creating_sensor(client, cleanup):
+    response = await client.post(
         url="/sensors",
         json={"sensor_name": "rattata", "configuration": {}},
     )
-    assert returns(res, 201)
+    assert returns(response, 201)
+
+
+@pytest.mark.anyio
+async def test_creating_sensor_duplicate(client, cleanup):
+    response = await client.post(
+        url="/sensors",
+        json={"sensor_name": "rattata", "configuration": {}},
+    )
+    assert returns(response, 201)
+    response = await client.post(
+        url="/sensors",
+        json={"sensor_name": "rattata", "configuration": {}},
+    )
+    assert returns(response, 409)
