@@ -145,7 +145,7 @@ async def test_reading_sensors(client, cleanup):
 
 
 @pytest.mark.anyio
-async def test_reading_sensors_with_filter(client, cleanup):
+async def test_reading_sensors_with_filters(client, cleanup):
     """Test reading only specific sensors."""
     response = await client.get("/sensors", params={"sensors": "pikachu,squirtle"})
     assert returns(response, 200)

@@ -137,18 +137,20 @@ async def get_sensors(request):
     # - last measurement
     # - last sensor health update
 
-    # Parameterize database query
-    query, parameters = database.build(
-        template="aggregate-sensor-information.sql",
-        template_parameters={"request": request},
-        query_parameters={
-            "sensor_names": request.query.sensors,
-            # TODO make this a query parameter; validate with `try: pendulum.timezone()`
-            "timezone": "Europe/Berlin",
-        },
-    )
-    # Execute database query
-    result = await database_client.fetch(query, *parameters)
+    try:
+        query, parameters = database.build(
+            template="aggregate-sensor-information.sql",
+            template_parameters={"request": request},
+            query_parameters={
+                "sensor_names": request.query.sensors,
+                # TODO make this a query param; validate with `try: pendulum.timezone()`
+                "timezone": "Europe/Berlin",
+            },
+        )
+        result = await database_client.fetch(query, *parameters)
+    except Exception as e:
+        logger.error(f"[PUT /sensors] Unknown error: {repr(e)}")
+        raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=200,
@@ -159,26 +161,30 @@ async def get_sensors(request):
 @validation.validate(schema=validation.GetMeasurementsRequest)
 async def get_measurements(request):
     """Return measurements sorted chronologically, optionally filtered."""
-
-    # Parameterize database query
-    query, parameters = database.build(
-        template="fetch-measurements.sql",
-        template_parameters={"request": request},
-        query_parameters={
-            "sensor_identifiers": request.query.sensors,
-            "start_timestamp": request.query.start,
-            "end_timestamp": request.query.end,
-            "skip": request.query.skip,
-            "limit": request.query.limit,
-        },
-    )
-    # Execute database query
-    # TODO limiting size and paginating is fine for now, but we should also
-    # either implement streaming or some other way to export the data in different
-    # formats
-    result = await database_client.fetch(query, *parameters)
+    try:
+        query, parameters = database.build(
+            template="fetch-measurements.sql",
+            template_parameters={"request": request},
+            query_parameters={
+                "sensor_identifiers": request.query.sensors,
+                "start_timestamp": request.query.start,
+                "end_timestamp": request.query.end,
+                "skip": request.query.skip,
+                "limit": request.query.limit,
+            },
+        )
+        # TODO limiting size and paginating is fine for now, but we should also
+        # either implement streaming or some other way to export the data in different
+        # formats (parquet, ...)
+        result = await database_client.fetch(query, *parameters)
+    except Exception as e:
+        logger.error(f"[PUT /sensors] Unknown error: {repr(e)}")
+        raise errors.InternalServerError()
     # Return successful response
-    return starlette.responses.JSONResponse(database.dictify(result))
+    return starlette.responses.JSONResponse(
+        status_code=200,
+        content=database.dictify(result),
+    )
 
 
 database_client = None
