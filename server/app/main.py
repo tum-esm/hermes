@@ -100,7 +100,7 @@ async def put_sensors(request):
             revision=revision,
             configuration=request.body.configuration,
         )
-    except asyncpg.exceptions.ForeignKeyViolationError:
+    except IndexError:
         logger.warning("[PUT /sensors] Sensor doesn't exist")
         raise errors.NotFoundError()
     except Exception as e:
