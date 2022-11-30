@@ -65,6 +65,6 @@ async def test_reading_server_status(client):
 async def test_creating_sensor(client):
     res = await client.post(
         url="/sensors",
-        json={"sensor_identifier": "rattata", "configuration": {}},
+        json={"sensor_name": "rattata", "configuration": {}},
     )
     assert returns(res, 201)

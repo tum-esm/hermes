@@ -1,5 +1,3 @@
-CREATE TYPE status AS ENUM ('info', 'warning', 'error');
-
 CREATE TABLE IF NOT EXISTS statuses (
     sensor_identifier UUID NOT NULL,
     revision INT NOT NULL,

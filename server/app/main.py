@@ -39,7 +39,7 @@ async def post_sensors(request):
                 template_parameters={},
                 query_parameters={"sensor_name": request.body.sensor_name},
             )
-            await database_client.fetch(query, *parameters)
+            result = await database_client.fetch(query, *parameters)
             sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
             # Insert configuration
             query, parameters = database.build(
@@ -54,7 +54,7 @@ async def post_sensors(request):
             revision = database.dictify(result)[0]["revision"]
         # Send MQTT message
         await mqtt_client.publish_configuration(
-            sensor_identifier=request.body.sensor_identifier,
+            sensor_identifier=sensor_identifier,
             revision=revision,
             configuration=request.body.configuration,
         )
@@ -97,7 +97,7 @@ async def put_sensors(request):
             revision = database.dictify(result)[0]["revision"]
         # Send MQTT message
         await mqtt_client.publish_configuration(
-            sensor_identifier=request.body.sensor_identifier,
+            sensor_identifier=sensor_identifier,
             revision=revision,
             configuration=request.body.configuration,
         )
@@ -125,6 +125,9 @@ async def get_sensors(request):
 
     To make this more performant on the database we should make sure to have the
     correct indexes in place. We should also consider using TimescaleDB.
+
+    - Provide both: GET request and websocket?
+    - fetch/cache/request aggregations/configurations/latest-measurement separately?
 
     """
 
