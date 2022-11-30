@@ -105,3 +105,18 @@ async def test_updating_sensor_with_not_exists(client, cleanup):
         json={"sensor_name": "rattata", "configuration": {}},
     )
     assert returns(response, 404)
+
+
+@pytest.mark.anyio
+async def test_updating_sensor_with_name_change(client, cleanup):
+    """Test updating a sensor together with a name change."""
+    response = await client.post(
+        url="/sensors",
+        json={"sensor_name": "rattata", "configuration": {}},
+    )
+    assert returns(response, 201)
+    response = await client.put(
+        url="/sensors/rattata",
+        json={"sensor_name": "squirtle", "configuration": {}},
+    )
+    assert returns(response, 204)
