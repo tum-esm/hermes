@@ -47,17 +47,13 @@ def validate(schema: type[_Request]) -> typing.Callable:
             try:
                 body = await request.body()
                 body = {} if len(body) == 0 else json.loads(body.decode())
-                return await func(
-                    schema(
-                        path=request.path_params,
-                        query=request.query_params,
-                        body=body,
-                    )
-                )
+                request = schema(request.path_params, request.query_params, body)
             except (TypeError, ValueError) as e:
                 # TODO Improve log message somehow
                 logger.warning(f"[HTTP] Invalid request: {repr(e)}")
                 raise errors.BadRequestError()
+
+            return await func(request)
 
         return wrapper
 

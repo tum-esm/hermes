@@ -139,7 +139,7 @@ async def get_sensors(request):
         template="aggregate-sensor-information.sql",
         template_parameters={"request": request},
         query_parameters={
-            "sensor_identifiers": request.query.sensors,
+            "sensor_names": request.query.sensors,
             # TODO make this a query parameter; validate with `try: pendulum.timezone()`
             "timezone": "Europe/Berlin",
         },
