@@ -47,7 +47,7 @@ async def test_reading_server_status(client):
 
 
 ########################################################################################
-# Route: POST /sensor
+# Route: POST /sensors
 ########################################################################################
 
 
@@ -72,3 +72,22 @@ async def test_creating_sensor_duplicate(client, cleanup):
         json={"sensor_name": "rattata", "configuration": {}},
     )
     assert returns(response, 409)
+
+
+########################################################################################
+# Route: PUT /sensors
+########################################################################################
+
+
+@pytest.mark.anyio
+async def test_updating_sensor(client, cleanup):
+    response = await client.post(
+        url="/sensors",
+        json={"sensor_name": "rattata", "configuration": {}},
+    )
+    assert returns(response, 201)
+    response = await client.put(
+        url="/sensors/rattata",
+        json={"sensor_name": "rattata", "configuration": {}},
+    )
+    assert returns(response, 204)
