@@ -1,7 +1,6 @@
 import asyncio
 import contextlib
 
-import asyncio_mqtt as aiomqtt
 import asyncpg
 import starlette.applications
 import starlette.responses

@@ -1,7 +1,7 @@
 import attrs
 
 import app.validation.constants as constants
-from app.validation.core import _Request, _RequestPath, _RequestBody, _RequestQuery
+from app.validation.core import _Request, _RequestBody, _RequestPath, _RequestQuery
 from app.validation.fields import (
     JSON_FIELD,
     POSITIVE_FLOAT_QUERY_FIELD,

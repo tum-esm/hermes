@@ -1,5 +1,6 @@
-import pydantic
 import enum
+
+import pydantic
 
 import app.validation.constants as constants
 from app.validation.fields import JSONValues

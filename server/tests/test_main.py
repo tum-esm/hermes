@@ -24,8 +24,8 @@ def returns(response, check):
     if isinstance(check, int):
         return response.status_code == check
     return (
-        response.status_code == error.STATUS_CODE
-        and response.json()["detail"] == error.DETAIL
+        response.status_code == check.STATUS_CODE
+        and response.json()["detail"] == check.DETAIL
     )
 
 
