@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS statuses (
     receipt_timestamp TIMESTAMPTZ NOT NULL,
 
     status status NOT NULL,
-    message TEXT NOT NULL,
+    subject TEXT NOT NULL,
     details TEXT,
 
     FOREIGN KEY (sensor_identifier) REFERENCES sensors (sensor_identifier) ON DELETE CASCADE
