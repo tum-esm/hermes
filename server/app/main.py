@@ -37,15 +37,16 @@ async def post_sensors(request):
             query, parameters = database.build(
                 template="insert-sensor.sql",
                 template_parameters={},
-                query_parameters={"sensor_identifier": request.body.sensor_identifier},
+                query_parameters={"sensor_name": request.body.sensor_name},
             )
-            await database_client.execute(query, *parameters)
+            await database_client.fetch(query, *parameters)
+            sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
             # Insert configuration
             query, parameters = database.build(
                 template="insert-configuration.sql",
                 template_parameters={},
                 query_parameters={
-                    "sensor_identifier": request.body.sensor_identifier,
+                    "sensor_identifier": sensor_identifier,
                     "configuration": request.body.configuration,
                 },
             )
@@ -70,24 +71,30 @@ async def post_sensors(request):
 @validation.validate(schema=validation.PutSensorsRequest)
 async def put_sensors(request):
     """Update an existing sensor's configuration."""
-
-    # TODO create own name for sensors, and let the user set only human readable one.
-    #  - how to we know which sensor that connects is which? -> return id on creation
-    #  - use UUID
-    # TODO Implement sensor_name change
-
     try:
-        # Insert configuration
-        query, parameters = database.build(
-            template="insert-configuration.sql",
-            template_parameters={},
-            query_parameters={
-                "sensor_identifier": request.body.sensor_identifier,
-                "configuration": request.body.configuration,
-            },
-        )
-        result = await database_client.fetch(query, *parameters)
-        revision = database.dictify(result)[0]["revision"]
+        async with database_client.transaction():
+            # Update sensor
+            query, parameters = database.build(
+                template="update-sensor.sql",
+                template_parameters={},
+                query_parameters={
+                    "sensor_name": request.path.sensor_name,
+                    "new_sensor_name": request.body.sensor_name,
+                },
+            )
+            result = await database_client.fetch(query, *parameters)
+            sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
+            # Insert configuration
+            query, parameters = database.build(
+                template="insert-configuration.sql",
+                template_parameters={},
+                query_parameters={
+                    "sensor_identifier": sensor_identifier,
+                    "configuration": request.body.configuration,
+                },
+            )
+            result = await database_client.fetch(query, *parameters)
+            revision = database.dictify(result)[0]["revision"]
         # Send MQTT message
         await mqtt_client.publish_configuration(
             sensor_identifier=request.body.sensor_identifier,
@@ -129,7 +136,7 @@ async def get_sensors(request):
 
     # Parameterize database query
     query, parameters = database.build(
-        template="fetch-sensors.sql",
+        template="aggregate-sensor-information.sql",
         template_parameters={"request": request},
         query_parameters={
             "sensor_identifiers": request.query.sensors,
@@ -211,7 +218,7 @@ app = starlette.applications.Starlette(
             methods=["POST"],
         ),
         starlette.routing.Route(
-            path="/sensors",
+            path="/sensors/{sensor_name}",
             endpoint=put_sensors,
             methods=["PUT"],
         ),
@@ -226,6 +233,5 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
     ],
-    # TODO Use shared subscriptions for multiple workers
     lifespan=lifespan,
 )

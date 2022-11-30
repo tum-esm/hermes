@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS configurations (
-    sensor_identifier TEXT NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
+    sensor_identifier UUID NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     publication_timestamp TIMESTAMPTZ,
     acknowledgement_timestamp TIMESTAMPTZ,
@@ -12,7 +12,9 @@ CREATE TABLE IF NOT EXISTS configurations (
     -- only contain things that are actually sent to the sensor
 
     configuration JSONB NOT NULL,
-    PRIMARY KEY (sensor_identifier, revision)
+
+    PRIMARY KEY (sensor_identifier, revision),
+    FOREIGN KEY (sensor_identifier) REFERENCES sensors (sensor_identifier) ON DELETE CASCADE
 );
 
 -- Check if CREATE returns saying that table already exists

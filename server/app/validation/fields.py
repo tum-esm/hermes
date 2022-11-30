@@ -38,9 +38,9 @@ def _validate_contains_timestamp(instance, attribute, value):
     POSITIVE_INTEGER_VALIDATOR(instance, attribute, value["timestamp"])
 
 
-SENSOR_IDENTIFIER_VALIDATOR = attrs.validators.and_(
+SENSOR_NAME_VALIDATOR = attrs.validators.and_(
     attrs.validators.instance_of(str),
-    attrs.validators.matches_re(constants.Pattern.SENSOR_IDENTIFIER),
+    attrs.validators.matches_re(constants.Pattern.SENSOR_NAME),
 )
 VALUE_IDENTIFIER_VALIDATOR = attrs.validators.and_(
     attrs.validators.instance_of(str),
@@ -88,6 +88,6 @@ POSITIVE_FLOAT_QUERY_FIELD = attrs.field(
 )
 
 # Standard fields are taken as is and are by default required
-SENSOR_IDENTIFIER_FIELD = attrs.field(validator=SENSOR_IDENTIFIER_VALIDATOR)
+SENSOR_NAME_FIELD = attrs.field(validator=SENSOR_NAME_VALIDATOR)
 POSITIVE_INTEGER_FIELD = attrs.field(validator=POSITIVE_INTEGER_VALIDATOR)
 JSON_FIELD = attrs.field(validator=JSON_VALIDATOR)

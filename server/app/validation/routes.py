@@ -1,14 +1,14 @@
 import attrs
 
 import app.validation.constants as constants
-from app.validation.core import _Request, _RequestBody, _RequestQuery
+from app.validation.core import _Request, _RequestPath, _RequestBody, _RequestQuery
 from app.validation.fields import (
     JSON_FIELD,
     POSITIVE_FLOAT_QUERY_FIELD,
     POSITIVE_FLOAT_VALIDATOR,
     POSITIVE_INTEGER_VALIDATOR,
-    SENSOR_IDENTIFIER_FIELD,
-    SENSOR_IDENTIFIER_VALIDATOR,
+    SENSOR_NAME_FIELD,
+    SENSOR_NAME_VALIDATOR,
     VALUE_IDENTIFIER_VALIDATOR,
     _convert_query_string_to_list,
     _validate_end_greater_equal_start,
@@ -18,6 +18,26 @@ from app.validation.fields import (
 # Guidelines for syntactically correct, but otherwise somehow invalid values:
 # - When lists of values are passed, ignore any invalid ones
 # - When a single value is passed, raise an error
+
+
+@attrs.frozen
+class _PostSensorsRequestPath(_RequestPath):
+    pass
+
+
+@attrs.frozen
+class _PutSensorsRequestPath(_RequestPath):
+    sensor_name: str = SENSOR_NAME_FIELD
+
+
+@attrs.frozen
+class _GetSensorsRequestPath(_RequestPath):
+    pass
+
+
+@attrs.frozen
+class _GetMeasurementsRequestPath(_RequestPath):
+    pass
 
 
 @attrs.frozen
@@ -37,7 +57,7 @@ class _GetSensorsRequestQuery(_RequestQuery):
         converter=_convert_query_string_to_list,
         validator=attrs.validators.deep_iterable(
             iterable_validator=attrs.validators.instance_of(list),
-            member_validator=SENSOR_IDENTIFIER_VALIDATOR,
+            member_validator=SENSOR_NAME_VALIDATOR,
         ),
     )
 
@@ -49,7 +69,7 @@ class _GetMeasurementsRequestQuery(_RequestQuery):
         converter=_convert_query_string_to_list,
         validator=attrs.validators.deep_iterable(
             iterable_validator=attrs.validators.instance_of(list),
-            member_validator=SENSOR_IDENTIFIER_VALIDATOR,
+            member_validator=SENSOR_NAME_VALIDATOR,
         ),
     )
     values: list[str] = attrs.field(
@@ -88,13 +108,13 @@ class _GetMeasurementsRequestQuery(_RequestQuery):
 
 @attrs.frozen
 class _PostSensorsRequestBody(_RequestBody):
-    sensor_identifier: str = SENSOR_IDENTIFIER_FIELD
+    sensor_name: str = SENSOR_NAME_FIELD
     configuration: dict[str, int | float | str | bool | None] = JSON_FIELD
 
 
 @attrs.frozen
 class _PutSensorsRequestBody(_RequestBody):
-    sensor_identifier: str = SENSOR_IDENTIFIER_FIELD
+    sensor_name: str = SENSOR_NAME_FIELD
     configuration: dict[str, int | float | str | bool | None] = JSON_FIELD
 
 
@@ -111,6 +131,9 @@ class _GetMeasurementsRequestBody(_RequestBody):
 # TODO Can we generate these automatically?
 @attrs.frozen
 class PostSensorsRequest(_Request):
+    path: _PostSensorsRequestPath = attrs.field(
+        converter=lambda x: _PostSensorsRequestPath(**x),
+    )
     query: _PostSensorsRequestQuery = attrs.field(
         converter=lambda x: _PostSensorsRequestQuery(**x),
     )
@@ -121,6 +144,9 @@ class PostSensorsRequest(_Request):
 
 @attrs.frozen
 class PutSensorsRequest(_Request):
+    path: _PutSensorsRequestPath = attrs.field(
+        converter=lambda x: _PutSensorsRequestPath(**x),
+    )
     query: _PutSensorsRequestQuery = attrs.field(
         converter=lambda x: _PutSensorsRequestQuery(**x),
     )
@@ -131,6 +157,9 @@ class PutSensorsRequest(_Request):
 
 @attrs.frozen
 class GetSensorsRequest(_Request):
+    path: _GetSensorsRequestPath = attrs.field(
+        converter=lambda x: _GetSensorsRequestPath(**x),
+    )
     query: _GetSensorsRequestQuery = attrs.field(
         converter=lambda x: _GetSensorsRequestQuery(**x),
     )
@@ -141,6 +170,9 @@ class GetSensorsRequest(_Request):
 
 @attrs.frozen
 class GetMeasurementsRequest(_Request):
+    path: _GetMeasurementsRequestPath = attrs.field(
+        converter=lambda x: _GetMeasurementsRequestPath(**x),
+    )
     query: _GetMeasurementsRequestQuery = attrs.field(
         converter=lambda x: _GetMeasurementsRequestQuery(**x),
     )

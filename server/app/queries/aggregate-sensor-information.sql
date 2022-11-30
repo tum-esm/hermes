@@ -60,14 +60,14 @@ activity AS (
 
 SELECT
     sensor_identifier,
-    revision,
-    extract(epoch from acknowledgement_timestamp at time zone 'utc')::DOUBLE PRECISION AS acknowledgement_timestamp,
-    configuration,
+    most_recent_configurations.revision,
+    extract(epoch from most_recent_configurations.acknowledgement_timestamp at time zone 'utc')::DOUBLE PRECISION AS acknowledgement_timestamp,
+    most_recent_configurations.configuration,
     extract(epoch from most_recent_measurements.measurement_timestamp at time zone 'utc')::DOUBLE PRECISION AS measurement_timestamp,
     activity.dates,
     activity.counts
-FROM most_recent_configurations
+FROM sensors
+LEFT JOIN most_recent_configurations USING (sensor_identifier)
 LEFT JOIN most_recent_measurements USING (sensor_identifier)
 JOIN activity USING (sensor_identifier)
-{%- if request.query.sensors -%} WHERE sensor_identifier = ANY({sensor_identifiers}) {%- endif %}
-ORDER BY sensor_identifier ASC
+{%- if request.query.sensors -%} WHERE sensor_name = ANY({sensor_names}) {%- endif %}
