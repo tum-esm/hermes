@@ -64,6 +64,7 @@ async def post_sensors(request):
         logger.error(f"[POST /sensors] Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
+    # TODO Return sensor_identifier and revision? Same for PUT?
     return starlette.responses.JSONResponse(status_code=201, content=None)
 
 
@@ -149,7 +150,10 @@ async def get_sensors(request):
     # Execute database query
     result = await database_client.fetch(query, *parameters)
     # Return successful response
-    return starlette.responses.JSONResponse(database.dictify(result))
+    return starlette.responses.JSONResponse(
+        status_code=200,
+        content=database.dictify(result),
+    )
 
 
 @validation.validate(schema=validation.GetMeasurementsRequest)
