@@ -105,12 +105,10 @@ class Client(aiomqtt.Client):
         task.add_done_callback(task_references.remove)
 
     async def _process_measurement_payload(
-        self, payload: dict[str, typing.Any]
+        self, sensor_identifier: str, payload: validation.MeasurementsMessage
     ) -> None:
         """Validate a measurement message and write it to the database."""
         try:
-            # TODO Move validation/exception logic into validation module
-            message = validation.MeasurementsMessage(**payload)
             # TODO Insert in a single execution call; must adapt templating for this
             for measurement in message.measurements:
                 query, parameters = database.build(
@@ -123,32 +121,46 @@ class Client(aiomqtt.Client):
                     },
                 )
                 await self.database_client.execute(query, *parameters)
-        except pydantic.ValidationError as e:
-            # TODO still save `sensor_identifier` and `receipt_timestamp` in database?
-            # -> works only if sensor_identifier is inferred from sender ID
-            # Like this, we can show the timestamp of last message in the sensor status,
-            # even if it was invalid
-            logger.warning(f"[MQTT] Invalid message: {e}")
         except Exception as e:
             # TODO divide into more specific exceptions
-            logger.error(f"[MQTT] Database error: {e}")
+            logger.error(f"[MQTT] Unknown error: {repr(e)}")
 
     async def listen(self) -> None:
         """Listen to incoming sensor messages and process them."""
         wildcard_measurements = "+/measurements"
+        wildcard_statuses = "+/statuses"
+
         async with self.messages() as messages:
+            # Subscribe to all topics
             await self.subscribe(wildcard_measurements, qos=1, timeout=10)
             logger.info(f"[MQTT] Subscribed to: {wildcard_measurements}")
-            # TODO subscribe to more topics here
+            await self.subscribe(wildcard_statuses, qos=1, timeout=10)
+            logger.info(f"[MQTT] Subscribed to: {wildcard_statuses}")
 
             async for message in messages:
-                payload = _decode_payload(message.payload)
-                logger.info(
-                    f"[MQTT] Received message: {payload} on topic: {message.topic}"
-                )
-                # TODO use + as sensor_identifier
-                # instead of requiring it in the message
-                if message.topic.matches(wildcard_measurements):
-                    await self._process_measurement_payload(payload)
-                else:
-                    logger.warning(f"[MQTT] Failed to match topic: {message.topic}")
+                try:
+                    logger.info(
+                        f"[MQTT] Received message: {message.payload} on topic:"
+                        f" {message.topic}"
+                    )
+                    # Get sensor identifier from the topic and decode the payload
+                    sensor_identifier = str(message.topic).split("/")[0]
+                    payload = _decode_payload(message.payload)
+
+                    if message.topic.matches(wildcard_measurements):
+                        message = validation.MeasurementsMessage(**payload)
+                        await self._process_measurement_payload(
+                            sensor_identifier=sensor_identifier,
+                            message=payload,
+                        )
+                    if message.topic.matches(wildcard_statuses):
+                        raise NotImplementedError
+                    else:
+                        logger.warning(f"[MQTT] Failed to match topic: {message.topic}")
+
+                except pydantic.ValidationError as e:
+                    # TODO still save `sensor_identifier` and `receipt_timestamp` in database?
+                    # -> works only if sensor_identifier is inferred from sender ID
+                    # Like this, we can show the timestamp of last message in the sensor status,
+                    # even if it was invalid
+                    logger.warning(f"[MQTT] Invalid message: {e}")

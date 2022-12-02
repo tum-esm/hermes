@@ -59,7 +59,7 @@ class Status(_BaseModel):
     ) | None = None
 
 
-class StatusMessage(_BaseModel):
+class StatusesMessage(_BaseModel):
     sensor_identifier: SensorIdentifier
     statuses: pydantic.conlist(
         item_type=Measurement, min_items=1, max_items=constants.Limit.MEDIUM - 1

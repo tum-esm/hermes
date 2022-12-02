@@ -13,5 +13,6 @@ __all__ = [
     "PostSensorsRequest",
     "PutSensorsRequest",
     "MeasurementsMessage",
+    "StatusesMessage",
     "validate",
 ]
