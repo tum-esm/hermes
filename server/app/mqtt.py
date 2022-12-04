@@ -104,8 +104,13 @@ class Client(aiomqtt.Client):
         task_references.add(task)
         task.add_done_callback(task_references.remove)
 
-    async def _process_measurement_payload(
-        self, sensor_identifier: str, payload: validation.MeasurementsMessage
+    async def _process_statuses_message(
+        self, sensor_identifier: str, message: validation.StatusesMessage
+    ) -> None:
+        raise NotImplementedError
+
+    async def _process_measurements_message(
+        self, sensor_identifier: str, message: validation.MeasurementsMessage
     ) -> None:
         """Validate a measurement message and write it to the database."""
         try:
@@ -127,15 +132,15 @@ class Client(aiomqtt.Client):
 
     async def listen(self) -> None:
         """Listen to incoming sensor messages and process them."""
-        wildcard_measurements = "+/measurements"
-        wildcard_statuses = "+/statuses"
+        wildcard_statuses = "statuses/+"
+        wildcard_measurements = "measurements/+"
 
         async with self.messages() as messages:
             # Subscribe to all topics
-            await self.subscribe(wildcard_measurements, qos=1, timeout=10)
-            logger.info(f"[MQTT] Subscribed to: {wildcard_measurements}")
             await self.subscribe(wildcard_statuses, qos=1, timeout=10)
             logger.info(f"[MQTT] Subscribed to: {wildcard_statuses}")
+            await self.subscribe(wildcard_measurements, qos=1, timeout=10)
+            logger.info(f"[MQTT] Subscribed to: {wildcard_measurements}")
 
             async for message in messages:
                 try:
@@ -144,23 +149,27 @@ class Client(aiomqtt.Client):
                         f" {message.topic}"
                     )
                     # Get sensor identifier from the topic and decode the payload
-                    sensor_identifier = str(message.topic).split("/")[0]
+                    sensor_identifier = str(message.topic).split("/")[-1]
                     payload = _decode_payload(message.payload)
 
-                    if message.topic.matches(wildcard_measurements):
-                        message = validation.MeasurementsMessage(**payload)
-                        await self._process_measurement_payload(
-                            sensor_identifier=sensor_identifier,
-                            message=payload,
-                        )
                     if message.topic.matches(wildcard_statuses):
-                        raise NotImplementedError
+                        await self._process_statuses_message(
+                            sensor_identifier=sensor_identifier,
+                            message=validation.StatusesMessage(**payload),
+                        )
+                    if message.topic.matches(wildcard_measurements):
+                        await self._process_measurements_message(
+                            sensor_identifier=sensor_identifier,
+                            message=validation.MeasurementsMessage(**payload),
+                        )
                     else:
                         logger.warning(f"[MQTT] Failed to match topic: {message.topic}")
 
                 except pydantic.ValidationError as e:
-                    # TODO still save `sensor_identifier` and `receipt_timestamp` in database?
-                    # -> works only if sensor_identifier is inferred from sender ID
-                    # Like this, we can show the timestamp of last message in the sensor status,
-                    # even if it was invalid
-                    logger.warning(f"[MQTT] Invalid message: {e}")
+                    # TODO still save `sensor_identifier` and `receipt_timestamp` in
+                    # database? -> works only if sensor_identifier is inferred from
+                    # sender ID. Like this, we can show the timestamp of last message
+                    # in the sensor status, even if it was invalid
+                    logger.warning(f"[MQTT] Invalid message: {repr(e)}")
+                except Exception as e:
+                    logger.error(f"[MQTT] Unknown error: {repr(e)}")

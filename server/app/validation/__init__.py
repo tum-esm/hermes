@@ -1,5 +1,5 @@
 from app.validation.core import validate
-from app.validation.mqtt import MeasurementsMessage
+from app.validation.mqtt import MeasurementsMessage, StatusesMessage
 from app.validation.routes import (
     GetMeasurementsRequest,
     GetSensorsRequest,

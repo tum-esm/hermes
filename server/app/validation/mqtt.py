@@ -33,20 +33,6 @@ class _BaseModel(pydantic.BaseModel):
         frozen = True
 
 
-class Measurement(_BaseModel):
-    revision: Revision
-    timestamp: Timestamp
-    # TODO Validate the values more thoroughly for min and max limits/lengths
-    values: dict[ValueIdentifier, JSONValues]
-
-
-class MeasurementsMessage(_BaseModel):
-    sensor_identifier: SensorIdentifier
-    measurements: pydantic.conlist(
-        item_type=Measurement, min_items=1, max_items=constants.Limit.MEDIUM - 1
-    )
-
-
 class Status(_BaseModel):
     revision: Revision
     timestamp: Timestamp
@@ -62,5 +48,19 @@ class Status(_BaseModel):
 class StatusesMessage(_BaseModel):
     sensor_identifier: SensorIdentifier
     statuses: pydantic.conlist(
+        item_type=Status, min_items=1, max_items=constants.Limit.MEDIUM - 1
+    )
+
+
+class Measurement(_BaseModel):
+    revision: Revision
+    timestamp: Timestamp
+    # TODO Validate the values more thoroughly for min and max limits/lengths
+    values: dict[ValueIdentifier, JSONValues]
+
+
+class MeasurementsMessage(_BaseModel):
+    sensor_identifier: SensorIdentifier
+    measurements: pydantic.conlist(
         item_type=Measurement, min_items=1, max_items=constants.Limit.MEDIUM - 1
     )
