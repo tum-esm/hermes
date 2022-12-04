@@ -43,7 +43,7 @@ class Client(aiomqtt.Client):
                 else None
             ),
             # Make the MQTT connection persistent. The broker will retain messages on
-            # topics we subscribed to in case we disconnect
+            # topics we subscribed to in case we disconnect.
             clean_start=False,
             client_id="server",
         )
@@ -107,24 +107,49 @@ class Client(aiomqtt.Client):
     async def _process_statuses_message(
         self, sensor_identifier: str, message: validation.StatusesMessage
     ) -> None:
-        """Write incoming statuses to the database."""
+        """Process incoming sensor statuses."""
         try:
-            query, arguments = database.build(
-                template="insert-status.sql",
-                template_arguments={},
-                query_arguments=[
-                    {
-                        "sensor_identifier": sensor_identifier,
-                        "revision": status.revision,
-                        "creation_timestamp": status.timestamp,
-                        "severity": status.severity,
-                        "subject": status.subject,
-                        "details": status.details,
-                    }
-                    for status in message.statuses
-                ],
-            )
-            await self.database_client.executemany(query, arguments)
+            async with self.database_client.transaction():
+                # Write statuses to the database
+                query, arguments = database.build(
+                    template="insert-status.sql",
+                    template_arguments={},
+                    query_arguments=[
+                        {
+                            "sensor_identifier": sensor_identifier,
+                            "revision": status.revision,
+                            "creation_timestamp": status.timestamp,
+                            "severity": status.severity,
+                            "subject": status.subject,
+                            "details": status.details,
+                        }
+                        for status in message.statuses
+                    ],
+                )
+                await self.database_client.executemany(query, arguments)
+                # Process system statuses
+                for status in message.statuses:
+                    if status.severity == "system":
+                        # Update configuration on configuration acknowledgement success
+                        if status.subject == "Configuration acknowledgement: success":
+                            query, arguments = database.build(
+                                template="update-configuration-on-acknowledgement.sql",
+                                template_arguments={},
+                                query_arguments={
+                                    "sensor_identifier": sensor_identifier,
+                                    "revision": status.revision,
+                                    "acknowledgement_timestamp": status.timestamp,
+                                },
+                            )
+                            await self.database_client.execute(query, *arguments)
+                        # Update configuration on configuration acknowledgement failure
+                        if status.subject == "Configuration acknowledgement: failure":
+                            ...  # TODO
+
+                        # Do something when receiving a heartbeat?
+                        # How do we aggregate the sensor online/unstable/offline status?
+                        if status.subject == "Heartbeat":
+                            ...  # TODO
         except Exception as e:
             # TODO divide into more specific exceptions
             logger.error(f"[MQTT] Unknown error: {repr(e)}")
@@ -132,7 +157,7 @@ class Client(aiomqtt.Client):
     async def _process_measurements_message(
         self, sensor_identifier: str, message: validation.MeasurementsMessage
     ) -> None:
-        """Write incoming measurements to the database."""
+        """Process incoming sensor measurements."""
         try:
             query, arguments = database.build(
                 template="insert-measurement.sql",

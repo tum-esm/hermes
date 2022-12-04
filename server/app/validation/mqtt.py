@@ -17,6 +17,7 @@ Timestamp = pydantic.confloat(strict=True, ge=0, lt=constants.Limit.MAXINT4)
 
 
 class Severity(str, enum.Enum):
+    SYSTEM = "system"
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
