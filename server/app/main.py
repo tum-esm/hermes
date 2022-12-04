@@ -33,23 +33,23 @@ async def post_sensors(request):
     try:
         async with database_client.transaction():
             # Insert sensor
-            query, parameters = database.build(
+            query, arguments = database.build(
                 template="insert-sensor.sql",
-                template_parameters={},
-                query_parameters={"sensor_name": request.body.sensor_name},
+                template_arguments={},
+                query_arguments={"sensor_name": request.body.sensor_name},
             )
-            result = await database_client.fetch(query, *parameters)
+            result = await database_client.fetch(query, *arguments)
             sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
             # Insert configuration
-            query, parameters = database.build(
+            query, arguments = database.build(
                 template="insert-configuration.sql",
-                template_parameters={},
-                query_parameters={
+                template_arguments={},
+                query_arguments={
                     "sensor_identifier": sensor_identifier,
                     "configuration": request.body.configuration,
                 },
             )
-            result = await database_client.fetch(query, *parameters)
+            result = await database_client.fetch(query, *arguments)
             revision = database.dictify(result)[0]["revision"]
         # Send MQTT message
         await mqtt_client.publish_configuration(
@@ -74,26 +74,26 @@ async def put_sensors(request):
     try:
         async with database_client.transaction():
             # Update sensor
-            query, parameters = database.build(
+            query, arguments = database.build(
                 template="update-sensor.sql",
-                template_parameters={},
-                query_parameters={
+                template_arguments={},
+                query_arguments={
                     "sensor_name": request.path.sensor_name,
                     "new_sensor_name": request.body.sensor_name,
                 },
             )
-            result = await database_client.fetch(query, *parameters)
+            result = await database_client.fetch(query, *arguments)
             sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
             # Insert configuration
-            query, parameters = database.build(
+            query, arguments = database.build(
                 template="insert-configuration.sql",
-                template_parameters={},
-                query_parameters={
+                template_arguments={},
+                query_arguments={
                     "sensor_identifier": sensor_identifier,
                     "configuration": request.body.configuration,
                 },
             )
-            result = await database_client.fetch(query, *parameters)
+            result = await database_client.fetch(query, *arguments)
             revision = database.dictify(result)[0]["revision"]
         # Send MQTT message
         await mqtt_client.publish_configuration(
@@ -138,16 +138,16 @@ async def get_sensors(request):
     # - last sensor health update
 
     try:
-        query, parameters = database.build(
+        query, arguments = database.build(
             template="aggregate-sensor-information.sql",
-            template_parameters={"request": request},
-            query_parameters={
+            template_arguments={"request": request},
+            query_arguments={
                 "sensor_names": request.query.sensors,
                 # TODO make this a query param; validate with `try: pendulum.timezone()`
                 "timezone": "Europe/Berlin",
             },
         )
-        result = await database_client.fetch(query, *parameters)
+        result = await database_client.fetch(query, *arguments)
     except Exception as e:
         logger.error(f"[PUT /sensors] Unknown error: {repr(e)}")
         raise errors.InternalServerError()
@@ -162,10 +162,10 @@ async def get_sensors(request):
 async def get_measurements(request):
     """Return measurements sorted chronologically, optionally filtered."""
     try:
-        query, parameters = database.build(
+        query, arguments = database.build(
             template="fetch-measurements.sql",
-            template_parameters={"request": request},
-            query_parameters={
+            template_arguments={"request": request},
+            query_arguments={
                 "sensor_identifiers": request.query.sensors,
                 "start_timestamp": request.query.start,
                 "end_timestamp": request.query.end,
@@ -176,7 +176,7 @@ async def get_measurements(request):
         # TODO limiting size and paginating is fine for now, but we should also
         # either implement streaming or some other way to export the data in different
         # formats (parquet, ...)
-        result = await database_client.fetch(query, *parameters)
+        result = await database_client.fetch(query, *arguments)
     except Exception as e:
         logger.error(f"[PUT /sensors] Unknown error: {repr(e)}")
         raise errors.InternalServerError()

@@ -61,10 +61,10 @@ class Client(aiomqtt.Client):
             sensor_identifier: str, revision: int, configuration: dict[str, typing.Any]
         ) -> None:
             backoff = 1
-            query, parameters = database.build(
+            query, arguments = database.build(
                 template="update-configuration-on-publish.sql",
-                template_parameters={},
-                query_parameters={
+                template_arguments={},
+                query_arguments={
                     "sensor_identifier": sensor_identifier,
                     "revision": revision,
                 },
@@ -79,7 +79,7 @@ class Client(aiomqtt.Client):
                         retain=True,
                     )
                     # Try to set the publication timestamp in the database
-                    await self.database_client.execute(query, *parameters)
+                    await self.database_client.execute(query, *arguments)
                     logger.info(
                         f"[MQTT] Published configuration #{revision} to:"
                         f" {sensor_identifier}"
@@ -107,31 +107,33 @@ class Client(aiomqtt.Client):
     async def _process_statuses_message(
         self, sensor_identifier: str, message: validation.StatusesMessage
     ) -> None:
+        """Write incoming statuses to the database."""
         raise NotImplementedError
 
     async def _process_measurements_message(
         self, sensor_identifier: str, message: validation.MeasurementsMessage
     ) -> None:
-        """Validate a measurement message and write it to the database."""
+        """Write incoming measurements to the database."""
         try:
-            # TODO Insert in a single execution call; must adapt templating for this
-            for measurement in message.measurements:
-                query, parameters = database.build(
-                    template="insert-measurement.sql",
-                    template_parameters={},
-                    query_parameters={
-                        "sensor_identifier": message.sensor_identifier,
+            query, arguments = database.build(
+                template="insert-measurement.sql",
+                template_arguments={},
+                query_arguments=[
+                    {
+                        "sensor_identifier": sensor_identifier,
                         "measurement_timestamp": measurement.timestamp,
                         "measurement": measurement.values,
-                    },
-                )
-                await self.database_client.execute(query, *parameters)
+                    }
+                    for measurement in message.measurements
+                ],
+            )
+            await self.database_client.executemany(query, arguments)
         except Exception as e:
             # TODO divide into more specific exceptions
             logger.error(f"[MQTT] Unknown error: {repr(e)}")
 
     async def listen(self) -> None:
-        """Listen to incoming sensor messages and process them."""
+        """Listen to incoming sensor MQTT messages and process them."""
         wildcard_statuses = "statuses/+"
         wildcard_measurements = "measurements/+"
 

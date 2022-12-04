@@ -18,20 +18,15 @@ def dictify(result: typing.Sequence[asyncpg.Record]) -> list[dict]:
     return [dict(record) for record in result]
 
 
-class Serial(dict):
-    def __getitem__(self, key):
-        return f"${list(self.keys()).index(key) + 1}"
-
-
 def build(
     template: str,
-    template_parameters: dict[str, typing.Any],
-    query_parameters: dict[str, typing.Any],
-) -> tuple[str, list[typing.Any]]:
-    """Dynamically build asyncpg query.
+    template_arguments: dict[str, typing.Any],
+    query_arguments: dict[str, typing.Any] | list[dict[str, typing.Any]],
+) -> tuple[str, tuple[typing.Any, ...] | list[tuple[typing.Any, ...]]]:
+    """Dynamically build and parametrize asyncpg query.
 
-    1. Render Jinja2 template with the given template parameters
-    2. Translate given named query parameters to unnamed asyncpg query parameters
+    1. Render Jinja2 template with the given template arguments
+    2. Translate given named query arguments to unnamed asyncpg query arguments
 
     I don't like how this looks, but I can't find a library that does what I want.
     I think what I'm searching for is a templating library that understands SQL, and
@@ -39,18 +34,28 @@ def build(
     without additional parametrization.
 
     Using jinja2 seems kind of hacky, because it doesn't help with avoiding SQL
-    injections. asyncpg doesn't support named parameters, adding them seems taped on.
+    injections. asyncpg doesn't support named arguments, adding them seems taped on.
     I tried SQLAlchemy, but found it too unflexible and slow to program. I want to
     write directly in SQL and have the queries in separate files.
     """
-    query = templates.get_template(template).render(**template_parameters)
-    for key in list(query_parameters.keys()):  # copy keys to avoid modifying iterator
-        if f"{{{key}}}" not in query:
-            query_parameters.pop(key)
-    return (
-        query.format_map(Serial(**query_parameters)),
-        list(query_parameters.values()),
+    query = templates.get_template(template).render(**template_arguments)
+    # Get the names of the query arguments in some fixed order
+    keys = list(
+        query_arguments.keys()
+        if isinstance(query_arguments, dict)
+        else query_arguments[0].keys()
     )
+    # Remove keys that are not used in the query template
+    keys = [key for key in keys if f"{{{key}}}" in query]
+    # Replace named arguments with native numbered arguments
+    query = query.format_map({key: f"${index + 1}" for index, key in enumerate(keys)})
+    # Build the tuple (or list of tuples) of arguments
+    arguments = (
+        tuple(query_arguments[key] for key in keys)
+        if isinstance(query_arguments, dict)
+        else [tuple(x[key] for key in keys) for x in query_arguments]
+    )
+    return query, arguments  # type: ignore
 
 
 async def setup(database_client: asyncpg.Connection) -> None:
