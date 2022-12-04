@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS statuses (
     sensor_identifier UUID NOT NULL,
     revision INT NOT NULL,
-    publication_timestamp TIMESTAMPTZ NOT NULL,
+    creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
 
     status status NOT NULL,

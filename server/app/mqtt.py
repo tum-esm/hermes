@@ -108,7 +108,26 @@ class Client(aiomqtt.Client):
         self, sensor_identifier: str, message: validation.StatusesMessage
     ) -> None:
         """Write incoming statuses to the database."""
-        raise NotImplementedError
+        try:
+            query, arguments = database.build(
+                template="insert-status.sql",
+                template_arguments={},
+                query_arguments=[
+                    {
+                        "sensor_identifier": sensor_identifier,
+                        "revision": status.revision,
+                        "creation_timestamp": status.timestamp,
+                        "severity": status.severity,
+                        "subject": status.subject,
+                        "details": status.details,
+                    }
+                    for status in message.statuses
+                ],
+            )
+            await self.database_client.executemany(query, arguments)
+        except Exception as e:
+            # TODO divide into more specific exceptions
+            logger.error(f"[MQTT] Unknown error: {repr(e)}")
 
     async def _process_measurements_message(
         self, sensor_identifier: str, message: validation.MeasurementsMessage

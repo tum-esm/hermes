@@ -6,10 +6,6 @@ import app.validation.constants as constants
 from app.validation.fields import JSONValues
 
 
-SensorIdentifier = pydantic.constr(
-    strict=True,
-    regex=constants.Pattern.SENSOR_IDENTIFIER.value,
-)
 ValueIdentifier = pydantic.constr(
     strict=True,
     regex=constants.Pattern.VALUE_IDENTIFIER.value,
@@ -20,7 +16,7 @@ Revision = pydantic.conint(strict=True, ge=0, lt=constants.Limit.MAXINT4)
 Timestamp = pydantic.confloat(strict=True, ge=0, lt=constants.Limit.MAXINT4)
 
 
-class Status(str, enum.Enum):
+class Severity(str, enum.Enum):
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
@@ -36,7 +32,7 @@ class _BaseModel(pydantic.BaseModel):
 class Status(_BaseModel):
     revision: Revision
     timestamp: Timestamp
-    status: Status
+    severity: Severity
     subject: pydantic.constr(
         strict=True, min_length=1, max_length=constants.Limit.LARGE - 1
     )
@@ -46,7 +42,6 @@ class Status(_BaseModel):
 
 
 class StatusesMessage(_BaseModel):
-    sensor_identifier: SensorIdentifier
     statuses: pydantic.conlist(
         item_type=Status, min_items=1, max_items=constants.Limit.MEDIUM - 1
     )
@@ -60,7 +55,6 @@ class Measurement(_BaseModel):
 
 
 class MeasurementsMessage(_BaseModel):
-    sensor_identifier: SensorIdentifier
     measurements: pydantic.conlist(
         item_type=Measurement, min_items=1, max_items=constants.Limit.MEDIUM - 1
     )
