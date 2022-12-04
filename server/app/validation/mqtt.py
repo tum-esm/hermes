@@ -51,7 +51,7 @@ class Measurement(_BaseModel):
     revision: Revision
     timestamp: Timestamp
     # TODO Validate the values more thoroughly for min and max limits/lengths
-    values: dict[ValueIdentifier, JSONValues]
+    value: dict[ValueIdentifier, JSONValues]
 
 
 class MeasurementsMessage(_BaseModel):

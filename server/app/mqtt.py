@@ -140,8 +140,9 @@ class Client(aiomqtt.Client):
                 query_arguments=[
                     {
                         "sensor_identifier": sensor_identifier,
-                        "measurement_timestamp": measurement.timestamp,
-                        "measurement": measurement.values,
+                        "revision": measurement.revision,
+                        "creation_timestamp": measurement.timestamp,
+                        "measurement": measurement.value,
                     }
                     for measurement in message.measurements
                 ],
