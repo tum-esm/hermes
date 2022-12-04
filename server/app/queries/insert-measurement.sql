@@ -1,12 +1,15 @@
 INSERT INTO measurements (
     sensor_identifier,
-    measurement_timestamp,
+
+    -- insert the revision number
+
+    creation_timestamp,
     receipt_timestamp,
     measurement
 )
 VALUES (
     {sensor_identifier},
-    ('epoch'::TIMESTAMPTZ + {measurement_timestamp} * '1 second'::INTERVAL),
+    ('epoch'::TIMESTAMPTZ + {creation_timestamp} * '1 second'::INTERVAL),
     now(),
     {measurement}
 );

@@ -159,7 +159,7 @@ async def get_sensors(request):
         )
         result = await database_client.fetch(query, *arguments)
     except Exception as e:
-        logger.error(f"[PUT /sensors] Unknown error: {repr(e)}")
+        logger.error(f"[GET /sensors] Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(

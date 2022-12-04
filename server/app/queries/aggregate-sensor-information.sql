@@ -2,7 +2,7 @@
 WITH most_recent_measurements AS (
     SELECT DISTINCT ON (sensor_identifier) *
     FROM measurements
-    ORDER BY sensor_identifier ASC, measurement_timestamp DESC
+    ORDER BY sensor_identifier ASC, creation_timestamp DESC
 ),
 
 -- Most recent configuration for each sensor identifier
@@ -31,7 +31,7 @@ defaults AS (
 counts AS (
     SELECT
         sensor_identifier,
-        date_trunc('day', measurement_timestamp, {timezone}) AS date,
+        date_trunc('day', creation_timestamp, {timezone}) AS date,
         count(*) AS count
     FROM measurements
     GROUP BY (sensor_identifier, date)
@@ -59,11 +59,16 @@ activity AS (
 )
 
 SELECT
+    -- Information about the sensor
+    sensor_name,
     sensor_identifier,
+    -- Information about the latest configuration
     most_recent_configurations.revision,
-    extract(epoch from most_recent_configurations.acknowledgement_timestamp at time zone 'utc')::DOUBLE PRECISION AS acknowledgement_timestamp,
+    extract(epoch from most_recent_configurations.acknowledgement_timestamp at time zone 'utc')::DOUBLE PRECISION AS configuration_acknowledgement_timestamp,
+    -- Information about the latest measurement
     most_recent_configurations.configuration,
-    extract(epoch from most_recent_measurements.measurement_timestamp at time zone 'utc')::DOUBLE PRECISION AS measurement_timestamp,
+    extract(epoch from most_recent_measurements.creation_timestamp at time zone 'utc')::DOUBLE PRECISION AS measurement_creation_timestamp,
+    -- Information about sensor activity
     activity.dates,
     activity.counts
 FROM sensors
