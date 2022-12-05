@@ -1,63 +1,7 @@
-import re
-import serial
 import time
 from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
-
-# returned when powering up the sensor
-startup_regex = (
-    r"GMP343 \- Version STD \d+\.\d+\r\nCopyright: Vaisala Oyj \d{4} - \d{4}"
-)
-
-# returned when calling "send"
-concentration_regex = r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
-
-
-# TODO: possibly combine RS232 interfaces from wind and co2 sensors
-class RS232Interface:
-    def __init__(self) -> None:
-        self.serial_interface = serial.Serial(
-            port=utils.Constants.CO2Sensor.serial_port,
-            baudrate=19200,
-            bytesize=8,
-            parity="N",
-            stopbits=1,
-        )
-
-    def send_command(self, message: str) -> None:
-        """send a command to the sensor. Puts a "\x1B" string before the
-        command, which will make the sensor wait until previous commands
-        have been processed"""
-        self.serial_interface.write((f"{message}\r\n").encode("utf-8"))
-        self.serial_interface.flush()
-
-    def flush_receiver_stream(self) -> None:
-        """wait 0.2 seconds and then empty the current input queue"""
-        time.sleep(0.2)  # wait for outstanding answers from previous commands
-        self.serial_interface.read_all()
-
-    def wait_for_answer(self, expected_regex: str = "[^>]*", timeout: float = 8) -> str:
-        expected_pattern = re.compile(
-            r"^(\r\n|\s)*" + expected_regex + r"(\r\n|\s)*>(\r\n|\s)*$"
-        )
-        start_time = time.time()
-        answer = ""
-
-        while True:
-            received_bytes = self.serial_interface.read_all()
-            if received_bytes is not None:
-                answer += received_bytes.decode(encoding="cp1252")
-                if expected_pattern.match(answer) is not None:
-                    return answer
-
-            if (time.time() - start_time) > timeout:
-                raise TimeoutError(
-                    "sensor did not answer as expected: expected_regex "
-                    + f"= {repr(expected_regex)}, answer = {repr(answer)}"
-                )
-            else:
-                time.sleep(0.05)
 
 
 class CO2SensorInterface:
@@ -67,7 +11,9 @@ class CO2SensorInterface:
     def __init__(
         self, config: custom_types.Config, logger: utils.Logger | None = None
     ) -> None:
-        self.rs232_interface = RS232Interface()
+        self.rs232_interface = utils.serial_interfaces.SerialCO2SensorInterface(
+            port=utils.Constants.CO2Sensor.serial_port
+        )
         self.logger = (
             logger if logger is not None else utils.Logger(config, origin="co2-sensor")
         )
@@ -90,7 +36,9 @@ class CO2SensorInterface:
         self.logger.debug("powering up sensor")
         self.rs232_interface.flush_receiver_stream()
         self.power_pin.on()
-        self.rs232_interface.wait_for_answer(expected_regex=startup_regex)
+        self.rs232_interface.wait_for_answer(
+            expected_regex=r"GMP343 \- Version STD \d+\.\d+\r\nCopyright: Vaisala Oyj \d{4} - \d{4}"
+        )
 
         self.logger.debug("sending default settings")
         for default_setting in [
@@ -207,7 +155,7 @@ class CO2SensorInterface:
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.send_command("send")
         answer = self.rs232_interface.wait_for_answer(
-            expected_regex=concentration_regex
+            expected_regex=r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
         )
         for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">", "\r\n"]:
             answer = answer.replace(s, "")
