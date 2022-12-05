@@ -10,10 +10,10 @@ rps_measurement_queue: queue.Queue[float] = queue.Queue()
 
 class PumpInterface:
     def __init__(self, config: custom_types.Config) -> None:
-        self.config = config
         self.logger = utils.Logger(config, "pump")
-        self.pin_factory = utils.get_pin_factory()
+        self.config = config
 
+        self.pin_factory = utils.get_pin_factory()
         self.control_pin = gpiozero.PWMOutputDevice(
             pin=Constants.pump.control_pin_out,
             frequency=Constants.pump.frequency,
@@ -32,7 +32,7 @@ class PumpInterface:
         assert 0 <= rps <= 70, f"rps have to be between 0 and 70 (passed {rps})"
         self.control_pin.value = rps / 70
 
-    def get_pump_cycle_count(self) -> float:
+    def _get_pump_cycle_count(self) -> float:
         count = 0
         while True:
             try:
@@ -42,24 +42,21 @@ class PumpInterface:
                 break
         return count / 18
 
-    def run(self, desired_rps: float, duration: float, logger: float = True) -> None:
+    def run(self, desired_rps: float, duration: float) -> None:
         assert 2 <= desired_rps <= 70, "pump hardware limitation is 70 rps"
-        self.get_pump_cycle_count()  # empty rps_measurement_queue
+        self._get_pump_cycle_count()  # empty rps_measurement_queue
 
         self.set_desired_pump_rps(desired_rps)
         time.sleep(duration)
         self.set_desired_pump_rps(0)
 
-        message = (
+        self.logger.info(
             f"duration = {duration}, rps = {desired_rps}, actual "
-            + f"average rps = {self.get_pump_cycle_count() / duration}"
+            + f"average rps = {self._get_pump_cycle_count() / duration}"
         )
-        if logger:
-            self.logger.info(message)
-        else:
-            print(message)
 
         # TODO: log warning when avg rps is differing more than 10% from the desired rps
+        # TODO: do rps monitoring without blocking
 
     def teardown(self) -> None:
         """End all hardware connections"""

@@ -13,12 +13,8 @@ startup_regex = (
 # returned when calling "send"
 concentration_regex = r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
 
-# TODO: add pressure calibration
-# TODO: add humidity calibration
-# TODO: add oxygen calibration
-# TODO: add temperature calibration
 
-
+# TODO: possibly combine RS232 interfaces from wind and co2 sensors
 class RS232Interface:
     def __init__(self) -> None:
         self.serial_interface = serial.Serial(

@@ -15,7 +15,7 @@ device_status_pattern = re.compile(
     + f"Vs={number_regex}V,Vr={number_regex}V,Id=tumesmmw\d+$"
 )
 
-
+# TODO: possibly combine RS232 interfaces from wind and co2 sensors
 class RS232Interface:
     def __init__(self) -> None:
         self.serial_interface = serial.Serial(
@@ -43,19 +43,17 @@ class WindSensorInterface:
         """raised when the wind sensor either reports
         low voltage or has not sent any data in a while"""
 
-    def __init__(
-        self, config: custom_types.Config, logger: utils.Logger | None = None
-    ) -> None:
-        self.rs232_interface = RS232Interface()
-        self.logger = (
-            logger if logger is not None else utils.Logger(config, origin="co2-sensor")
-        )
+    def __init__(self, config: custom_types.Config) -> None:
+        self.logger = utils.Logger(config, origin="co2-sensor")
+        self.config = config
+
         self.pin_factory = utils.get_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
             pin=utils.Constants.wind_sensor.power_pin_out, pin_factory=self.pin_factory
         )
         self.power_pin.on()
 
+        self.rs232_interface = RS232Interface()
         self.wind_measurement: custom_types.WindSensorData | None = None
         self.device_status: custom_types.WindSensorStatus | None = None
 
@@ -90,7 +88,6 @@ class WindSensorInterface:
                     sensor_id=m.split("=")[-1],
                     last_update_time=now,
                 )
-        # TODO: log warning when last update time on each reaches a certain threshold
 
     def get_current_wind_measurement(self) -> custom_types.WindSensorData | None:
         self._update_current_values()

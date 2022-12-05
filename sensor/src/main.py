@@ -34,15 +34,15 @@ def run() -> None:
         logger.info("starting mainloop iteration")
 
         logger.info("running system checks")
-        system_check_prodecure.run(config)
+        system_check_prodecure.run()
 
         # TODO: read mqtt messages
-        # TODO: optionally call configuration routine
+        # TODO: optionally call configuration routine -> triggers a restart if config is accepted
         # TODO: optionally call calibration routing
 
         # TODO: if messages are empty, run, skip otherwise
         logger.info("running measurements")
-        measurement_prodecure.run(config)
+        measurement_prodecure.run()
 
         logger.info("finished mainloop iteration")
 

@@ -46,7 +46,7 @@ class MeasurementProcedure:
         # TODO: measure airflow and calculate rounds that need
         #       to be pumped for 50 meters of pipe
 
-    def get_current_wind_data(self) -> custom_types.WindSensorData:
+    def _get_current_wind_data(self) -> custom_types.WindSensorData:
         # fetch wind data
         while True:
             wind_data = self.wind_sensor_interface.get_current_wind_measurement()
@@ -65,7 +65,7 @@ class MeasurementProcedure:
         """
 
         # fetch wind data
-        wind_data = self.get_current_wind_data()
+        wind_data = self._get_current_wind_data()
 
         # determine new valve
         new_valve = min(
@@ -96,12 +96,8 @@ class MeasurementProcedure:
         if humidity is None:
             self.logger.warning("could not read humidity value from SHT21")
 
-    def run(self, config: custom_types.Config) -> None:
+    def run(self) -> None:
         start_time = time.time()
-
-        self.logger.update_config(config)
-        self.config = config
-        # TODO: update config on components
 
         # check whether the sensors report any errors
         self.co2_sensor_interface.check_sensor_errors()

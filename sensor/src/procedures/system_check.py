@@ -6,12 +6,11 @@ class SystemCheckProcedure:
     """runs every mainloop call"""
 
     def __init__(self, config: custom_types.Config) -> None:
+        self.logger = utils.Logger(config, origin="system-checks")
+        self.config = config
         self.mainboard_sensor = interfaces.MainboardSensorInterface()
-        self.logger = utils.Logger(config, origin="system-check")
 
-    def run(self, config: custom_types.Config) -> None:
-        self.logger.update_config(config)
-
+    def run(self) -> None:
         # evaluate system ambient conditions
         system_data = self.mainboard_sensor.get_system_data()
         self.logger.debug(
@@ -27,7 +26,9 @@ class SystemCheckProcedure:
                 f"mainboard temperature is very high ({system_data.mainboard_temperature}°C)"
             )
         if system_data.cpu_temperature is not None and system_data.cpu_temperature > 70:
-            self.logger.warning(f"cpu temperature is very high ({system_data.cpu_temperature}°C)")
+            self.logger.warning(
+                f"cpu temperature is very high ({system_data.cpu_temperature}°C)"
+            )
 
         # evaluate disk usage
         disk_usage = psutil.disk_usage("/")
@@ -36,7 +37,9 @@ class SystemCheckProcedure:
             + f"MB disk space used (= {disk_usage.percent} %)"
         )
         if disk_usage.percent > 80:
-            self.logger.warning(f"disk space usage is very high ({disk_usage.percent} %)")
+            self.logger.warning(
+                f"disk space usage is very high ({disk_usage.percent} %)"
+            )
 
         # evaluate CPU usage
         cpu_usage_percent = psutil.cpu_percent()

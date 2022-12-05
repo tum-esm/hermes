@@ -41,9 +41,6 @@ class Logger:
         self.log_file_slug: str = f"sensor-node-{config.general.node_id}"
         self.print_to_console = print_to_console
 
-    def update_config(self, new_config: custom_types.Config) -> None:
-        self.log_file_slug = f"sensor-node-{new_config.general.node_id}"
-
     def debug(self, message: str) -> None:
         """Write a debug log (to debug only). Used for verbose output"""
         self._write_log_line("DEBUG", message)

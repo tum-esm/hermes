@@ -6,9 +6,8 @@ import gpiozero
 
 class ValveInterface:
     def __init__(self, config: custom_types.Config) -> None:
-        self.config = config
         self.logger = utils.Logger(config, "valves")
-        self.set_active_input(1)
+        self.config = config
 
         self.valves: dict[Literal[1, 2, 3, 4], gpiozero.OutputDevice] = {
             1: gpiozero.OutputDevice(
@@ -24,16 +23,12 @@ class ValveInterface:
                 Constants.valves.pin_4_out, active_high=True, initial_value=False
             ),
         }
+        self.set_active_input(1)
 
-    def set_active_input(self, no: Literal[1, 2, 3, 4], logger: bool = True) -> None:
+    def set_active_input(self, no: Literal[1, 2, 3, 4]) -> None:
         for number, device in self.valves.items():
             if number == no:
                 device.on()
             else:
                 device.off()
-
-        message = f"switching to valve {no}"
-        if logger:
-            self.logger.info(message)
-        else:
-            print(message)
+        self.logger.info(f"switching to valve {no}")

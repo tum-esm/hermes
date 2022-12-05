@@ -18,8 +18,7 @@ class ConfigInterface:
     def read() -> custom_types.Config:
         try:
             with open(CONFIG_PATH, "r") as f:
-                config = json.load(f)
-                return custom_types.Config(**config)
+                return custom_types.Config(**json.load(f))
         except FileNotFoundError:
             raise ConfigInterface.FileIsMissing()
         except json.JSONDecodeError:
