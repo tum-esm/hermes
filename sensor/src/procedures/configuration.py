@@ -15,12 +15,12 @@ if version upgrade
 8. Call `sys.exit()`
 """
 
-from src import types
+from src import custom_types
 
 
 class ConfigurationProcedure:
     """runs when a config change has been requested"""
 
-    def run(self, current_config: types.Config, mqtt_request: str) -> None:
+    def run(self, current_config: custom_types.Config, mqtt_request: str) -> None:
         pass
         # TODO: implement configuration procedure

@@ -8,7 +8,7 @@ PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
 DEFAULT_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.default.json")
 
 sys.path.append(PROJECT_DIR)
-from src.types import Config
+from src.custom_types import Config
 
 
 @pytest.mark.ci

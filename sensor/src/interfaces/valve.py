@@ -1,11 +1,11 @@
 from typing import Literal
-from src import utils, types
+from src import utils, custom_types
 from src.utils import Constants
 import gpiozero
 
 
 class ValveInterface:
-    def __init__(self, config: types.Config) -> None:
+    def __init__(self, config: custom_types.Config) -> None:
         self.config = config
         self.logger = utils.Logger(config, "valves")
         self.set_active_input(1)

@@ -1,10 +1,10 @@
-from src import utils, types
+from src import utils, custom_types
 from src.utils import Constants
 import gpiozero
 
 
 class UPSInterface:
-    def __init__(self, config: types.Config):
+    def __init__(self, config: custom_types.Config):
         logger = utils.Logger(config, "ups")
 
         # pin goes high if the system is powered by the UPS battery

@@ -2,7 +2,7 @@ import os
 import traceback
 from datetime import datetime, timedelta
 
-from src import types
+from src import custom_types
 
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
@@ -33,7 +33,7 @@ class Logger:
 
     def __init__(
         self,
-        config: types.Config,
+        config: custom_types.Config,
         origin: str = "insert-name-here",
         print_to_console: bool = False,
     ) -> None:
@@ -41,7 +41,7 @@ class Logger:
         self.log_file_slug: str = f"sensor-node-{config.general.node_id}"
         self.print_to_console = print_to_console
 
-    def update_config(self, new_config: types.Config) -> None:
+    def update_config(self, new_config: custom_types.Config) -> None:
         self.log_file_slug = f"sensor-node-{new_config.general.node_id}"
 
     def debug(self, message: str) -> None:

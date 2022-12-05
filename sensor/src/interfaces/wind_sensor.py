@@ -1,6 +1,6 @@
 import time
 import serial
-from src import utils, types
+from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
 import re
@@ -44,7 +44,7 @@ class WindSensorInterface:
         low voltage or has not sent any data in a while"""
 
     def __init__(
-        self, config: types.Config, logger: utils.Logger | None = None
+        self, config: custom_types.Config, logger: utils.Logger | None = None
     ) -> None:
         self.rs232_interface = RS232Interface()
         self.logger = (
@@ -56,8 +56,8 @@ class WindSensorInterface:
         )
         self.power_pin.on()
 
-        self.wind_measurement: types.WindSensorData | None = None
-        self.device_status: types.WindSensorStatus | None = None
+        self.wind_measurement: custom_types.WindSensorData | None = None
+        self.device_status: custom_types.WindSensorStatus | None = None
 
     def _update_current_values(self) -> None:
         new_messages = self.rs232_interface.get_messages()
@@ -68,7 +68,7 @@ class WindSensorInterface:
                     c for c in m[4:] if c.isnumeric() or c in [",", "."]
                 )
                 dn, dm, dx, sn, sm, sx = [float(v) for v in parsed_message.split(",")]
-                self.wind_measurement = types.WindSensorData(
+                self.wind_measurement = custom_types.WindSensorData(
                     direction_min=dn,
                     direction_avg=dm,
                     direction_max=dx,
@@ -82,7 +82,7 @@ class WindSensorInterface:
                     c for c in m[4:-13] if c.isnumeric() or c in [",", "."]
                 )
                 th, vh, vs, vr = [float(v) for v in parsed_message.split(",")]
-                self.device_status = types.WindSensorStatus(
+                self.device_status = custom_types.WindSensorStatus(
                     temperature=th,
                     heating_voltage=vh,
                     supply_voltage=vs,
@@ -92,11 +92,11 @@ class WindSensorInterface:
                 )
         # TODO: log warning when last update time on each reaches a certain threshold
 
-    def get_current_wind_measurement(self) -> types.WindSensorData | None:
+    def get_current_wind_measurement(self) -> custom_types.WindSensorData | None:
         self._update_current_values()
         return self.wind_measurement
 
-    def get_current_device_status(self) -> types.WindSensorStatus | None:
+    def get_current_device_status(self) -> custom_types.WindSensorStatus | None:
         self._update_current_values()
         return self.device_status
 

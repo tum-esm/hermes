@@ -1,7 +1,7 @@
 import smbus2
 import bme280
 import os
-from src import utils, types
+from src import utils, custom_types
 
 
 class MainboardSensorInterface:
@@ -17,7 +17,7 @@ class MainboardSensorInterface:
         s = os.popen("vcgencmd measure_temp").readline()
         return float(s.replace("temp=", "").replace("'C\n", ""))
 
-    def get_system_data(self) -> types.MainboardSensorData:
+    def get_system_data(self) -> custom_types.MainboardSensorData:
         """log mainboard and cpu temperature and enclosure humidity and pressure"""
 
         bme280_data = bme280.sample(
@@ -25,7 +25,7 @@ class MainboardSensorInterface:
             utils.Constants.mainboard_sensor.i2c_address,
             self.calibration_params,
         )
-        return types.MainboardSensorData(
+        return custom_types.MainboardSensorData(
             mainboard_temperature=round(bme280_data.temperature, 1),
             cpu_temperature=self._get_cpu_temperature(),
             enclosure_humidity=round(bme280_data.humidity, 1),

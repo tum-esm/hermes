@@ -1,15 +1,15 @@
 import psutil
-from src import interfaces, types, utils
+from src import interfaces, custom_types, utils
 
 
 class SystemCheckProcedure:
     """runs every mainloop call"""
 
-    def __init__(self, config: types.Config) -> None:
+    def __init__(self, config: custom_types.Config) -> None:
         self.mainboard_sensor = interfaces.MainboardSensorInterface()
         self.logger = utils.Logger(config, origin="system-check")
 
-    def run(self, config: types.Config) -> None:
+    def run(self, config: custom_types.Config) -> None:
         self.logger.update_config(config)
 
         # evaluate system ambient conditions

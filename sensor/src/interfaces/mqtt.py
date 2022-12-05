@@ -3,7 +3,7 @@ import queue
 import ssl
 from typing import Any
 from paho.mqtt.client import Client, MQTTMessage
-from src import types
+from src import custom_types
 
 # TODO: statically type messages
 mqtt_message_queue = queue.Queue(maxsize=1024)  # type:ignore
@@ -20,7 +20,7 @@ def on_message(client: Client, userdata: Any, msg: MQTTMessage) -> None:
 
 
 class MQTTInterface:
-    def __init__(self, config: types.Config) -> None:
+    def __init__(self, config: custom_types.Config) -> None:
         self.config = config
         self.client = Client(client_id=self.config.general.node_id)
 

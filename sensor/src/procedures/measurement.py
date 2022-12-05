@@ -4,7 +4,7 @@
 
 import time
 from typing import Literal
-from src import types, utils, interfaces
+from src import custom_types, utils, interfaces
 
 
 def distance_between_angles(angle_1: float, angle_2: float) -> float:
@@ -25,7 +25,7 @@ class MeasurementProcedure:
     4. Do 2 minutes of measurements
     """
 
-    def __init__(self, config: types.Config) -> None:
+    def __init__(self, config: custom_types.Config) -> None:
         self.logger = utils.Logger(config, origin="measurements")
         self.config = config
 
@@ -46,7 +46,7 @@ class MeasurementProcedure:
         # TODO: measure airflow and calculate rounds that need
         #       to be pumped for 50 meters of pipe
 
-    def get_current_wind_data(self) -> types.WindSensorData:
+    def get_current_wind_data(self) -> custom_types.WindSensorData:
         # fetch wind data
         while True:
             wind_data = self.wind_sensor_interface.get_current_wind_measurement()
@@ -96,7 +96,7 @@ class MeasurementProcedure:
         if humidity is None:
             self.logger.warning("could not read humidity value from SHT21")
 
-    def run(self, config: types.Config) -> None:
+    def run(self, config: custom_types.Config) -> None:
         start_time = time.time()
 
         self.logger.update_config(config)

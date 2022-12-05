@@ -1,7 +1,7 @@
 import re
 import serial
 import time
-from src import utils, types
+from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
 
@@ -69,7 +69,7 @@ class CO2SensorInterface:
         """raised when the CO2 probe "errs" command responds with an error"""
 
     def __init__(
-        self, config: types.Config, logger: utils.Logger | None = None
+        self, config: custom_types.Config, logger: utils.Logger | None = None
     ) -> None:
         self.rs232_interface = RS232Interface()
         self.logger = (
@@ -206,7 +206,7 @@ class CO2SensorInterface:
             + f"humidity = {humidity}, oxygen = {oxygen})"
         )
 
-    def get_current_concentration(self) -> types.CO2SensorData:
+    def get_current_concentration(self) -> custom_types.CO2SensorData:
         """get the current concentration value from the CO2 probe"""
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.send_command("send")
@@ -216,7 +216,7 @@ class CO2SensorInterface:
         for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">", "\r\n"]:
             answer = answer.replace(s, "")
         raw_value_string, comp_value_string, filt_value_string = answer.split(";")
-        return types.CO2SensorData(
+        return custom_types.CO2SensorData(
             raw=float(raw_value_string),
             compensated=float(comp_value_string),
             filtered=float(filt_value_string),

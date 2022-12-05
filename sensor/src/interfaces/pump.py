@@ -2,14 +2,14 @@ import queue
 import time
 import gpiozero
 import gpiozero.pins.pigpio
-from src import utils, types
+from src import utils, custom_types
 from src.utils import Constants
 
 rps_measurement_queue: queue.Queue[float] = queue.Queue()
 
 
 class PumpInterface:
-    def __init__(self, config: types.Config) -> None:
+    def __init__(self, config: custom_types.Config) -> None:
         self.config = config
         self.logger = utils.Logger(config, "pump")
         self.pin_factory = utils.get_pin_factory()
