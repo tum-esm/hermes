@@ -19,6 +19,13 @@ bash scripts/testing/run_integration_tests.sh
 bash scripts/testing/check_static_types.sh
 ```
 
+## Configuration
+
+Use the `config/config.template.json` to generate a `config/config.json`.
+
+**`node_id`** will be used in the logs, the MQTT communication, and the
+database/server to identify each station.
+
 ## Code location on the Raspi
 
 On the sensor, the codebase layout will look like this:
