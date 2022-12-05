@@ -15,7 +15,8 @@ def on_message(client: Client, userdata: Any, msg: MQTTMessage) -> None:
         payload = json.loads(msg.payload.decode())
         mqtt_message_queue.put({"topic": msg.topic, "qos": msg.qos, "payload": payload})
     except json.JSONDecodeError:
-        # TODO: log
+        # TODO: log (how to do this clean?)
+        # TODO: send warning message
         pass
 
 
@@ -43,3 +44,6 @@ class MQTTInterface:
                 break
 
         return new_messages
+
+    # TODO: add function to send status messages
+    # TODO: add function to send measurement messages
