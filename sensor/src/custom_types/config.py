@@ -1,5 +1,4 @@
 from typing import Any, Literal
-
 import attrs
 import attrs.validators as val
 
@@ -9,6 +8,7 @@ class ConfigSectionGeneral:
     node_id: str = attrs.field(
         validator=[val.instance_of(str), val.min_len(3), val.max_len(64)]  # type: ignore
     )
+    boneless_mode: bool = attrs.field(validator=[val.instance_of(bool)])  # type: ignore
 
 
 @attrs.frozen
@@ -85,7 +85,10 @@ class Config:
 if __name__ == "__main__":
     example_config = {
         "version": "0.1.0",
-        "general": {"node_id": "a-unique-node-id"},
+        "general": {
+            "node_id": "a-unique-node-id",
+            "boneless_mode": False,
+        },
         "mqtt": {
             "url": "...",
             "port": 8883,

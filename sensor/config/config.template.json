@@ -1,7 +1,8 @@
 {
     "version": "0.1.0",
     "general": {
-        "node_id": "a-unique-node-id"
+        "node_id": "a-unique-node-id",
+        "boneless_mode": true
     },
     "mqtt": {
         "url": "...",

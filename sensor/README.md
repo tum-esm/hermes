@@ -24,7 +24,10 @@ bash scripts/testing/check_static_types.sh
 Use the `config/config.template.json` to generate a `config/config.json`.
 
 **`node_id`** will be used in the logs, the MQTT communication, and the
-database/server to identify each station.
+database/server to identify each station. When **`boneless_mode`** is set
+to true, then the code will not interact with any hardware components but
+mock each components answers. This is useful during development or testing
+on a separate machine without any of the sensors connected.
 
 ## Code location on the Raspi
 
