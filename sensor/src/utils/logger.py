@@ -38,7 +38,7 @@ class Logger:
         print_to_console: bool = False,
     ) -> None:
         self.origin: str = origin
-        self.log_file_slug: str = f"sensor-node-{config.general.node_id}"
+        self.log_file_slug: str = f"sensor-node-{config.general.station_name}"
         self.print_to_console = print_to_console
 
     def debug(self, message: str) -> None:

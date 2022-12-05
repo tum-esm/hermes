@@ -1,22 +1,17 @@
 from typing import Literal
 from pydantic import BaseModel, validator
 from .validators import (
-    validate_bool,
     validate_int,
     validate_str,
 )
 
 
 class GeneralConfig(BaseModel):
-    node_id: str
-    boneless_mode: bool
+    station_name: str
 
     # validators
-    _val_node_id = validator("node_id", pre=True, allow_reuse=True)(
+    _val_station_name = validator("station_name", pre=True, allow_reuse=True)(
         validate_str(min_len=3, max_len=64),
-    )
-    _val_boneless_mode = validator("boneless_mode", pre=True, allow_reuse=True)(
-        validate_bool(),
     )
 
 

@@ -15,8 +15,7 @@ from src.custom_types import Config
 VALID_CONFIG = {
     "version": "0.1.0",
     "general": {
-        "node_id": "a-unique-node-id",
-        "boneless_mode": False,
+        "station_name": "a-unique-node-id",
     },
     "mqtt": {
         "url": "...",
@@ -58,12 +57,13 @@ def test_config_validation():
     Config(**VALID_CONFIG)
 
     # testing the merge_dicts function
-    Config(**merge_dicts(deepcopy(VALID_CONFIG), {"general": {"boneless_mode": True}}))
+    Config(
+        **merge_dicts(deepcopy(VALID_CONFIG), {"general": {"station_name": "fghj-a"}})
+    )
 
     for modification in [
         {"version": "0.2.0"},
-        {"general": {"node_id", 30}},
-        {"general": {"boneless_mode": [True]}},
+        {"general": {"station_name", 30}},
         {"mqtt": {"url": 30}},
         {"mqtt": {"port": "30"}},
         {"mqtt": {"identifier": 30}},
