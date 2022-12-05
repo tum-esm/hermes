@@ -4,8 +4,8 @@
 import time
 from src import utils
 
-# TODO rename to inflow-air-sensor
-class InputAirSensorInterface:
+
+class AirInletSensorInterface:
     def __init__(self) -> None:
         self.i2c_interface = utils.serial_interfaces.SerialI2CInterface(
             address=0x40, device=1

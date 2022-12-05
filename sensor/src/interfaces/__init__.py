@@ -4,7 +4,7 @@ pigpio.exceptions = False
 
 from .co2_sensor import CO2SensorInterface
 from .config import ConfigInterface
-from .input_air_sensor import InputAirSensorInterface
+from .air_inlet_sensor import AirInletSensorInterface
 from .mainboard_sensor import MainboardSensorInterface
 from .mqtt import MQTTInterface
 from .pump import PumpInterface

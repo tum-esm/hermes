@@ -26,7 +26,7 @@ class MeasurementProcedure:
         self.pump_interface = interfaces.PumpInterface(config)
         self.active_valve_number: Literal[1, 2, 3, 4] | None = None
 
-        self.input_air_sensor = interfaces.InputAirSensorInterface()
+        self.air_inlet_sensor = interfaces.AirInletSensorInterface()
 
         self.co2_sensor_interface = interfaces.CO2SensorInterface(config)
         self.last_measurement_time: float = 0
@@ -85,7 +85,7 @@ class MeasurementProcedure:
                 self.logger.info(f"staying at air inlet {new_valve}")
 
     def _update_input_air_calibration(self) -> None:
-        _, humidity = self.input_air_sensor.get_current_values()
+        _, humidity = self.air_inlet_sensor.get_current_values()
         self.co2_sensor_interface.set_calibration_values(humidity=humidity)
         if humidity is None:
             self.logger.warning("could not read humidity value from SHT21")
