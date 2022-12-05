@@ -39,6 +39,7 @@ def run() -> None:
         # TODO: read mqtt messages
         # TODO: optionally call configuration routine -> triggers a restart if config is accepted
         # TODO: optionally call calibration routing
+        # TODO: run teardown of other procedures before configuration/calibration
 
         # TODO: if messages are empty, run, skip otherwise
         logger.info("running measurements")

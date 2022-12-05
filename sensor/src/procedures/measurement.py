@@ -21,13 +21,18 @@ class MeasurementProcedure:
         self.logger = utils.Logger(config, origin="measurements")
         self.config = config
 
+        # valve switching
         self.wind_sensor_interface = interfaces.WindSensorInterface(config)
         self.valve_interfaces = interfaces.ValveInterface(config)
-        self.pump_interface = interfaces.PumpInterface(config)
         self.active_valve_number: Literal[1, 2, 3, 4] | None = None
 
-        self.air_inlet_sensor = interfaces.AirInletSensorInterface()
+        # pump (runs continuously)
+        self.pump_interface = interfaces.PumpInterface(config)
+        self.pump_interface.set_desired_pump_rps(20)
+        time.sleep(1)
 
+        # measurements
+        self.air_inlet_sensor = interfaces.AirInletSensorInterface()
         self.co2_sensor_interface = interfaces.CO2SensorInterface(config)
         self.last_measurement_time: float = 0
 
@@ -38,10 +43,14 @@ class MeasurementProcedure:
         """
 
         self.valve_interfaces.set_active_input(new_valve_number)
-        self.pump_interface.run(desired_rps=30, duration=20)
-        self.active_valve_number = new_valve_number
+        self.pump_interface.set_desired_pump_rps(40)
+
+        time.sleep(10)
         # TODO: measure airflow and calculate rounds that need
         #       to be pumped for 50 meters of pipe
+
+        self.pump_interface.set_desired_pump_rps(20)
+        self.active_valve_number = new_valve_number
 
     def _get_current_wind_data(self) -> custom_types.WindSensorData:
         """
@@ -81,7 +90,7 @@ class MeasurementProcedure:
 
         # perform switch
         if self.active_valve_number is None:
-            self.logger.info(f"enabeling to air inlet {new_valve}")
+            self.logger.info(f"enabeling air inlet {new_valve}")
             self._switch_to_valve_number(new_valve.number)
         else:
             if self.active_valve_number != new_valve.number:
@@ -124,17 +133,9 @@ class MeasurementProcedure:
         # check whether the sensors report any errors
         self.co2_sensor_interface.check_sensor_errors()
         self.wind_sensor_interface.check_sensor_errors()
-        # TODO: implement shut down and retry logic (if error
-        #       happens 3 times in a row, report)
 
-        # switch to up-to-date valve every two minutes
+        # possibly switches valve every two minutes
         self._update_input_valve()
-
-        # run the pump for the whole procedure
-        # TODO: do not stop pump between 2-min cycles
-        self.pump_interface.set_desired_pump_rps(20)
-        time.sleep(1)
-
         self._update_input_air_calibration()
 
         # do regular measurements for about 2 minutes
@@ -154,4 +155,6 @@ class MeasurementProcedure:
             # TODO: write out measurements to data files
             # TODO: write out measurements to mqtt broker
 
+    def teardown(self) -> None:
+        """ends all hardware/system connections"""
         self.pump_interface.set_desired_pump_rps(0)
