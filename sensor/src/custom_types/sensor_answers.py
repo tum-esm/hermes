@@ -1,8 +1,10 @@
-import attrs
+from pydantic import BaseModel
+
+# validation is only necessary for external sources
+# internal source will be covered by mypy
 
 
-@attrs.frozen
-class CO2SensorData:
+class CO2SensorData(BaseModel):
     raw: float
     compensated: float
     filtered: float
@@ -11,8 +13,7 @@ class CO2SensorData:
 # TODO: add sht 21 data
 
 
-@attrs.frozen
-class MainboardSensorData:
+class MainboardSensorData(BaseModel):
     """units: °C for temperature, rH for humidity, hPa for pressure"""
 
     mainboard_temperature: float
@@ -21,8 +22,7 @@ class MainboardSensorData:
     enclosure_pressure: float
 
 
-@attrs.frozen
-class WindSensorData:
+class WindSensorData(BaseModel):
     direction_min: float
     direction_avg: float
     direction_max: float
@@ -32,8 +32,7 @@ class WindSensorData:
     last_update_time: float
 
 
-@attrs.frozen
-class WindSensorStatus:
+class WindSensorStatus(BaseModel):
     temperature: float
     heating_voltage: float
     supply_voltage: float
