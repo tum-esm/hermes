@@ -1,17 +1,17 @@
-name: 'test-sensor-on-main'
+name: 'test-sensor'
 on:
     push:
         branches:
             - main
         paths:
             - 'sensor/**'
-            - '.github/workflows/test-sensor-on-main.yaml'
+            - '.github/workflows/test-sensor.yaml'
     pull_request:
         branches:
             - main
         paths:
             - 'sensor/**'
-            - '.github/workflows/test-sensor-on-main.yaml'
+            - '.github/workflows/test-sensor.yaml'
 
 jobs:
     test-sensor-codebase:
