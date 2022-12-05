@@ -1,4 +1,3 @@
-import re
 import time
 from src import utils, custom_types
 import gpiozero

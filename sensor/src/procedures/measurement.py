@@ -32,6 +32,11 @@ class MeasurementProcedure:
         self.last_measurement_time: float = 0
 
     def _switch_to_valve_number(self, new_valve_number: Literal[1, 2, 3, 4]) -> None:
+        """
+        1. switches to a different valve
+        2. pumps 50 meters worth of air (or some other pipe length at the new valve)
+        """
+
         self.valve_interfaces.set_active_input(new_valve_number)
         self.pump_interface.run(desired_rps=30, duration=20)
         self.active_valve_number = new_valve_number
@@ -39,15 +44,22 @@ class MeasurementProcedure:
         #       to be pumped for 50 meters of pipe
 
     def _get_current_wind_data(self) -> custom_types.WindSensorData:
-        # fetch wind data
+        """
+        * fetches the latest wind sensor data
+        * raises TimeoutError after 15 seconds without a response
+        """
+        start_time = time.time()
+
         while True:
             wind_data = self.wind_sensor_interface.get_current_wind_measurement()
             if wind_data is not None:
                 return wind_data
             self.logger.debug("no current wind data, waiting 2 seconds")
             time.sleep(2)
-
-        # TODO: Add timeout error
+            if time.time() - start_time > 15:
+                raise TimeoutError(
+                    "wind sensor did not send any wind data for 15 seconds"
+                )
 
     def _update_input_valve(self) -> None:
         """
@@ -85,12 +97,28 @@ class MeasurementProcedure:
                 self.logger.info(f"staying at air inlet {new_valve}")
 
     def _update_input_air_calibration(self) -> None:
+        """
+        1. fetches the latest temperature and pressure data at air inlet
+        2. sends these values to the CO2 sensor
+        """
         _, humidity = self.air_inlet_sensor.get_current_values()
         self.co2_sensor_interface.set_calibration_values(humidity=humidity)
         if humidity is None:
             self.logger.warning("could not read humidity value from SHT21")
 
     def run(self) -> None:
+        """
+        1. checks wind and co2 sensor for errors
+        2. switches between input valves
+        3. starts pumping
+        4. calibrates co2 sensor with input air
+        5. collects measurements for 2 minutes
+        6. stops pumping
+
+        the measurements will be sent to the MQTT client right
+        during the collection (2 minutes)
+        """
+
         start_time = time.time()
 
         # check whether the sensors report any errors
@@ -103,6 +131,7 @@ class MeasurementProcedure:
         self._update_input_valve()
 
         # run the pump for the whole procedure
+        # TODO: do not stop pump between 2-min cycles
         self.pump_interface.set_desired_pump_rps(20)
         time.sleep(1)
 
