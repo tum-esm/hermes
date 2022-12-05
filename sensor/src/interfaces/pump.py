@@ -64,6 +64,9 @@ class PumpInterface:
                 self.rps_monitoring_exceptions.get_nowait()
             )
         except queue.Empty:
+            assert (
+                self.rps_monitoring_process.is_alive()
+            ), "rps monitoring process has stopped without an exception"
             self.logger.info("pump doesn't report any errors")
 
     def teardown(self) -> None:
