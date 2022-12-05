@@ -2,12 +2,14 @@
 # https://github.com/Tronde/Raspi-SHT21
 
 import time
-from .i2c import I2CInterface
+from src import utils
 
 # TODO rename to inflow-air-sensor
 class InputAirSensorInterface:
     def __init__(self) -> None:
-        self.i2c_interface = I2CInterface(0x40, 1)
+        self.i2c_interface = utils.serial_interfaces.SerialI2CInterface(
+            address=0x40, device=1
+        )
 
     def get_current_values(self) -> tuple[float | None, float | None]:
         """get tuple of temperature and humidity"""

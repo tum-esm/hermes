@@ -1,3 +1,4 @@
+import fcntl
 import serial
 import re
 import time
@@ -68,3 +69,27 @@ class SerialWindSensorInterface:
         separate_messages = self.current_input_stream.split("\r\n")
         self.current_input_stream = separate_messages[-1]
         return separate_messages[:-1]
+
+
+class SerialI2CInterface:
+    def __init__(self, address: int = 0, device: int = 1) -> None:
+        """Open I2C-Port
+
+        addr: I2C device address
+        dev:  I2C port (Raspberry Pi) B,B+,Pi 2 = 1 the first Pi = 0
+              For I2C emulation with GPIO, dev must be None
+        """
+        self.i2c_device = open(("/dev/i2c-%s" % device), "rb+", 0)
+        fcntl.ioctl(self.i2c_device, 0x0706, address)  # I2C Address
+
+    def close(self) -> None:
+        """close connection"""
+        self.i2c_device.close()
+
+    def write(self, data: list[int]) -> None:
+        """write data to device"""
+        self.i2c_device.write(bytes(data))
+
+    def read(self, n: int) -> bytes:
+        """read n bytes from I2C device"""
+        return self.i2c_device.read(n)
