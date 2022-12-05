@@ -1,3 +1,24 @@
+# Sensor Software
+
+## Installation
+
+**Set up virtual environment and install dependencies:**
+
+```bash
+python3.10 -m venv .venv
+source .venv/bin/activate
+poetry install --with=dev # dev is optional
+```
+
+**Run tests/check static types:**
+
+```bash
+bash scripts/testing/run_all_tests.sh
+bash scripts/testing/run_ci_tests.sh
+bash scripts/testing/run_integration_tests.sh
+bash scripts/testing/check_static_types.sh
+```
+
 ## Code location on the Raspi
 
 On the sensor, the codebase layout will look like this:
