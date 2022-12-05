@@ -13,7 +13,7 @@ class PumpInterface:
         self.logger = utils.Logger(config, "pump")
         self.config = config
 
-        self.pin_factory = utils.get_pin_factory()
+        self.pin_factory = utils.gpio.get_pin_factory()
         self.control_pin = gpiozero.PWMOutputDevice(
             pin=Constants.pump.control_pin_out,
             frequency=Constants.pump.frequency,

@@ -47,7 +47,7 @@ class WindSensorInterface:
         self.logger = utils.Logger(config, origin="co2-sensor")
         self.config = config
 
-        self.pin_factory = utils.get_pin_factory()
+        self.pin_factory = utils.gpio.get_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
             pin=utils.Constants.wind_sensor.power_pin_out, pin_factory=self.pin_factory
         )

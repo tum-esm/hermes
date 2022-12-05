@@ -71,7 +71,7 @@ class CO2SensorInterface:
         self.logger = (
             logger if logger is not None else utils.Logger(config, origin="co2-sensor")
         )
-        self.pin_factory = utils.get_pin_factory()
+        self.pin_factory = utils.gpio.get_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
             pin=utils.Constants.co2_sensor.power_pin_out, pin_factory=self.pin_factory
         )

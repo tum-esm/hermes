@@ -8,5 +8,7 @@ def get_pin_factory() -> PiGPIOFactory:
         assert pin_factory.connection is not None
         assert pin_factory.connection.connected
     except:
-        raise ConnectionError('pigpio is not connected, please run "sudo pigpiod -n 127.0.0.1"')
+        raise ConnectionError(
+            'pigpio is not connected, please run "sudo pigpiod -n 127.0.0.1"'
+        )
     return pin_factory
