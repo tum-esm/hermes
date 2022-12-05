@@ -134,8 +134,12 @@ async def get_sensors(request):
     # TODO Enrich with
     # V last measurement timestamp
     # V activity timeline
-    # - last measurement
-    # - last sensor health update
+    # - last sensor heartbeat
+    # - aggregation of sensor statuses
+    # - paging of
+    #   - sensor statuses
+    #   - sensor configurations
+    #   - sensor measurements
 
     try:
         query, arguments = database.build(
@@ -144,6 +148,7 @@ async def get_sensors(request):
             query_arguments={
                 "sensor_names": request.query.sensors,
                 # TODO make this a query param; validate with `try: pendulum.timezone()`
+                #
                 # It's probably better to do everything in UTC and convert to the
                 # user's offset on the frontend.
                 #

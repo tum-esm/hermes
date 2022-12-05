@@ -1,4 +1,4 @@
-import enum
+import typing
 
 import pydantic
 
@@ -16,13 +16,6 @@ Revision = pydantic.conint(strict=True, ge=0, lt=constants.Limit.MAXINT4)
 Timestamp = pydantic.confloat(strict=True, ge=0, lt=constants.Limit.MAXINT4)
 
 
-class Severity(str, enum.Enum):
-    SYSTEM = "system"
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-
-
 class _BaseModel(pydantic.BaseModel):
     class Config:
         max_anystr_length = constants.Limit.LARGE
@@ -30,10 +23,22 @@ class _BaseModel(pydantic.BaseModel):
         frozen = True
 
 
-class Status(_BaseModel):
+class Heartbeat(_BaseModel):
     revision: Revision
     timestamp: Timestamp
-    severity: Severity
+    success: bool  # Did the sensor successfully process the configuration?
+
+
+class HeartbeatsMessage(_BaseModel):
+    heartbeats: pydantic.conlist(
+        item_type=Heartbeat, min_items=1, max_items=constants.Limit.MEDIUM - 1
+    )
+
+
+class Status(_BaseModel):
+    severity: typing.Literal["info", "warning", "error"]
+    revision: Revision
+    timestamp: Timestamp
     subject: pydantic.constr(
         strict=True, min_length=1, max_length=constants.Limit.LARGE - 1
     )

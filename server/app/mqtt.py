@@ -104,55 +104,74 @@ class Client(aiomqtt.Client):
         task_references.add(task)
         task.add_done_callback(task_references.remove)
 
-    async def _process_statuses_message(
-        self, sensor_identifier: str, message: validation.StatusesMessage
+    async def _process_heartbeats_message(
+        self, sensor_identifier: str, message: validation.HeartbeatsMessage
     ) -> None:
-        """Process incoming sensor statuses."""
-        try:
-            async with self.database_client.transaction():
-                # Write statuses to the database
-                query, arguments = database.build(
-                    template="insert-status.sql",
-                    template_arguments={},
-                    query_arguments=[
-                        {
+        """Process incoming sensor heartbeats.
+
+        Heartbeat messages are critical to the system working correctly. This is in
+        contrast to status messages, which only fulfill a kind of logging functionality
+        that allows us to see errors on the sensors straight from the dashboard.
+        On receival of a heartbeat, we:
+
+        1. Update configuration on acknowledgement success/failure
+        2. TODO Update sensor's last seen
+        """
+        for heartbeat in message.heartbeats:
+            # We process each heartheat individually in separate transactions
+            try:
+                with self.database_client.transaction():
+                    # Write heartbeat as status message in the database
+                    query, arguments = database.build(
+                        template="insert-status.sql",
+                        template_arguments={},
+                        query_arguments={
                             "sensor_identifier": sensor_identifier,
-                            "revision": status.revision,
-                            "creation_timestamp": status.timestamp,
-                            "severity": status.severity,
-                            "subject": status.subject,
-                            "details": status.details,
-                        }
-                        for status in message.statuses
-                    ],
-                )
-                await self.database_client.executemany(query, arguments)
-                # Update configuration on acknowledgement success/failure
-                acknowledgements = [
-                    status
-                    for status in message.statuses
-                    if status.severity == "system"
-                    and status.subject
-                    in [
-                        "Configuration acknowledgement: SUCCESS",
-                        "Configuration acknowledgement: FAILURE",
-                    ]
-                ]
-                if acknowledgements:
+                            "revision": heartbeat.revision,
+                            "creation_timestamp": heartbeat.timestamp,
+                            "severity": "system",
+                            "subject": "Heartbeat",
+                            "details": None,
+                        },
+                    )
+                    await self.database_client.execute(query, *arguments)
+                    # Update configuration in the database
                     query, arguments = database.build(
                         template="update-configuration-on-acknowledgement.sql",
                         template_arguments={},
-                        query_arguments=[
-                            {
-                                "sensor_identifier": sensor_identifier,
-                                "revision": status.revision,
-                                "acknowledgement_timestamp": status.timestamp,
-                                "successful": status.subject.endswith("SUCCESS"),
-                            }
-                            for status in acknowledgements
-                        ],
+                        query_arguments={
+                            "sensor_identifier": sensor_identifier,
+                            "revision": heartbeat.revision,
+                            "acknowledgement_timestamp": heartbeat.timestamp,
+                            "success": heartbeat.success,
+                        },
                     )
-                    await self.database_client.executemany(query, arguments)
+                    await self.database_client.execute(query, *arguments)
+            except Exception as e:
+                # TODO divide into more specific exceptions
+                logger.error(f"[MQTT] Unknown error: {repr(e)}")
+
+    async def _process_statuses_message(
+        self, sensor_identifier: str, message: validation.StatusesMessage
+    ) -> None:
+        """Write incoming sensor statuses to the database."""
+        try:
+            query, arguments = database.build(
+                template="insert-status.sql",
+                template_arguments={},
+                query_arguments=[
+                    {
+                        "sensor_identifier": sensor_identifier,
+                        "revision": status.revision,
+                        "creation_timestamp": status.timestamp,
+                        "severity": status.severity,
+                        "subject": status.subject,
+                        "details": status.details,
+                    }
+                    for status in message.statuses
+                ],
+            )
+            await self.database_client.executemany(query, arguments)
         except Exception as e:
             # TODO divide into more specific exceptions
             logger.error(f"[MQTT] Unknown error: {repr(e)}")
@@ -160,7 +179,7 @@ class Client(aiomqtt.Client):
     async def _process_measurements_message(
         self, sensor_identifier: str, message: validation.MeasurementsMessage
     ) -> None:
-        """Process incoming sensor measurements."""
+        """Write incoming sensor measurements to the database."""
         try:
             query, arguments = database.build(
                 template="insert-measurement.sql",
@@ -182,11 +201,14 @@ class Client(aiomqtt.Client):
 
     async def listen(self) -> None:
         """Listen to incoming sensor MQTT messages and process them."""
+        wildcard_heartbeats = "heartbeats/+"
         wildcard_statuses = "statuses/+"
         wildcard_measurements = "measurements/+"
 
         async with self.messages() as messages:
             # Subscribe to all topics
+            await self.subscribe(wildcard_heartbeats, qos=1, timeout=10)
+            logger.info(f"[MQTT] Subscribed to: {wildcard_heartbeats}")
             await self.subscribe(wildcard_statuses, qos=1, timeout=10)
             logger.info(f"[MQTT] Subscribed to: {wildcard_statuses}")
             await self.subscribe(wildcard_measurements, qos=1, timeout=10)
@@ -202,6 +224,11 @@ class Client(aiomqtt.Client):
                     sensor_identifier = str(message.topic).split("/")[-1]
                     payload = _decode_payload(message.payload)
 
+                    if message.topic.matches(wildcard_heartbeats):
+                        await self._process_heartbeats_message(
+                            sensor_identifier=sensor_identifier,
+                            message=validation.HeartbeatsMessage(**payload),
+                        )
                     if message.topic.matches(wildcard_statuses):
                         await self._process_statuses_message(
                             sensor_identifier=sensor_identifier,

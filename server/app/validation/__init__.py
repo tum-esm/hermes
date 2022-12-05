@@ -1,5 +1,5 @@
 from app.validation.core import validate
-from app.validation.mqtt import MeasurementsMessage, StatusesMessage
+from app.validation.mqtt import HeartbeatsMessage, MeasurementsMessage, StatusesMessage
 from app.validation.routes import (
     GetMeasurementsRequest,
     GetSensorsRequest,
@@ -12,6 +12,7 @@ __all__ = [
     "GetSensorsRequest",
     "PostSensorsRequest",
     "PutSensorsRequest",
+    "HeartbeatsMessage",
     "MeasurementsMessage",
     "StatusesMessage",
     "validate",

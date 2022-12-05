@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS statuses (
     creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
 
-    status status NOT NULL,
+    severity severity NOT NULL,
     subject TEXT NOT NULL,
     details TEXT,
 
