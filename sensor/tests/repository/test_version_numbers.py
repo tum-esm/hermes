@@ -8,7 +8,7 @@ ROOT_DIR = dir(dir(dir(dir(os.path.abspath(__file__)))))
 SERVER_PYPROJECT_TOML = os.path.join(ROOT_DIR, "server", "pyproject.toml")
 SENSOR_PYPROJECT_TOML = os.path.join(ROOT_DIR, "sensor", "pyproject.toml")
 SENSOR_DEFAULT_CONFIG = os.path.join(
-    ROOT_DIR, "sensor", "config", "config.default.json"
+    ROOT_DIR, "sensor", "config", "config.template.json"
 )
 
 # TODO: test version number of dashboard
