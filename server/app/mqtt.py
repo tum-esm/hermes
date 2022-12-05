@@ -131,7 +131,7 @@ class Client(aiomqtt.Client):
                             "creation_timestamp": heartbeat.timestamp,
                             "severity": "system",
                             "subject": "Heartbeat",
-                            "details": None,
+                            "details": json.dumps({"success": heartbeat.success}),
                         },
                     )
                     await self.database_client.execute(query, *arguments)
@@ -223,7 +223,7 @@ class Client(aiomqtt.Client):
                     # Get sensor identifier from the topic and decode the payload
                     sensor_identifier = str(message.topic).split("/")[-1]
                     payload = _decode_payload(message.payload)
-
+                    # Match topic and process message
                     if message.topic.matches(wildcard_heartbeats):
                         await self._process_heartbeats_message(
                             sensor_identifier=sensor_identifier,
