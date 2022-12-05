@@ -127,29 +127,32 @@ class Client(aiomqtt.Client):
                     ],
                 )
                 await self.database_client.executemany(query, arguments)
-                # Process system statuses
-                for status in message.statuses:
-                    if status.severity == "system":
-                        # Update configuration on configuration acknowledgement success
-                        if status.subject == "Configuration acknowledgement: success":
-                            query, arguments = database.build(
-                                template="update-configuration-on-acknowledgement.sql",
-                                template_arguments={},
-                                query_arguments={
-                                    "sensor_identifier": sensor_identifier,
-                                    "revision": status.revision,
-                                    "acknowledgement_timestamp": status.timestamp,
-                                },
-                            )
-                            await self.database_client.execute(query, *arguments)
-                        # Update configuration on configuration acknowledgement failure
-                        if status.subject == "Configuration acknowledgement: failure":
-                            ...  # TODO
-
-                        # Do something when receiving a heartbeat?
-                        # How do we aggregate the sensor online/unstable/offline status?
-                        if status.subject == "Heartbeat":
-                            ...  # TODO
+                # Update configuration on acknowledgement success/failure
+                acknowledgements = [
+                    status
+                    for status in message.statuses
+                    if status.severity == "system"
+                    and status.subject
+                    in [
+                        "Configuration acknowledgement: SUCCESS",
+                        "Configuration acknowledgement: FAILURE",
+                    ]
+                ]
+                if acknowledgements:
+                    query, arguments = database.build(
+                        template="update-configuration-on-acknowledgement.sql",
+                        template_arguments={},
+                        query_arguments=[
+                            {
+                                "sensor_identifier": sensor_identifier,
+                                "revision": status.revision,
+                                "acknowledgement_timestamp": status.timestamp,
+                                "successful": status.subject.endswith("SUCCESS"),
+                            }
+                            for status in acknowledgements
+                        ],
+                    )
+                    await self.database_client.executemany(query, arguments)
         except Exception as e:
             # TODO divide into more specific exceptions
             logger.error(f"[MQTT] Unknown error: {repr(e)}")
