@@ -76,7 +76,7 @@ class WindSensorInterface:
         self._update_current_values()
         return self.device_status
 
-    def check_sensor_errors(self) -> None:
+    def check_errors(self) -> None:
         """checks whether the wind sensor behaves incorrectly - Possibly
         raises the WindSensorInterface.DeviceFailure exception"""
 
@@ -110,6 +110,8 @@ class WindSensorInterface:
                     "the reference voltage is off by more than 0.4 volts"
                     + f" ({self.device_status})"
                 )
+
+        self.logger.info("sensor doesn't report any errors")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""

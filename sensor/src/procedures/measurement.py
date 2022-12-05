@@ -130,9 +130,10 @@ class MeasurementProcedure:
 
         start_time = time.time()
 
-        # check whether the sensors report any errors
-        self.co2_sensor_interface.check_sensor_errors()
-        self.wind_sensor_interface.check_sensor_errors()
+        # check whether sensors or pump report any errors
+        self.co2_sensor_interface.check_errors()
+        self.wind_sensor_interface.check_errors()
+        self.pump_interface.check_errors()
 
         # possibly switches valve every two minutes
         self._update_input_valve()

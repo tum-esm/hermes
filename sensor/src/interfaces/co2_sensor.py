@@ -198,7 +198,7 @@ class CO2SensorInterface:
         self.rs232_interface.send_command("corr")
         return self._format_raw_answer(self.rs232_interface.wait_for_answer())
 
-    def check_sensor_errors(self) -> None:
+    def check_errors(self) -> None:
         """checks whether the CO2 probe reports any errors. Possibly raises
         the CO2SensorInterface.DeviceFailure exception"""
         self.rs232_interface.flush_receiver_stream()
@@ -207,6 +207,8 @@ class CO2SensorInterface:
 
         if not ("OK: No errors detected" in answer):
             raise CO2SensorInterface.DeviceFailure(answer)
+
+        self.logger.info("sensor doesn't report any errors")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
