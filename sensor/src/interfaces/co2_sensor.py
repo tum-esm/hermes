@@ -1,7 +1,19 @@
+import re
 import time
 from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
+
+number_regex = r"\d+(\.\d+)?"
+startup_regex = (
+    f"GMP343 - Version STD {number_regex}\\r\\n"
+    + f"Copyright: Vaisala Oyj \\d{4} - \\d{4}"
+)
+measurement_regex = (
+    f"Raw\\s*{number_regex} ppm; "
+    + f"Comp\\.\\s*{number_regex} ppm; "
+    + f"Filt\\.\\s*{number_regex} ppm"
+)
 
 
 class CO2SensorInterface:
@@ -36,9 +48,7 @@ class CO2SensorInterface:
         self.logger.debug("powering up sensor")
         self.rs232_interface.flush_receiver_stream()
         self.power_pin.on()
-        self.rs232_interface.wait_for_answer(
-            expected_regex=r"GMP343 \- Version STD \d+\.\d+\r\nCopyright: Vaisala Oyj \d{4} - \d{4}"
-        )
+        self.rs232_interface.wait_for_answer(expected_regex=startup_regex)
 
         self.logger.debug("sending default settings")
         for default_setting in [
@@ -154,9 +164,7 @@ class CO2SensorInterface:
         """get the current concentration value from the CO2 probe"""
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.send_command("send")
-        answer = self.rs232_interface.wait_for_answer(
-            expected_regex=r"Raw\s*\d+\.\d ppm; Comp\.\s*\d+\.\d ppm; Filt\.\s*\d+\.\d ppm"
-        )
+        answer = self.rs232_interface.wait_for_answer(expected_regex=measurement_regex)
         for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">", "\r\n"]:
             answer = answer.replace(s, "")
         raw_value_string, comp_value_string, filt_value_string = answer.split(";")
