@@ -15,14 +15,14 @@ class PumpInterface:
 
         self.pin_factory = utils.gpio.get_pin_factory()
         self.control_pin = gpiozero.PWMOutputDevice(
-            pin=Constants.pump.control_pin_out,
-            frequency=Constants.pump.frequency,
+            pin=Constants.Pump.control_pin_out,
+            frequency=Constants.Pump.frequency,
             active_high=True,
             initial_value=0,
             pin_factory=self.pin_factory,
         )
         self.speed_pin = gpiozero.DigitalInputDevice(
-            pin=Constants.pump.speed_pin_in,
+            pin=Constants.Pump.speed_pin_in,
             pin_factory=self.pin_factory,
         )
         self.speed_pin.when_activated = lambda: rps_measurement_queue.put(1)

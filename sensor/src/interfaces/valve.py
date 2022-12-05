@@ -11,16 +11,16 @@ class ValveInterface:
 
         self.valves: dict[Literal[1, 2, 3, 4], gpiozero.OutputDevice] = {
             1: gpiozero.OutputDevice(
-                Constants.valves.pin_1_out, active_high=False, initial_value=True
+                Constants.Valves.pin_1_out, active_high=False, initial_value=True
             ),
             2: gpiozero.OutputDevice(
-                Constants.valves.pin_2_out, active_high=True, initial_value=False
+                Constants.Valves.pin_2_out, active_high=True, initial_value=False
             ),
             3: gpiozero.OutputDevice(
-                Constants.valves.pin_3_out, active_high=True, initial_value=False
+                Constants.Valves.pin_3_out, active_high=True, initial_value=False
             ),
             4: gpiozero.OutputDevice(
-                Constants.valves.pin_4_out, active_high=True, initial_value=False
+                Constants.Valves.pin_4_out, active_high=True, initial_value=False
             ),
         }
         self.set_active_input(1)

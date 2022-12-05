@@ -19,7 +19,7 @@ device_status_pattern = re.compile(
 class RS232Interface:
     def __init__(self) -> None:
         self.serial_interface = serial.Serial(
-            port=utils.Constants.wind_sensor.serial_port,
+            port=utils.Constants.WindSensor.serial_port,
             baudrate=19200,
             bytesize=8,
             parity="N",
@@ -49,7 +49,7 @@ class WindSensorInterface:
 
         self.pin_factory = utils.gpio.get_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
-            pin=utils.Constants.wind_sensor.power_pin_out, pin_factory=self.pin_factory
+            pin=utils.Constants.WindSensor.power_pin_out, pin_factory=self.pin_factory
         )
         self.power_pin.on()
 

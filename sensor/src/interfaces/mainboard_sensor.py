@@ -10,7 +10,7 @@ class MainboardSensorInterface:
         self.bus = smbus2.SMBus(1)
         self.calibration_params = bme280.load_calibration_params(
             self.bus,
-            utils.Constants.mainboard_sensor.i2c_address,
+            utils.Constants.MainboardSensor.i2c_address,
         )
 
     def _get_cpu_temperature(self) -> float | None:
@@ -22,7 +22,7 @@ class MainboardSensorInterface:
 
         bme280_data = bme280.sample(
             self.bus,
-            utils.Constants.mainboard_sensor.i2c_address,
+            utils.Constants.MainboardSensor.i2c_address,
             self.calibration_params,
         )
         return custom_types.MainboardSensorData(
