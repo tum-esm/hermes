@@ -209,6 +209,6 @@ class CO2SensorInterface:
             raise CO2SensorInterface.DeviceFailure(answer)
 
     def teardown(self) -> None:
-        """End all hardware connections"""
+        """ends all hardware/system connections"""
         self.power_pin.off()
         self.pin_factory.close()

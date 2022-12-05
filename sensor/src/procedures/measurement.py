@@ -157,4 +157,7 @@ class MeasurementProcedure:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
-        self.pump_interface.set_desired_pump_rps(0)
+        self.wind_sensor_interface.teardown()
+        self.valve_interfaces.teardown()
+        self.pump_interface.teardown()
+        self.co2_sensor_interface.teardown()

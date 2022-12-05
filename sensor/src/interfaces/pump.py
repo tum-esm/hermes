@@ -59,5 +59,6 @@ class PumpInterface:
         # TODO: do rps monitoring without blocking
 
     def teardown(self) -> None:
-        """End all hardware connections"""
+        """ends all hardware/system connections"""
+        self.set_desired_pump_rps(0)
         self.pin_factory.close()
