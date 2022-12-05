@@ -1,5 +1,4 @@
 import time
-import serial
 from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
@@ -14,28 +13,6 @@ device_status_pattern = re.compile(
     f"^0R5,Th={number_regex}C,Vh={number_regex}N,"
     + f"Vs={number_regex}V,Vr={number_regex}V,Id=tumesmmw\d+$"
 )
-
-# TODO: possibly combine RS232 interfaces from wind and co2 sensors
-class RS232Interface:
-    def __init__(self) -> None:
-        self.serial_interface = serial.Serial(
-            port=utils.Constants.WindSensor.serial_port,
-            baudrate=19200,
-            bytesize=8,
-            parity="N",
-            stopbits=1,
-        )
-        self.current_input_stream = ""
-
-    def get_messages(self) -> list[str]:
-        new_input_bytes = self.serial_interface.read_all()
-        if new_input_bytes is None:
-            return []
-
-        self.current_input_stream += new_input_bytes.decode("cp1252")
-        separate_messages = self.current_input_stream.split("\r\n")
-        self.current_input_stream = separate_messages[-1]
-        return separate_messages[:-1]
 
 
 class WindSensorInterface:
@@ -53,7 +30,9 @@ class WindSensorInterface:
         )
         self.power_pin.on()
 
-        self.rs232_interface = RS232Interface()
+        self.rs232_interface = utils.serial_interfaces.SerialWindSensorInterface(
+            port=utils.Constants.WindSensor.serial_port
+        )
         self.wind_measurement: custom_types.WindSensorData | None = None
         self.device_status: custom_types.WindSensorStatus | None = None
 

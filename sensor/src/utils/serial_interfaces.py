@@ -46,3 +46,25 @@ class SerialCO2SensorInterface:
                 )
             else:
                 time.sleep(0.05)
+
+
+class SerialWindSensorInterface:
+    def __init__(self, port: str) -> None:
+        self.serial_interface = serial.Serial(
+            port=port,
+            baudrate=19200,
+            bytesize=8,
+            parity="N",
+            stopbits=1,
+        )
+        self.current_input_stream = ""
+
+    def get_messages(self) -> list[str]:
+        new_input_bytes = self.serial_interface.read_all()
+        if new_input_bytes is None:
+            return []
+
+        self.current_input_stream += new_input_bytes.decode("cp1252")
+        separate_messages = self.current_input_stream.split("\r\n")
+        self.current_input_stream = separate_messages[-1]
+        return separate_messages[:-1]
