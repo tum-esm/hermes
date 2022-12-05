@@ -1,3 +1,4 @@
+import re
 from typing import Any, Callable, TypeVar
 
 
@@ -49,6 +50,7 @@ def validate_str(
     min_len: float | None = None,
     max_len: float | None = None,
     allowed: list[str] | None = None,
+    regex: str | None = None,
 ) -> Callable[[Any, str], str]:
     def f(cls: Any, v: str) -> str:
         if not isinstance(v, str):
@@ -59,6 +61,8 @@ def validate_str(
             raise ValueError(f'"{v}" has more than {max_len} characters')
         if allowed is not None and v not in allowed:
             raise ValueError(f'"{v}" is not a allowed (not one of {allowed})')
+        if regex is not None and re.compile(regex).match(v) is None:
+            raise ValueError(f'"{v}" does not match the regex "{regex}"')
         return v
 
     return f

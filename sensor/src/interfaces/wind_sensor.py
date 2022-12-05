@@ -11,7 +11,7 @@ measurement_pattern = re.compile(
 )
 device_status_pattern = re.compile(
     f"^0R5,Th={number_regex}C,Vh={number_regex}N,"
-    + f"Vs={number_regex}V,Vr={number_regex}V,Id=tumesmmw\d+$"
+    + f"Vs={number_regex}V,Vr={number_regex}V,Id=tumesmmw\\d+$"
 )
 
 

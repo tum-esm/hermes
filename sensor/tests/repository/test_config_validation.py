@@ -23,7 +23,7 @@ VALID_CONFIG = {
         "port": 8883,
         "identifier": "...",
         "password": "........",
-        "base_topic": "/.../...",
+        "base_topic": "/abc/def",
     },
     "valves": {
         "air_inlets": [
@@ -64,6 +64,12 @@ def test_config_validation():
         {"version": "0.2.0"},
         {"general": {"node_id", 30}},
         {"general": {"boneless_mode": [True]}},
+        {"mqtt": {"url": 30}},
+        {"mqtt": {"port": "30"}},
+        {"mqtt": {"identifier": 30}},
+        {"mqtt": {"password": 30}},
+        {"mqtt": {"base_topic": 30}},
+        {"mqtt": {"base_topic": "/fghj/fghj/"}},
     ]:
         try:
             invalid_config = merge_dicts(deepcopy(VALID_CONFIG), modification)

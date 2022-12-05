@@ -41,7 +41,7 @@ class MQTTConfig(BaseModel):
         validate_str(min_len=8, max_len=256),
     )
     _val_base_topic = validator("base_topic", pre=True, allow_reuse=True)(
-        validate_str(min_len=1, max_len=256),
+        validate_str(min_len=1, max_len=256, regex=r"^(\/[a-z0-9_-]+)*$"),
     )
 
 

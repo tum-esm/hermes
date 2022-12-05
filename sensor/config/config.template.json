@@ -9,7 +9,7 @@
         "port": 8883,
         "identifier": "...",
         "password": "........",
-        "base_topic": "/.../..."
+        "base_topic": "/abc/def"
     },
     "valves": {
         "air_inlets": [
