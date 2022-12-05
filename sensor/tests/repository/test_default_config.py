@@ -5,8 +5,7 @@ import pytest
 
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
-DEFAULT_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.default.json")
-
+DEFAULT_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.template.json")
 sys.path.append(PROJECT_DIR)
 from src.custom_types import Config
 
