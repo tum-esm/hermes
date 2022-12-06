@@ -41,6 +41,7 @@ markers = [
 strict = true
 implicit_reexport = true
 no_warn_unused_ignores = true
+plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
 module = [
