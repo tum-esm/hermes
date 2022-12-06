@@ -96,3 +96,21 @@ class SendingMQTTClient:
             # TODO: when any message could not be sent, wait with
             #       exponentially increasing times
             time.sleep(5)
+
+    @staticmethod
+    def check_errors() -> None:
+        """checks whether the sending loop process is still running"""
+
+        if SendingMQTTClient.sending_loop_process is not None:
+            assert (
+                SendingMQTTClient.sending_loop_process.is_alive()
+            ), "sending loop process is not running"
+
+    @staticmethod
+    def log_statistics() -> None:
+        """logs a few statistics about the current MQTT sending activity"""
+
+        # TODO: log how many messages are pending/sent/...
+        # TODO: log when the last successful message has been sent
+        # TODO: log how many messages were sent today
+        pass
