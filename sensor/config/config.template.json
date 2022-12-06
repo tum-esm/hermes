@@ -2,14 +2,7 @@
     "version": "0.1.0",
     "revision": 1,
     "general": {
-        "station_name": "a-unique-node-id"
-    },
-    "mqtt": {
-        "url": "...",
-        "port": 8883,
-        "identifier": "...",
-        "password": "........",
-        "base_topic": "/abc/def"
+        "station_name": "some-useful-name"
     },
     "valves": {
         "air_inlets": [
