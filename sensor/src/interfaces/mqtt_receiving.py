@@ -5,7 +5,7 @@ from typing import Any
 from paho.mqtt.client import Client, MQTTMessage
 from src import custom_types
 
-# TODO: statically type messages
+# TODO: statically type config messages
 mqtt_message_queue = queue.Queue(maxsize=1024)  # type:ignore
 
 
@@ -44,6 +44,3 @@ class ReceivingMQTTClient:
                 break
 
         return new_messages
-
-    # TODO: add function to send status messages
-    # TODO: add function to send measurement messages
