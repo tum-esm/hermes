@@ -18,13 +18,6 @@ VALID_CONFIG = {
     "general": {
         "station_name": "a-unique-node-id",
     },
-    "mqtt": {
-        "url": "...",
-        "port": 8883,
-        "identifier": "...",
-        "password": "........",
-        "base_topic": "/abc/def",
-    },
     "valves": {
         "air_inlets": [
             {"number": 1, "direction": 300},
@@ -65,12 +58,27 @@ def test_config_validation():
     for modification in [
         {"version": "0.2.0"},
         {"general": {"station_name", 30}},
-        {"mqtt": {"url": 30}},
-        {"mqtt": {"port": "30"}},
-        {"mqtt": {"identifier": 30}},
-        {"mqtt": {"password": 30}},
-        {"mqtt": {"base_topic": 30}},
-        {"mqtt": {"base_topic": "/fghj/fghj/"}},
+        {
+            "valves": {
+                "air_inlets": [
+                    {"number": 1, "direction": 300, "additional key": 30},
+                ]
+            }
+        },
+        {
+            "valves": {
+                "air_inlets": [
+                    {"number": 1},
+                ]
+            }
+        },
+        {
+            "valves": {
+                "air_inlets": [
+                    {"number": "1", "direction": 300},
+                ]
+            }
+        },
     ]:
         try:
             invalid_config = merge_dicts(deepcopy(VALID_CONFIG), modification)

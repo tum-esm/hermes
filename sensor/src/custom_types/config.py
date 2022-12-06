@@ -14,30 +14,8 @@ class GeneralConfig(BaseModel):
         validate_str(min_len=3, max_len=64),
     )
 
-
-class MQTTConfig(BaseModel):
-    url: str
-    port: int
-    identifier: str
-    password: str
-    base_topic: str
-
-    # validators
-    _val_url = validator("url", pre=True, allow_reuse=True)(
-        validate_str(min_len=3, max_len=256),
-    )
-    _val_port = validator("port", pre=True, allow_reuse=True)(
-        validate_int(minimum=0),
-    )
-    _val_identifier = validator("identifier", pre=True, allow_reuse=True)(
-        validate_str(min_len=3, max_len=256),
-    )
-    _val_password = validator("password", pre=True, allow_reuse=True)(
-        validate_str(min_len=8, max_len=256),
-    )
-    _val_base_topic = validator("base_topic", pre=True, allow_reuse=True)(
-        validate_str(min_len=1, max_len=256, regex=r"^(\/[a-z0-9_-]+)*$"),
-    )
+    class Config:
+        extra = "forbid"
 
 
 class AirInletConfig(BaseModel):
@@ -52,9 +30,15 @@ class AirInletConfig(BaseModel):
         validate_int(minimum=0, maximum=359)
     )
 
+    class Config:
+        extra = "forbid"
+
 
 class ValveConfig(BaseModel):
     air_inlets: list[AirInletConfig]
+
+    class Config:
+        extra = "forbid"
 
 
 class Config(BaseModel):
@@ -63,7 +47,6 @@ class Config(BaseModel):
     version: Literal["0.1.0"]
     revision: int
     general: GeneralConfig
-    mqtt: MQTTConfig
     valves: ValveConfig
 
     # validators
@@ -73,3 +56,6 @@ class Config(BaseModel):
     _val_revision = validator("revision", pre=True, allow_reuse=True)(
         validate_int(minimum=0, maximum=2_147_483_648),
     )
+
+    class Config:
+        extra = "forbid"

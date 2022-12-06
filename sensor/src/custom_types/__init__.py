@@ -6,6 +6,7 @@ from .sensor_answers import (
     WindSensorStatus,
 )
 from .mqtt import (
+    MQTTConfig,
     MQTTMessageHeader,
     MQTTStatusMessageBody,
     MQTTMeasurementMessageBody,

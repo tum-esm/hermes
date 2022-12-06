@@ -4,8 +4,37 @@ from pydantic import BaseModel, validator
 from .validators import validate_int, validate_str, validate_float
 from .sensor_answers import CO2SensorData
 
-# meta data to deal with message queue
+
+class MQTTConfig(BaseModel):
+    """fixed params loaded from the environment"""
+
+    url: str
+    port: int
+    identifier: str
+    password: str
+    base_topic: str
+
+    # validators
+    _val_url = validator("url", pre=True, allow_reuse=True)(
+        validate_str(min_len=3, max_len=256),
+    )
+    _val_port = validator("port", pre=True, allow_reuse=True)(
+        validate_int(minimum=0),
+    )
+    _val_identifier = validator("identifier", pre=True, allow_reuse=True)(
+        validate_str(min_len=3, max_len=256),
+    )
+    _val_password = validator("password", pre=True, allow_reuse=True)(
+        validate_str(min_len=8, max_len=256),
+    )
+    _val_base_topic = validator("base_topic", pre=True, allow_reuse=True)(
+        validate_str(min_len=1, max_len=256, regex=r"^(\/[a-z0-9_-]+)*$"),
+    )
+
+
 class MQTTMessageHeader(BaseModel):
+    """meta data for managing message queue"""
+
     identifier: int
     status: Literal["pending", "sent", "failed", "successful"]
     revision: int
@@ -30,8 +59,9 @@ class MQTTMessageHeader(BaseModel):
     )
 
 
-# message sent to server
 class MQTTStatusMessageBody(BaseModel):
+    """message body which is sent to server"""
+
     severity: Literal["info", "warning", "error"]
     subject: str
     details: str
@@ -48,31 +78,31 @@ class MQTTStatusMessageBody(BaseModel):
     )
 
 
-# message sent to server
 class MQTTMeasurementMessageBody(BaseModel):
+    """message body which is sent to server"""
+
     value: CO2SensorData
 
 
-# elements in message queue
 class MQTTStatusMessage(BaseModel):
+    """element in local message queue"""
+
     header: MQTTMessageHeader
     body: MQTTStatusMessageBody
 
 
-# elements in message queue
 class MQTTMeasurementMessage(BaseModel):
+    """element in local message queue"""
+
     header: MQTTMessageHeader
     body: MQTTMeasurementMessageBody
-
-
-# TODO: implement bundled sending of message
 
 
 class ActiveMQTTMessageQueue(BaseModel):
     max_identifier: int
     messages: list[MQTTStatusMessage | MQTTMeasurementMessage]
 
-    # validators
+    # validatorså
     _val_max_identifier = validator("max_identifier", pre=True, allow_reuse=True)(
         validate_int(minimum=0),
     )
