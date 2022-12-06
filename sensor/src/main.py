@@ -20,6 +20,13 @@ def run() -> None:
     4. run measurement procedure
     """
 
+    # TODO: routine that loads the environment MQTT parameters
+
+    # TODO: if local config does not exist: fetch newest config
+    #       from pinned topic messages and perform update
+
+    # TODO: do not use station name by logger
+
     config = interfaces.ConfigInterface.read()
     logger = utils.Logger(config, origin="main")
     logger.info(f"starting mainloop with process ID {os.getpid()}")
