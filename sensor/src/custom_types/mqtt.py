@@ -66,3 +66,13 @@ class MQTTMeasurementMessage(BaseModel):
 
 
 # TODO: implement bundled sending of message
+
+
+class ActiveMQTTMessageQueue(BaseModel):
+    max_identifier: int
+    messages: list[MQTTStatusMessage | MQTTMeasurementMessage]
+
+    # validators
+    _val_max_identifier = validator("max_identifier", pre=True, allow_reuse=True)(
+        validate_int(minimum=0),
+    )

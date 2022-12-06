@@ -11,4 +11,5 @@ from .mqtt import (
     MQTTMeasurementMessageBody,
     MQTTStatusMessage,
     MQTTMeasurementMessage,
+    ActiveMQTTMessageQueue,
 )
