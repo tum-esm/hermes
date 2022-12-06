@@ -5,6 +5,7 @@ import time
 from paho.mqtt.client import Client
 from src import custom_types, utils
 import multiprocessing
+import multiprocessing.synchronize
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 ACTIVE_QUEUE_FILE = join(PROJECT_DIR, "data", "active-mqtt-queue.json")
@@ -78,7 +79,7 @@ class SendingMQTTClient:
             json.dump(active_queue.dict(), f, indent=4)
 
     @staticmethod
-    def sending_loop(lock: multiprocessing.Lock) -> None:
+    def sending_loop(lock: multiprocessing.synchronize.Lock) -> None:
         """takes messages from the queue file and processes them"""
         logger = utils.Logger(origin="mqtt-sending-loop")
         logger.info("starting loop")
