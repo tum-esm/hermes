@@ -12,29 +12,28 @@ QUEUE_ARCHIVE_DIR = join(PROJECT_DIR, "data", "archive")
 class SendingMQTTClient:
     def __init__(self, config: custom_types.Config) -> None:
         self.config = config
-        self.logger = utils.Logger(origin="sending-mqtt-client")
+        self.logger = utils.Logger(config, origin="sending-mqtt-client")
 
     # TODO: function to pick messages from the queue file and process them
 
-    def enqueue_status_message(
-        self, message_body: custom_types.MQTTStatusMessageBody
+    def enqueue_message(
+        self,
+        message_body: custom_types.MQTTStatusMessageBody
+        | custom_types.MQTTMeasurementMessageBody,
     ) -> None:
-        self._add_message_to_queue_file(
-            custom_types.MQTTStatusMessage(
+        new_message: custom_types.MQTTStatusMessage | custom_types.MQTTMeasurementMessage
+        if isinstance(message_body, custom_types.MQTTStatusMessageBody):
+            new_message = custom_types.MQTTStatusMessage(
                 header=self._generate_header(),
                 body=message_body,
             )
-        )
+        else:
+            new_message = custom_types.MQTTMeasurementMessage(
+                header=self._generate_header(),
+                body=message_body,
+            )
 
-    def enqueue_measurement_message(
-        self, message_body: custom_types.MQTMeasurementMessageBody
-    ) -> None:
-        self._add_message_to_queue_file(
-            custom_types.MQTMeasurementMessage(
-                header=self._generate_header(),
-                body=message_body,
-            )
-        )
+        self._add_message_to_queue_file(new_message)
 
     def _generate_header(self) -> custom_types.MQTTMessageHeader:
         # TODO: determine new identifier from queue
@@ -45,7 +44,7 @@ class SendingMQTTClient:
         return custom_types.MQTTMessageHeader(
             identifier=new_identifier,
             status="pending",
-            revision=self.config.revision,
+            revision=0,  # TODO: use from self.config.revision,
             issue_timestamp=time.time(),
             success_timestamp=None,
         )
