@@ -34,7 +34,7 @@ class SendingMQTTClient:
         | custom_types.MQTTMeasurementMessageBody,
     ) -> None:
         with lock:
-            active_queue = self._load_active_queue()
+            active_queue = SendingMQTTClient._load_active_queue()
             new_header = custom_types.MQTTMessageHeader(
                 identifier=active_queue.max_identifier + 1,
                 status="pending",
@@ -55,17 +55,35 @@ class SendingMQTTClient:
 
             active_queue.messages.append(new_message)
             active_queue.max_identifier += 1
-            self._dump_active_queue(active_queue)
+            SendingMQTTClient._dump_active_queue(active_queue)
 
-    def _load_active_queue(self) -> custom_types.ActiveMQTTMessageQueue:
+    @staticmethod
+    def _load_active_queue() -> custom_types.ActiveMQTTMessageQueue:
         with open(ACTIVE_QUEUE_FILE, "r") as f:
             active_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
         return active_queue
 
-    def _dump_active_queue(
-        self, active_queue: custom_types.ActiveMQTTMessageQueue
-    ) -> None:
+    @staticmethod
+    def _dump_active_queue(active_queue: custom_types.ActiveMQTTMessageQueue) -> None:
         with open(ACTIVE_QUEUE_FILE, "w") as f:
             json.dump(active_queue.dict(), f, indent=4)
 
-    # TODO: function to pick messages from the queue file and process them
+    @staticmethod
+    def sending_loop(lock: multiprocessing.Lock) -> None:
+        """takes messages from the queue file and processes them"""
+        logger = utils.Logger(origin="mqtt-sending-loop")
+        logger.info("starting loop")
+
+        # TODO: init mqtt client
+
+        while True:
+            # TODO: read active queue
+            # TODO: for each pending or failed message, send it and set it to sent
+            # TODO: for each sent message, check whether it has been successful
+            #       -> for each successful message, move it
+            #       -> for each failed message, move it
+            # TODO: write out new active queue
+
+            # TODO: when any message could not be sent, wait with
+            #       exponentially increasing times
+            time.sleep(5)
