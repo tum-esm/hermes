@@ -14,6 +14,8 @@ lock = multiprocessing.Lock()
 
 
 class SendingMQTTClient:
+    sending_loop_process: multiprocessing.Process | None = None
+
     def __init__(self, config: custom_types.Config) -> None:
         self.config = config
         self.logger = utils.Logger(origin="mqtt-sender")
@@ -27,6 +29,13 @@ class SendingMQTTClient:
                         messages=[],
                     )
                 )
+
+        if SendingMQTTClient.sending_loop_process is None:
+            new_process = multiprocessing.Process(
+                target=SendingMQTTClient.sending_loop, args=(lock,)
+            )
+            new_process.start()
+            SendingMQTTClient.sending_loop_process = new_process
 
     def enqueue_message(
         self,
