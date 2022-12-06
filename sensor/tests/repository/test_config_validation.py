@@ -14,6 +14,7 @@ from src.custom_types import Config
 
 VALID_CONFIG = {
     "version": "0.1.0",
+    "revision": 1,
     "general": {
         "station_name": "a-unique-node-id",
     },

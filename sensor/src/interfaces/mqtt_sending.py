@@ -35,7 +35,7 @@ class SendingMQTTClient:
         new_header = custom_types.MQTTMessageHeader(
             identifier=active_queue.max_identifier + 1,
             status="pending",
-            revision=0,  # TODO: use from self.config.revision,
+            revision=self.config.revision,
             issue_timestamp=time.time(),
             success_timestamp=None,
         )
@@ -63,6 +63,6 @@ class SendingMQTTClient:
         self, active_queue: custom_types.ActiveMQTTMessageQueue
     ) -> None:
         with open(ACTIVE_QUEUE_FILE, "w") as f:
-            json.dump(f, active_queue.dict(), indent=4)
+            json.dump(active_queue.dict(), f, indent=4)
 
     # TODO: function to pick messages from the queue file and process them

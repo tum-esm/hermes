@@ -61,6 +61,7 @@ class Config(BaseModel):
     """The config.json for each sensor"""
 
     version: Literal["0.1.0"]
+    revision: int
     general: GeneralConfig
     mqtt: MQTTConfig
     valves: ValveConfig
@@ -68,4 +69,7 @@ class Config(BaseModel):
     # validators
     _val_version = validator("version", pre=True, allow_reuse=True)(
         validate_str(allowed=["0.1.0"]),
+    )
+    _val_revision = validator("revision", pre=True, allow_reuse=True)(
+        validate_int(minimum=0, maximum=2_147_483_648),
     )
