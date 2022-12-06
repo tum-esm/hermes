@@ -10,7 +10,7 @@ class MQTTMessageHeader(BaseModel):
     status: Literal["pending", "sent", "failed", "successful"]
     revision: int
     issue_timestamp: float  # 01.01.2022 - 19.01.2038 allowed (4 byte integer)
-    success_timestamp: float  # 01.01.2022 - 19.01.2038 allowed (4 byte integer)
+    success_timestamp: float | None  # 01.01.2022 - 19.01.2038 allowed (4 byte integer)
 
     # validators
     _val_identifier = validator("identifier", pre=True, allow_reuse=True)(

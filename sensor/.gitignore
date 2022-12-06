@@ -3,3 +3,5 @@ hidden/
 nohup.out
 logs/**/*
 !logs/**/.gitkeep
+data/**/*
+!data/**/.gitkeep
