@@ -55,9 +55,9 @@ jobs:
             - name: Run static type analysis
               run: |
                   source .venv/bin/activate
-                  bash scripts/repository/run_static_type_analysis.sh
+                  bash scripts/testing/check_static_types.sh
             - name: Run ci-pytests
               run: |
                   source .venv/bin/activate
-                  bash scripts/repository/run_ci_tests.sh
+                  bash scripts/testing/run_ci_tests.sh
                   coverage report
