@@ -18,7 +18,7 @@ class MeasurementProcedure:
     """
 
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(config, origin="measurements")
+        self.logger = utils.Logger(origin="measurements")
         self.config = config
 
         # valve switching

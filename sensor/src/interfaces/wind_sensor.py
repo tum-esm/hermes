@@ -21,7 +21,7 @@ class WindSensorInterface:
         low voltage or has not sent any data in a while"""
 
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(config, origin="co2-sensor")
+        self.logger = utils.Logger(origin="co2-sensor")
         self.config = config
 
         self.pin_factory = utils.gpio.get_pin_factory()

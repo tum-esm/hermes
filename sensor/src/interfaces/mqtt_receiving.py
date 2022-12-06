@@ -10,15 +10,14 @@ from src import custom_types, utils
 mqtt_message_queue = queue.Queue(maxsize=1024)  # type:ignore
 
 
-# print message, useful for checking if it was successful
 def on_message(client: Client, userdata: Any, msg: MQTTMessage) -> None:
     try:
         payload = json.loads(msg.payload.decode())
         mqtt_message_queue.put({"topic": msg.topic, "qos": msg.qos, "payload": payload})
     except json.JSONDecodeError:
-        # TODO: log (how to do this clean?)
-        # TODO: send warning message
-        pass
+        utils.Logger(origin="mqtt-receiver").warning(
+            f"could not decode message payload on message: {msg}"
+        )
 
 
 class ReceivingMQTTClient:

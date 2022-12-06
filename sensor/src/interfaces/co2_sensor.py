@@ -19,14 +19,12 @@ class CO2SensorInterface:
     class DeviceFailure(Exception):
         """raised when the CO2 probe "errs" command responds with an error"""
 
-    def __init__(
-        self, config: custom_types.Config, logger: utils.Logger | None = None
-    ) -> None:
+    def __init__(self, config: custom_types.Config) -> None:
+        self.logger = utils.Logger(origin="co2-sensor")
+        self.config = config
+
         self.rs232_interface = utils.serial_interfaces.SerialCO2SensorInterface(
             port=utils.Constants.CO2Sensor.serial_port
-        )
-        self.logger = (
-            logger if logger is not None else utils.Logger(config, origin="co2-sensor")
         )
         self.pin_factory = utils.gpio.get_pin_factory()
         self.power_pin = gpiozero.OutputDevice(

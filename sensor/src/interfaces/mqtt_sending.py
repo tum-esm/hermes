@@ -16,7 +16,7 @@ lock = multiprocessing.Lock()
 class SendingMQTTClient:
     def __init__(self, config: custom_types.Config) -> None:
         self.config = config
-        self.logger = utils.Logger(config, origin="sending-mqtt-client")
+        self.logger = utils.Logger(origin="mqtt-sender")
 
         # generate an empty queue file if the file does not exist
         with lock:

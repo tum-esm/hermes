@@ -2,11 +2,10 @@ import os
 import traceback
 from datetime import datetime, timedelta
 
-from src import custom_types
-
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
-LOGS_DIR = os.path.join(PROJECT_DIR, "logs")
+LOGS_ARCHIVE_DIR = os.path.join(PROJECT_DIR, "logs", "archive")
+LOG_FILE = os.path.join(PROJECT_DIR, "logs", "current-logs.log")
 
 # The logging module behaved very weird with the setup we have
 # therefore I am just formatting and appending the log lines
@@ -33,12 +32,10 @@ class Logger:
 
     def __init__(
         self,
-        config: custom_types.Config,
         origin: str = "insert-name-here",
         print_to_console: bool = False,
     ) -> None:
         self.origin: str = origin
-        self.log_file_slug: str = f"sensor-node-{config.general.station_name}"
         self.print_to_console = print_to_console
 
     def debug(self, message: str) -> None:
@@ -79,7 +76,7 @@ class Logger:
         if self.print_to_console:
             print(log_string, end="")
         else:
-            with open(os.path.join(LOGS_DIR, f"{self.log_file_slug}.log"), "a") as f1:
+            with open(LOG_FILE, "a") as f1:
                 f1.write(log_string)
 
             # Archive lines older than 60 minutes, every 10 minutes
@@ -94,7 +91,7 @@ class Logger:
         Log lines from the last hour will remain.
         """
 
-        with open(os.path.join(LOGS_DIR, f"{self.log_file_slug}.log"), "r") as f:
+        with open(LOG_FILE, "r") as f:
             log_lines_in_file = f.readlines()
         if len(log_lines_in_file) == 0:
             return
@@ -110,7 +107,7 @@ class Logger:
                 lines_to_be_kept = log_lines_in_file[index:]
                 break
 
-        with open(os.path.join(LOGS_DIR, f"{self.log_file_slug}.log"), "w") as f:
+        with open(LOG_FILE, "w") as f:
             f.writelines(lines_to_be_kept)
 
         if len(lines_to_be_archived) == 0:
@@ -126,9 +123,7 @@ class Logger:
             archive_log_date_groups[line_date].append(line)
 
         for date in archive_log_date_groups.keys():
-            filename = os.path.join(
-                LOGS_DIR, "archive", f"{self.log_file_slug}-{date}.log"
-            )
+            filename = os.path.join(LOGS_ARCHIVE_DIR, f"{date}.log")
             with open(filename, "a") as f:
                 f.writelines(archive_log_date_groups[date] + [""])
 

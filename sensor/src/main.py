@@ -25,10 +25,8 @@ def run() -> None:
     # TODO: if local config does not exist: fetch newest config
     #       from pinned topic messages and perform update
 
-    # TODO: do not use station name by logger
-
     config = interfaces.ConfigInterface.read()
-    logger = utils.Logger(config, origin="main")
+    logger = utils.Logger(origin="main")
     logger.info(f"starting mainloop with process ID {os.getpid()}")
 
     # TODO: mqtt_interface = interfaces.ReceivingMQTTClient(config)

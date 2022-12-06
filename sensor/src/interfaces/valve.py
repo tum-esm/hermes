@@ -6,7 +6,7 @@ import gpiozero
 
 class ValveInterface:
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(config, "valves")
+        self.logger = utils.Logger("valves")
         self.config = config
         self.pin_factory = utils.gpio.get_pin_factory()
 

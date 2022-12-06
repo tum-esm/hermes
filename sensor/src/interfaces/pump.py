@@ -13,7 +13,7 @@ class PumpInterface:
         by more than 15% from the desired rps"""
 
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(config, "pump")
+        self.logger = utils.Logger("pump")
         self.config = config
         self.pin_factory = utils.gpio.get_pin_factory()
 
@@ -85,7 +85,7 @@ class PumpInterface:
         """monitors the rps of the pump interface. this function
         is blocking, hence it is called in a thread"""
 
-        logger = utils.Logger(config, "pump-rps-monitoring")
+        logger = utils.Logger(origin="pump-rps-monitoring")
         current_rps_update_time = time.time()
         current_rps: float = 0
 

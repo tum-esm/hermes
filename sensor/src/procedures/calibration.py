@@ -5,7 +5,7 @@ class CalibrationProcedure:
     """runs when a calibration is due"""
 
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(config, origin="calibration")
+        self.logger = utils.Logger(origin="calibration")
         self.config = config
 
     def run(self) -> None:

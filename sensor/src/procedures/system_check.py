@@ -6,7 +6,7 @@ class SystemCheckProcedure:
     """runs every mainloop call"""
 
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(config, origin="system-checks")
+        self.logger = utils.Logger(origin="system-checks")
         self.config = config
         self.mainboard_sensor = interfaces.MainboardSensorInterface()
 

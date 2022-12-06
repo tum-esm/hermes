@@ -5,7 +5,7 @@ import gpiozero
 
 class UPSInterface:
     def __init__(self, config: custom_types.Config):
-        logger = utils.Logger(config, "ups")
+        logger = utils.Logger("ups")
         self.pin_factory = utils.gpio.get_pin_factory()
 
         # pin goes high if the system is powered by the UPS battery
@@ -31,6 +31,7 @@ class UPSInterface:
         def _on_battery_is_ready() -> None:
             if mode_input.is_active:
                 logger.error("battery voltage is under threshold")
+                # TODO: where to do a shutdown routine
             else:
                 logger.info("battery is fully charged")
 
