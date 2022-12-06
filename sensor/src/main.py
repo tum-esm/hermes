@@ -24,7 +24,7 @@ def run() -> None:
     logger = utils.Logger(config, origin="main")
     logger.info(f"starting mainloop with process ID {os.getpid()}")
 
-    # TODO: mqtt_interface = interfaces.MQTTInterface(config)
+    # TODO: mqtt_interface = interfaces.ReceivingMQTTClient(config)
     system_check_prodecure = procedures.SystemCheckProcedure(config)
     # TODO: init configuration-procedure instance
     # TODO: init calibration-procedure instance

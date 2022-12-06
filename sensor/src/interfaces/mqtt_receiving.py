@@ -20,7 +20,7 @@ def on_message(client: Client, userdata: Any, msg: MQTTMessage) -> None:
         pass
 
 
-class MQTTInterface:
+class ReceivingMQTTClient:
     def __init__(self, config: custom_types.Config) -> None:
         self.config = config
         self.client = Client(client_id=self.config.general.station_name)
