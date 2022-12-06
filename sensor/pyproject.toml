@@ -15,6 +15,7 @@ pigpio = "^1.78"
 gpiozero = "^1.6.2"
 rpi-bme280 = "^0.2.4"
 pydantic = "^1.10.2"
+python-dotenv = "^0.21.0"
 
 [tool.poetry.group.dev]
 optional = true

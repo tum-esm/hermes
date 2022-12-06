@@ -29,12 +29,17 @@ def run() -> None:
         logger.exception(e)
         return
 
-    # TODO: if local config does not exist: fetch newest config
-    #       from pinned topic messages and perform update
-    config = interfaces.ConfigInterface.read()
+    # TODO: init configuration-procedure instance
+
+    try:
+        config = interfaces.ConfigInterface.read()
+    except Exception as e:
+        logger.error("could not load local config.json")
+        logger.exception(e)
+        # TODO: fetch newest config from pinned topic messages
+        #       and perform configuration procedure
 
     system_check_prodecure = procedures.SystemCheckProcedure(config)
-    # TODO: init configuration-procedure instance
     # TODO: init calibration-procedure instance
     measurement_prodecure = procedures.MeasurementProcedure(config)
 
