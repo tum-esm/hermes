@@ -19,17 +19,20 @@ def run() -> None:
         * continue
     4. run measurement procedure
     """
-
-    # TODO: routine that loads the environment MQTT parameters
-
-    # TODO: if local config does not exist: fetch newest config
-    #       from pinned topic messages and perform update
-
-    config = interfaces.ConfigInterface.read()
     logger = utils.Logger(origin="main")
     logger.info(f"starting mainloop with process ID {os.getpid()}")
 
-    # TODO: mqtt_interface = interfaces.ReceivingMQTTClient(config)
+    try:
+        mqtt_receiver = interfaces.ReceivingMQTTClient()
+    except Exception as e:
+        logger.error("could not start mqtt receiver")
+        logger.exception(e)
+        return
+
+    # TODO: if local config does not exist: fetch newest config
+    #       from pinned topic messages and perform update
+    config = interfaces.ConfigInterface.read()
+
     system_check_prodecure = procedures.SystemCheckProcedure(config)
     # TODO: init configuration-procedure instance
     # TODO: init calibration-procedure instance
