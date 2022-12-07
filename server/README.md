@@ -42,7 +42,7 @@ The payloads are JSON encoded and have the following structure:
   "heartbeats": [
     {
       "revision": 0,
-      "timestamp": 0,
+      "timestamp": 0.0,
       "success": true // did the sensor successfully process the configuration?
     }
   ]
@@ -58,7 +58,7 @@ The payloads are JSON encoded and have the following structure:
     {
       "severity": "warning", // one of info, warning, error
       "revision": 0,
-      "timestamp": 0,
+      "timestamp": 0.0,
       "subject": "The CPU is burning",
       "details": "Please call the fire department" // optional parameter
     }
@@ -74,7 +74,7 @@ The payloads are JSON encoded and have the following structure:
   "measurements": [
     {
       "revision": 0,
-      "timestamp": 0,
+      "timestamp": 0.0,
       "value": {} // this can be any valid (unnested) JSON object
     }
   ]
