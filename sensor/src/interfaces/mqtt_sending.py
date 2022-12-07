@@ -69,6 +69,8 @@ class SendingMQTTClient:
     def _load_active_queue() -> custom_types.ActiveMQTTMessageQueue:
         with open(ACTIVE_QUEUE_FILE, "r") as f:
             active_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
+        # TODO: when active queue could not be loaded, move file to
+        #       "corrupt" directory and start a new active queue file
         return active_queue
 
     @staticmethod
@@ -85,13 +87,26 @@ class SendingMQTTClient:
         mqtt_client, mqtt_config = utils.mqtt.get_mqtt_client()
 
         while True:
-            # TODO: read active queue
-            # TODO: for each pending or failed message, send it and set it to sent
-            # TODO: for each sent message, check whether it has been successful
-            #       -> for each successful message, move it
-            #       -> for each failed message, move it
-            # TODO: write out new active queue
+            with lock:
+                active_queue = SendingMQTTClient._load_active_queue()
+            successful_messages = []
+            failed_messages = []
+            for message in active_queue.messages:
+                if message.header.status in ["pending", "failed"]:
+                    # TODO: send message
+                    pass
+                elif message.header.status == "sent":
+                    # TODO: if successful, move
+                    # TODO: if failed, set to "failed" and mark loop as "contains failed messages"
+                    pass
 
+            active_queue.messages = list(
+                filter(lambda m: m.header.status != "successful", active_queue.messages)
+            )
+            SendingMQTTClient._dump_active_queue(active_queue)
+
+            # TODO: log info about failed messages
+            # TODO: log info about successful messages
             # TODO: when any message could not be sent, wait with
             #       exponentially increasing times
             time.sleep(5)
