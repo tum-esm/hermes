@@ -1,7 +1,6 @@
 config.json
-hidden/
 nohup.out
-logs/**/*
-!logs/**/.gitkeep
-data/**/*
-!data/**/.gitkeep
+sensor/hidden/
+sensor/logs/
+sensor/data/
+!.gitkeep

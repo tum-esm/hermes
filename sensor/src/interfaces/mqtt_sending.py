@@ -1,3 +1,4 @@
+import datetime
 import json
 import time
 from typing import Literal
@@ -8,7 +9,7 @@ import multiprocessing
 import multiprocessing.synchronize
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
-ACTIVE_QUEUE_FILE = join(PROJECT_DIR, "data", "active-mqtt-queue.json")
+ACTIVE_QUEUE_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
 QUEUE_ARCHIVE_DIR = join(PROJECT_DIR, "data", "archive")
 
 lock = multiprocessing.Lock()
@@ -85,9 +86,37 @@ class SendingMQTTClient:
             custom_types.MQTTStatusMessage | custom_types.MQTTMeasurementMessage
         ],
     ) -> None:
+        modified_lists: dict[
+            str,
+            list[custom_types.MQTTStatusMessage | custom_types.MQTTMeasurementMessage],
+        ] = {}
+        filename_for_datestring = lambda date_string: join(
+            QUEUE_ARCHIVE_DIR, f"delivered-mqtt-messages-{date_string}.json"
+        )
+
         for m in messages:
-            pass
-            # TODO
+            date_string = datetime.datetime.fromtimestamp(
+                m.header.issue_timestamp
+            ).strftime("%Y-%m-%d")
+            if date_string not in modified_lists:
+                try:
+                    with open(filename_for_datestring(date_string), "r") as f:
+                        modified_lists[
+                            date_string
+                        ] = custom_types.ActiveMQTTMessageQueue(**json.load(f))
+                except FileNotFoundError:
+                    modified_lists[date_string] = []
+                # TODO: move corrupt files
+            modified_lists[date_string].append(m)
+
+        for date_string in modified_lists.keys():
+            modified_lists[date_string] = list(
+                sorted(
+                    modified_lists[date_string], key=lambda m: m.header.issue_timestamp
+                )
+            )
+            with open(filename_for_datestring(date_string), "w") as f:
+                json.dump(modified_lists[date_string], f, indent=4)
 
     @staticmethod
     def sending_loop(lock: multiprocessing.synchronize.Lock) -> None:
@@ -198,5 +227,5 @@ class SendingMQTTClient:
         # TODO: log how many messages were sent today
         pass
 
-    # TODO: function "add_for_message_sending" that blocks until the
+    # TODO: function "wait_for_message_sending" that blocks until the
     #       active queue is empty
