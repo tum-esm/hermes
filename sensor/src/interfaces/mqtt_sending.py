@@ -1,8 +1,6 @@
 import json
-from os.path import dirname, abspath, join, isfile
-import ssl
 import time
-from paho.mqtt.client import Client
+from os.path import dirname, abspath, join, isfile
 from src import custom_types, utils
 import multiprocessing
 import multiprocessing.synchronize
@@ -84,7 +82,7 @@ class SendingMQTTClient:
         logger = utils.Logger(origin="mqtt-sending-loop")
         logger.info("starting loop")
 
-        # TODO: init mqtt client
+        mqtt_client, mqtt_config = utils.mqtt.get_mqtt_client()
 
         while True:
             # TODO: read active queue
