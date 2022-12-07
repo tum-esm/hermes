@@ -74,15 +74,16 @@ class Client(aiomqtt.Client):
                     # Try to publish the configuration
                     await self.publish(
                         topic=f"{sensor_identifier}/configuration",
-                        payload=_encode_payload(configuration),
+                        payload=_encode_payload(
+                            {"revision": revision, "configuration": configuration}
+                        ),
                         qos=1,
                         retain=True,
                     )
                     # Try to set the publication timestamp in the database
                     await self.database_client.execute(query, *arguments)
                     logger.info(
-                        f"[MQTT] Published configuration #{revision} to:"
-                        f" {sensor_identifier}"
+                        f"[MQTT] Published configuration {sensor_identifier}#{revision}"
                     )
                     break
                 except Exception as e:
@@ -90,9 +91,9 @@ class Client(aiomqtt.Client):
                     # the sensor can ignore them based on the revision number.
                     # The revision number only increases, never decreases.
                     logger.warning(
-                        f"[MQTT] Failed to publish configuration #{revision} to"
-                        f" {sensor_identifier}, retrying in {backoff} seconds:"
-                        f" {repr(e)}"
+                        "[MQTT] Failed to publish configuration"
+                        f" {sensor_identifier}#{revision}, retrying in"
+                        f" {backoff} seconds: {repr(e)}"
                     )
                     # Backoff exponentially, up until about 5 minutes
                     if backoff < 256:
