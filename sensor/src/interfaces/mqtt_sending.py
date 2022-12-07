@@ -1,5 +1,6 @@
 import json
 import time
+from typing import Literal
 import paho.mqtt.client
 from os.path import dirname, abspath, join, isfile
 from src import custom_types, utils
@@ -63,7 +64,6 @@ class SendingMQTTClient:
                 )
 
             active_queue.messages.append(new_message)
-            active_queue.max_identifier += 1
             SendingMQTTClient._dump_active_queue(active_queue)
 
     @staticmethod
@@ -79,8 +79,15 @@ class SendingMQTTClient:
         with open(ACTIVE_QUEUE_FILE, "w") as f:
             json.dump(active_queue.dict(), f, indent=4)
 
-    # TODO: function "archive_successful_messages" that moves a list of
-    #       messages to the archive directory
+    @staticmethod
+    def _archive_delivered_message(
+        messages: list[
+            custom_types.MQTTStatusMessage | custom_types.MQTTMeasurementMessage
+        ],
+    ) -> None:
+        for m in messages:
+            pass
+            # TODO
 
     @staticmethod
     def sending_loop(lock: multiprocessing.synchronize.Lock) -> None:
@@ -98,53 +105,78 @@ class SendingMQTTClient:
         while True:
             with lock:
                 active_queue = SendingMQTTClient._load_active_queue()
-            sent_messages = []
-            resent_messages = []
-            successful_messages = []
+
+            processed_messages: dict[
+                Literal["sent", "resent", "delivered"],
+                list[
+                    custom_types.MQTTStatusMessage | custom_types.MQTTMeasurementMessage
+                ],
+            ] = {
+                "sent": [],
+                "resent": [],
+                "delivered": [],
+            }
+
             for message in active_queue.messages:
-                if message.header.status in ["pending", "failed"]:
+
+                if message.header.status == "pending":
                     message_info = mqtt_client.publish(
                         topic=f"{mqtt_config.base_topic}/measurements/{mqtt_config.identifier}",
-                        payload=[message.body.dict()],
+                        payload=json.dumps([message.body.dict()]),
                         qos=1,
                     )
                     message.header.identifier = message_info.mid
                     message.header.status = "sent"
                     current_messages[message.header.identifier] = message_info
-                    sent_messages.append(message)
+                    processed_messages["sent"].append(message)
 
                 elif message.header.status == "sent":
                     assert message.header.identifier is not None
-                    message_info = current_messages.get(message.header.identifier, None)
 
-                    if message_info is not None:
-                        if message_info.is_published():
-                            message.header.status = "successful"
+                    # normal behavior
+                    if message.header.identifier in current_messages:
+                        if current_messages[message.header.identifier].is_published():
+                            message.header.status = "delivered"
                             message.header.success_timestamp = time.time()
-                            successful_messages.append(message)
+                            processed_messages["delivered"].append(message)
                             del current_messages[message.header.identifier]
 
-                    # current_messages are lost when restarting the program
+                    # happens, when current_messages are lost due
+                    # to restarting the program
                     else:
                         message_info = mqtt_client.publish(
                             topic=f"{mqtt_config.base_topic}/measurements/{mqtt_config.identifier}",
-                            payload=[message.body.dict()],
+                            payload=json.dumps([message.body.dict()]),
                             qos=1,
                         )
                         message.header.identifier = message_info.mid
                         current_messages[message.header.identifier] = message_info
-                        resent_messages.append(message)
+                        processed_messages["resent"].append(message)
 
+            # remove successful message from active queue and save
+            # them in the archive directory; no lock needed because
+            # this is the only process that interacts with the archive
             active_queue.messages = list(
-                filter(lambda m: m.header.status != "successful", active_queue.messages)
+                filter(lambda m: m.header.status != "delivered", active_queue.messages)
             )
-            # TODO: move successful messages
+            SendingMQTTClient._archive_delivered_message(
+                processed_messages["delivered"]
+            )
 
-            SendingMQTTClient._dump_active_queue(active_queue)
+            with lock:
+                # add messages that have been added since calling
+                # "_load_active_queue" at the beginning of the loop
+                new_messages = list(
+                    filter(
+                        lambda m: m.header.status == "pending",
+                        SendingMQTTClient._load_active_queue().messages,
+                    )
+                )
+                active_queue.messages += new_messages
+                SendingMQTTClient._dump_active_queue(active_queue)
 
-            logger.info(f"{len(sent_messages)} message(s) have been sent")
-            logger.info(f"{len(resent_messages)} message(s) have been resent")
-            logger.info(f"{len(successful_messages)} message(s) have been delivered")
+            for key, value in processed_messages.items():
+                logger.info(f"{len(value)} message(s) have been {key}")
 
             # TODO: adjust wait time based on length of "current_messages"
             time.sleep(5)

@@ -36,7 +36,7 @@ class MQTTMessageHeader(BaseModel):
     """meta data for managing message queue"""
 
     identifier: int | None
-    status: Literal["pending", "sent", "failed", "successful"]
+    status: Literal["pending", "sent", "delivered"]
     revision: int
     issue_timestamp: float  # 01.01.2022 - 19.01.2038 allowed (4 byte integer)
     success_timestamp: float | None  # 01.01.2022 - 19.01.2038 allowed (4 byte integer)
@@ -46,7 +46,7 @@ class MQTTMessageHeader(BaseModel):
         validate_int(nullable=True),
     )
     _val_status = validator("status", pre=True, allow_reuse=True)(
-        validate_str(allowed=["pending", "sent", "failed", "successful"]),
+        validate_str(allowed=["pending", "sent", "delivered"]),
     )
     _val_revision = validator("revision", pre=True, allow_reuse=True)(
         validate_int(minimum=0, maximum=2_147_483_648),
