@@ -27,7 +27,7 @@ The payloads are JSON encoded and have the following structure:
 
 **`configurations/<sensor-identifier>`:**
 
-```json
+```javascript
 {
   "revision": 0,
   "configuration": {} // this can be any valid (unnested) JSON object
@@ -36,7 +36,7 @@ The payloads are JSON encoded and have the following structure:
 
 **`heartbeats/<sensor-identifier>`:**
 
-```json
+```javascript
 {
   // the array structure allows to batch messages
   "heartbeats": [
@@ -51,7 +51,7 @@ The payloads are JSON encoded and have the following structure:
 
 **`statuses/<sensor-identifier>`:**
 
-```json
+```javascript
 {
   // the array structure allows to batch messages
   "statuses": [
@@ -68,7 +68,7 @@ The payloads are JSON encoded and have the following structure:
 
 **`measurements/<sensor-identifier>`:**
 
-```json
+```javascript
 {
   // the array structure allows to batch messages
   "measurements": [
