@@ -39,9 +39,11 @@ class Status(_BaseModel):
     severity: typing.Literal["info", "warning", "error"]
     revision: Revision
     timestamp: Timestamp
+    # TODO Cut off the string at max length instead of rejecting it
     subject: pydantic.constr(
         strict=True, min_length=1, max_length=constants.Limit.LARGE - 1
     )
+    # TODO Cut off the string at max length instead of rejecting it
     details: pydantic.constr(
         strict=True, min_length=1, max_length=constants.Limit.LARGE - 1
     ) | None = None

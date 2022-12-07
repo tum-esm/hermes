@@ -13,10 +13,10 @@ async def app():
 
 
 @pytest.fixture(scope="session")
-async def client(app):
+async def http_client(app):
     """Provide a HTTPX AsyncClient that is properly closed after testing."""
-    async with httpx.AsyncClient(app=app, base_url="http://test") as client:
-        yield client
+    async with httpx.AsyncClient(app=app, base_url="http://test") as http_client:
+        yield http_client
 
 
 def returns(response, check):
@@ -35,9 +35,9 @@ def returns(response, check):
 
 
 @pytest.mark.anyio
-async def test_reading_status(client):
+async def test_reading_status(http_client):
     """Test reading the server status."""
-    response = await client.get("/status")
+    response = await http_client.get("/status")
     assert returns(response, 200)
     assert set(response.json().keys()) == {
         "environment",
@@ -53,9 +53,9 @@ async def test_reading_status(client):
 
 
 @pytest.mark.anyio
-async def test_creating_sensors(client, cleanup):
+async def test_creating_sensors(http_client, cleanup):
     """Test creating a sensor."""
-    response = await client.post(
+    response = await http_client.post(
         url="/sensors",
         json={"sensor_name": "rattata", "configuration": {}},
     )
@@ -63,14 +63,14 @@ async def test_creating_sensors(client, cleanup):
 
 
 @pytest.mark.anyio
-async def test_creating_sensors_with_duplicate(client, cleanup):
+async def test_creating_sensors_with_duplicate(http_client, cleanup):
     """Test creating a sensor that already exists."""
-    response = await client.post(
+    response = await http_client.post(
         url="/sensors",
         json={"sensor_name": "rattata", "configuration": {}},
     )
     assert returns(response, 201)
-    response = await client.post(
+    response = await http_client.post(
         url="/sensors",
         json={"sensor_name": "rattata", "configuration": {}},
     )
@@ -83,14 +83,14 @@ async def test_creating_sensors_with_duplicate(client, cleanup):
 
 
 @pytest.mark.anyio
-async def test_updating_sensors(client, cleanup):
+async def test_updating_sensors(http_client, cleanup):
     """Test updating a sensor."""
-    response = await client.post(
+    response = await http_client.post(
         url="/sensors",
         json={"sensor_name": "rattata", "configuration": {}},
     )
     assert returns(response, 201)
-    response = await client.put(
+    response = await http_client.put(
         url="/sensors/rattata",
         json={"sensor_name": "rattata", "configuration": {"int": 7}},
     )
@@ -98,9 +98,9 @@ async def test_updating_sensors(client, cleanup):
 
 
 @pytest.mark.anyio
-async def test_updating_sensors_with_not_exists(client, cleanup):
+async def test_updating_sensors_with_not_exists(http_client, cleanup):
     """Test updating a sensor that does not exist."""
-    response = await client.put(
+    response = await http_client.put(
         url="/sensors/rattata",
         json={"sensor_name": "rattata", "configuration": {}},
     )
@@ -108,19 +108,19 @@ async def test_updating_sensors_with_not_exists(client, cleanup):
 
 
 @pytest.mark.anyio
-async def test_updating_sensors_with_name_change(client, cleanup):
+async def test_updating_sensors_with_name_change(http_client, cleanup):
     """Test updating a sensor together with a name change."""
-    response = await client.post(
+    response = await http_client.post(
         url="/sensors",
         json={"sensor_name": "rattata", "configuration": {}},
     )
     assert returns(response, 201)
-    response = await client.put(
+    response = await http_client.put(
         url="/sensors/rattata",
         json={"sensor_name": "squirtle", "configuration": {}},
     )
     assert returns(response, 204)
-    response = await client.put(
+    response = await http_client.put(
         url="/sensors/squirtle",
         json={"sensor_name": "squirtle", "configuration": {}},
     )
@@ -138,16 +138,16 @@ async def test_updating_sensors_with_name_change(client, cleanup):
 
 
 @pytest.mark.anyio
-async def test_reading_sensors(client, cleanup):
+async def test_reading_sensors(http_client, cleanup):
     """Test reading sensors."""
-    response = await client.get("/sensors")
+    response = await http_client.get("/sensors")
     assert returns(response, 200)
 
 
 @pytest.mark.anyio
-async def test_reading_sensors_with_filters(client, cleanup):
+async def test_reading_sensors_with_filters(http_client, cleanup):
     """Test reading only specific sensors."""
-    response = await client.get("/sensors", params={"sensors": "pikachu,squirtle"})
+    response = await http_client.get("/sensors", params={"sensors": "pikachu,squirtle"})
     assert returns(response, 200)
 
 
@@ -160,7 +160,7 @@ async def test_reading_sensors_with_filters(client, cleanup):
 
 
 @pytest.mark.anyio
-async def test_reading_measurements(client, cleanup):
+async def test_reading_measurements(http_client, cleanup):
     """Test reading measurements."""
-    response = await client.get("/measurements")
+    response = await http_client.get("/measurements")
     assert returns(response, 200)

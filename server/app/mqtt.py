@@ -148,6 +148,9 @@ class Client(aiomqtt.Client):
                         },
                     )
                     await self.database_client.execute(query, *arguments)
+                logger.info(
+                    f"[MQTT] Processed heartbeat {heartbeat} from {sensor_identifier}"
+                )
             except Exception as e:
                 # TODO divide into more specific exceptions
                 logger.error(f"[MQTT] Unknown error: {repr(e)}")
@@ -173,6 +176,10 @@ class Client(aiomqtt.Client):
                 ],
             )
             await self.database_client.executemany(query, arguments)
+            logger.info(
+                f"[MQTT] Processed {len(message.statuses)} statuses from"
+                f" {sensor_identifier}"
+            )
         except Exception as e:
             # TODO divide into more specific exceptions
             logger.error(f"[MQTT] Unknown error: {repr(e)}")
@@ -196,6 +203,10 @@ class Client(aiomqtt.Client):
                 ],
             )
             await self.database_client.executemany(query, arguments)
+            logger.info(
+                f"[MQTT] Processed {len(message.measurements)} measurements from"
+                f" {sensor_identifier}"
+            )
         except Exception as e:
             # TODO divide into more specific exceptions
             logger.error(f"[MQTT] Unknown error: {repr(e)}")
