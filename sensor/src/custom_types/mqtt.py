@@ -35,7 +35,7 @@ class MQTTConfig(BaseModel):
 class MQTTMessageHeader(BaseModel):
     """meta data for managing message queue"""
 
-    identifier: int
+    identifier: int | None
     status: Literal["pending", "sent", "failed", "successful"]
     revision: int
     issue_timestamp: float  # 01.01.2022 - 19.01.2038 allowed (4 byte integer)
@@ -43,7 +43,7 @@ class MQTTMessageHeader(BaseModel):
 
     # validators
     _val_identifier = validator("identifier", pre=True, allow_reuse=True)(
-        validate_int(minimum=0),
+        validate_int(nullable=True),
     )
     _val_status = validator("status", pre=True, allow_reuse=True)(
         validate_str(allowed=["pending", "sent", "failed", "successful"]),
@@ -99,10 +99,4 @@ class MQTTMeasurementMessage(BaseModel):
 
 
 class ActiveMQTTMessageQueue(BaseModel):
-    max_identifier: int
     messages: list[MQTTStatusMessage | MQTTMeasurementMessage]
-
-    # validatorså
-    _val_max_identifier = validator("max_identifier", pre=True, allow_reuse=True)(
-        validate_int(minimum=0),
-    )

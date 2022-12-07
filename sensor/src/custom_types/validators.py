@@ -28,11 +28,17 @@ def validate_float(
 
 
 def validate_int(
+    nullable: bool = False,
     minimum: int | None = None,
     maximum: int | None = None,
     allowed: list[int] | None = None,
-) -> Callable[[Any, int], int]:
-    def f(cls: Any, v: int) -> int:
+) -> Callable[[Any, int | None], int | None]:
+    def f(cls: Any, v: int | None) -> int | None:
+        if v is None:
+            if nullable:
+                return v
+            else:
+                raise ValueError(f"value cannot be None")
         if not isinstance(v, int):
             raise ValueError(f'"{v}" is not an integer')
         if minimum is not None and v < minimum:

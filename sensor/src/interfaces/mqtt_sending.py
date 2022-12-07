@@ -1,5 +1,6 @@
 import json
 import time
+import paho.mqtt.client
 from os.path import dirname, abspath, join, isfile
 from src import custom_types, utils
 import multiprocessing
@@ -44,7 +45,7 @@ class SendingMQTTClient:
         with lock:
             active_queue = SendingMQTTClient._load_active_queue()
             new_header = custom_types.MQTTMessageHeader(
-                identifier=active_queue.max_identifier + 1,
+                identifier=None,
                 status="pending",
                 revision=self.config.revision,
                 issue_timestamp=time.time(),
@@ -86,19 +87,44 @@ class SendingMQTTClient:
 
         mqtt_client, mqtt_config = utils.mqtt.get_mqtt_client()
 
+        # this queue is necessary because paho-mqtt does not support
+        # a function that answers the question "has this message id
+        # been delivered successfully?"
+        current_messages: dict[int, paho.mqtt.client.MQTTMessageInfo] = {}
+
         while True:
             with lock:
                 active_queue = SendingMQTTClient._load_active_queue()
             successful_messages = []
-            failed_messages = []
+            resent_messages = []
             for message in active_queue.messages:
                 if message.header.status in ["pending", "failed"]:
-                    # TODO: send message
-                    pass
+                    message_info = mqtt_client.publish(
+                        topic=f"{mqtt_config.base_topic}/measurements/{mqtt_config.identifier}",
+                        payload=[message.body.dict()],
+                        qos=1,
+                    )
+                    message.header.identifier = message_info.mid
+                    message.header.status = "sent"
+                    current_messages[message.header.identifier] = message_info
                 elif message.header.status == "sent":
-                    # TODO: if successful, move
-                    # TODO: if failed, set to "failed" and mark loop as "contains failed messages"
-                    pass
+                    assert message.header.identifier is not None
+                    message_info = current_messages.get(message.header.identifier, None)
+                    if message_info is None:
+                        message_info = mqtt_client.publish(
+                            topic=f"{mqtt_config.base_topic}/measurements/{mqtt_config.identifier}",
+                            payload=[message.body.dict()],
+                            qos=1,
+                        )
+                        message.header.identifier = message_info.mid
+                        resent_messages.append(message)
+                        current_messages[message.header.identifier] = message_info
+                    else:
+                        if message_info.is_published():
+                            message.header.status = "successful"
+                            message.header.success_timestamp = time.time()
+                            successful_messages.append(message)
+                            del current_messages[message.header.identifier]
 
             active_queue.messages = list(
                 filter(lambda m: m.header.status != "successful", active_queue.messages)
