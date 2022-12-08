@@ -65,4 +65,3 @@ jobs:
               run: |
                   source .venv/bin/activate
                   bash scripts/testing/run_ci_tests.sh
-                  coverage report
