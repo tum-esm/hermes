@@ -57,6 +57,11 @@ jobs:
                   source .venv/bin/activate
                   bash scripts/testing/check_static_types.sh
             - name: Run ci-pytests
+              env:
+                  INSERT_NAME_HERE_MQTT_URL: ${{ secrets.INSERT_NAME_HERE_MQTT_URL }}
+                  INSERT_NAME_HERE_MQTT_PORT: ${{ secrets.INSERT_NAME_HERE_MQTT_PORT }}
+                  INSERT_NAME_HERE_MQTT_USERNAME: ${{ secrets.INSERT_NAME_HERE_MQTT_USERNAME }}
+                  INSERT_NAME_HERE_MQTT_PASSWORD: ${{ secrets.INSERT_NAME_HERE_MQTT_PASSWORD }}
               run: |
                   source .venv/bin/activate
                   bash scripts/testing/run_ci_tests.sh
