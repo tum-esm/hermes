@@ -1,4 +1,6 @@
 import os
+
+import pytest
 from fixtures import mqtt_client_environment
 from os.path import dirname, abspath
 import sys
@@ -9,6 +11,7 @@ sys.path.append(PROJECT_DIR)
 from src import utils
 
 
+@pytest.mark.ci
 def test_mqtt_receiving(mqtt_client_environment) -> None:
     mqtt_client, mqtt_config = utils.mqtt.get_mqtt_client()
 
