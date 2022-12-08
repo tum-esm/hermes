@@ -57,6 +57,7 @@ def validate_str(
     max_len: float | None = None,
     allowed: list[str] | None = None,
     regex: str | None = None,
+    is_numeric: bool = False,
 ) -> Callable[[Any, str], str]:
     def f(cls: Any, v: str) -> str:
         if not isinstance(v, str):
@@ -69,6 +70,8 @@ def validate_str(
             raise ValueError(f'"{v}" is not a allowed (not one of {allowed})')
         if regex is not None and re.compile(regex).match(v) is None:
             raise ValueError(f'"{v}" does not match the regex "{regex}"')
+        if is_numeric and not v.isnumeric():
+            raise ValueError(f'"{v}" is not numeric')
         return v
 
     return f

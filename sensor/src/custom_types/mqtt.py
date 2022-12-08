@@ -10,7 +10,7 @@ class MQTTConfig(BaseModel):
 
     station_identifier: str
     mqtt_url: str
-    mqtt_port: int
+    mqtt_port: str
     mqtt_username: str
     mqtt_password: str
     mqtt_base_topic: str
@@ -25,7 +25,7 @@ class MQTTConfig(BaseModel):
         validate_str(min_len=3, max_len=256),
     )
     _val_mqtt_port = validator("mqtt_port", pre=True, allow_reuse=True)(
-        validate_int(minimum=0),
+        validate_str(is_numeric=True),
     )
     _val_mqtt_username = validator("mqtt_username", pre=True, allow_reuse=True)(
         validate_str(min_len=8, max_len=256),
