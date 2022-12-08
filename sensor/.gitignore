@@ -5,3 +5,5 @@ sensor/logs/
 sensor/data/
 !.gitkeep
 mosquitto-config.conf
+mosquitto-passwords.txt
+.env.testing
