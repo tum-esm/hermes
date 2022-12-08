@@ -4,3 +4,4 @@ sensor/hidden/
 sensor/logs/
 sensor/data/
 !.gitkeep
+mosquitto-config.conf
