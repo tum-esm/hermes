@@ -81,6 +81,7 @@ class MQTTStatusMessageBody(BaseModel):
 class MQTTMeasurementMessageBody(BaseModel):
     """message body which is sent to server"""
 
+    timestamp: int
     value: CO2SensorData
 
 

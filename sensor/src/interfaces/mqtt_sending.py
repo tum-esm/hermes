@@ -18,20 +18,19 @@ lock = multiprocessing.Lock()
 class SendingMQTTClient:
     sending_loop_process: multiprocessing.Process | None = None
 
-    def __init__(self, config: custom_types.Config) -> None:
-        self.config = config
-        self.logger = utils.Logger(origin="mqtt-sender")
-
+    @staticmethod
+    def init_sending_loop_process() -> None:
         # generate an empty queue file if the file does not exist
         with lock:
             if not isfile(ACTIVE_QUEUE_FILE):
-                self._dump_active_queue(
+                SendingMQTTClient._dump_active_queue(
                     custom_types.ActiveMQTTMessageQueue(
                         max_identifier=0,
                         messages=[],
                     )
                 )
 
+        # start the processing of messages in that sending queue
         if SendingMQTTClient.sending_loop_process is None:
             new_process = multiprocessing.Process(
                 target=SendingMQTTClient.sending_loop, args=(lock,)
@@ -39,17 +38,23 @@ class SendingMQTTClient:
             new_process.start()
             SendingMQTTClient.sending_loop_process = new_process
 
+    @staticmethod
     def enqueue_message(
-        self,
+        config: custom_types.Config,
         message_body: custom_types.MQTTMessageBody,
     ) -> None:
+        assert (
+            SendingMQTTClient.sending_loop_process is not None
+        ), "sending loop process has not been initialized"
+
+        now = time.time()
         with lock:
             active_queue = SendingMQTTClient._load_active_queue()
             new_header = custom_types.MQTTMessageHeader(
                 identifier=None,
                 status="pending",
-                revision=self.config.revision,
-                issue_timestamp=time.time(),
+                revision=config.revision,
+                issue_timestamp=now,
                 success_timestamp=None,
             )
             new_message: custom_types.MQTTMessage
@@ -143,6 +148,7 @@ class SendingMQTTClient:
             for message in active_queue.messages:
 
                 if message.header.status == "pending":
+                    # TODO: adjust message format to server spec (revision, etc.)
                     message_info = mqtt_client.publish(
                         topic=f"{mqtt_config.base_topic}/measurements/{mqtt_config.identifier}",
                         payload=json.dumps([message.body.dict()]),
@@ -167,11 +173,13 @@ class SendingMQTTClient:
                     # happens, when current_messages are lost due
                     # to restarting the program
                     else:
+                        # TODO: adjust message format to server spec (revision, etc.)
                         message_info = mqtt_client.publish(
                             topic=f"{mqtt_config.base_topic}/measurements/{mqtt_config.identifier}",
                             payload=json.dumps([message.body.dict()]),
                             qos=1,
                         )
+                        # TODO: mid might not be unique (tell felix about it)
                         message.header.identifier = message_info.mid
                         current_messages[message.header.identifier] = message_info
                         processed_messages["resent"].append(message)
