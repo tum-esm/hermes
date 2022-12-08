@@ -2,6 +2,7 @@ import os
 import pytest
 import subprocess
 import dotenv
+import psutil
 from os.path import dirname, abspath, join, isfile
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
@@ -24,38 +25,45 @@ MOSQUITTO_PASSWORD_FILE_PATH = join(
 )
 
 
-@pytest.fixture(scope="session")
-def provide_mqtt_broker():
-    # generate mosquitto config file
+def run_process(command: list[str]) -> None:
+    p = subprocess.run(
+        command,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
+    if p.returncode != 0:
+        raise Exception(
+            "could not generate password file: "
+            + f'stdout = "{p.stdout}", '
+            + f'stderr = "{p.stderr}"'
+        )
+
+
+def generate_mosquitto_config_file() -> None:
     with open(MOSQUITTO_CONFIG_PATH, "w") as f:
         f.write(
             f"allow_anonymous false\npassword_file {MOSQUITTO_PASSWORD_FILE_PATH}",
         )
 
+
+def generate_mosquitto_password_file() -> None:
     # remove old password file
     if isfile(MOSQUITTO_PASSWORD_FILE_PATH):
         os.remove(MOSQUITTO_PASSWORD_FILE_PATH)
-
-    # generate new password file
-    password_process = subprocess.run(
+    run_process(
         [
             "mosquitto_passwd",
+            "-b",
+            "-c",
             MOSQUITTO_PASSWORD_FILE_PATH,
             "test_user",
             "test_password",
-        ],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
+        ]
     )
-    if password_process.returncode != 0:
-        raise Exception(
-            "could not generate password file: "
-            + f'stdout = "{start_process.stdout}", '
-            + f'stderr = "{start_process.stderr}"'
-        )
 
-    # start mosquitto background process
-    start_process = subprocess.run(
+
+def start_mosquitto_background_process() -> None:
+    run_process(
         [
             "mosquitto",
             "-p",
@@ -63,16 +71,28 @@ def provide_mqtt_broker():
             "--daemon",
             "-c",
             MOSQUITTO_CONFIG_PATH,
-        ],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
+        ]
     )
-    if start_process.returncode != 0:
-        raise Exception(
-            "could not start mosquitto broker: "
-            + f'stdout = "{start_process.stdout}", '
-            + f'stderr = "{start_process.stderr}"'
-        )
+
+
+def stop_mosquitto_background_process() -> None:
+    killed_process_count = 0
+    for p in psutil.process_iter():
+        try:
+            if "mosquitto" in p.exe():
+                p.kill()
+                print(f"killed process with PID {p.pid}")
+                killed_process_count += 1
+        except:
+            pass
+    assert killed_process_count == 1, "killed no or more than two mosquitto processes"
+
+
+@pytest.fixture(scope="session")
+def provide_mqtt_broker():
+    generate_mosquitto_config_file()
+    generate_mosquitto_password_file()
+    start_mosquitto_background_process()
 
     # load testing environment variables
     # used by all clients in code
@@ -80,17 +100,4 @@ def provide_mqtt_broker():
 
     yield
 
-    stop_process = subprocess.run(
-        [
-            "pkill",
-            "mosquitto",
-        ],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-    )
-    if stop_process.returncode != 0:
-        raise Exception(
-            "could not stop mosquitto broker: "
-            + f'stdout = "{start_process.stdout}", '
-            + f'stderr = "{start_process.stderr}"'
-        )
+    stop_mosquitto_background_process()
