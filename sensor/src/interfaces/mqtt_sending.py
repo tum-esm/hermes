@@ -150,7 +150,7 @@ class SendingMQTTClient:
                 if message.header.status == "pending":
                     # TODO: adjust message format to server spec (revision, etc.)
                     message_info = mqtt_client.publish(
-                        topic=f"{mqtt_config.base_topic}/measurements/{mqtt_config.identifier}",
+                        topic=f"{mqtt_config.mqtt_base_topic}/measurements/{mqtt_config.station_identifier}",
                         payload=json.dumps([message.body.dict()]),
                         qos=1,
                     )
@@ -175,7 +175,7 @@ class SendingMQTTClient:
                     else:
                         # TODO: adjust message format to server spec (revision, etc.)
                         message_info = mqtt_client.publish(
-                            topic=f"{mqtt_config.base_topic}/measurements/{mqtt_config.identifier}",
+                            topic=f"{mqtt_config.mqtt_base_topic}/measurements/{mqtt_config.station_identifier}",
                             payload=json.dumps([message.body.dict()]),
                             qos=1,
                         )

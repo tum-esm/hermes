@@ -8,26 +8,32 @@ from .sensor_answers import CO2SensorData
 class MQTTConfig(BaseModel):
     """fixed params loaded from the environment"""
 
-    url: str
-    port: int
-    identifier: str
-    password: str
-    base_topic: str
+    station_identifier: str
+    mqtt_url: str
+    mqtt_port: int
+    mqtt_username: str
+    mqtt_password: str
+    mqtt_base_topic: str
 
     # validators
-    _val_url = validator("url", pre=True, allow_reuse=True)(
+    _val_station_identifier = validator(
+        "station_identifier", pre=True, allow_reuse=True
+    )(
         validate_str(min_len=3, max_len=256),
     )
-    _val_port = validator("port", pre=True, allow_reuse=True)(
+    _val_mqtt_url = validator("mqtt_url", pre=True, allow_reuse=True)(
+        validate_str(min_len=3, max_len=256),
+    )
+    _val_mqtt_port = validator("mqtt_port", pre=True, allow_reuse=True)(
         validate_int(minimum=0),
     )
-    _val_identifier = validator("identifier", pre=True, allow_reuse=True)(
-        validate_str(min_len=3, max_len=256),
-    )
-    _val_password = validator("password", pre=True, allow_reuse=True)(
+    _val_mqtt_username = validator("mqtt_username", pre=True, allow_reuse=True)(
         validate_str(min_len=8, max_len=256),
     )
-    _val_base_topic = validator("base_topic", pre=True, allow_reuse=True)(
+    _val_mqtt_password = validator("mqtt_password", pre=True, allow_reuse=True)(
+        validate_str(min_len=8, max_len=256),
+    )
+    _val_mqtt_base_topic = validator("mqtt_base_topic", pre=True, allow_reuse=True)(
         validate_str(min_len=1, max_len=256, regex=r"^(\/[a-z0-9_-]+)*$"),
     )
 

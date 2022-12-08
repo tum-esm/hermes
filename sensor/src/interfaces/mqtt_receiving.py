@@ -27,7 +27,8 @@ class ReceivingMQTTClient:
         self.mqtt_client, self.mqtt_config = utils.mqtt.get_mqtt_client()
         self.mqtt_client.on_message = on_message
         self.mqtt_client.subscribe(
-            self.mqtt_config.base_topic + "/initial-setup-test",
+            f"{self.mqtt_config.mqtt_base_topic}/configuration/"
+            + f"{self.mqtt_config.station_identifier}"
         )
         self.mqtt_client.loop_start()
 
