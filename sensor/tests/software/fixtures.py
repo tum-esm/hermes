@@ -1,11 +1,27 @@
 import os
 import pytest
 import subprocess
+import dotenv
 from os.path import dirname, abspath, join, isfile
 
-PARENT_DIR = dirname(abspath(__file__))
-MOSQUITTO_CONFIG_PATH = join(PARENT_DIR, "mosquitto-config.conf")
-MOSQUITTO_PASSWORD_FILE_PATH = join(PARENT_DIR, "mosquitto-passwords.txt")
+PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
+MQTT_ENV_VARS_PATH = join(
+    PROJECT_DIR,
+    "config",
+    ".env.testing",
+)
+MOSQUITTO_CONFIG_PATH = join(
+    PROJECT_DIR,
+    "tests",
+    "software",
+    "mosquitto-config.conf",
+)
+MOSQUITTO_PASSWORD_FILE_PATH = join(
+    PROJECT_DIR,
+    "tests",
+    "software",
+    "mosquitto-passwords.txt",
+)
 
 
 @pytest.fixture(scope="session")
@@ -58,7 +74,9 @@ def provide_mqtt_broker():
             + f'stderr = "{start_process.stderr}"'
         )
 
-    # TODO: load test env file
+    # load testing environment variables
+    # used by all clients in code
+    dotenv.load_dotenv(MQTT_ENV_VARS_PATH)
 
     yield
 
