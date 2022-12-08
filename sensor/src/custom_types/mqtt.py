@@ -100,3 +100,7 @@ class MQTTMeasurementMessage(BaseModel):
 
 class ActiveMQTTMessageQueue(BaseModel):
     messages: list[MQTTStatusMessage | MQTTMeasurementMessage]
+
+
+MQTTMessageBody = MQTTStatusMessageBody | MQTTMeasurementMessageBody
+MQTTMessage = MQTTStatusMessage | MQTTMeasurementMessage

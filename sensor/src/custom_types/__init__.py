@@ -7,6 +7,8 @@ from .sensor_answers import (
 )
 from .mqtt import (
     MQTTConfig,
+    MQTTMessage,
+    MQTTMessageBody,
     MQTTMessageHeader,
     MQTTStatusMessageBody,
     MQTTMeasurementMessageBody,

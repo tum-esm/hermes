@@ -1,7 +1,7 @@
 import datetime
 import json
 import time
-from typing import Literal
+from typing import Callable, Literal
 import paho.mqtt.client
 from os.path import dirname, abspath, join, isfile
 from src import custom_types, utils
@@ -41,8 +41,7 @@ class SendingMQTTClient:
 
     def enqueue_message(
         self,
-        message_body: custom_types.MQTTStatusMessageBody
-        | custom_types.MQTTMeasurementMessageBody,
+        message_body: custom_types.MQTTMessageBody,
     ) -> None:
         with lock:
             active_queue = SendingMQTTClient._load_active_queue()
@@ -53,7 +52,7 @@ class SendingMQTTClient:
                 issue_timestamp=time.time(),
                 success_timestamp=None,
             )
-            new_message: custom_types.MQTTStatusMessage | custom_types.MQTTMeasurementMessage
+            new_message: custom_types.MQTTMessage
 
             if isinstance(message_body, custom_types.MQTTStatusMessageBody):
                 new_message = custom_types.MQTTStatusMessage(
@@ -82,15 +81,10 @@ class SendingMQTTClient:
 
     @staticmethod
     def _archive_delivered_message(
-        messages: list[
-            custom_types.MQTTStatusMessage | custom_types.MQTTMeasurementMessage
-        ],
+        messages: list[custom_types.MQTTMessage],
     ) -> None:
-        modified_lists: dict[
-            str,
-            list[custom_types.MQTTStatusMessage | custom_types.MQTTMeasurementMessage],
-        ] = {}
-        filename_for_datestring = lambda date_string: join(
+        modified_lists: dict[str, list[custom_types.MQTTMessage]] = {}
+        filename_for_datestring: Callable[[str], str] = lambda date_string: join(
             QUEUE_ARCHIVE_DIR, f"delivered-mqtt-messages-{date_string}.json"
         )
 
@@ -103,7 +97,9 @@ class SendingMQTTClient:
                     with open(filename_for_datestring(date_string), "r") as f:
                         modified_lists[
                             date_string
-                        ] = custom_types.ActiveMQTTMessageQueue(**json.load(f))
+                        ] = custom_types.ActiveMQTTMessageQueue(
+                            messages=json.load(f)
+                        ).messages
                 except FileNotFoundError:
                     modified_lists[date_string] = []
                 # TODO: move corrupt files
@@ -137,9 +133,7 @@ class SendingMQTTClient:
 
             processed_messages: dict[
                 Literal["sent", "resent", "delivered"],
-                list[
-                    custom_types.MQTTStatusMessage | custom_types.MQTTMeasurementMessage
-                ],
+                list[custom_types.MQTTMessage],
             ] = {
                 "sent": [],
                 "resent": [],
