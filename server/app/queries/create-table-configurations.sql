@@ -5,8 +5,7 @@ CREATE TABLE IF NOT EXISTS configurations (
     publication_timestamp TIMESTAMPTZ,
     acknowledgement_timestamp TIMESTAMPTZ,
     ack_reception_timestamp TIMESTAMPTZ,
-    successful BOOLEAN,
-
+    success BOOLEAN,
 
     -- Add more pre-defined values here (needed if we want to visualize them in the dashboard)
     -- Something like: lat/long, notes, version commit hash -> most should still be nullable
@@ -15,9 +14,11 @@ CREATE TABLE IF NOT EXISTS configurations (
 
     configuration JSONB NOT NULL,
 
-    PRIMARY KEY (sensor_identifier, revision),
     FOREIGN KEY (sensor_identifier) REFERENCES sensors (sensor_identifier) ON DELETE CASCADE
 );
+
+-- Defining the primary key like this makes the query to get the latest revision faster
+CREATE UNIQUE INDEX IF NOT EXISTS sensor_identifier_revision_index ON configurations (sensor_identifier ASC, revision DESC);
 
 -- Check if CREATE returns saying that table already exists
 -- Check if schema is equal, if not, error out (own .sql file as jinja template)
