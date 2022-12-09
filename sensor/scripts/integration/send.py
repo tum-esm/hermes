@@ -24,7 +24,7 @@ mqtt_client, mqtt_config = utils.mqtt.get_mqtt_client()
 i = 0
 while True:
     mqtt_client.publish(
-        mqtt_config.mqtt_base_topic + "/initial-setup-test",
+        mqtt_config.mqtt_base_topic + "/incrementor-test",
         json.dumps({"type": "text", "body": f"iteration {i}"}),
         qos=1,
     )

@@ -5,10 +5,8 @@ import ssl
 from src import custom_types
 
 
-def get_mqtt_client(
-    timeout_seconds: float = 5,
-) -> tuple[paho.mqtt.client.Client, custom_types.MQTTConfig]:
-    mqtt_config = custom_types.MQTTConfig(
+def get_mqtt_config() -> custom_types.MQTTConfig:
+    return custom_types.MQTTConfig(
         station_identifier=os.environ.get("INSERT_NAME_HERE_STATION_IDENTIFIER"),
         mqtt_url=os.environ.get("INSERT_NAME_HERE_MQTT_URL"),
         mqtt_port=os.environ.get("INSERT_NAME_HERE_MQTT_PORT"),
@@ -16,6 +14,12 @@ def get_mqtt_client(
         mqtt_password=os.environ.get("INSERT_NAME_HERE_MQTT_PASSWORD"),
         mqtt_base_topic=os.environ.get("INSERT_NAME_HERE_MQTT_BASE_TOPIC"),
     )
+
+
+def get_mqtt_client(
+    timeout_seconds: float = 5,
+) -> tuple[paho.mqtt.client.Client, custom_types.MQTTConfig]:
+    mqtt_config = get_mqtt_config()
 
     mqtt_client = paho.mqtt.client.Client(client_id=mqtt_config.station_identifier)
     mqtt_client.username_pw_set(mqtt_config.mqtt_username, mqtt_config.mqtt_password)

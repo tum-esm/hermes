@@ -41,6 +41,8 @@ def mqtt_client_environment():
 
     yield
 
+    # TODO: provide mqtt client
+
 
 @pytest.fixture(scope="session")
 def log_files():

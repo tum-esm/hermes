@@ -5,31 +5,29 @@ import paho.mqtt.client
 from src import utils
 
 # TODO: statically type config messages
-mqtt_message_queue = queue.Queue(maxsize=1024)  # type:ignore
+mqtt_message_queue: queue.Queue[dict[Any]] = queue.Queue(maxsize=1024)  # type:ignore
 
 
-def get_message_callback(queue: queue.Queue) -> Any:
-    def on_message(
-        client: paho.mqtt.client.Client,
-        userdata: Any,
-        msg: paho.mqtt.client.MQTTMessage,
-    ) -> None:
-        logger = utils.Logger(origin="mqtt-receiving-loop")
-        logger.debug(f"received message: {msg}")
-        try:
-            # payload = json.loads(msg.payload.decode())
-            queue.put(msg)
-        except json.JSONDecodeError:
-            logger.warning(f"could not decode message payload on message: {msg}")
-
-    return on_message
+def on_message(
+    client: paho.mqtt.client.Client,
+    userdata: Any,
+    msg: paho.mqtt.client.MQTTMessage,
+) -> None:
+    global mqtt_message_queue
+    logger = utils.Logger(origin="mqtt-receiving-loop")
+    logger.debug(f"received message: {msg}")
+    try:
+        payload = json.loads(msg.payload.decode())
+        mqtt_message_queue.put({"topic": msg.topic, "payload": payload})
+    except json.JSONDecodeError:
+        logger.warning(f"could not decode message payload on message: {msg}")
 
 
 class ReceivingMQTTClient:
     def __init__(self) -> None:
         logger = utils.Logger(origin="mqtt-receiving-client")
         self.mqtt_client, self.mqtt_config = utils.mqtt.get_mqtt_client()
-        self.mqtt_client.on_message = get_message_callback(queue)
+        self.mqtt_client.on_message = on_message
         config_topic = f"{self.mqtt_config.mqtt_base_topic}/configuration/{self.mqtt_config.station_identifier}"
 
         logger.info(f"subscribing to topic {config_topic}")
@@ -38,10 +36,9 @@ class ReceivingMQTTClient:
             + f"{self.mqtt_config.station_identifier}"
         )
 
-        logger.info(f"starting receiving loop")
-        self.mqtt_client.loop_start()
-
     def get_messages(self) -> list[Any]:
+        global mqtt_message_queue
+
         new_messages = []
         while True:
             try:
