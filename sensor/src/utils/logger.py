@@ -1,11 +1,10 @@
-import os
+from os.path import dirname, abspath, join
 import traceback
 from datetime import datetime, timedelta
 
-dir = os.path.dirname
-PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
-LOGS_ARCHIVE_DIR = os.path.join(PROJECT_DIR, "logs", "archive")
-LOG_FILE = os.path.join(PROJECT_DIR, "logs", "current-logs.log")
+PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
+LOGS_ARCHIVE_DIR = join(PROJECT_DIR, "logs", "archive")
+LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
 
 # The logging module behaved very weird with the setup we have
 # therefore I am just formatting and appending the log lines
@@ -123,7 +122,7 @@ class Logger:
             archive_log_date_groups[line_date].append(line)
 
         for date in archive_log_date_groups.keys():
-            filename = os.path.join(LOGS_ARCHIVE_DIR, f"{date}.log")
+            filename = join(LOGS_ARCHIVE_DIR, f"{date}.log")
             with open(filename, "a") as f:
                 f.writelines(archive_log_date_groups[date] + [""])
 
