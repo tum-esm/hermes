@@ -1,10 +1,13 @@
 import os
+import time
 import paho.mqtt.client
 import ssl
 from src import custom_types
 
 
-def get_mqtt_client() -> tuple[paho.mqtt.client.Client, custom_types.MQTTConfig]:
+def get_mqtt_client(
+    timeout_seconds: float = 5,
+) -> tuple[paho.mqtt.client.Client, custom_types.MQTTConfig]:
     mqtt_config = custom_types.MQTTConfig(
         station_identifier=os.environ.get("INSERT_NAME_HERE_STATION_IDENTIFIER"),
         mqtt_url=os.environ.get("INSERT_NAME_HERE_MQTT_URL"),
@@ -25,5 +28,16 @@ def get_mqtt_client() -> tuple[paho.mqtt.client.Client, custom_types.MQTTConfig]
     mqtt_client.connect(
         mqtt_config.mqtt_url, port=int(mqtt_config.mqtt_port), keepalive=60
     )
+    mqtt_client.loop_start()
+
+    start_time = time.time()
+    while True:
+        if mqtt_client.is_connected():
+            break
+        if (time.time() - start_time) > timeout_seconds:
+            raise TimeoutError(
+                f"mqtt client is not connected (using params {mqtt_config})"
+            )
+        time.sleep(0.1)
 
     return mqtt_client, mqtt_config
