@@ -8,3 +8,6 @@ CREATE TABLE IF NOT EXISTS measurements (
 
     FOREIGN KEY (sensor_identifier) REFERENCES sensors (sensor_identifier) ON DELETE CASCADE
 );
+
+SELECT create_hypertable('measurements', 'creation_timestamp', if_not_exists => TRUE);
+CREATE INDEX IF NOT EXISTS sensor_identifier_creation_timestamp_index ON measurements (sensor_identifier ASC, creation_timestamp DESC);
