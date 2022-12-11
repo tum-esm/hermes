@@ -89,6 +89,13 @@ class Client:
             encoder=json.dumps,
             decoder=json.loads,
         )
+        # Automatically encode/decode UUID fields to/from str
+        await self.connection.set_type_codec(
+            typename="uuid",
+            schema="pg_catalog",
+            encoder=str,
+            decoder=str,
+        )
         return self.connection
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
