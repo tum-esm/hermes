@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+# Change into the project's directory
+cd "$(dirname "$0")/.."
+
+# Initialize the database
+poetry run python -c '''
+
+import asyncio
+import asyncpg
+import os
+
+import app.database
+
+
+async def initialize():
+    connection = await asyncpg.connect(
+        host=os.environ["POSTGRESQL_URL"],
+        user=os.environ["POSTGRESQL_IDENTIFIER"],
+        password=os.environ["POSTGRESQL_PASSWORD"],
+        database=os.environ["POSTGRESQL_DATABASE"],
+    )
+    statements = app.database.extract("app/schema.sql")
+    for statement in statements:
+        await connection.execute(statement)
+
+
+asyncio.run(initialize())
+
+'''

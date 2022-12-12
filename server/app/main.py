@@ -217,10 +217,9 @@ async def lifespan(app):
     global database_client
     global mqtt_client
     async with database.Client() as x:
-        database_client = x
-        # Create database tables if they don't exist yet
-        await database.setup(database_client)
         async with mqtt.Client(database_client) as y:
+            # Make clients globally available
+            database_client = x
             mqtt_client = y
             # Start MQTT listener in (unawaited) asyncio task
             loop = asyncio.get_event_loop()

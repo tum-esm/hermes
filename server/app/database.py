@@ -13,6 +13,12 @@ templates = jinja2.Environment(
 )
 
 
+def extract(path):
+    """Extract the individual SQL statements from a file that contains multiple."""
+    with open(path) as file:
+        return file.read().split("\n\n\n")
+
+
 def dictify(result: typing.Sequence[asyncpg.Record]) -> list[dict]:
     """Cast a database SELECT result into a list of dictionaries."""
     return [dict(record) for record in result]
@@ -56,17 +62,6 @@ def build(
         else [tuple(x[key] for key in keys) for x in query_arguments]
     )
     return query, arguments  # type: ignore
-
-
-async def setup(database_client: asyncpg.Connection) -> None:
-    """Create tables, and error out if existing tables don't match the schema."""
-    await database_client.execute(templates.get_template("initialize.sql").render())
-    tables = ["sensors", "configurations", "measurements"]
-    for table in tables:
-        await database_client.execute(
-            templates.get_template(f"create-table-{table}.sql").render()
-        )
-    # TODO Error out if existing tables don't match the schema
 
 
 class Client:
