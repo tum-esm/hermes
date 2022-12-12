@@ -23,7 +23,7 @@ async def initialize():
         password=os.environ["POSTGRESQL_PASSWORD"],
         database=os.environ["POSTGRESQL_DATABASE"],
     )
-    statements = app.database.extract("app/schema.sql")
+    statements = app.database.extract("schema.sql")
     for statement in statements:
         await connection.execute(statement)
 

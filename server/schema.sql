@@ -52,7 +52,8 @@ WITH (timescaledb.continuous) AS
         time_bucket('4 hours', creation_timestamp) AS bucket,
         COUNT(*) AS count
     FROM measurements
-    GROUP BY sensor_identifier, bucket;
+    GROUP BY sensor_identifier, bucket
+WITH DATA;
 
 
 SELECT add_continuous_aggregate_policy('measurements_aggregation_4_hours',
@@ -72,3 +73,11 @@ CREATE TABLE statuses (
     details TEXT
     -- keep only the last N statuses?
 );
+
+-- CREATE INDEX sensor_identifier_creation_timestamp_index ON statuses (sensor_identifier ASC, creation_timestamp DESC);
+
+SELECT create_hypertable('statuses', 'creation_timestamp');
+
+-- add some sort of materialized view?
+
+-- drop statuses older than some threshold

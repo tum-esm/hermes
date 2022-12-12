@@ -217,7 +217,7 @@ async def lifespan(app):
     global database_client
     global mqtt_client
     async with database.Client() as x:
-        async with mqtt.Client(database_client) as y:
+        async with mqtt.Client(x) as y:
             # Make clients globally available
             database_client = x
             mqtt_client = y
