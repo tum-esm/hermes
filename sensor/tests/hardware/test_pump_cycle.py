@@ -10,7 +10,7 @@ from src import interfaces
 
 
 @pytest.mark.integration
-def test_pump_cycle(log_files) -> None:
+def test_pump_cycle(log_files: None) -> None:
     config = interfaces.ConfigInterface.read()
     pump = interfaces.PumpInterface(config)
 

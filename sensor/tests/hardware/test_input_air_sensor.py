@@ -10,7 +10,7 @@ from src import interfaces
 
 
 @pytest.mark.integration
-def test_input_air_sensor(log_files) -> None:
+def test_input_air_sensor(log_files: None) -> None:
     config = interfaces.ConfigInterface.read()
     sensor = interfaces.AirInletSensorInterface()
     valves = interfaces.ValveInterface(config)

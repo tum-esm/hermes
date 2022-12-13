@@ -11,7 +11,7 @@ from src import interfaces
 
 
 @pytest.mark.integration
-def test_valve_cycle(log_files) -> None:
+def test_valve_cycle(log_files: None) -> None:
     config = interfaces.ConfigInterface.read()
     valves = interfaces.ValveInterface(config)
 
