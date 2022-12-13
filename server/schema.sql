@@ -56,8 +56,9 @@ WITH (timescaledb.continuous) AS
 WITH DATA;
 
 
-SELECT add_continuous_aggregate_policy('measurements_aggregation_4_hours',
-    start_offset => '7 days',
+SELECT add_continuous_aggregate_policy(
+    continuous_aggregate => 'measurements_aggregation_4_hours',
+    start_offset => '10 days',
     end_offset => '4 hours',
     schedule_interval => '2 hours'
 );
@@ -78,6 +79,7 @@ CREATE TABLE statuses (
 
 SELECT create_hypertable('statuses', 'creation_timestamp');
 
--- add some sort of materialized view?
-
--- drop statuses older than some threshold
+SELECT add_retention_policy(
+    relation => 'statuses',
+    drop_after => INTERVAL '90 days'
+);
