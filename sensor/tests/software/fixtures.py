@@ -12,6 +12,9 @@ from src import utils
 
 @pytest.fixture(scope="session")
 def mqtt_client_environment():
+    """load the environment variables from config/.env.testing
+    and generate a dummy base-topic path"""
+
     MQTT_ENV_VARS_PATH = join(PROJECT_DIR, "config", ".env.testing")
     dotenv.load_dotenv(MQTT_ENV_VARS_PATH)
 
@@ -25,7 +28,7 @@ def mqtt_client_environment():
     utils.mqtt.MQTTClient.deinit()
 
 
-def save_file(original_path: str, temporary_path: str, test_content: str) -> None:
+def _save_file(original_path: str, temporary_path: str, test_content: str) -> None:
     assert not os.path.exists(temporary_path)
 
     try:
@@ -37,7 +40,7 @@ def save_file(original_path: str, temporary_path: str, test_content: str) -> Non
         f.write(test_content)
 
 
-def restore_file(original_path: str, temporary_path: str):
+def _restore_file(original_path: str, temporary_path: str):
     os.remove(original_path)
     try:
         os.rename(temporary_path, original_path)
@@ -45,13 +48,18 @@ def restore_file(original_path: str, temporary_path: str):
         pass
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def log_files():
+    """
+    1. store actual log files in a temporary location
+    2. set up a new, empty log file just for the test
+    3. restore the original log file after the test
+    """
     LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
     TMP_LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.tmp.log")
 
-    save_file(LOG_FILE, TMP_LOG_FILE, "")
+    _save_file(LOG_FILE, TMP_LOG_FILE, "")
 
     yield
 
-    restore_file(LOG_FILE, TMP_LOG_FILE)
+    _restore_file(LOG_FILE, TMP_LOG_FILE)

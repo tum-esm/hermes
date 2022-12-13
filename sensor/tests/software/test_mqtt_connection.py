@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from fixtures import mqtt_client_environment
+from fixtures import mqtt_client_environment, log_files
 from utils import wait_for_condition
 from os.path import dirname, abspath
 import sys
@@ -13,7 +13,7 @@ from src import utils
 
 
 @pytest.mark.ci
-def test_mqtt_receiving(mqtt_client_environment) -> None:
+def test_mqtt_receiving(mqtt_client_environment, log_files) -> None:
     mqtt_client = utils.mqtt.MQTTClient.get_client()
     mqtt_config = utils.mqtt.MQTTClient.get_config()
 

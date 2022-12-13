@@ -1,7 +1,4 @@
-import multiprocessing
-import queue
 import json
-import os
 import time
 import pytest
 from os.path import dirname, abspath, join
@@ -18,7 +15,7 @@ from src import utils, interfaces
 
 
 @pytest.mark.ci
-def test_mqtt_receiving(mqtt_client_environment) -> None:
+def test_mqtt_receiving(mqtt_client_environment, log_files) -> None:
     mqtt_client = utils.mqtt.MQTTClient.get_client()
     mqtt_config = utils.mqtt.MQTTClient.get_config()
 
