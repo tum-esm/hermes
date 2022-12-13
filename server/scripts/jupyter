@@ -1,3 +1,23 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o nounset
+set -o pipefail
+# Change into the project's directory
+cd "$(dirname "$0")/.."
+
+# Set our environment variables
+export ENVIRONMENT="development"
+export COMMIT_SHA=$(git rev-parse --verify HEAD)
+export BRANCH_NAME=$(git branch --show-current)
+export POSTGRESQL_URL="localhost"
+export POSTGRESQL_IDENTIFIER="username"
+export POSTGRESQL_PASSWORD="12345678"
+export POSTGRESQL_DATABASE="database"
+export MQTT_URL="localhost"
+export MQTT_PORT="1883"
+export MQTT_IDENTIFIER="username"
+export MQTT_PASSWORD="12345678"
+
+# Start jupyter server
 poetry run python -m jupyterlab --no-browser --port 8532
