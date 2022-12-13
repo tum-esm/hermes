@@ -12,37 +12,35 @@ class MQTTClient:
     __client: paho.mqtt.client.Client | None = None
 
     @staticmethod
-    def init(timeout_seconds: float = 5) -> None:
+    def __init() -> None:
         """v and
         initializes the mqtt client. timeout_seconds is the amount
         of time the mqtt connection process is allowed to take."""
         MQTTClient.__init_config()
-        MQTTClient.__init_client(timeout_seconds=timeout_seconds)
+        MQTTClient.__init_client()
 
     @staticmethod
     def get_config() -> custom_types.MQTTConfig:
-        """returns the mqtt config, requires init() to be run before"""
-        assert (
-            MQTTClient.__config is not None
-        ), "please run init() before requesting the config"
+        """returns the mqtt config, runs init() on first call"""
+        if MQTTClient.__config is None or MQTTClient.__client is None:
+            MQTTClient.__init()
+        assert MQTTClient.__config is not None
         return MQTTClient.__config
 
     @staticmethod
     def get_client() -> paho.mqtt.client.Client:
-        """returns the mqtt client, requires init() to be run before"""
-        assert (
-            MQTTClient.__client is not None
-        ), "please run init() before requesting the client"
+        """returns the mqtt client, runs init() on first call"""
+        if MQTTClient.__config is None or MQTTClient.__client is None:
+            MQTTClient.__init()
+        assert MQTTClient.__client is not None
         return MQTTClient.__client
 
     @staticmethod
     def deinit() -> None:
         """disconnected the mqtt client and removes the internal class state"""
-        assert (
-            MQTTClient.__client is not None
-        ), "please run init() before requesting the client"
-        MQTTClient.__client.disconnect()
-        MQTTClient.__client = None
+        if MQTTClient.__client is not None:
+            MQTTClient.__client.disconnect()
+            MQTTClient.__client = None
         MQTTClient.__config = None
 
     @staticmethod
@@ -58,7 +56,7 @@ class MQTTClient:
         )
 
     @staticmethod
-    def __init_client(timeout_seconds: float = 5) -> None:
+    def __init_client() -> None:
         """initializes the mqtt client. timeout_seconds is the amount
         of time the mqtt connection process is allowed to take."""
         assert MQTTClient.__config is not None
@@ -86,9 +84,9 @@ class MQTTClient:
         while True:
             if mqtt_client.is_connected():
                 break
-            if (time.time() - start_time) > timeout_seconds:
+            if (time.time() - start_time) > 5:
                 raise TimeoutError(
-                    f"mqtt client is not connected (using params {MQTTClient.config})"
+                    f"mqtt client is not connected (using params {MQTTClient.__config})"
                 )
             time.sleep(0.1)
 
