@@ -54,7 +54,7 @@ def mqtt_client_environment() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mqtt_sending_loop(mqtt_client_environment) -> Generator[None, None, None]:
+def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, None]:
     """start and stop the background sending loop of the SendingMQTTClient"""
 
     ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
@@ -83,8 +83,8 @@ def mqtt_sending_loop(mqtt_client_environment) -> Generator[None, None, None]:
     yield
 
     interfaces.SendingMQTTClient.deinit_sending_loop_process()
-    _restore_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE)
-    _restore_file(ACTIVE_ARCHIVE_FILE, TMP_ACTIVE_ARCHIVE_FILE)
+    # _restore_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE)
+    # _restore_file(ACTIVE_ARCHIVE_FILE, TMP_ACTIVE_ARCHIVE_FILE)
 
 
 @pytest.fixture

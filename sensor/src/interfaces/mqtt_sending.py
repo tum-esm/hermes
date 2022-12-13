@@ -57,7 +57,7 @@ class SendingMQTTClient:
         with lock:
             active_queue = SendingMQTTClient._load_active_queue()
             new_header = custom_types.MQTTMessageHeader(
-                identifier=None,
+                identifier=active_queue.max_identifier + 1,
                 status="pending",
                 revision=config.revision,
                 issue_timestamp=now,
@@ -75,6 +75,7 @@ class SendingMQTTClient:
                 )
 
             active_queue.messages.append(new_message)
+            active_queue.max_identifier += 1
             SendingMQTTClient._dump_active_queue(active_queue)
 
     @staticmethod
@@ -108,7 +109,7 @@ class SendingMQTTClient:
                     with open(filename_for_datestring(date_string), "r") as f:
                         modified_lists[
                             date_string
-                        ] = custom_types.ActiveMQTTMessageQueue(
+                        ] = custom_types.ArchivedMQTTMessageQueue(
                             messages=json.load(f)
                         ).messages
                 except FileNotFoundError:
@@ -162,14 +163,11 @@ class SendingMQTTClient:
                         payload=json.dumps([message.body.dict()]),
                         qos=1,
                     )
-                    message.header.identifier = message_info.mid
                     message.header.status = "sent"
                     current_messages[message.header.identifier] = message_info
                     processed_messages["sent"].append(message)
 
                 elif message.header.status == "sent":
-                    assert message.header.identifier is not None
-
                     # normal behavior
                     if message.header.identifier in current_messages:
                         if current_messages[message.header.identifier].is_published():
@@ -187,8 +185,6 @@ class SendingMQTTClient:
                             payload=json.dumps([message.body.dict()]),
                             qos=1,
                         )
-                        # TODO: mid might not be unique (tell felix about it)
-                        message.header.identifier = message_info.mid
                         current_messages[message.header.identifier] = message_info
                         processed_messages["resent"].append(message)
 
@@ -205,9 +201,11 @@ class SendingMQTTClient:
             with lock:
                 # add messages that have been added since calling
                 # "_load_active_queue" at the beginning of the loop
+                known_message_ids = [m.header.identifier for m in active_queue.messages]
                 new_messages = list(
                     filter(
-                        lambda m: m.header.status == "pending",
+                        lambda m: m.header.status == "pending"
+                        and m.header.identifier not in known_message_ids,
                         SendingMQTTClient._load_active_queue().messages,
                     )
                 )
@@ -218,7 +216,7 @@ class SendingMQTTClient:
                 logger.info(f"{len(value)} message(s) have been {key}")
 
             # TODO: adjust wait time based on length of "current_messages"
-            time.sleep(5)
+            time.sleep(3)
 
     @staticmethod
     def check_errors() -> None:

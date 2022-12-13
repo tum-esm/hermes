@@ -37,11 +37,14 @@ class MQTTConfig(BaseModel):
         validate_str(min_len=1, max_len=256, regex=r"^(\/[a-z0-9_-]+)*$"),
     )
 
+    class Config:
+        extra = "forbid"
+
 
 class MQTTMessageHeader(BaseModel):
     """meta data for managing message queue"""
 
-    identifier: int | None
+    identifier: int
     status: Literal["pending", "sent", "delivered"]
     revision: int
     issue_timestamp: float  # 01.01.2022 - 19.01.2038 allowed (4 byte integer)
@@ -49,7 +52,7 @@ class MQTTMessageHeader(BaseModel):
 
     # validators
     _val_identifier = validator("identifier", pre=True, allow_reuse=True)(
-        validate_int(nullable=True),
+        validate_int(minimum=0),
     )
     _val_status = validator("status", pre=True, allow_reuse=True)(
         validate_str(allowed=["pending", "sent", "delivered"]),
@@ -63,6 +66,9 @@ class MQTTMessageHeader(BaseModel):
     _val_success_timestamp = validator("success_timestamp", pre=True, allow_reuse=True)(
         validate_float(minimum=1_640_991_600, maximum=2_147_483_648, nullable=True),
     )
+
+    class Config:
+        extra = "forbid"
 
 
 class MQTTStatusMessageBody(BaseModel):
@@ -83,11 +89,14 @@ class MQTTStatusMessageBody(BaseModel):
         validate_str(min_len=1, max_len=1024),
     )
 
+    class Config:
+        extra = "forbid"
+
 
 class MQTTMeasurementMessageBody(BaseModel):
     """message body which is sent to server"""
 
-    timestamp: int
+    timestamp: float
     value: CO2SensorData
 
 
@@ -106,7 +115,23 @@ class MQTTMeasurementMessage(BaseModel):
 
 
 class ActiveMQTTMessageQueue(BaseModel):
+    max_identifier: int
     messages: list[MQTTStatusMessage | MQTTMeasurementMessage]
+
+    # validators
+    _val_max_identifier = validator("max_identifier", pre=True, allow_reuse=True)(
+        validate_int(minimum=0),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
+class ArchivedMQTTMessageQueue(BaseModel):
+    messages: list[MQTTStatusMessage | MQTTMeasurementMessage]
+
+    class Config:
+        extra = "forbid"
 
 
 MQTTMessageBody = MQTTStatusMessageBody | MQTTMeasurementMessageBody
