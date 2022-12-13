@@ -6,7 +6,7 @@ import dotenv
 import sys
 from os.path import dirname, abspath, join
 
-PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
+PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
 from src import utils
 

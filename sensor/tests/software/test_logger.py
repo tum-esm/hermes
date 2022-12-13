@@ -1,5 +1,5 @@
 import pytest
-from fixtures import log_files
+from ..pytest_fixtures import log_files
 from os.path import dirname, abspath, join
 import sys
 

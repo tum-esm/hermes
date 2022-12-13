@@ -4,8 +4,8 @@ import pytest
 from os.path import dirname, abspath, join
 import sys
 
-from fixtures import mqtt_client_environment, log_files
-from utils import expect_log_lines, wait_for_condition
+from ..pytest_fixtures import mqtt_client_environment, log_files
+from ..pytest_utils import expect_log_lines, wait_for_condition
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
