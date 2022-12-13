@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+from typing import Literal
 import pytest
 
 dir = os.path.dirname
@@ -9,18 +10,18 @@ sys.path.append(PROJECT_DIR)
 
 from src import interfaces
 
+# TODO: use log_file fixture
+
 
 @pytest.mark.integration
 def test_valve_cycle() -> None:
     config = interfaces.ConfigInterface.read()
     valves = interfaces.ValveInterface(config)
-    pump = interfaces.PumpInterface(config)
-    pump.set_desired_pump_rps(30)
 
-    for i in range(5):
-        for valve_no in range(1, 5):
-            valves.set_active_input(valve_no, logger=False)
-            time.sleep(3)
+    valve_nos: list[Literal[1, 2, 3, 4]] = [1, 2, 3, 4]
 
-    pump.set_desired_pump_rps(0)
-    pump.teardown()
+    for valve_no in valve_nos:
+        valves.set_active_input(valve_no)
+        time.sleep(3)
+
+    valves.teardown()

@@ -14,12 +14,12 @@ from src import interfaces
 @pytest.mark.integration
 def test_input_air_sensor() -> None:
     config = interfaces.ConfigInterface.read()
-    sensor = interfaces.InputAirSensorInterface(config)
+    sensor = interfaces.AirInletSensorInterface()
     valves = interfaces.ValveInterface(config)
     pump = interfaces.PumpInterface(config)
 
-    valves.set_active_input(1, logger=False)
+    valves.set_active_input(1)
     pump.set_desired_pump_rps(20)
     time.sleep(5)
-    sensor.run(logger=False)
+    sensor.get_current_values()
     pump.teardown()

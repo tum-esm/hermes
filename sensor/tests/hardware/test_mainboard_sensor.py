@@ -8,10 +8,10 @@ sys.path.append(PROJECT_DIR)
 
 from src import interfaces
 
+# TODO: use log_file fixture
+
 
 @pytest.mark.integration
 def test_mainboard_sensor() -> None:
-    config = interfaces.ConfigInterface.read()
-    sensor = interfaces.MainboardSensorInterface(config)
-
-    sensor.log_system_data(logger=False)
+    sensor = interfaces.MainboardSensorInterface()
+    sensor.get_system_data()

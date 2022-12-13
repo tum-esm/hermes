@@ -10,6 +10,9 @@ sys.path.append(PROJECT_DIR)
 from src import interfaces
 
 
+# TODO: use log_file fixture
+
+
 @pytest.mark.integration
 def test_pump_cycle() -> None:
     config = interfaces.ConfigInterface.read()
@@ -17,9 +20,11 @@ def test_pump_cycle() -> None:
 
     for rps in range(10, 71, 10):
         print(f"setting rps to {rps}")
-        pump.run(desired_rps=rps, duration=10, logger=False)
-        time.sleep(2)
+        pump.set_desired_pump_rps(rps)
+        time.sleep(8)
 
+    pump.set_desired_pump_rps(0)
+    pump.check_errors()
     pump.teardown()
 
 
