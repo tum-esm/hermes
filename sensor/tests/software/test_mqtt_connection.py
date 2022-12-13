@@ -14,7 +14,8 @@ from src import utils
 
 @pytest.mark.ci
 def test_mqtt_receiving(mqtt_client_environment) -> None:
-    mqtt_client, mqtt_config = utils.mqtt.get_mqtt_client()
+    mqtt_client = utils.mqtt.MQTTClient.get_client()
+    mqtt_config = utils.mqtt.MQTTClient.get_config()
 
     # testing whether config variables have been loaded correctly
     assert (
