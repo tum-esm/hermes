@@ -8,7 +8,7 @@ from os.path import dirname, abspath, join
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
-from src import utils
+from src import utils, interfaces
 
 
 @pytest.fixture(scope="session")
@@ -27,6 +27,19 @@ def mqtt_client_environment() -> Generator[None, None, None]:
     yield
 
     utils.mqtt.MQTTClient.deinit()
+
+
+@pytest.fixture
+def mqtt_sending_loop(mqtt_client_environment) -> Generator[None, None, None]:
+    """start and stop the background sending loop of the SendingMQTTClient"""
+
+    interfaces.SendingMQTTClient.init_sending_loop_process()
+    # TODO: backup data/ directory content
+
+    yield
+
+    interfaces.SendingMQTTClient.deinit_sending_loop_process()
+    # TODO: restore data/ directory content
 
 
 def _save_file(original_path: str, temporary_path: str, test_content: str) -> None:

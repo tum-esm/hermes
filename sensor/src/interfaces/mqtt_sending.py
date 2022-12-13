@@ -39,6 +39,12 @@ class SendingMQTTClient:
             SendingMQTTClient.sending_loop_process = new_process
 
     @staticmethod
+    def deinit_sending_loop_process() -> None:
+        if SendingMQTTClient.sending_loop_process is not None:
+            SendingMQTTClient.sending_loop_process.terminate()
+            SendingMQTTClient.sending_loop_process = None
+
+    @staticmethod
     def enqueue_message(
         config: custom_types.Config,
         message_body: custom_types.MQTTMessageBody,
