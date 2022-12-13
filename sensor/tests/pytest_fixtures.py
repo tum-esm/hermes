@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import time
 from typing import Generator
@@ -9,6 +10,29 @@ from os.path import dirname, abspath, join
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
 from src import utils, interfaces
+
+
+def _save_file(
+    original_path: str, temporary_path: str, test_content: str | None
+) -> None:
+    assert not os.path.exists(temporary_path)
+
+    try:
+        os.rename(original_path, temporary_path)
+    except FileNotFoundError:
+        pass
+
+    if test_content is not None:
+        with open(original_path, "w") as f:
+            f.write(test_content)
+
+
+def _restore_file(original_path: str, temporary_path: str) -> None:
+    os.remove(original_path)
+    try:
+        os.rename(temporary_path, original_path)
+    except FileNotFoundError:
+        pass
 
 
 @pytest.fixture(scope="session")
@@ -33,33 +57,34 @@ def mqtt_client_environment() -> Generator[None, None, None]:
 def mqtt_sending_loop(mqtt_client_environment) -> Generator[None, None, None]:
     """start and stop the background sending loop of the SendingMQTTClient"""
 
+    ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
+    TMP_ACTIVE_MESSAGES_FILE = join(
+        PROJECT_DIR, "data", "incomplete-mqtt-messages.tmp.json"
+    )
+
+    TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
+    ACTIVE_ARCHIVE_FILE = join(
+        PROJECT_DIR,
+        "data",
+        "archive",
+        f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
+    )
+    TMP_ACTIVE_ARCHIVE_FILE = join(
+        PROJECT_DIR,
+        "data",
+        "archive",
+        f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
+    )
+
+    _save_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE, None)
+    _save_file(ACTIVE_ARCHIVE_FILE, TMP_ACTIVE_ARCHIVE_FILE, None)
     interfaces.SendingMQTTClient.init_sending_loop_process()
-    # TODO: backup data/ directory content
 
     yield
 
     interfaces.SendingMQTTClient.deinit_sending_loop_process()
-    # TODO: restore data/ directory content
-
-
-def _save_file(original_path: str, temporary_path: str, test_content: str) -> None:
-    assert not os.path.exists(temporary_path)
-
-    try:
-        os.rename(original_path, temporary_path)
-    except FileNotFoundError:
-        pass
-
-    with open(original_path, "w") as f:
-        f.write(test_content)
-
-
-def _restore_file(original_path: str, temporary_path: str) -> None:
-    os.remove(original_path)
-    try:
-        os.rename(temporary_path, original_path)
-    except FileNotFoundError:
-        pass
+    _restore_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE)
+    _restore_file(ACTIVE_ARCHIVE_FILE, TMP_ACTIVE_ARCHIVE_FILE)
 
 
 @pytest.fixture

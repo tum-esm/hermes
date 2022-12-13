@@ -5,3 +5,4 @@ sensor/logs/
 sensor/data/
 !.gitkeep
 .env.testing
+data/**/*.json

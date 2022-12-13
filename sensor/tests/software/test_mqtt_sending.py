@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import time
 import pytest
@@ -21,7 +22,7 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     config = interfaces.ConfigInterface.read()
 
     dummy_measurement_message = custom_types.MQTTMeasurementMessageBody(
-        timestamp=time.time(),
+        timestamp=datetime.now().timestamp(),
         value=custom_types.CO2SensorData(raw=0.0, compensated=0.0, filtered=0.0),
     )
     interfaces.SendingMQTTClient.enqueue_message(
