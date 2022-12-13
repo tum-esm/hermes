@@ -4,6 +4,7 @@ import time
 import pytest
 from os.path import dirname, abspath, join
 import sys
+import deepdiff
 
 from ..pytest_fixtures import mqtt_client_environment, mqtt_sending_loop, log_files
 from ..pytest_utils import expect_log_lines, wait_for_condition
@@ -14,13 +15,27 @@ sys.path.append(PROJECT_DIR)
 
 from src import interfaces, custom_types
 
+ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
+TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
+MESSAGE_ARCHIVE_FILE = join(
+    PROJECT_DIR,
+    "data",
+    "archive",
+    f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
+)
+
 
 @pytest.mark.ci
 def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     interfaces.SendingMQTTClient.check_errors()
+    with open(ACTIVE_MESSAGES_FILE, "r") as f:
+        active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
+    assert active_mqtt_message_queue.max_identifier == 0
+    assert len(active_mqtt_message_queue.messages) == 0
 
     config = interfaces.ConfigInterface.read()
 
+    # enqueue dummy message
     dummy_measurement_message = custom_types.MQTTMeasurementMessageBody(
         timestamp=datetime.now().timestamp(),
         value=custom_types.CO2SensorData(raw=0.0, compensated=0.0, filtered=0.0),
@@ -30,6 +45,22 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
         dummy_measurement_message,
     )
 
+    # assert dummy message to be in active queue
+    with open(ACTIVE_MESSAGES_FILE, "r") as f:
+        active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
+    assert active_mqtt_message_queue.max_identifier == 1
+    assert len(active_mqtt_message_queue.messages) == 1
+    assert active_mqtt_message_queue.messages[0].header.identifier == 1
+    assert active_mqtt_message_queue.messages[0].header.status == "pending"
+    assert (
+        deepdiff.DeepDiff(
+            active_mqtt_message_queue.messages[0].body.dict(),
+            dummy_measurement_message.dict(),
+        )
+        == {}
+    )
+
     time.sleep(10)
 
+    # assert that sending loop is still functioning correctly
     interfaces.SendingMQTTClient.check_errors()

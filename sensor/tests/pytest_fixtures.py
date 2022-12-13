@@ -63,13 +63,13 @@ def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, No
     )
 
     TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
-    ACTIVE_ARCHIVE_FILE = join(
+    MESSAGE_ARCHIVE_FILE = join(
         PROJECT_DIR,
         "data",
         "archive",
         f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
     )
-    TMP_ACTIVE_ARCHIVE_FILE = join(
+    TMP_MESSAGE_ARCHIVE_FILE = join(
         PROJECT_DIR,
         "data",
         "archive",
@@ -77,7 +77,7 @@ def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, No
     )
 
     _save_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE, None)
-    _save_file(ACTIVE_ARCHIVE_FILE, TMP_ACTIVE_ARCHIVE_FILE, None)
+    _save_file(MESSAGE_ARCHIVE_FILE, TMP_MESSAGE_ARCHIVE_FILE, None)
     interfaces.SendingMQTTClient.init_sending_loop_process()
 
     yield
