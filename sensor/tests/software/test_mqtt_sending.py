@@ -33,7 +33,19 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     assert active_mqtt_message_queue.max_identifier == 0
     assert len(active_mqtt_message_queue.messages) == 0
 
-    config = interfaces.ConfigInterface.read()
+    config = custom_types.Config(
+        **{
+            "version": "0.1.0",
+            "revision": 17,
+            "general": {"station_name": "pytest-dummy-config"},
+            "valves": {
+                "air_inlets": [
+                    {"number": 1, "direction": 300},
+                    {"number": 2, "direction": 50},
+                ]
+            },
+        }
+    )
 
     # enqueue dummy message
     dummy_measurement_message = custom_types.MQTTMeasurementMessageBody(
@@ -52,6 +64,7 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     assert len(active_mqtt_message_queue.messages) == 1
     assert active_mqtt_message_queue.messages[0].header.identifier == 1
     assert active_mqtt_message_queue.messages[0].header.status == "pending"
+    assert active_mqtt_message_queue.messages[0].header.revision == config.revision
     assert (
         deepdiff.DeepDiff(
             active_mqtt_message_queue.messages[0].body.dict(),

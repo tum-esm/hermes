@@ -5,7 +5,7 @@ from typing import Generator
 import pytest
 import dotenv
 import sys
-from os.path import dirname, abspath, join
+from os.path import dirname, abspath, join, isfile
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
@@ -28,7 +28,8 @@ def _save_file(
 
 
 def _restore_file(original_path: str, temporary_path: str) -> None:
-    os.remove(original_path)
+    if isfile(original_path):
+        os.remove(original_path)
     try:
         os.rename(temporary_path, original_path)
     except FileNotFoundError:
@@ -81,9 +82,6 @@ def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, No
     interfaces.SendingMQTTClient.init_sending_loop_process()
 
     yield
-
-    print("data:", os.listdir(join(PROJECT_DIR, "data")))
-    print("archive:", os.listdir(join(PROJECT_DIR, "data", "archive")))
 
     interfaces.SendingMQTTClient.deinit_sending_loop_process()
     _restore_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE)
