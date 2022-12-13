@@ -53,6 +53,7 @@ module = [
     "gpiozero.*",
     "smbus2",
     "serial",
+    "deepdiff",
 ]
 ignore_missing_imports = true
 

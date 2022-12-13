@@ -60,7 +60,7 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
         == {}
     )
 
-    time.sleep(10)
+    time.sleep(6)
 
     # assert active queue to be empty
     with open(ACTIVE_MESSAGES_FILE, "r") as f:
