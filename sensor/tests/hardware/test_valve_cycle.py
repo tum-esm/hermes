@@ -3,6 +3,7 @@ import sys
 import time
 from typing import Literal
 import pytest
+from ..pytest_fixtures import log_files
 
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
@@ -10,11 +11,9 @@ sys.path.append(PROJECT_DIR)
 
 from src import interfaces
 
-# TODO: use log_file fixture
-
 
 @pytest.mark.integration
-def test_valve_cycle() -> None:
+def test_valve_cycle(log_files) -> None:
     config = interfaces.ConfigInterface.read()
     valves = interfaces.ValveInterface(config)
 

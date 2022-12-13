@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import pytest
-
+from ..pytest_fixtures import log_files
 
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
@@ -12,7 +12,7 @@ from src import interfaces
 
 
 @pytest.mark.integration
-def test_input_air_sensor() -> None:
+def test_input_air_sensor(log_files) -> None:
     config = interfaces.ConfigInterface.read()
     sensor = interfaces.AirInletSensorInterface()
     valves = interfaces.ValveInterface(config)
