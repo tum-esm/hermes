@@ -236,22 +236,26 @@ class Client(aiomqtt.Client):
                     sensor_identifier = str(message.topic).split("/")[-1]
                     payload = _decode_payload(message.payload)
                     # Match topic and process message
+                    matched = False
                     if message.topic.matches(wildcard_heartbeats):
+                        matched = True
                         await self._process_heartbeats_message(
                             sensor_identifier=sensor_identifier,
                             message=validation.HeartbeatsMessage(**payload),
                         )
                     if message.topic.matches(wildcard_statuses):
+                        matched = True
                         await self._process_statuses_message(
                             sensor_identifier=sensor_identifier,
                             message=validation.StatusesMessage(**payload),
                         )
                     if message.topic.matches(wildcard_measurements):
+                        matched = True
                         await self._process_measurements_message(
                             sensor_identifier=sensor_identifier,
                             message=validation.MeasurementsMessage(**payload),
                         )
-                    else:
+                    if not matched:
                         logger.warning(f"[MQTT] Failed to match topic: {message.topic}")
 
                 except pydantic.ValidationError as e:
