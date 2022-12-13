@@ -1,13 +1,11 @@
-import os
+from os.path import dirname, abspath
 import sys
 import time
 import pytest
 from ..pytest_fixtures import log_files
 
-dir = os.path.dirname
-PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
+PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
-
 from src import interfaces
 
 
