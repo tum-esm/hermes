@@ -73,7 +73,7 @@ def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, No
         PROJECT_DIR,
         "data",
         "archive",
-        f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
+        f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.tmp.json",
     )
 
     _save_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE, None)
@@ -83,8 +83,8 @@ def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, No
     yield
 
     interfaces.SendingMQTTClient.deinit_sending_loop_process()
-    # _restore_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE)
-    # _restore_file(ACTIVE_ARCHIVE_FILE, TMP_ACTIVE_ARCHIVE_FILE)
+    _restore_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE)
+    _restore_file(MESSAGE_ARCHIVE_FILE, TMP_MESSAGE_ARCHIVE_FILE)
 
 
 @pytest.fixture

@@ -62,5 +62,27 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
 
     time.sleep(10)
 
+    # assert active queue to be empty
+    with open(ACTIVE_MESSAGES_FILE, "r") as f:
+        active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
+    assert active_mqtt_message_queue.max_identifier == 1
+    assert len(active_mqtt_message_queue.messages) == 0
+
+    # assert dummy message to be in archive
+    with open(MESSAGE_ARCHIVE_FILE, "r") as f:
+        archived_mqtt_messages = custom_types.ArchivedMQTTMessageQueue(
+            messages=json.load(f)
+        ).messages
+    assert len(archived_mqtt_messages) == 1
+    assert archived_mqtt_messages[0].header.identifier == 1
+    assert archived_mqtt_messages[0].header.status == "delivered"
+    assert (
+        deepdiff.DeepDiff(
+            archived_mqtt_messages[0].body.dict(),
+            dummy_measurement_message.dict(),
+        )
+        == {}
+    )
+
     # assert that sending loop is still functioning correctly
     interfaces.SendingMQTTClient.check_errors()
