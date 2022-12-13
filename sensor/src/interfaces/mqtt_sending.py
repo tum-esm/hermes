@@ -125,7 +125,8 @@ class SendingMQTTClient:
         logger = utils.Logger(origin="mqtt-sending-loop")
         logger.info("starting loop")
 
-        mqtt_client, mqtt_config = utils.mqtt.get_mqtt_client()
+        mqtt_client = utils.mqtt.MQTTClient.get_client()
+        mqtt_config = utils.mqtt.MQTTClient.get_config()
 
         # this queue is necessary because paho-mqtt does not support
         # a function that answers the question "has this message id

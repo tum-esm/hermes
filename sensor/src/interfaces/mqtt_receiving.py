@@ -26,14 +26,15 @@ def on_message(
 class ReceivingMQTTClient:
     def __init__(self) -> None:
         logger = utils.Logger(origin="mqtt-receiving-client")
-        self.mqtt_client, self.mqtt_config = utils.mqtt.get_mqtt_client()
-        self.mqtt_client.on_message = on_message
-        config_topic = f"{self.mqtt_config.mqtt_base_topic}/configuration/{self.mqtt_config.station_identifier}"
+        mqtt_client = utils.mqtt.MQTTClient.get_client()
+        mqtt_config = utils.mqtt.MQTTClient.get_config()
+        mqtt_client.on_message = on_message
+        config_topic = f"{mqtt_config.mqtt_base_topic}/configuration/{mqtt_config.station_identifier}"
 
         logger.info(f"subscribing to topic {config_topic}")
-        self.mqtt_client.subscribe(
-            f"{self.mqtt_config.mqtt_base_topic}/configuration/"
-            + f"{self.mqtt_config.station_identifier}"
+        mqtt_client.subscribe(
+            f"{mqtt_config.mqtt_base_topic}/configuration/"
+            + f"{mqtt_config.station_identifier}"
         )
 
     def get_messages(self) -> list[Any]:
