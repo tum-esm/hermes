@@ -111,13 +111,14 @@ class SendingMQTTClient:
             modified_lists[date_string].append(m)
 
         for date_string in modified_lists.keys():
-            modified_lists[date_string] = list(
-                sorted(
+            dict_list = [
+                m.dict()
+                for m in sorted(
                     modified_lists[date_string], key=lambda m: m.header.issue_timestamp
                 )
-            )
+            ]
             with open(filename_for_datestring(date_string), "w") as f:
-                json.dump(modified_lists[date_string], f, indent=4)
+                json.dump(dict_list, f, indent=4)
 
     @staticmethod
     def sending_loop(lock: multiprocessing.synchronize.Lock) -> None:

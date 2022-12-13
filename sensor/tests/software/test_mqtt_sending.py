@@ -29,3 +29,5 @@ def test_mqtt_sending(mqtt_client_environment: None, log_files: None) -> None:
     )
 
     time.sleep(10)
+
+    interfaces.SendingMQTTClient.check_errors()
