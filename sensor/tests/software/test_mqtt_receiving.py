@@ -19,9 +19,9 @@ from src import utils, interfaces
 
 @pytest.mark.ci
 def test_mqtt_receiving(mqtt_client_environment) -> None:
-    global exception_queue
+    mqtt_client = utils.mqtt.MQTTClient.get_client()
+    mqtt_config = utils.mqtt.MQTTClient.get_config()
 
-    mqtt_config = utils.mqtt.get_mqtt_config()
     config_topic = (
         f"{mqtt_config.mqtt_base_topic}/configuration/{mqtt_config.station_identifier}"
     )
@@ -44,18 +44,13 @@ def test_mqtt_receiving(mqtt_client_environment) -> None:
         ]
     )
 
-    assert receiving_client.mqtt_client.is_connected()
-
-    message_info = receiving_client.mqtt_client.publish(
+    message_info = mqtt_client.publish(
         topic=config_topic, payload=json.dumps(message), qos=1
     )
     wait_for_condition(
         is_successful=lambda: message_info.is_published(),
         timeout_message=f"message if mid {message_info.mid} could not be published",
     )
-
-    time.sleep(1)
-    assert receiving_client.mqtt_client.is_connected()
 
     expect_log_lines(
         required_lines=[

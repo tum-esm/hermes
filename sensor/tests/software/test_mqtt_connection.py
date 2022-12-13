@@ -24,6 +24,8 @@ def test_mqtt_receiving(mqtt_client_environment) -> None:
     )
     assert mqtt_config.mqtt_base_topic == os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"]
 
+    # test connection and message sending
+    assert mqtt_client.is_connected()
     message_info = mqtt_client.publish(topic="some", payload="hello", qos=1)
     wait_for_condition(
         is_successful=lambda: message_info.is_published(),
