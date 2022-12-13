@@ -73,13 +73,22 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
         == {}
     )
 
-    time.sleep(6)
+    def empty_active_queue() -> bool:
+        with open(ACTIVE_MESSAGES_FILE, "r") as f:
+            active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(
+                **json.load(f)
+            )
+        return (
+            len(active_mqtt_message_queue.messages) == 0
+            and active_mqtt_message_queue.max_identifier == 1
+        )
 
     # assert active queue to be empty
-    with open(ACTIVE_MESSAGES_FILE, "r") as f:
-        active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
-    assert active_mqtt_message_queue.max_identifier == 1
-    assert len(active_mqtt_message_queue.messages) == 0
+    wait_for_condition(
+        is_successful=empty_active_queue,
+        timeout_seconds=20,
+        timeout_message="active queue is not empty after 20 second timeout",
+    )
 
     # assert dummy message to be in archive
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
