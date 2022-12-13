@@ -61,7 +61,7 @@ class MQTTMessageHeader(BaseModel):
         validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
     )
     _val_success_timestamp = validator("success_timestamp", pre=True, allow_reuse=True)(
-        validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
+        validate_float(minimum=1_640_991_600, maximum=2_147_483_648, nullable=True),
     )
 
 

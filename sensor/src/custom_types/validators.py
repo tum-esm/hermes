@@ -12,10 +12,16 @@ def validate_bool() -> Callable[[Any, bool], bool]:
 
 
 def validate_float(
+    nullable: bool = False,
     minimum: float | None = None,
     maximum: float | None = None,
 ) -> Callable[[Any, float], float]:
     def f(cls: Any, v: float) -> float:
+        if v is None:
+            if nullable:
+                return v
+            else:
+                raise ValueError(f"value cannot be None")
         if not isinstance(v, float):
             raise ValueError(f'"{v}" is not a float')
         if minimum is not None and v < minimum:
