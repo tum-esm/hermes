@@ -4,6 +4,8 @@ import time
 from typing import Callable, Literal
 import paho.mqtt.client
 from os.path import dirname, abspath, join, isfile
+
+import pytz
 from src import custom_types, utils
 import multiprocessing
 import multiprocessing.synchronize
@@ -102,7 +104,7 @@ class SendingMQTTClient:
 
         for m in messages:
             date_string = datetime.datetime.fromtimestamp(
-                m.header.issue_timestamp
+                m.header.issue_timestamp, tz=pytz.timezone("UTC")
             ).strftime("%Y-%m-%d")
             if date_string not in modified_lists:
                 try:
@@ -212,8 +214,12 @@ class SendingMQTTClient:
                 active_queue.messages += new_messages
                 SendingMQTTClient._dump_active_queue(active_queue)
 
-            for key, value in processed_messages.items():
-                logger.info(f"{len(value)} message(s) have been {key}")
+            logger.info(
+                f"{len(processed_messages['sent'])}/"
+                + f"{len(processed_messages['resent'])}/"
+                + f"{len(processed_messages['delivered'])} "
+                + "messages have been sent/resent/delivered"
+            )
 
             # TODO: adjust wait time based on length of "current_messages"
             time.sleep(3)

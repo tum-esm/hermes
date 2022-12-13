@@ -397,6 +397,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "types-pytz"
+version = "2022.6.0.1"
+description = "Typing stubs for pytz"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "4.4.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -407,7 +415,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "1075aa619d137342433301b7fdb7394045055ffbe4081b7642be206681c0f849"
+content-hash = "9eaf95884dd84673bd84976641cd27c4e9b3721d760501d95a8d3367c7eaa9bf"
 
 [metadata.files]
 attrs = [
@@ -675,6 +683,10 @@ types-paho-mqtt = [
 types-psutil = [
     {file = "types-psutil-5.9.5.5.tar.gz", hash = "sha256:4f26fdb2cb064b274cbc6359fba4abf3b3a2993d7d4abc336ad0947568212c62"},
     {file = "types_psutil-5.9.5.5-py3-none-any.whl", hash = "sha256:e576bb81c74f7443b067e94f92435894d5dd561161bec3d6401727b63df009f0"},
+]
+types-pytz = [
+    {file = "types-pytz-2022.6.0.1.tar.gz", hash = "sha256:d078196374d1277e9f9984d49373ea043cf2c64d5d5c491fbc86c258557bd46f"},
+    {file = "types_pytz-2022.6.0.1-py3-none-any.whl", hash = "sha256:bea605ce5d5a5d52a8e1afd7656c9b42476e18a0f888de6be91587355313ddf4"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.4.0-py3-none-any.whl", hash = "sha256:16fa4864408f655d35ec496218b85f79b3437c829e93320c7c9215ccfd92489e"},

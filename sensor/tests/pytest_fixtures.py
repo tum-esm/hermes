@@ -82,6 +82,9 @@ def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, No
 
     yield
 
+    print("data:", os.listdir(join(PROJECT_DIR, "data")))
+    print("archive:", os.listdir(join(PROJECT_DIR, "data", "archive")))
+
     interfaces.SendingMQTTClient.deinit_sending_loop_process()
     _restore_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE)
     _restore_file(MESSAGE_ARCHIVE_FILE, TMP_MESSAGE_ARCHIVE_FILE)
