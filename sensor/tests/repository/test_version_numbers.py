@@ -15,7 +15,7 @@ SENSOR_DEFAULT_CONFIG = os.path.join(
 
 
 @pytest.mark.ci
-def test_version_numbers():
+def test_version_numbers() -> None:
     assert os.path.isfile(SERVER_PYPROJECT_TOML)
     assert os.path.isfile(SENSOR_PYPROJECT_TOML)
     assert os.path.isfile(SENSOR_DEFAULT_CONFIG)

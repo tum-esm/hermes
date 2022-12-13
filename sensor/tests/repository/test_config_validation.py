@@ -28,7 +28,7 @@ VALID_CONFIG = {
 
 
 # adapted from https://gist.github.com/angstwad/bf22d1822c38a92ec0a9
-def merge_dicts(original: Any, updates: Any):
+def merge_dicts(original: Any, updates: Any) -> Any:
     for key, value in updates.items():
         if (
             (key in original)
@@ -46,7 +46,7 @@ class ValidationPassedException(Exception):
 
 
 @pytest.mark.ci
-def test_config_validation():
+def test_config_validation() -> None:
     # some valid configs
     Config(**VALID_CONFIG)
 
