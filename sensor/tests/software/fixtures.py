@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Generator
 import pytest
 import dotenv
 import sys
@@ -11,7 +12,7 @@ from src import utils
 
 
 @pytest.fixture(scope="session")
-def mqtt_client_environment():
+def mqtt_client_environment() -> Generator[None, None, None]:
     """load the environment variables from config/.env.testing
     and generate a dummy base-topic path"""
 
@@ -40,7 +41,7 @@ def _save_file(original_path: str, temporary_path: str, test_content: str) -> No
         f.write(test_content)
 
 
-def _restore_file(original_path: str, temporary_path: str):
+def _restore_file(original_path: str, temporary_path: str) -> None:
     os.remove(original_path)
     try:
         os.rename(temporary_path, original_path)
@@ -49,7 +50,7 @@ def _restore_file(original_path: str, temporary_path: str):
 
 
 @pytest.fixture
-def log_files():
+def log_files() -> Generator[None, None, None]:
     """
     1. store actual log files in a temporary location
     2. set up a new, empty log file just for the test

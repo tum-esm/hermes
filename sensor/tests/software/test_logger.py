@@ -11,7 +11,7 @@ from src import utils
 
 
 @pytest.mark.ci
-def test_logger(log_files) -> None:
+def test_logger(log_files: None) -> None:
     expected_lines = [
         "pytests - DEBUG - some message a",
         "pytests - INFO - some message b",

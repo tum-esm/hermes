@@ -13,7 +13,7 @@ from src import utils
 
 
 @pytest.mark.ci
-def test_mqtt_receiving(mqtt_client_environment, log_files) -> None:
+def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
     mqtt_client = utils.mqtt.MQTTClient.get_client()
     mqtt_config = utils.mqtt.MQTTClient.get_config()
 
