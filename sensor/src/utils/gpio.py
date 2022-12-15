@@ -1,4 +1,8 @@
+import pigpio
 from gpiozero.pins.pigpio import PiGPIOFactory
+
+
+pigpio.exceptions = False
 
 
 def get_pin_factory() -> PiGPIOFactory:
