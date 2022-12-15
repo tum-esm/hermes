@@ -1,3 +1,4 @@
+from typing import Optional
 import click
 import os
 import psutil
@@ -16,7 +17,7 @@ def print_red(text: str) -> None:
     click.echo(click.style(text, fg="red"))
 
 
-def process_is_running() -> int | None:
+def process_is_running() -> Optional[int]:
     for p in psutil.process_iter():
         try:
             arguments = p.cmdline()
