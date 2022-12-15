@@ -3,7 +3,6 @@ import pigpio
 pigpio.exceptions = False
 
 from .co2_sensor import CO2SensorInterface
-from .config import ConfigInterface
 from .air_inlet_sensor import AirInletSensorInterface
 from .mainboard_sensor import MainboardSensorInterface
 from .pump import PumpInterface

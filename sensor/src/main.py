@@ -32,7 +32,7 @@ def run() -> None:
     # TODO: init configuration-procedure instance
 
     try:
-        config = hardware_interfaces.ConfigInterface.read()
+        config = utils.ConfigInterface.read()
     except Exception as e:
         logger.error("could not load local config.json")
         logger.exception(e)
