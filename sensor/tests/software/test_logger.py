@@ -10,6 +10,9 @@ sys.path.append(PROJECT_DIR)
 from src import utils
 
 
+# TODO: test whether logger enqueues and sends mqtt messages
+
+
 @pytest.mark.ci
 def test_logger(log_files: None) -> None:
     expected_lines = [
