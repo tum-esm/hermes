@@ -245,4 +245,4 @@ class SendingMQTTClient:
         pass
 
     # TODO: function "wait_for_message_sending" that blocks until the
-    #       active queue is empty
+    #       active queue is empty - timeout after 1 minute
