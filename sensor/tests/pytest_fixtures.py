@@ -33,6 +33,7 @@ def _restore_file(original_path: str, temporary_path: str) -> None:
     if isfile(original_path):
         with open(original_path, "r") as f:
             tmp_content = f.read()
+        os.remove(original_path)
 
     try:
         os.rename(temporary_path, original_path)

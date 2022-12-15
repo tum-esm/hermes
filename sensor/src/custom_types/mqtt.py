@@ -86,7 +86,7 @@ class MQTTStatusMessageBody(BaseModel):
         validate_str(min_len=1, max_len=1024),
     )
     _val_details = validator("details", pre=True, allow_reuse=True)(
-        validate_str(min_len=1, max_len=1024),
+        validate_str(min_len=0, max_len=1024),
     )
 
     class Config:
