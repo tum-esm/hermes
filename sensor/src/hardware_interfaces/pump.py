@@ -136,7 +136,8 @@ class PumpInterface:
             elif -15 < difference_in_percent < 15:
                 logger.warning(
                     f"pump speed varies {difference_in_percent}%"
-                    + " target (in noticeable range)"
+                    + " target (in noticeable range)",
+                    config=config,
                 )
                 # TODO: send warning to MQTT client
             else:
@@ -144,7 +145,7 @@ class PumpInterface:
                     f"pump speed varies {difference_in_percent}%"
                     + " target (in unaccpetable range)"
                 )
-                logger.error(error_message)
+                logger.error(error_message, config=config)
 
                 # this queue will make the main thread raise an exception
                 rps_monitoring_exceptions.put(error_message)

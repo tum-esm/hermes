@@ -23,11 +23,13 @@ class SystemCheckProcedure:
         )
         if system_data.mainboard_temperature > 70:
             self.logger.warning(
-                f"mainboard temperature is very high ({system_data.mainboard_temperature}°C)"
+                f"mainboard temperature is very high ({system_data.mainboard_temperature}°C)",
+                config=self.config,
             )
         if system_data.cpu_temperature is not None and system_data.cpu_temperature > 70:
             self.logger.warning(
-                f"cpu temperature is very high ({system_data.cpu_temperature}°C)"
+                f"cpu temperature is very high ({system_data.cpu_temperature}°C)",
+                config=self.config,
             )
 
         # evaluate disk usage
@@ -38,14 +40,17 @@ class SystemCheckProcedure:
         )
         if disk_usage.percent > 80:
             self.logger.warning(
-                f"disk space usage is very high ({disk_usage.percent} %)"
+                f"disk space usage is very high ({disk_usage.percent} %)",
+                config=self.config,
             )
 
         # evaluate CPU usage
         cpu_usage_percent = psutil.cpu_percent()
         self.logger.debug(f"{cpu_usage_percent} % total CPU usage")
         if cpu_usage_percent > 90:
-            self.logger.warning(f"CPU usage is very high ({cpu_usage_percent} %)")
+            self.logger.warning(
+                f"CPU usage is very high ({cpu_usage_percent} %)", config=self.config
+            )
 
         # mqtt sending loop
         utils.SendingMQTTClient.check_errors()

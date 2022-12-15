@@ -15,7 +15,7 @@ class UPSInterface:
             pin_factory=self.pin_factory,
         )
         mode_input.when_activated = lambda: logger.warning(
-            "system is powered by battery"
+            "system is powered by battery", config=config
         )
         mode_input.when_deactivated = lambda: logger.info(
             "system is powered externally"
@@ -25,12 +25,14 @@ class UPSInterface:
         alarm_input = gpiozero.DigitalInputDevice(
             Constants.UPS.alarm_pin_in, bounce_time=300, pin_factory=self.pin_factory
         )
-        alarm_input.when_activated = lambda: logger.warning("battery error detected")
+        alarm_input.when_activated = lambda: logger.warning(
+            "battery error detected", config=config
+        )
         alarm_input.when_deactivated = lambda: logger.info("battery status is ok")
 
         def _on_battery_is_ready() -> None:
             if mode_input.is_active:
-                logger.error("battery voltage is under threshold")
+                logger.error("battery voltage is under threshold", config=config)
                 # TODO: where to do a shutdown routine
             else:
                 logger.info("battery is fully charged")

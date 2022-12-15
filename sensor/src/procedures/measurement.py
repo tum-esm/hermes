@@ -113,7 +113,9 @@ class MeasurementProcedure:
         _, humidity = self.air_inlet_sensor.get_current_values()
         self.co2_sensor_interface.set_calibration_values(humidity=humidity)
         if humidity is None:
-            self.logger.warning("could not read humidity value from SHT21")
+            self.logger.warning(
+                "could not read humidity value from SHT21", config=self.config
+            )
 
     def run(self) -> None:
         """
