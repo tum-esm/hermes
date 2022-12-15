@@ -48,5 +48,5 @@ class SystemCheckProcedure:
             self.logger.warning(f"CPU usage is very high ({cpu_usage_percent} %)")
 
         # mqtt sending loop
-        interfaces.SendingMQTTClient.check_errors()
-        interfaces.SendingMQTTClient.log_statistics()
+        utils.SendingMQTTClient.check_errors()
+        utils.SendingMQTTClient.log_statistics()

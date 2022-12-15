@@ -5,8 +5,11 @@ from typing import Callable, Literal
 import paho.mqtt.client
 from os.path import dirname, abspath, join, isfile
 
+from .logger import Logger
+from .mqtt_connection import MQTTConnection
+
 import pytz
-from src import custom_types, utils
+from src import custom_types
 import multiprocessing
 import multiprocessing.synchronize
 
@@ -133,11 +136,11 @@ class SendingMQTTClient:
     def sending_loop(lock: multiprocessing.synchronize.Lock) -> None:
         """takes messages from the queue file and processes them"""
 
-        logger = utils.Logger(origin="mqtt-sending-loop")
+        logger = Logger(origin="mqtt-sending-loop")
         logger.info("starting loop")
 
-        mqtt_client = utils.mqtt.MQTTClient.get_client()
-        mqtt_config = utils.mqtt.MQTTClient.get_config()
+        mqtt_client = MQTTConnection.get_client()
+        mqtt_config = MQTTConnection.get_config()
 
         # TODO: add periodic heartbeat messages
 

@@ -16,8 +16,8 @@ from src import utils, interfaces
 
 @pytest.mark.ci
 def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
-    mqtt_client = utils.mqtt.MQTTClient.get_client()
-    mqtt_config = utils.mqtt.MQTTClient.get_config()
+    mqtt_client = utils.mqtt_connection.MQTTConnection.get_client()
+    mqtt_config = utils.mqtt_connection.MQTTConnection.get_config()
 
     config_topic = (
         f"{mqtt_config.mqtt_base_topic}/configuration/{mqtt_config.station_identifier}"
@@ -31,7 +31,7 @@ def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
         ]
     )
 
-    receiving_client = interfaces.ReceivingMQTTClient()
+    receiving_client = utils.ReceivingMQTTClient()
     assert len(receiving_client.get_messages()) == 0
     time.sleep(1)
 

@@ -18,7 +18,7 @@ test_base_topic = f"/development/{round(time.time())*2}"
 os.environ["INSERT_NAME_HERE_STATION_IDENTIFIER"] = test_station_identifier
 os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"] = test_base_topic
 
-mqtt_client, mqtt_config = utils.mqtt.get_mqtt_client()
+mqtt_client, mqtt_config = utils.mqtt_connection.get_mqtt_client()
 
 
 i = 0

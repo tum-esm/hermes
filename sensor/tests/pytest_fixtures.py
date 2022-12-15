@@ -51,7 +51,7 @@ def mqtt_client_environment() -> Generator[None, None, None]:
 
     yield
 
-    utils.mqtt.MQTTClient.deinit()
+    utils.mqtt_connection.MQTTConnection.deinit()
 
 
 @pytest.fixture
@@ -79,11 +79,11 @@ def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, No
 
     _save_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE, None)
     _save_file(MESSAGE_ARCHIVE_FILE, TMP_MESSAGE_ARCHIVE_FILE, None)
-    interfaces.SendingMQTTClient.init_sending_loop_process()
+    utils.SendingMQTTClient.init_sending_loop_process()
 
     yield
 
-    interfaces.SendingMQTTClient.deinit_sending_loop_process()
+    utils.SendingMQTTClient.deinit_sending_loop_process()
     _restore_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE)
     _restore_file(MESSAGE_ARCHIVE_FILE, TMP_MESSAGE_ARCHIVE_FILE)
 

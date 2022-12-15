@@ -2,7 +2,8 @@ import json
 import queue
 from typing import Any
 import paho.mqtt.client
-from src import utils
+from .logger import Logger
+from .mqtt_connection import MQTTConnection
 
 # TODO: statically type config messages
 mqtt_message_queue: queue.Queue[dict[Any]] = queue.Queue(maxsize=1024)  # type:ignore
@@ -14,7 +15,7 @@ def on_message(
     msg: paho.mqtt.client.MQTTMessage,
 ) -> None:
     global mqtt_message_queue
-    logger = utils.Logger(origin="mqtt-receiving-loop")
+    logger = Logger(origin="mqtt-receiving-loop")
     logger.debug(f"received message: {msg}")
     try:
         payload = json.loads(msg.payload.decode())
@@ -25,9 +26,9 @@ def on_message(
 
 class ReceivingMQTTClient:
     def __init__(self) -> None:
-        logger = utils.Logger(origin="mqtt-receiving-client")
-        mqtt_client = utils.mqtt.MQTTClient.get_client()
-        mqtt_config = utils.mqtt.MQTTClient.get_config()
+        logger = Logger(origin="mqtt-receiving-client")
+        mqtt_client = MQTTConnection.get_client()
+        mqtt_config = MQTTConnection.get_config()
         mqtt_client.on_message = on_message
         config_topic = f"{mqtt_config.mqtt_base_topic}/configuration/{mqtt_config.station_identifier}"
 

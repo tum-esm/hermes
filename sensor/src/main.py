@@ -23,7 +23,7 @@ def run() -> None:
     logger.info(f"starting mainloop with process ID {os.getpid()}")
 
     try:
-        mqtt_receiver = interfaces.ReceivingMQTTClient()
+        mqtt_receiver = utils.ReceivingMQTTClient()
     except Exception as e:
         logger.error("could not start mqtt receiver")
         logger.exception(e)

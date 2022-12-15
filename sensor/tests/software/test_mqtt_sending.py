@@ -13,7 +13,7 @@ PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
 sys.path.append(PROJECT_DIR)
 
-from src import interfaces, custom_types
+from src import utils, custom_types
 
 ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
 TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
@@ -31,7 +31,7 @@ MESSAGE_ARCHIVE_FILE = join(
 
 @pytest.mark.integration
 def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
-    interfaces.SendingMQTTClient.check_errors()
+    utils.SendingMQTTClient.check_errors()
     with open(ACTIVE_MESSAGES_FILE, "r") as f:
         active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
     assert active_mqtt_message_queue.max_identifier == 0
@@ -56,7 +56,7 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
         timestamp=datetime.now().timestamp(),
         value=custom_types.CO2SensorData(raw=0.0, compensated=0.0, filtered=0.0),
     )
-    interfaces.SendingMQTTClient.enqueue_message(
+    utils.SendingMQTTClient.enqueue_message(
         config,
         dummy_measurement_message,
     )
@@ -111,4 +111,4 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     )
 
     # assert that sending loop is still functioning correctly
-    interfaces.SendingMQTTClient.check_errors()
+    utils.SendingMQTTClient.check_errors()
