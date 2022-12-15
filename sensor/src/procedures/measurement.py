@@ -154,9 +154,12 @@ class MeasurementProcedure:
 
             current_sensor_data = self.co2_sensor_interface.get_current_concentration()
             self.logger.info(f"new measurement: {current_sensor_data}")
-
-            # TODO: write out measurements to data files
-            # TODO: write out measurements to mqtt broker
+            utils.SendingMQTTClient.enqueue_message(
+                config=self.config,
+                message_body=custom_types.MQTTMeasurementMessageBody(
+                    timestamp=time.time(), value=current_sensor_data
+                ),
+            )
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
