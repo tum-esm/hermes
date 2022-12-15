@@ -43,6 +43,10 @@ def run() -> None:
     # TODO: init calibration-procedure instance
     measurement_prodecure = procedures.MeasurementProcedure(config)
 
+    # TODO: add try-except logic around mainloop
+    # TODO: send exceptions over mqtt as well
+    # TODO: ad incremental backoff time
+
     while True:
         logger.info("starting mainloop iteration")
 
@@ -59,6 +63,3 @@ def run() -> None:
         measurement_prodecure.run()
 
         logger.info("finished mainloop iteration")
-
-        # not needed anymore once all procedures have been implemented
-        time.sleep(10)

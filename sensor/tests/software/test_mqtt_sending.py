@@ -25,6 +25,10 @@ MESSAGE_ARCHIVE_FILE = join(
 )
 
 
+# TODO: figure out, why this test doesn't work
+#       in the GitHub CI environment
+
+
 @pytest.mark.integration
 def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     interfaces.SendingMQTTClient.check_errors()
