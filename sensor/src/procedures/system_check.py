@@ -1,5 +1,5 @@
 import psutil
-from src import interfaces, custom_types, utils
+from src import hardware_interfaces, custom_types, utils
 
 
 class SystemCheckProcedure:
@@ -8,7 +8,7 @@ class SystemCheckProcedure:
     def __init__(self, config: custom_types.Config) -> None:
         self.logger = utils.Logger(origin="system-checks")
         self.config = config
-        self.mainboard_sensor = interfaces.MainboardSensorInterface()
+        self.mainboard_sensor = hardware_interfaces.MainboardSensorInterface()
 
     def run(self) -> None:
         # evaluate system ambient conditions

@@ -1,6 +1,6 @@
 import os
 import time
-from src import interfaces, procedures, utils
+from src import hardware_interfaces, procedures, utils
 
 
 def run() -> None:
@@ -32,7 +32,7 @@ def run() -> None:
     # TODO: init configuration-procedure instance
 
     try:
-        config = interfaces.ConfigInterface.read()
+        config = hardware_interfaces.ConfigInterface.read()
     except Exception as e:
         logger.error("could not load local config.json")
         logger.exception(e)

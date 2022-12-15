@@ -6,15 +6,15 @@ from ..pytest_fixtures import log_files
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
-from src import interfaces
+from src import hardware_interfaces
 
 
 @pytest.mark.integration
 def test_input_air_sensor(log_files: None) -> None:
-    config = interfaces.ConfigInterface.read()
-    sensor = interfaces.AirInletSensorInterface()
-    valves = interfaces.ValveInterface(config)
-    pump = interfaces.PumpInterface(config)
+    config = hardware_interfaces.ConfigInterface.read()
+    sensor = hardware_interfaces.AirInletSensorInterface()
+    valves = hardware_interfaces.ValveInterface(config)
+    pump = hardware_interfaces.PumpInterface(config)
 
     valves.set_active_input(1)
     pump.set_desired_pump_rps(20)

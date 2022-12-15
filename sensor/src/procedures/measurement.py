@@ -4,7 +4,7 @@
 
 import time
 from typing import Literal
-from src import custom_types, utils, interfaces
+from src import custom_types, utils, hardware_interfaces
 
 
 class MeasurementProcedure:
@@ -22,18 +22,18 @@ class MeasurementProcedure:
         self.config = config
 
         # valve switching
-        self.wind_sensor_interface = interfaces.WindSensorInterface(config)
-        self.valve_interfaces = interfaces.ValveInterface(config)
+        self.wind_sensor_interface = hardware_interfaces.WindSensorInterface(config)
+        self.valve_interfaces = hardware_interfaces.ValveInterface(config)
         self.active_valve_number: Literal[1, 2, 3, 4] | None = None
 
         # pump (runs continuously)
-        self.pump_interface = interfaces.PumpInterface(config)
+        self.pump_interface = hardware_interfaces.PumpInterface(config)
         self.pump_interface.set_desired_pump_rps(20)
         time.sleep(1)
 
         # measurements
-        self.air_inlet_sensor = interfaces.AirInletSensorInterface()
-        self.co2_sensor_interface = interfaces.CO2SensorInterface(config)
+        self.air_inlet_sensor = hardware_interfaces.AirInletSensorInterface()
+        self.co2_sensor_interface = hardware_interfaces.CO2SensorInterface(config)
         self.last_measurement_time: float = 0
 
     def _switch_to_valve_number(self, new_valve_number: Literal[1, 2, 3, 4]) -> None:

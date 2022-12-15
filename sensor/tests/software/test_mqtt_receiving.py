@@ -11,7 +11,7 @@ PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
 sys.path.append(PROJECT_DIR)
 
-from src import utils, interfaces
+from src import utils, hardware_interfaces
 
 
 @pytest.mark.ci
