@@ -13,10 +13,14 @@ poetry install --with=dev # dev is optional
 **Run tests/check static types:**
 
 ```bash
-bash scripts/testing/run_all_tests.sh
-bash scripts/testing/run_ci_tests.sh
-bash scripts/testing/run_integration_tests.sh
-bash scripts/testing/check_static_types.sh
+# all tests
+pytest --cov=src --cov=cli tests/
+
+# only ci tests
+pytest -m "ci" --cov=src --cov=cli tests/
+
+# only integration tests
+pytest -m "integration" --cov=src --cov=cli tests/
 ```
 
 ## Configuration
