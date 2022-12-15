@@ -1,3 +1,4 @@
+from typing import Optional
 import smbus2
 import bme280
 import os
@@ -13,7 +14,7 @@ class MainboardSensorInterface:
             utils.Constants.MainboardSensor.i2c_address,
         )
 
-    def _get_cpu_temperature(self) -> float | None:
+    def _get_cpu_temperature(self) -> Optional[float]:
         s = os.popen("vcgencmd measure_temp").readline()
         return float(s.replace("temp=", "").replace("'C\n", ""))
 

@@ -1,7 +1,7 @@
 import datetime
 import json
 import time
-from typing import Callable, Literal
+from typing import Callable, Literal, Optional
 import paho.mqtt.client
 from os.path import dirname, abspath, join, isfile
 
@@ -20,7 +20,7 @@ lock = multiprocessing.Lock()
 
 
 class SendingMQTTClient:
-    sending_loop_process: multiprocessing.Process | None = None
+    sending_loop_process: Optional[multiprocessing.Process] = None
 
     @staticmethod
     def init_sending_loop_process() -> None:

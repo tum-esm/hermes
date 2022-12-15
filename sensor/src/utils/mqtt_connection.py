@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Optional
 import paho.mqtt.client
 import ssl
 from src import custom_types
@@ -8,8 +9,8 @@ from src import custom_types
 class MQTTConnection:
     """provides an mqtt client"""
 
-    __config: custom_types.MQTTConfig | None = None
-    __client: paho.mqtt.client.Client | None = None
+    __config: Optional[custom_types.MQTTConfig] = None
+    __client: Optional[paho.mqtt.client.Client] = None
 
     @staticmethod
     def __init() -> None:

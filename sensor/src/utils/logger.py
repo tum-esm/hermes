@@ -1,6 +1,8 @@
 from os.path import dirname, abspath, join
+import sys
 import traceback
 from datetime import datetime, timedelta
+from typing import Optional
 
 from src import custom_types
 
@@ -49,7 +51,9 @@ class Logger:
         """writes an info log line"""
         self._write_log_line("INFO", message)
 
-    def warning(self, message: str, config: custom_types.Config | None = None) -> None:
+    def warning(
+        self, message: str, config: Optional[custom_types.Config] = None
+    ) -> None:
         """writes a warning log line, sends the message via
         MQTT when config is passed (required for revision number)
         """
@@ -62,7 +66,7 @@ class Logger:
                 ),
             )
 
-    def error(self, message: str, config: custom_types.Config | None = None) -> None:
+    def error(self, message: str, config: Optional[custom_types.Config] = None) -> None:
         """writes an error log line, sends the message via
         MQTT when config is passed (required for revision number)
         """
@@ -76,13 +80,13 @@ class Logger:
             )
 
     def exception(
-        self, e: Exception, config: custom_types.Config | None = None
+        self, e: Exception, config: Optional[custom_types.Config] = None
     ) -> None:
         """logs the traceback of an exception, sends the message via
         MQTT when config is passed (required for revision number)
         """
         exception_name = type(e).__name__
-        exception_traceback = "\n".join(traceback.format_exception(e))
+        exception_traceback = "\n".join(traceback.format_exception(*sys.exc_info()))
         self._write_log_line(
             "EXCEPTION", f"{exception_name} occured: {exception_traceback}"
         )

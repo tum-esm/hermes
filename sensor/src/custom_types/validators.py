@@ -1,5 +1,5 @@
 import re
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 
 
 def validate_bool() -> Callable[[Any, bool], bool]:
@@ -13,8 +13,8 @@ def validate_bool() -> Callable[[Any, bool], bool]:
 
 def validate_float(
     nullable: bool = False,
-    minimum: float | None = None,
-    maximum: float | None = None,
+    minimum: Optional[float] = None,
+    maximum: Optional[float] = None,
 ) -> Callable[[Any, float], float]:
     def f(cls: Any, v: float) -> float:
         if v is None:
@@ -35,11 +35,11 @@ def validate_float(
 
 def validate_int(
     nullable: bool = False,
-    minimum: int | None = None,
-    maximum: int | None = None,
-    allowed: list[int] | None = None,
-) -> Callable[[Any, int | None], int | None]:
-    def f(cls: Any, v: int | None) -> int | None:
+    minimum: Optional[int] = None,
+    maximum: Optional[int] = None,
+    allowed: Optional[list[int]] = None,
+) -> Callable[[Any, Optional[int]], Optional[int]]:
+    def f(cls: Any, v: Optional[int]) -> Optional[int]:
         if v is None:
             if nullable:
                 return v
@@ -59,10 +59,10 @@ def validate_int(
 
 
 def validate_str(
-    min_len: float | None = None,
-    max_len: float | None = None,
-    allowed: list[str] | None = None,
-    regex: str | None = None,
+    min_len: Optional[float] = None,
+    max_len: Optional[float] = None,
+    allowed: Optional[list[str]] = None,
+    regex: Optional[str] = None,
     is_numeric: bool = False,
 ) -> Callable[[Any, str], str]:
     def f(cls: Any, v: str) -> str:
@@ -87,8 +87,8 @@ T = TypeVar("T")
 
 
 def validate_list(
-    min_len: float | None = None,
-    max_len: float | None = None,
+    min_len: Optional[float] = None,
+    max_len: Optional[float] = None,
 ) -> Callable[[Any, list[T]], list[T]]:
     def f(cls: Any, v: list[T]) -> list[T]:
         if not isinstance(v, list):

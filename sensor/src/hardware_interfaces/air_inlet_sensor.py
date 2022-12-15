@@ -2,6 +2,7 @@
 # https://github.com/Tronde/Raspi-SHT21
 
 import time
+from typing import Optional
 from src import utils
 
 
@@ -11,7 +12,7 @@ class AirInletSensorInterface:
             address=0x40, device=1
         )
 
-    def get_current_values(self) -> tuple[float | None, float | None]:
+    def get_current_values(self) -> tuple[Optional[float], Optional[float]]:
         """get tuple of temperature and humidity"""
         # execute Softreset Command  (default T=14Bit RH=12)
         self.i2c_interface.write([0xFE])
@@ -23,7 +24,7 @@ class AirInletSensorInterface:
 
         return temperature, humidity
 
-    def _read_temperature(self) -> float | None:
+    def _read_temperature(self) -> Optional[float]:
         """Temperature measurement (no hold master), blocking for ~ 88ms !!!"""
         self.i2c_interface.write([0xF3])
         time.sleep(0.086)  # wait, typ=66ms, max=85ms @ 14Bit resolution
@@ -35,7 +36,7 @@ class AirInletSensorInterface:
         else:
             return None
 
-    def _read_humidity(self) -> float | None:
+    def _read_humidity(self) -> Optional[float]:
         """RH measurement (no hold master), blocking for ~ 32ms !!!"""
         self.i2c_interface.write([0xF5])  # Trigger RH measurement (no hold master)
         time.sleep(0.03)  # wait, typ=22ms, max=29ms @ 12Bit resolution

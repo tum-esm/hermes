@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional, Union
 from pydantic import BaseModel, validator
 
 from .validators import validate_int, validate_str, validate_float
@@ -47,8 +47,8 @@ class MQTTMessageHeader(BaseModel):
     identifier: int
     status: Literal["pending", "sent", "delivered"]
     revision: int
-    issue_timestamp: float  # 01.01.2022 - 19.01.2038 allowed (4 byte integer)
-    success_timestamp: float | None  # 01.01.2022 - 19.01.2038 allowed (4 byte integer)
+    issue_timestamp: float
+    success_timestamp: Optional[float]
 
     # validators
     _val_identifier = validator("identifier", pre=True, allow_reuse=True)(
@@ -60,6 +60,8 @@ class MQTTMessageHeader(BaseModel):
     _val_revision = validator("revision", pre=True, allow_reuse=True)(
         validate_int(minimum=0, maximum=2_147_483_648),
     )
+
+    # timestamps allow 01.01.2022 - 19.01.2038 allowed (4 byte integer)
     _val_issue_timestamp = validator("issue_timestamp", pre=True, allow_reuse=True)(
         validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
     )
@@ -116,7 +118,7 @@ class MQTTMeasurementMessage(BaseModel):
 
 class ActiveMQTTMessageQueue(BaseModel):
     max_identifier: int
-    messages: list[MQTTStatusMessage | MQTTMeasurementMessage]
+    messages: list[Union[MQTTStatusMessage, MQTTMeasurementMessage]]
 
     # validators
     _val_max_identifier = validator("max_identifier", pre=True, allow_reuse=True)(
@@ -128,11 +130,11 @@ class ActiveMQTTMessageQueue(BaseModel):
 
 
 class ArchivedMQTTMessageQueue(BaseModel):
-    messages: list[MQTTStatusMessage | MQTTMeasurementMessage]
+    messages: list[Union[MQTTStatusMessage, MQTTMeasurementMessage]]
 
     class Config:
         extra = "forbid"
 
 
-MQTTMessageBody = MQTTStatusMessageBody | MQTTMeasurementMessageBody
-MQTTMessage = MQTTStatusMessage | MQTTMeasurementMessage
+MQTTMessageBody = Union[MQTTStatusMessageBody, MQTTMeasurementMessageBody]
+MQTTMessage = Union[MQTTStatusMessage, MQTTMeasurementMessage]

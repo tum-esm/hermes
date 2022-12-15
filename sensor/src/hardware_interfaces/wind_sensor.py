@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
@@ -33,8 +34,8 @@ class WindSensorInterface:
         self.rs232_interface = utils.serial_interfaces.SerialWindSensorInterface(
             port=utils.Constants.WindSensor.serial_port
         )
-        self.wind_measurement: custom_types.WindSensorData | None = None
-        self.device_status: custom_types.WindSensorStatus | None = None
+        self.wind_measurement: Optional[custom_types.WindSensorData] = None
+        self.device_status: Optional[custom_types.WindSensorStatus] = None
 
     def _update_current_values(self) -> None:
         new_messages = self.rs232_interface.get_messages()
@@ -68,11 +69,11 @@ class WindSensorInterface:
                     last_update_time=now,
                 )
 
-    def get_current_wind_measurement(self) -> custom_types.WindSensorData | None:
+    def get_current_wind_measurement(self) -> Optional[custom_types.WindSensorData]:
         self._update_current_values()
         return self.wind_measurement
 
-    def get_current_device_status(self) -> custom_types.WindSensorStatus | None:
+    def get_current_device_status(self) -> Optional[custom_types.WindSensorStatus]:
         self._update_current_values()
         return self.device_status
 

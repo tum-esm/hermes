@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
@@ -103,9 +104,9 @@ class CO2SensorInterface:
 
     def set_calibration_values(
         self,
-        pressure: float | None = None,
-        humidity: float | None = None,
-        oxygen: float | None = None,
+        pressure: Optional[float] = None,
+        humidity: Optional[float] = None,
+        oxygen: Optional[float] = None,
     ) -> None:
         """
         update pressure, humidity, and oxygen values in sensor

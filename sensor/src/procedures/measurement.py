@@ -3,7 +3,7 @@
 # class last_measurement_value = datetime.now()
 
 import time
-from typing import Literal
+from typing import Literal, Optional
 from src import custom_types, utils, hardware_interfaces
 
 
@@ -24,7 +24,7 @@ class MeasurementProcedure:
         # valve switching
         self.wind_sensor_interface = hardware_interfaces.WindSensorInterface(config)
         self.valve_interfaces = hardware_interfaces.ValveInterface(config)
-        self.active_valve_number: Literal[1, 2, 3, 4] | None = None
+        self.active_valve_number: Optional[Literal[1, 2, 3, 4]] = None
 
         # pump (runs continuously)
         self.pump_interface = hardware_interfaces.PumpInterface(config)

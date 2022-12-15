@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 # validation is only necessary for external sources
@@ -17,7 +18,7 @@ class MainboardSensorData(BaseModel):
     """units: °C for temperature, rH for humidity, hPa for pressure"""
 
     mainboard_temperature: float
-    cpu_temperature: float | None
+    cpu_temperature: Optional[float]
     enclosure_humidity: float
     enclosure_pressure: float
 
