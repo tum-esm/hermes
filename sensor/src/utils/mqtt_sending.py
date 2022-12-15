@@ -5,7 +5,6 @@ from typing import Callable, Literal
 import paho.mqtt.client
 from os.path import dirname, abspath, join, isfile
 
-from .logger import Logger
 from .mqtt_connection import MQTTConnection
 
 import pytz
@@ -135,8 +134,9 @@ class SendingMQTTClient:
     @staticmethod
     def sending_loop(lock: multiprocessing.synchronize.Lock) -> None:
         """takes messages from the queue file and processes them"""
+        from src import utils
 
-        logger = Logger(origin="mqtt-sending-loop")
+        logger = utils.Logger(origin="mqtt-sending-loop")
         logger.info("starting loop")
 
         mqtt_client = MQTTConnection.get_client()
