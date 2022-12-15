@@ -16,10 +16,10 @@ LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
 
 
 def log_line_has_date(log_line: str) -> bool:
-    """Returns true when a give log line (string) starts
+    """returns true when a give log line (string) starts
     with a valid date. This is not true for exception
     tracebacks. This log line time is used to determine
-    which file to archive logs lines into."""
+    which file to archive logs lines into"""
     try:
         datetime.strptime(log_line[:10], "%Y-%m-%d")
         return True
@@ -42,15 +42,17 @@ class Logger:
         self.print_to_console = print_to_console
 
     def debug(self, message: str) -> None:
-        """Write a debug log (to debug only). Used for verbose output"""
+        """writes a debug log line, used for verbose output"""
         self._write_log_line("DEBUG", message)
 
     def info(self, message: str) -> None:
-        """Write an info log (to debug and info)"""
+        """writes an info log line"""
         self._write_log_line("INFO", message)
 
     def warning(self, message: str, config: custom_types.Config | None = None) -> None:
-        """Write a warning log (to debug and info)"""
+        """writes a warning log line, sends the message via
+        MQTT when config is passed (required for revision number)
+        """
         self._write_log_line("WARNING", message)
         if config is not None:
             SendingMQTTClient.enqueue_message(
@@ -61,7 +63,9 @@ class Logger:
             )
 
     def error(self, message: str, config: custom_types.Config | None = None) -> None:
-        """Write an error log (to debug and info)"""
+        """writes an error log line, sends the message via
+        MQTT when config is passed (required for revision number)
+        """
         self._write_log_line("ERROR", message)
         if config is not None:
             SendingMQTTClient.enqueue_message(
@@ -74,7 +78,9 @@ class Logger:
     def exception(
         self, e: Exception, config: custom_types.Config | None = None
     ) -> None:
-        """Log the traceback of an exception"""
+        """logs the traceback of an exception, sends the message via
+        MQTT when config is passed (required for revision number)
+        """
         exception_name = type(e).__name__
         exception_traceback = "\n".join(traceback.format_exception(e))
         self._write_log_line(
@@ -91,8 +97,8 @@ class Logger:
             )
 
     def _write_log_line(self, level: str, message: str) -> None:
-        """Format the log line string and write it to "logs/debug.log"
-        and possibly "logs/info.log"""
+        """formats the log line string and writes it to
+        `logs/current-logs.log`"""
         now = datetime.now()
         utc_offset = round(
             (datetime.now() - datetime.utcnow()).total_seconds() / 3600, 1
@@ -115,12 +121,9 @@ class Logger:
                 self._archive()
 
     def _archive(self) -> None:
-        """
-        Move old log lines in "logs/sensor-node-{sensor_node_id}.log" into an
-        archive file "logs/archive/sensor-node-{sensor_node_id}-YYYYMMDD.log".
-
-        Log lines from the last hour will remain.
-        """
+        """moves old log lines in "logs/current-logs.log" into an
+        archive file "logs/archive/YYYYMMDD.log". log lines from
+        the last hour will remain"""
 
         with open(LOG_FILE, "r") as f:
             log_lines_in_file = f.readlines()
