@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 import time
-from typing import Generator
+from typing import Generator, Optional
 import pytest
 import dotenv
 import sys
@@ -13,7 +13,7 @@ from src import utils, hardware_interfaces
 
 
 def _save_file(
-    original_path: str, temporary_path: str, test_content: str | None
+    original_path: str, temporary_path: str, test_content: Optional[str]
 ) -> None:
     if isfile(temporary_path):
         os.remove(temporary_path)
