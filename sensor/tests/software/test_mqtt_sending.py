@@ -29,6 +29,7 @@ MESSAGE_ARCHIVE_FILE = join(
 #       in the GitHub CI environment
 
 
+@pytest.mark.dev
 @pytest.mark.integration
 def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     utils.SendingMQTTClient.check_errors()

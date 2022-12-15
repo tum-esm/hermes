@@ -15,7 +15,8 @@ from src import utils, hardware_interfaces
 def _save_file(
     original_path: str, temporary_path: str, test_content: str | None
 ) -> None:
-    assert not os.path.exists(temporary_path)
+    if isfile(temporary_path):
+        os.remove(temporary_path)
 
     try:
         os.rename(original_path, temporary_path)
@@ -28,12 +29,19 @@ def _save_file(
 
 
 def _restore_file(original_path: str, temporary_path: str) -> None:
+    tmp_content = None
     if isfile(original_path):
-        os.remove(original_path)
+        with open(original_path, "r") as f:
+            tmp_content = f.read()
+
     try:
         os.rename(temporary_path, original_path)
     except FileNotFoundError:
         pass
+
+    if tmp_content is not None:
+        with open(temporary_path, "w") as f:
+            f.write(tmp_content)
 
 
 @pytest.fixture(scope="session")
@@ -54,7 +62,7 @@ def mqtt_client_environment() -> Generator[None, None, None]:
     utils.mqtt_connection.MQTTConnection.deinit()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, None]:
     """start and stop the background sending loop of the SendingMQTTClient"""
 

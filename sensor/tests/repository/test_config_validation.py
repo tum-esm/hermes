@@ -45,6 +45,7 @@ class ValidationPassedException(Exception):
     """raise when validation does not catch some validation error"""
 
 
+@pytest.mark.dev
 @pytest.mark.ci
 def test_config_validation() -> None:
     # some valid configs
