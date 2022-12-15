@@ -2,6 +2,10 @@ from os.path import dirname, abspath, join
 import traceback
 from datetime import datetime, timedelta
 
+from src import custom_types
+
+from .mqtt_sending import SendingMQTTClient
+
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOGS_ARCHIVE_DIR = join(PROJECT_DIR, "logs", "archive")
 LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
@@ -45,18 +49,46 @@ class Logger:
         """Write an info log (to debug and info)"""
         self._write_log_line("INFO", message)
 
-    def warning(self, message: str) -> None:
+    def warning(self, message: str, config: custom_types.Config | None = None) -> None:
         """Write a warning log (to debug and info)"""
         self._write_log_line("WARNING", message)
+        if config is not None:
+            SendingMQTTClient.enqueue_message(
+                config=config,
+                message_body=custom_types.MQTTStatusMessageBody(
+                    severity="warning", subject=message, details=""
+                ),
+            )
 
-    def error(self, message: str) -> None:
+    def error(self, message: str, config: custom_types.Config | None = None) -> None:
         """Write an error log (to debug and info)"""
         self._write_log_line("ERROR", message)
+        if config is not None:
+            SendingMQTTClient.enqueue_message(
+                config=config,
+                message_body=custom_types.MQTTStatusMessageBody(
+                    severity="error", subject=message, details=""
+                ),
+            )
 
-    def exception(self, e: Exception) -> None:
+    def exception(
+        self, e: Exception, config: custom_types.Config | None = None
+    ) -> None:
         """Log the traceback of an exception"""
-        tb = "\n".join(traceback.format_exception(e))
-        self._write_log_line("EXCEPTION", f"{type(e).__name__} occured: {tb}")
+        exception_name = type(e).__name__
+        exception_traceback = "\n".join(traceback.format_exception(e))
+        self._write_log_line(
+            "EXCEPTION", f"{exception_name} occured: {exception_traceback}"
+        )
+        if config is not None:
+            SendingMQTTClient.enqueue_message(
+                config=config,
+                message_body=custom_types.MQTTStatusMessageBody(
+                    severity="exception",
+                    subject=exception_name,
+                    details=exception_traceback,
+                ),
+            )
 
     def _write_log_line(self, level: str, message: str) -> None:
         """Format the log line string and write it to "logs/debug.log"

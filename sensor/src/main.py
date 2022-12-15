@@ -1,6 +1,5 @@
 import os
-import time
-from src import hardware_interfaces, procedures, utils
+from src import procedures, utils
 
 
 def run() -> None:
