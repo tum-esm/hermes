@@ -2,6 +2,14 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" CASCADE;
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
 
+-- Function to convert a TIMESTAMPTZ into a unix timestamp
+CREATE FUNCTION unixtime (tstz TIMESTAMPTZ) RETURNS DOUBLE PRECISION
+    LANGUAGE SQL
+    IMMUTABLE
+    RETURNS NULL ON NULL INPUT
+    RETURN extract(epoch from tstz at time zone 'utc')::DOUBLE PRECISION;
+
+
 CREATE TABLE sensors (
     sensor_name TEXT UNIQUE NOT NULL,
     sensor_identifier UUID PRIMARY KEY,
@@ -22,7 +30,7 @@ CREATE TABLE configurations (
     -- Something like: lat/long, notes, version commit hash -> most should still be nullable
     -- lat/long and notes should be in the sensors table though, the configurations table should
     -- only contain things that are actually sent to the sensor
-    -- or user-configurable "metadata" that is not sent to the sensor
+    -- or user-configurable "metadata" that is not sent to the sensor -> better: extra tags table?
 
     configuration JSONB NOT NULL
 );
@@ -72,7 +80,6 @@ CREATE TABLE statuses (
     severity TEXT NOT NULL,
     subject TEXT NOT NULL,
     details TEXT
-    -- keep only the last N statuses?
 );
 
 -- CREATE INDEX sensor_identifier_creation_timestamp_index ON statuses (sensor_identifier ASC, creation_timestamp DESC);
@@ -81,5 +88,5 @@ SELECT create_hypertable('statuses', 'creation_timestamp');
 
 SELECT add_retention_policy(
     relation => 'statuses',
-    drop_after => INTERVAL '90 days'
+    drop_after => INTERVAL '120 days'
 );
