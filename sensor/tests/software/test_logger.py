@@ -17,7 +17,6 @@ from src import utils, custom_types
 # TODO: make the message queue assertions prettier
 
 
-@pytest.mark.dev
 @pytest.mark.ci
 def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
     config = custom_types.Config(

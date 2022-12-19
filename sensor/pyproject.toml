@@ -37,7 +37,6 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 markers = [
     "ci: can be run in GitHub CI",
-    "dev: can be run on a development machine",  # I don't know why GitHub actions cannot run certain tests yet (mqtt sending client doesn't work there)
     "integration: can only be run on a configured system",
 ]
 

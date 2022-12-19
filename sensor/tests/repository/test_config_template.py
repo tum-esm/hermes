@@ -10,7 +10,6 @@ sys.path.append(PROJECT_DIR)
 from src.custom_types import Config
 
 
-@pytest.mark.dev
 @pytest.mark.ci
 def test_default_config() -> None:
     with open(DEFAULT_CONFIG_PATH, "r") as f:

@@ -14,7 +14,6 @@ SENSOR_DEFAULT_CONFIG = os.path.join(
 # TODO: test version number of dashboard
 
 
-@pytest.mark.dev
 @pytest.mark.ci
 def test_version_numbers() -> None:
     assert os.path.isfile(SERVER_PYPROJECT_TOML)

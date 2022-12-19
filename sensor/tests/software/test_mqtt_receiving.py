@@ -14,7 +14,6 @@ sys.path.append(PROJECT_DIR)
 from src import utils, hardware_interfaces
 
 
-@pytest.mark.dev
 @pytest.mark.ci
 def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
     mqtt_client = utils.mqtt_connection.MQTTConnection.get_client()
