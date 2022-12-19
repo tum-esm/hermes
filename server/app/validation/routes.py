@@ -31,7 +31,7 @@ class _PutSensorsRequestPath(_RequestPath):
 
 
 @attrs.frozen
-class _GetSensorsRequestPath(_RequestPath):
+class _StreamSensorsRequestPath(_RequestPath):
     pass
 
 
@@ -51,8 +51,8 @@ class _PutSensorsRequestQuery(_RequestQuery):
 
 
 @attrs.frozen
-class _GetSensorsRequestQuery(_RequestQuery):
-    sensors: list[str] = attrs.field(
+class _StreamSensorsRequestQuery(_RequestQuery):
+    sensor_names: list[str] = attrs.field(
         default="",
         converter=_convert_query_string_to_list,
         validator=attrs.validators.deep_iterable(
@@ -64,7 +64,7 @@ class _GetSensorsRequestQuery(_RequestQuery):
 
 @attrs.frozen
 class _GetMeasurementsRequestQuery(_RequestQuery):
-    sensors: list[str] = attrs.field(
+    sensor_names: list[str] = attrs.field(
         default="",
         converter=_convert_query_string_to_list,
         validator=attrs.validators.deep_iterable(
@@ -119,7 +119,7 @@ class _PutSensorsRequestBody(_RequestBody):
 
 
 @attrs.frozen
-class _GetSensorsRequestBody(_RequestBody):
+class _StreamSensorsRequestBody(_RequestBody):
     pass
 
 
@@ -156,15 +156,15 @@ class PutSensorsRequest(_Request):
 
 
 @attrs.frozen
-class GetSensorsRequest(_Request):
-    path: _GetSensorsRequestPath = attrs.field(
-        converter=lambda x: _GetSensorsRequestPath(**x),
+class StreamSensorsRequest(_Request):
+    path: _StreamSensorsRequestPath = attrs.field(
+        converter=lambda x: _StreamSensorsRequestPath(**x),
     )
-    query: _GetSensorsRequestQuery = attrs.field(
-        converter=lambda x: _GetSensorsRequestQuery(**x),
+    query: _StreamSensorsRequestQuery = attrs.field(
+        converter=lambda x: _StreamSensorsRequestQuery(**x),
     )
-    body: _GetSensorsRequestBody = attrs.field(
-        converter=lambda x: _GetSensorsRequestBody(**x),
+    body: _StreamSensorsRequestBody = attrs.field(
+        converter=lambda x: _StreamSensorsRequestBody(**x),
     )
 
 

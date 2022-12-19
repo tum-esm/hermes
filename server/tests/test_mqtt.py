@@ -1,8 +1,8 @@
 import asyncio_mqtt as aiomqtt
 import pytest
 
-import app.settings as settings
 import app.mqtt as mqtt
+import app.settings as settings
 
 
 @pytest.fixture(scope="session")

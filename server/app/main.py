@@ -1,7 +1,8 @@
 import asyncio
-import asyncpg
 import contextlib
-import itertools
+import json
+
+import asyncpg
 import starlette.applications
 import starlette.responses
 import starlette.routing
@@ -111,42 +112,51 @@ async def put_sensors(request):
     return starlette.responses.JSONResponse(status_code=204, content=None)
 
 
-import random
+class ServerSentEvent:
+    def __init__(self, data: dict):
+        self.data = data
+
+    def encode(self):
+        return f"data: {json.dumps(self.data)}\n\n"
 
 
-# first version: just return new aggregation every 5 minutes
-# improvements:
-# - use a cache (redis?) to store the last aggregation?
-# - then we can return the cached value immediately and update the cache when a new
-#   measurement comes in
-# - or better: re-aggregate every minute, but only if there are new measurements
-
-
-def get_data(stream_identifier: int, event_identifier: int) -> int:
-    r = random.Random()
-    r.seed(stream_identifier * event_identifier)
-    return r.randrange(1000)
-
-
-async def sse_generator(request):
-    identifier = 0  # request.path_params["id"]
-    for i in itertools.count():
-        data = get_data(identifier, i)
-        data = b"id: %d\ndata: %d\n\n" % (i, data)
-        yield data
-        await asyncio.sleep(1)
-
-
+@validation.validate(schema=validation.StreamSensorsRequest)
 async def stream_sensors(request):
-    """SSE test.
+    """Stream aggregated information about sensors via Server Sent Events.
 
-    V activity timeline
-    - last sensor heartbeat
-    - last measurement timestamp
-
+    This includes:
+      - the number of measurements in 4 hour intervals over the last 28 days
+    Ideas:
+      - last sensor heartbeats
+      - last measurement timestamps
     """
+
+    # first version: just return new aggregation in fixed interval
+    # improvements:
+    # - use a cache (redis?) to store the last aggregation?
+    # - then we can return the cached value immediately and update the cache when a new
+    #   measurement comes in
+    # - or better: re-aggregate fixed interval, but only if there are new measurements
+
+    async def stream(request):
+        while True:
+            query, arguments = database.build(
+                template="aggregate-measurements.sql",
+                template_arguments={},
+                query_arguments={
+                    "sensor_names": request.query.sensor_names,
+                },
+            )
+            result = await database_client.fetch(query, *arguments)
+            yield ServerSentEvent(data=database.dictify(result)).encode()
+            await asyncio.sleep(5)
+
+    # was geben wir hier zurueck? sensor_name oder sensor_identifier?
+    # sensor_name ist schwierig, weil sich der aendern kann
+    # sensor_identifier waere ok, aber dann muss der client das mapping kennen
+
     return starlette.responses.StreamingResponse(
-        content=sse_generator(request),
+        content=stream(request),
         status_code=200,
         headers={
             "Content-Type": "text/event-stream",
@@ -156,7 +166,6 @@ async def stream_sensors(request):
     )
 
 
-@validation.validate(schema=validation.GetSensorsRequest)
 async def get_sensors(request):
     """Return configurations of selected sensors."""
     raise errors.NotImplementedError()
