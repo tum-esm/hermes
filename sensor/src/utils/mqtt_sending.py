@@ -146,6 +146,16 @@ class SendingMQTTClient:
         # been delivered successfully?"
         current_messages: dict[int, paho.mqtt.client.MQTTMessageInfo] = {}
 
+        def _publish_mqtt_message(message: custom_types.MQTTMessage) -> None:
+            # TODO: fix topic path
+            message_info = mqtt_client.publish(
+                topic=f"{mqtt_config.mqtt_base_topic}/measurements/{mqtt_config.station_identifier}",
+                payload=json.dumps([message.body.dict()]),
+                qos=1,
+            )
+            message.header.status = "sent"
+            current_messages[message.header.identifier] = message_info
+
         while True:
 
             # TODO: https://github.com/tum-esm/insert-name-here/issues/29
@@ -165,14 +175,7 @@ class SendingMQTTClient:
             for message in active_queue.messages:
 
                 if message.header.status == "pending":
-                    # TODO: fix topic path
-                    message_info = mqtt_client.publish(
-                        topic=f"{mqtt_config.mqtt_base_topic}/measurements/{mqtt_config.station_identifier}",
-                        payload=json.dumps([message.body.dict()]),
-                        qos=1,
-                    )
-                    message.header.status = "sent"
-                    current_messages[message.header.identifier] = message_info
+                    _publish_mqtt_message(message)
                     processed_messages["sent"].append(message)
 
                 elif message.header.status == "sent":
@@ -184,15 +187,10 @@ class SendingMQTTClient:
                             processed_messages["delivered"].append(message)
                             del current_messages[message.header.identifier]
 
-                    # happens, when current_messages are lost due
-                    # to restarting the program
+                    # resending is required, when current_messages are
+                    # lost due to restarting the program
                     else:
-                        message_info = mqtt_client.publish(
-                            topic=f"{mqtt_config.mqtt_base_topic}/measurements/{mqtt_config.station_identifier}",
-                            payload=json.dumps([message.body.dict()]),
-                            qos=1,
-                        )
-                        current_messages[message.header.identifier] = message_info
+                        _publish_mqtt_message(message)
                         processed_messages["resent"].append(message)
 
             # remove successful message from active queue and save
