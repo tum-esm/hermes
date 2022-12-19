@@ -94,7 +94,7 @@ class Logger:
             SendingMQTTClient.enqueue_message(
                 config=config,
                 message_body=custom_types.MQTTStatusMessageBody(
-                    severity="exception",
+                    severity="error",
                     subject=exception_name,
                     details=exception_traceback,
                 ),
