@@ -57,10 +57,10 @@ CREATE MATERIALIZED VIEW measurements_aggregation_4_hours
 WITH (timescaledb.continuous) AS
     SELECT
         sensor_identifier,
-        time_bucket('4 hours', creation_timestamp) AS bucket,
-        COUNT(*) AS count
+        time_bucket('4 hours', creation_timestamp) AS bucket_timestamp,
+        COUNT(*) AS measurements_count
     FROM measurements
-    GROUP BY sensor_identifier, bucket
+    GROUP BY sensor_identifier, bucket_timestamp
 WITH DATA;
 
 
