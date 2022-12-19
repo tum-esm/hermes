@@ -138,7 +138,13 @@ async def sse_generator(request):
 
 
 async def stream_sensors(request):
-    """SSE test."""
+    """SSE test.
+
+    V activity timeline
+    - last sensor heartbeat
+    - last measurement timestamp
+
+    """
     return starlette.responses.StreamingResponse(
         content=sse_generator(request),
         status_code=200,
@@ -152,48 +158,8 @@ async def stream_sensors(request):
 
 @validation.validate(schema=validation.GetSensorsRequest)
 async def get_sensors(request):
-    """Return configuration of selected sensors."""
-
-    # TODO Enrich with
-    # V last measurement timestamp
-    # V activity timeline
-    # - last sensor heartbeat
-    # - aggregation of sensor statuses
-    # - paging of
-    #   - sensor statuses
-    #   - sensor configurations
-    #   - sensor measurements
-
-    try:
-        query, arguments = database.build(
-            template="aggregate-sensor-information.sql",
-            template_arguments={"request": request},
-            query_arguments={
-                "sensor_names": request.query.sensors,
-                # TODO make this a query param; validate with `try: pendulum.timezone()`
-                #
-                # It's probably better to do everything in UTC and convert to the
-                # user's offset on the frontend.
-                #
-                # This makes it easier to pre-compute and/or cache the results. The
-                # only downside is that we cannot show aggregates over the time zone,
-                # but only over offsets, because for a specific offset, time periods
-                # will actually always span the same number of seconds, which is not
-                # the case for time zones. What we also cannot do is aggregate over
-                # periods like days, months, or years, because we cannot adapt them
-                # from UTC to the user's time zone on the frontend
-                "timezone": "Europe/Berlin",
-            },
-        )
-        result = await database_client.fetch(query, *arguments)
-    except Exception as e:
-        logger.error(f"[GET /sensors] Unknown error: {repr(e)}")
-        raise errors.InternalServerError()
-    # Return successful response
-    return starlette.responses.JSONResponse(
-        status_code=200,
-        content=database.dictify(result),
-    )
+    """Return configurations of selected sensors."""
+    raise errors.NotImplementedError()
 
 
 @validation.validate(schema=validation.GetMeasurementsRequest)

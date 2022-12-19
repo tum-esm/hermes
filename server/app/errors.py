@@ -24,3 +24,8 @@ class ConflictError(_CustomError):
 class InternalServerError(_CustomError):
     STATUS_CODE = 500
     DETAIL = "Internal Server Error"
+
+
+class NotImplementedError(_CustomError):
+    STATUS_CODE = 501
+    DETAIL = "Not Implemented"
