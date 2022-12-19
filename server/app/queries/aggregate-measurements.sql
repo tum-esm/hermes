@@ -4,3 +4,5 @@ SELECT
 FROM measurements_aggregation_4_hours
 WHERE bucket_timestamp > now() - INTERVAL '28 days' AND sensor_identifier = ANY({sensor_identifiers})
 GROUP BY sensor_identifier
+
+-- Also push the most recent measurement to the client?

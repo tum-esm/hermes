@@ -27,37 +27,6 @@ async def get_status(request):
     )
 
 
-import random
-
-
-def get_data(stream_identifier: int, event_identifier: int) -> int:
-    r = random.Random()
-    r.seed(stream_identifier * event_identifier)
-    return r.randrange(1000)
-
-
-async def sse_generator(request):
-    identifier = 0  # request.path_params["id"]
-    for i in itertools.count():
-        data = get_data(identifier, i)
-        data = b"id: %d\ndata: %d\n\n" % (i, data)
-        yield data
-        await asyncio.sleep(1)
-
-
-async def stream(request):
-    """SSE test."""
-    return starlette.responses.StreamingResponse(
-        content=sse_generator(request),
-        status_code=200,
-        headers={
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        },
-    )
-
-
 @validation.validate(schema=validation.PostSensorsRequest)
 async def post_sensors(request):
     """Create a new sensor and configuration."""
@@ -65,15 +34,15 @@ async def post_sensors(request):
         async with database_client.transaction():
             # Insert sensor
             query, arguments = database.build(
-                template="insert-sensor.sql",
+                template="create-sensor.sql",
                 template_arguments={},
                 query_arguments={"sensor_name": request.body.sensor_name},
             )
             result = await database_client.fetch(query, *arguments)
             sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
-            # Insert configuration
+            # Create new configuration
             query, arguments = database.build(
-                template="insert-configuration.sql",
+                template="create-configuration.sql",
                 template_arguments={},
                 query_arguments={
                     "sensor_identifier": sensor_identifier,
@@ -115,9 +84,9 @@ async def put_sensors(request):
             )
             result = await database_client.fetch(query, *arguments)
             sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
-            # Insert configuration
+            # Create new configuration
             query, arguments = database.build(
-                template="insert-configuration.sql",
+                template="create-configuration.sql",
                 template_arguments={},
                 query_arguments={
                     "sensor_identifier": sensor_identifier,
@@ -142,25 +111,48 @@ async def put_sensors(request):
     return starlette.responses.JSONResponse(status_code=204, content=None)
 
 
+import random
+
+
+# first version: just return new aggregation every 5 minutes
+# improvements:
+# - use a cache (redis?) to store the last aggregation?
+# - then we can return the cached value immediately and update the cache when a new
+#   measurement comes in
+# - or better: re-aggregate every minute, but only if there are new measurements
+
+
+def get_data(stream_identifier: int, event_identifier: int) -> int:
+    r = random.Random()
+    r.seed(stream_identifier * event_identifier)
+    return r.randrange(1000)
+
+
+async def sse_generator(request):
+    identifier = 0  # request.path_params["id"]
+    for i in itertools.count():
+        data = get_data(identifier, i)
+        data = b"id: %d\ndata: %d\n\n" % (i, data)
+        yield data
+        await asyncio.sleep(1)
+
+
+async def stream_sensors(request):
+    """SSE test."""
+    return starlette.responses.StreamingResponse(
+        content=sse_generator(request),
+        status_code=200,
+        headers={
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
+    )
+
+
 @validation.validate(schema=validation.GetSensorsRequest)
 async def get_sensors(request):
-    """Return status and configuration of sensors.
-
-    The underlying database query is quite expensive, the best tactic would probably
-    be to cache the results per sensor for a short time, invalidate them when a new
-    measurement in received, and re-aggregate every few minutes.
-
-    The best tactic for the frontend is probably to use websockets. This would allow
-    us to send back cached results immediately and then update them as soon as new
-    aggregations are available.
-
-    To make this more performant on the database we should make sure to have the
-    correct indexes in place. We should also consider using TimescaleDB.
-
-    - Provide both: GET request and websocket?
-    - fetch/cache/request aggregations/configurations/latest-measurement separately?
-
-    """
+    """Return configuration of selected sensors."""
 
     # TODO Enrich with
     # V last measurement timestamp
@@ -270,11 +262,6 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
         starlette.routing.Route(
-            path="/stream",
-            endpoint=stream,
-            methods=["GET"],
-        ),
-        starlette.routing.Route(
             path="/sensors",
             endpoint=post_sensors,
             methods=["POST"],
@@ -292,6 +279,11 @@ app = starlette.applications.Starlette(
         starlette.routing.Route(
             path="/measurements",
             endpoint=get_measurements,
+            methods=["GET"],
+        ),
+        starlette.routing.Route(
+            path="/streams/sensors",
+            endpoint=stream_sensors,
             methods=["GET"],
         ),
     ],
