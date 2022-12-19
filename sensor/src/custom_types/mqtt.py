@@ -105,6 +105,7 @@ class MQTTMeasurementMessageBody(BaseModel):
 class MQTTStatusMessage(BaseModel):
     """element in local message queue"""
 
+    topic: Literal["status"]
     header: MQTTMessageHeader
     body: MQTTStatusMessageBody
 
@@ -112,6 +113,7 @@ class MQTTStatusMessage(BaseModel):
 class MQTTMeasurementMessage(BaseModel):
     """element in local message queue"""
 
+    topic: Literal["measurement"]
     header: MQTTMessageHeader
     body: MQTTMeasurementMessageBody
 

@@ -71,11 +71,11 @@ class SendingMQTTClient:
 
             if isinstance(message_body, custom_types.MQTTStatusMessageBody):
                 new_message = custom_types.MQTTStatusMessage(
-                    header=new_header, body=message_body
+                    topic="status", header=new_header, body=message_body
                 )
             else:
                 new_message = custom_types.MQTTMeasurementMessage(
-                    header=new_header, body=message_body
+                    topic="measurement", header=new_header, body=message_body
                 )
 
             active_queue.messages.append(new_message)

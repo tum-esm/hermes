@@ -30,7 +30,7 @@ MESSAGE_ARCHIVE_FILE = join(
 
 
 @pytest.mark.dev
-@pytest.mark.integration
+@pytest.mark.ci
 def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     utils.SendingMQTTClient.check_errors()
     with open(ACTIVE_MESSAGES_FILE, "r") as f:

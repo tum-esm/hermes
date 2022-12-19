@@ -74,45 +74,42 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
     assert len(active_message_queue.messages) == 3
     assert any(
         [
-            all(
-                [
-                    m.header.identifier == 1,
-                    m.header.status == "pending",
-                    m.body.severity == "warning",
-                    m.body.subject == "some message c",
-                ]
+            (
+                m.header.identifier == 1
+                and m.header.status == "pending"
+                and m.topic == "status"
+                and m.body.severity == "warning"
+                and m.body.subject == "some message c"
             )
             for m in active_message_queue.messages
         ]
     )
     assert any(
         [
-            all(
-                [
-                    m.header.identifier == 2,
-                    m.header.status == "pending",
-                    m.body.severity == "error",
-                    m.body.subject == "some message d",
-                ]
+            (
+                m.header.identifier == 2
+                and m.header.status == "pending"
+                and m.topic == "status"
+                and m.body.severity == "error"
+                and m.body.subject == "some message d"
             )
             for m in active_message_queue.messages
         ]
     )
     assert any(
         [
-            all(
-                [
-                    m.header.identifier == 3,
-                    m.header.status == "pending",
-                    m.body.severity == "error",
-                    m.body.subject == "ZeroDivisionError",
-                ]
+            (
+                m.header.identifier == 3
+                and m.header.status == "pending"
+                and m.topic == "status"
+                and m.body.severity == "error"
+                and m.body.subject == "ZeroDivisionError"
             )
             for m in active_message_queue.messages
         ]
     )
 
-    def empty_pending_queue() -> True:
+    def empty_pending_queue() -> bool:
         with open(ACTIVE_MESSAGES_FILE, "r") as f:
             active_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
         return (active_message_queue.max_identifier == 3) and (
@@ -128,39 +125,36 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
     assert len(message_archive.messages) == 3
     assert any(
         [
-            all(
-                [
-                    m.header.identifier == 1,
-                    m.header.status == "delivered",
-                    m.body.severity == "warning",
-                    m.body.subject == "some message c",
-                ]
+            (
+                m.header.identifier == 1
+                and m.header.status == "delivered"
+                and m.topic == "status"
+                and m.body.severity == "warning"
+                and m.body.subject == "some message c"
             )
             for m in message_archive.messages
         ]
     )
     assert any(
         [
-            all(
-                [
-                    m.header.identifier == 2,
-                    m.header.status == "delivered",
-                    m.body.severity == "error",
-                    m.body.subject == "some message d",
-                ]
+            (
+                m.header.identifier == 2
+                and m.header.status == "delivered"
+                and m.topic == "status"
+                and m.body.severity == "error"
+                and m.body.subject == "some message d"
             )
             for m in message_archive.messages
         ]
     )
     assert any(
         [
-            all(
-                [
-                    m.header.identifier == 3,
-                    m.header.status == "delivered",
-                    m.body.severity == "error",
-                    m.body.subject == "ZeroDivisionError",
-                ]
+            (
+                m.header.identifier == 3
+                and m.header.status == "delivered"
+                and m.topic == "status"
+                and m.body.severity == "error"
+                and m.body.subject == "ZeroDivisionError"
             )
             for m in message_archive.messages
         ]
