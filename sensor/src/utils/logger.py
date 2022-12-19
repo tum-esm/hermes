@@ -29,9 +29,6 @@ def log_line_has_date(log_line: str) -> bool:
         return False
 
 
-# TODO: option to send warnings via MQTT as well
-
-
 class Logger:
     last_archive_time = datetime.now()
 

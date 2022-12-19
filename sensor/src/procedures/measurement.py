@@ -1,6 +1,4 @@
-# TODO: Put 50 meter pipe at every inlet. Still configurable.
-
-# class last_measurement_value = datetime.now()
+# TODO: https://github.com/tum-esm/insert-name-here/issues/34
 
 import time
 from typing import Literal, Optional
@@ -46,8 +44,7 @@ class MeasurementProcedure:
         self.pump_interface.set_desired_pump_rps(40)
 
         time.sleep(10)
-        # TODO: measure airflow and calculate rounds that need
-        #       to be pumped for 50 meters of pipe
+        # TODO: https://github.com/tum-esm/insert-name-here/issues/35
 
         self.pump_interface.set_desired_pump_rps(20)
         self.active_valve_number = new_valve_number

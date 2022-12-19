@@ -139,7 +139,6 @@ class PumpInterface:
                     + " target (in noticeable range)",
                     config=config,
                 )
-                # TODO: send warning to MQTT client
             else:
                 error_message = (
                     f"pump speed varies {difference_in_percent}%"

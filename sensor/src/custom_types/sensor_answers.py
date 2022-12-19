@@ -11,9 +11,6 @@ class CO2SensorData(BaseModel):
     filtered: float
 
 
-# TODO: add sht 21 data
-
-
 class MainboardSensorData(BaseModel):
     """units: °C for temperature, rH for humidity, hPa for pressure"""
 

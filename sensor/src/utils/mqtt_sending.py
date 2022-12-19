@@ -84,10 +84,9 @@ class SendingMQTTClient:
 
     @staticmethod
     def _load_active_queue() -> custom_types.ActiveMQTTMessageQueue:
+        # TODO: https://github.com/tum-esm/insert-name-here/issues/28
         with open(ACTIVE_QUEUE_FILE, "r") as f:
             active_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
-        # TODO: when active queue could not be loaded, move file to
-        #       "corrupt" directory and start a new active queue file
         return active_queue
 
     @staticmethod
@@ -116,9 +115,9 @@ class SendingMQTTClient:
                         ] = custom_types.ArchivedMQTTMessageQueue(
                             messages=json.load(f)
                         ).messages
+                        # TODO: https://github.com/tum-esm/insert-name-here/issues/28
                 except FileNotFoundError:
                     modified_lists[date_string] = []
-                # TODO: move corrupt files
             modified_lists[date_string].append(m)
 
         for date_string in modified_lists.keys():
@@ -142,14 +141,15 @@ class SendingMQTTClient:
         mqtt_client = MQTTConnection.get_client()
         mqtt_config = MQTTConnection.get_config()
 
-        # TODO: add periodic heartbeat messages
-
         # this queue is necessary because paho-mqtt does not support
         # a function that answers the question "has this message id
         # been delivered successfully?"
         current_messages: dict[int, paho.mqtt.client.MQTTMessageInfo] = {}
 
         while True:
+
+            # TODO: https://github.com/tum-esm/insert-name-here/issues/29
+
             with lock:
                 active_queue = SendingMQTTClient._load_active_queue()
 
@@ -165,7 +165,7 @@ class SendingMQTTClient:
             for message in active_queue.messages:
 
                 if message.header.status == "pending":
-                    # TODO: adjust message format to server spec (revision, etc.)
+                    # TODO: fix topic path
                     message_info = mqtt_client.publish(
                         topic=f"{mqtt_config.mqtt_base_topic}/measurements/{mqtt_config.station_identifier}",
                         payload=json.dumps([message.body.dict()]),
@@ -187,7 +187,6 @@ class SendingMQTTClient:
                     # happens, when current_messages are lost due
                     # to restarting the program
                     else:
-                        # TODO: adjust message format to server spec (revision, etc.)
                         message_info = mqtt_client.publish(
                             topic=f"{mqtt_config.mqtt_base_topic}/measurements/{mqtt_config.station_identifier}",
                             payload=json.dumps([message.body.dict()]),
@@ -227,7 +226,7 @@ class SendingMQTTClient:
                 + "messages have been sent/resent/delivered"
             )
 
-            # TODO: adjust wait time based on length of "current_messages"
+            # TODO: https://github.com/tum-esm/insert-name-here/issues/30
             time.sleep(3)
 
     @staticmethod
@@ -243,9 +242,7 @@ class SendingMQTTClient:
     def log_statistics() -> None:
         """logs a few statistics about the current MQTT sending activity"""
 
-        # TODO: log when the last successful message has been sent
-        # TODO: log how many messages were sent today
+        # TODO: https://github.com/tum-esm/insert-name-here/issues/32
         pass
 
-    # TODO: function "wait_for_message_sending" that blocks until the
-    #       active queue is empty - timeout after 1 minute
+    # TODO: https://github.com/tum-esm/insert-name-here/issues/31

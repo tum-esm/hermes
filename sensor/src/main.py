@@ -57,7 +57,7 @@ def run() -> None:
             # TODO: optionally call calibration routing
             # TODO: run teardown of other procedures before configuration/calibration
 
-            # TODO: if messages are empty, run, skip otherwise
+            # if messages are empty, run regular measurements
             logger.info("running measurements")
             measurement_prodecure.run()
 

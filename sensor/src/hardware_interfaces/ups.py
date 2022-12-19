@@ -33,7 +33,7 @@ class UPSInterface:
         def _on_battery_is_ready() -> None:
             if mode_input.is_active:
                 logger.error("battery voltage is under threshold", config=config)
-                # TODO: where to do a shutdown routine
+                # TODO: https://github.com/tum-esm/insert-name-here/issues/33
             else:
                 logger.info("battery is fully charged")
 
