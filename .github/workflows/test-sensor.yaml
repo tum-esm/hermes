@@ -64,4 +64,4 @@ jobs:
                   INSERT_NAME_HERE_MQTT_PASSWORD: ${{ secrets.INSERT_NAME_HERE_MQTT_PASSWORD }}
               run: |
                   source .venv/bin/activate
-                  bash scripts/testing/run_ci_tests.sh
+                  pytest -m "ci" --cov=src --cov=cli tests/
