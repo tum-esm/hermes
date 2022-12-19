@@ -1,6 +1,5 @@
 import asyncio
 import contextlib
-import json
 
 import asyncpg
 import starlette.applications
@@ -12,6 +11,7 @@ import app.errors as errors
 import app.mqtt as mqtt
 import app.settings as settings
 import app.validation as validation
+import app.sse as sse
 from app.logs import logger
 
 
@@ -112,14 +112,6 @@ async def put_sensors(request):
     return starlette.responses.JSONResponse(status_code=204, content=None)
 
 
-class ServerSentEvent:
-    def __init__(self, data: dict):
-        self.data = data
-
-    def encode(self):
-        return f"data: {json.dumps(self.data)}\n\n"
-
-
 @validation.validate(schema=validation.StreamSensorsRequest)
 async def stream_sensors(request):
     """Stream aggregated information about sensors via Server Sent Events.
@@ -148,12 +140,9 @@ async def stream_sensors(request):
                 },
             )
             result = await database_client.fetch(query, *arguments)
-            yield ServerSentEvent(data=database.dictify(result)).encode()
+            # TODO handle exceptions
+            yield sse.ServerSentEvent(data=database.dictify(result)).encode()
             await asyncio.sleep(5)
-
-    # was geben wir hier zurueck? sensor_name oder sensor_identifier?
-    # sensor_name ist schwierig, weil sich der aendern kann
-    # sensor_identifier waere ok, aber dann muss der client das mapping kennen
 
     return starlette.responses.StreamingResponse(
         content=stream(request),
