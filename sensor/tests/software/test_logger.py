@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import os
 import pytest
 
 from ..pytest_utils import expect_log_lines, wait_for_condition
@@ -76,6 +77,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 1
                 and m.header.status == "pending"
+                and m.header.mqtt_topic is None
                 and m.variant == "status"
                 and m.body.severity == "warning"
                 and m.body.subject == "some message c"
@@ -88,6 +90,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 2
                 and m.header.status == "pending"
+                and m.header.mqtt_topic is None
                 and m.variant == "status"
                 and m.body.severity == "error"
                 and m.body.subject == "some message d"
@@ -100,6 +103,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 3
                 and m.header.status == "pending"
+                and m.header.mqtt_topic is None
                 and m.variant == "status"
                 and m.body.severity == "error"
                 and m.body.subject == "ZeroDivisionError"
@@ -119,6 +123,11 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
         empty_pending_queue, timeout_message="log messages were not sent over MQTT"
     )
 
+    expected_message_topic = (
+        os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"]
+        + "statuses/"
+        + os.environ["INSERT_NAME_HERE_STATION_IDENTIFIER"]
+    )
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
         message_archive = custom_types.ArchivedMQTTMessageQueue(messages=json.load(f))
     assert len(message_archive.messages) == 3
@@ -127,6 +136,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 1
                 and m.header.status == "delivered"
+                and m.header.mqtt_topic == expected_message_topic
                 and m.variant == "status"
                 and m.body.severity == "warning"
                 and m.body.subject == "some message c"
@@ -139,6 +149,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 2
                 and m.header.status == "delivered"
+                and m.header.mqtt_topic == expected_message_topic
                 and m.variant == "status"
                 and m.body.severity == "error"
                 and m.body.subject == "some message d"
@@ -151,6 +162,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 3
                 and m.header.status == "delivered"
+                and m.header.mqtt_topic == expected_message_topic
                 and m.variant == "status"
                 and m.body.severity == "error"
                 and m.body.subject == "ZeroDivisionError"
