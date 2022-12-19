@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import pytest
 
@@ -13,8 +14,7 @@ sys.path.append(PROJECT_DIR)
 
 from src import utils, custom_types
 
-
-# TODO: test whether logger enqueues and sends mqtt messages
+# TODO: make the message queue assertions prettier
 
 
 @pytest.mark.dev
@@ -47,6 +47,14 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
         active_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
     assert active_message_queue.max_identifier == 0
     assert len(active_message_queue.messages) == 0
+
+    TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
+    MESSAGE_ARCHIVE_FILE = join(
+        PROJECT_DIR,
+        "data",
+        "archive",
+        f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
+    )
 
     logger = utils.Logger(origin="pytests")
     logger.debug("some message a")
@@ -113,4 +121,47 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
 
     wait_for_condition(
         empty_pending_queue, timeout_message="log messages were not sent over MQTT"
+    )
+
+    with open(MESSAGE_ARCHIVE_FILE, "r") as f:
+        message_archive = custom_types.ArchivedMQTTMessageQueue(messages=json.load(f))
+    assert len(message_archive.messages) == 3
+    assert any(
+        [
+            all(
+                [
+                    m.header.identifier == 1,
+                    m.header.status == "delivered",
+                    m.body.severity == "warning",
+                    m.body.subject == "some message c",
+                ]
+            )
+            for m in message_archive.messages
+        ]
+    )
+    assert any(
+        [
+            all(
+                [
+                    m.header.identifier == 2,
+                    m.header.status == "delivered",
+                    m.body.severity == "error",
+                    m.body.subject == "some message d",
+                ]
+            )
+            for m in message_archive.messages
+        ]
+    )
+    assert any(
+        [
+            all(
+                [
+                    m.header.identifier == 3,
+                    m.header.status == "delivered",
+                    m.body.severity == "error",
+                    m.body.subject == "ZeroDivisionError",
+                ]
+            )
+            for m in message_archive.messages
+        ]
     )
