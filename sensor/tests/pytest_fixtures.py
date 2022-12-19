@@ -45,7 +45,7 @@ def _restore_file(original_path: str, temporary_path: str) -> None:
             f.write(tmp_content)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def mqtt_client_environment() -> Generator[None, None, None]:
     """load the environment variables from config/.env.testing
     and generate a dummy base-topic path"""
@@ -63,7 +63,7 @@ def mqtt_client_environment() -> Generator[None, None, None]:
     utils.mqtt_connection.MQTTConnection.deinit()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, None]:
     """start and stop the background sending loop of the SendingMQTTClient"""
 
