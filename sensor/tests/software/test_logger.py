@@ -76,7 +76,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 1
                 and m.header.status == "pending"
-                and m.topic == "status"
+                and m.variant == "status"
                 and m.body.severity == "warning"
                 and m.body.subject == "some message c"
             )
@@ -88,7 +88,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 2
                 and m.header.status == "pending"
-                and m.topic == "status"
+                and m.variant == "status"
                 and m.body.severity == "error"
                 and m.body.subject == "some message d"
             )
@@ -100,7 +100,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 3
                 and m.header.status == "pending"
-                and m.topic == "status"
+                and m.variant == "status"
                 and m.body.severity == "error"
                 and m.body.subject == "ZeroDivisionError"
             )
@@ -127,7 +127,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 1
                 and m.header.status == "delivered"
-                and m.topic == "status"
+                and m.variant == "status"
                 and m.body.severity == "warning"
                 and m.body.subject == "some message c"
             )
@@ -139,7 +139,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 2
                 and m.header.status == "delivered"
-                and m.topic == "status"
+                and m.variant == "status"
                 and m.body.severity == "error"
                 and m.body.subject == "some message d"
             )
@@ -151,7 +151,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
             (
                 m.header.identifier == 3
                 and m.header.status == "delivered"
-                and m.topic == "status"
+                and m.variant == "status"
                 and m.body.severity == "error"
                 and m.body.subject == "ZeroDivisionError"
             )

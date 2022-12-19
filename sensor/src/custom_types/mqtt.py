@@ -34,7 +34,7 @@ class MQTTConfig(BaseModel):
         validate_str(min_len=8, max_len=256),
     )
     _val_mqtt_base_topic = validator("mqtt_base_topic", pre=True, allow_reuse=True)(
-        validate_str(min_len=1, max_len=256, regex=r"^(\/[a-z0-9_-]+)*$"),
+        validate_str(min_len=1, max_len=256, regex=r"^([a-z0-9_-]+\/)*$"),
     )
 
     class Config:
@@ -45,6 +45,7 @@ class MQTTMessageHeader(BaseModel):
     """meta data for managing message queue"""
 
     identifier: int
+    mqtt_topic: Optional[str]
     status: Literal["pending", "sent", "delivered"]
     revision: int
     issue_timestamp: float
@@ -105,7 +106,7 @@ class MQTTMeasurementMessageBody(BaseModel):
 class MQTTStatusMessage(BaseModel):
     """element in local message queue"""
 
-    topic: Literal["status"]
+    variant: Literal["status"]
     header: MQTTMessageHeader
     body: MQTTStatusMessageBody
 
@@ -113,7 +114,7 @@ class MQTTStatusMessage(BaseModel):
 class MQTTMeasurementMessage(BaseModel):
     """element in local message queue"""
 
-    topic: Literal["measurement"]
+    variant: Literal["measurement"]
     header: MQTTMessageHeader
     body: MQTTMeasurementMessageBody
 

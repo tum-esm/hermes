@@ -66,16 +66,17 @@ class SendingMQTTClient:
                 revision=config.revision,
                 issue_timestamp=now,
                 success_timestamp=None,
+                mqtt_topic=None,
             )
             new_message: custom_types.MQTTMessage
 
             if isinstance(message_body, custom_types.MQTTStatusMessageBody):
                 new_message = custom_types.MQTTStatusMessage(
-                    topic="status", header=new_header, body=message_body
+                    variant="status", header=new_header, body=message_body
                 )
             else:
                 new_message = custom_types.MQTTMeasurementMessage(
-                    topic="measurement", header=new_header, body=message_body
+                    variant="measurement", header=new_header, body=message_body
                 )
 
             active_queue.messages.append(new_message)
@@ -147,9 +148,13 @@ class SendingMQTTClient:
         current_messages: dict[int, paho.mqtt.client.MQTTMessageInfo] = {}
 
         def _publish_mqtt_message(message: custom_types.MQTTMessage) -> None:
-            # TODO: fix topic path
+            if message.variant == "status":
+                topic = f"{mqtt_config.mqtt_base_topic}statuses/{mqtt_config.station_identifier}"
+            else:
+                topic = f"{mqtt_config.mqtt_base_topic}measurements/{mqtt_config.station_identifier}"
+            message.header.mqtt_topic = topic
             message_info = mqtt_client.publish(
-                topic=f"{mqtt_config.mqtt_base_topic}/measurements/{mqtt_config.station_identifier}",
+                topic=message.header.mqtt_topic,
                 payload=json.dumps([message.body.dict()]),
                 qos=1,
             )
