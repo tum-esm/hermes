@@ -1,7 +1,7 @@
 import asyncio
-import contextlib
-
 import asyncpg
+import contextlib
+import itertools
 import starlette.applications
 import starlette.responses
 import starlette.routing
@@ -23,6 +23,37 @@ async def get_status(request):
             "commit_sha": settings.COMMIT_SHA,
             "branch_name": settings.BRANCH_NAME,
             "start_time": settings.START_TIME,
+        },
+    )
+
+
+import random
+
+
+def get_data(stream_identifier: int, event_identifier: int) -> int:
+    r = random.Random()
+    r.seed(stream_identifier * event_identifier)
+    return r.randrange(1000)
+
+
+async def sse_generator(request):
+    identifier = 0  # request.path_params["id"]
+    for i in itertools.count():
+        data = get_data(identifier, i)
+        data = b"id: %d\ndata: %d\n\n" % (i, data)
+        yield data
+        await asyncio.sleep(1)
+
+
+async def stream(request):
+    """SSE test."""
+    return starlette.responses.StreamingResponse(
+        content=sse_generator(request),
+        status_code=200,
+        headers={
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
         },
     )
 
@@ -236,6 +267,11 @@ app = starlette.applications.Starlette(
         starlette.routing.Route(
             path="/status",
             endpoint=get_status,
+            methods=["GET"],
+        ),
+        starlette.routing.Route(
+            path="/stream",
+            endpoint=stream,
             methods=["GET"],
         ),
         starlette.routing.Route(

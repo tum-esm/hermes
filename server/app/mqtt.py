@@ -151,8 +151,12 @@ class Client(aiomqtt.Client):
                 logger.info(
                     f"[MQTT] Processed heartbeat {heartbeat} from {sensor_identifier}"
                 )
+            except asyncpg.ForeignKeyViolationError:
+                logger.warning(
+                    "[MQTT] Failed to process heartbeat; Sensor not known:"
+                    f" {sensor_identifier}"
+                )
             except Exception as e:
-                # TODO divide into more specific exceptions
                 logger.error(f"[MQTT] Unknown error: {repr(e)}")
 
     async def _process_statuses_message(
@@ -180,8 +184,12 @@ class Client(aiomqtt.Client):
                 f"[MQTT] Processed {len(message.statuses)} statuses from"
                 f" {sensor_identifier}"
             )
+        except asyncpg.ForeignKeyViolationError:
+            logger.warning(
+                "[MQTT] Failed to process statuses; Sensor not known:"
+                f" {sensor_identifier}"
+            )
         except Exception as e:
-            # TODO divide into more specific exceptions
             logger.error(f"[MQTT] Unknown error: {repr(e)}")
 
     async def _process_measurements_message(
@@ -207,8 +215,12 @@ class Client(aiomqtt.Client):
                 f"[MQTT] Processed {len(message.measurements)} measurements from"
                 f" {sensor_identifier}"
             )
+        except asyncpg.ForeignKeyViolationError:
+            logger.warning(
+                "[MQTT] Failed to process measurements; Sensor not known:"
+                f" {sensor_identifier}"
+            )
         except Exception as e:
-            # TODO divide into more specific exceptions
             logger.error(f"[MQTT] Unknown error: {repr(e)}")
 
     async def listen(self) -> None:
