@@ -1,5 +1,6 @@
 from os.path import dirname, abspath, join
 import sys
+import time
 import traceback
 from datetime import datetime, timedelta
 from typing import Optional
@@ -57,10 +58,13 @@ class Logger:
         self._write_log_line("WARNING", message)
         if config is not None:
             SendingMQTTClient.enqueue_message(
-                config=config,
                 message_body=custom_types.MQTTStatusMessageBody(
-                    severity="warning", subject=message, details=""
-                ),
+                    severity="warning",
+                    subject=message,
+                    details="",
+                    revision=config.revision,
+                    timestamp=time.time(),
+                )
             )
 
     def error(self, message: str, config: Optional[custom_types.Config] = None) -> None:
@@ -70,9 +74,12 @@ class Logger:
         self._write_log_line("ERROR", message)
         if config is not None:
             SendingMQTTClient.enqueue_message(
-                config=config,
                 message_body=custom_types.MQTTStatusMessageBody(
-                    severity="error", subject=message, details=""
+                    severity="error",
+                    subject=message,
+                    details="",
+                    timestamp=time.time(),
+                    revision=config.revision,
                 ),
             )
 
@@ -89,11 +96,12 @@ class Logger:
         )
         if config is not None:
             SendingMQTTClient.enqueue_message(
-                config=config,
                 message_body=custom_types.MQTTStatusMessageBody(
                     severity="error",
                     subject=exception_name,
                     details=exception_traceback,
+                    timestamp=time.time(),
+                    revision=config.revision,
                 ),
             )
 

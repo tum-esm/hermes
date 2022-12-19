@@ -47,26 +47,21 @@ class MQTTMessageHeader(BaseModel):
     identifier: int
     mqtt_topic: Optional[str]
     status: Literal["pending", "sent", "delivered"]
-    revision: int
-    issue_timestamp: float
-    success_timestamp: Optional[float]
+    delivery_timestamp: Optional[float]
 
     # validators
     _val_identifier = validator("identifier", pre=True, allow_reuse=True)(
         validate_int(minimum=0),
     )
+    _val_mqtt_topic = validator("mqtt_topic", pre=True, allow_reuse=True)(
+        validate_str(nullable=True),
+    )
     _val_status = validator("status", pre=True, allow_reuse=True)(
         validate_str(allowed=["pending", "sent", "delivered"]),
     )
-    _val_revision = validator("revision", pre=True, allow_reuse=True)(
-        validate_int(minimum=0, maximum=2_147_483_648),
-    )
-
-    # timestamps allow 01.01.2022 - 19.01.2038 allowed (4 byte integer)
-    _val_issue_timestamp = validator("issue_timestamp", pre=True, allow_reuse=True)(
-        validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
-    )
-    _val_success_timestamp = validator("success_timestamp", pre=True, allow_reuse=True)(
+    _val_delivery_timestamp = validator(
+        "delivery_timestamp", pre=True, allow_reuse=True
+    )(
         validate_float(minimum=1_640_991_600, maximum=2_147_483_648, nullable=True),
     )
 
@@ -78,12 +73,20 @@ class MQTTStatusMessageBody(BaseModel):
     """message body which is sent to server"""
 
     severity: Literal["info", "warning", "error"]
+    revision: int
+    timestamp: float
     subject: str
     details: str
 
     # validators
     _val_severity = validator("severity", pre=True, allow_reuse=True)(
         validate_str(allowed=["info", "warning", "error"]),
+    )
+    _val_revision = validator("revision", pre=True, allow_reuse=True)(
+        validate_int(minimum=0, maximum=2_147_483_648),
+    )
+    _val_timestamp = validator("timestamp", pre=True, allow_reuse=True)(
+        validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
     )
     _val_subject = validator("subject", pre=True, allow_reuse=True)(
         validate_str(min_len=1, max_len=1024),
@@ -99,8 +102,20 @@ class MQTTStatusMessageBody(BaseModel):
 class MQTTMeasurementMessageBody(BaseModel):
     """message body which is sent to server"""
 
+    revision: int
     timestamp: float
     value: CO2SensorData
+
+    # validators
+    _val_revision = validator("revision", pre=True, allow_reuse=True)(
+        validate_int(minimum=0, maximum=2_147_483_648),
+    )
+    _val_timestamp = validator("timestamp", pre=True, allow_reuse=True)(
+        validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
+    )
+
+    class Config:
+        extra = "forbid"
 
 
 class MQTTStatusMessage(BaseModel):

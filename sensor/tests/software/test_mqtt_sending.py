@@ -55,11 +55,9 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     dummy_measurement_message = custom_types.MQTTMeasurementMessageBody(
         timestamp=datetime.now().timestamp(),
         value=custom_types.CO2SensorData(raw=0.0, compensated=0.0, filtered=0.0),
+        revision=config.revision,
     )
-    utils.SendingMQTTClient.enqueue_message(
-        config,
-        dummy_measurement_message,
-    )
+    utils.SendingMQTTClient.enqueue_message(dummy_measurement_message)
 
     # assert dummy message to be in active queue
     with open(ACTIVE_MESSAGES_FILE, "r") as f:
@@ -68,7 +66,7 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     assert len(active_mqtt_message_queue.messages) == 1
     assert active_mqtt_message_queue.messages[0].header.identifier == 1
     assert active_mqtt_message_queue.messages[0].header.status == "pending"
-    assert active_mqtt_message_queue.messages[0].header.revision == config.revision
+    assert active_mqtt_message_queue.messages[0].body.revision == config.revision
     assert (
         deepdiff.DeepDiff(
             active_mqtt_message_queue.messages[0].body.dict(),

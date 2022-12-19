@@ -49,23 +49,17 @@ class SendingMQTTClient:
             SendingMQTTClient.sending_loop_process = None
 
     @staticmethod
-    def enqueue_message(
-        config: custom_types.Config,
-        message_body: custom_types.MQTTMessageBody,
-    ) -> None:
+    def enqueue_message(message_body: custom_types.MQTTMessageBody) -> None:
         assert (
             SendingMQTTClient.sending_loop_process is not None
         ), "sending loop process has not been initialized"
 
-        now = time.time()
         with lock:
             active_queue = SendingMQTTClient._load_active_queue()
             new_header = custom_types.MQTTMessageHeader(
                 identifier=active_queue.max_identifier + 1,
                 status="pending",
-                revision=config.revision,
-                issue_timestamp=now,
-                success_timestamp=None,
+                delivery_timestamp=None,
                 mqtt_topic=None,
             )
             new_message: custom_types.MQTTMessage
@@ -85,7 +79,6 @@ class SendingMQTTClient:
 
     @staticmethod
     def _load_active_queue() -> custom_types.ActiveMQTTMessageQueue:
-        # TODO: https://github.com/tum-esm/insert-name-here/issues/28
         with open(ACTIVE_QUEUE_FILE, "r") as f:
             active_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
         return active_queue
@@ -106,7 +99,7 @@ class SendingMQTTClient:
 
         for m in messages:
             date_string = datetime.datetime.fromtimestamp(
-                m.header.issue_timestamp, tz=pytz.timezone("UTC")
+                m.body.timestamp, tz=pytz.timezone("UTC")
             ).strftime("%Y-%m-%d")
             if date_string not in modified_lists:
                 try:
@@ -116,7 +109,6 @@ class SendingMQTTClient:
                         ] = custom_types.ArchivedMQTTMessageQueue(
                             messages=json.load(f)
                         ).messages
-                        # TODO: https://github.com/tum-esm/insert-name-here/issues/28
                 except FileNotFoundError:
                     modified_lists[date_string] = []
             modified_lists[date_string].append(m)
@@ -125,7 +117,7 @@ class SendingMQTTClient:
             dict_list = [
                 m.dict()
                 for m in sorted(
-                    modified_lists[date_string], key=lambda m: m.header.issue_timestamp
+                    modified_lists[date_string], key=lambda m: m.body.timestamp
                 )
             ]
             with open(filename_for_datestring(date_string), "w") as f:
@@ -162,8 +154,7 @@ class SendingMQTTClient:
             current_messages[message.header.identifier] = message_info
 
         while True:
-
-            # TODO: https://github.com/tum-esm/insert-name-here/issues/29
+            # TODO: heartbeat messages, https://github.com/tum-esm/insert-name-here/issues/29
 
             with lock:
                 active_queue = SendingMQTTClient._load_active_queue()
@@ -188,7 +179,7 @@ class SendingMQTTClient:
                     if message.header.identifier in current_messages:
                         if current_messages[message.header.identifier].is_published():
                             message.header.status = "delivered"
-                            message.header.success_timestamp = time.time()
+                            message.header.delivery_timestamp = time.time()
                             processed_messages["delivered"].append(message)
                             del current_messages[message.header.identifier]
 

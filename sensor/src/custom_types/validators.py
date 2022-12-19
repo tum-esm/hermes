@@ -59,6 +59,7 @@ def validate_int(
 
 
 def validate_str(
+    nullable: bool = False,
     min_len: Optional[float] = None,
     max_len: Optional[float] = None,
     allowed: Optional[list[str]] = None,
@@ -66,6 +67,11 @@ def validate_str(
     is_numeric: bool = False,
 ) -> Callable[[Any, str], str]:
     def f(cls: Any, v: str) -> str:
+        if v is None:
+            if nullable:
+                return v
+            else:
+                raise ValueError(f"value cannot be None")
         if not isinstance(v, str):
             raise ValueError(f'"{v}" is not a string')
         if min_len is not None and len(v) < min_len:
