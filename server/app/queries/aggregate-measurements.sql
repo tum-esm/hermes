@@ -10,7 +10,7 @@ WITH aggregation AS (
 SELECT
     sensor_name,
     sensor_identifier,
-    measurements_counts
+    coalesce(measurements_counts, ARRAY[]::int[][]) AS measurements_counts
 FROM sensors
 LEFT JOIN aggregation USING (sensor_identifier)
 WHERE sensor_name = ANY({sensor_names})
