@@ -13,3 +13,44 @@ WHERE
 ORDER BY creation_timestamp ASC
 OFFSET {skip}
 LIMIT {limit};
+
+
+-- fetch-latest-measurements.sql
+SELECT
+    sensor_identifier,
+    timestamptz_to_unixtime(creation_timestamp) AS creation_timestamp,
+    timestamptz_to_unixtime(receipt_timestamp) AS receipt_timestamp,
+    position_in_transmission,
+    measurement
+FROM measurements
+WHERE sensor_identifier = {sensor_identifier}
+ORDER BY creation_timestamp DESC, receipt_timestamp DESC, position_in_transmission DESC
+LIMIT 32;
+
+-- fetch-previous-measurements.sql
+SELECT
+    sensor_identifier,
+    timestamptz_to_unixtime(creation_timestamp) AS creation_timestamp,
+    timestamptz_to_unixtime(receipt_timestamp) AS receipt_timestamp,
+    position_in_transmission,
+    measurement
+FROM measurements
+WHERE
+    sensor_identifier = {sensor_identifier}
+    AND (creation_timestamp, receipt_timestamp, position_in_transmission) > (unixtime_to_timestamptz({creation_timestamp}), unixtime_to_timestamptz({receipt_timestamp}), {position_in_transmission})
+ORDER BY creation_timestamp DESC, receipt_timestamp DESC, position_in_transmission DESC
+LIMIT 32;
+
+-- fetch-next-measurements.sql
+SELECT
+    sensor_identifier,
+    timestamptz_to_unixtime(creation_timestamp) AS creation_timestamp,
+    timestamptz_to_unixtime(receipt_timestamp) AS receipt_timestamp,
+    position_in_transmission,
+    measurement
+FROM measurements
+WHERE
+    sensor_identifier = {sensor_identifier}
+    AND (creation_timestamp, receipt_timestamp, position_in_transmission) < (unixtime_to_timestamptz({creation_timestamp}), unixtime_to_timestamptz({receipt_timestamp}), {position_in_transmission})
+ORDER BY creation_timestamp DESC, receipt_timestamp DESC, position_in_transmission DESC
+LIMIT 32;
