@@ -6,6 +6,11 @@ import app.validation.constants as constants
 from app.validation.fields import JSONValues
 
 
+########################################################################################
+# Types
+########################################################################################
+
+
 ValueIdentifier = pydantic.constr(
     strict=True,
     regex=constants.Pattern.VALUE_IDENTIFIER.value,
@@ -14,6 +19,11 @@ Revision = pydantic.conint(strict=True, ge=0, lt=constants.Limit.MAXINT4)
 # TODO what are the real min/max values here? How do we handle overflow?
 # During validation somehow, or by handling the database error?
 Timestamp = pydantic.confloat(strict=True, ge=0, lt=constants.Limit.MAXINT4)
+
+
+########################################################################################
+# Models
+########################################################################################
 
 
 class _BaseModel(pydantic.BaseModel):

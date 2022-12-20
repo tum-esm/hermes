@@ -118,7 +118,7 @@ class Client(aiomqtt.Client):
         1. Update configuration on acknowledgement success/failure
         2. TODO Update sensor's last seen
         """
-        for heartbeat in message.heartbeats:
+        for i, heartbeat in enumerate(message.heartbeats):
             # We process each heartheat individually in separate transactions
             try:
                 with self.database_client.transaction():
@@ -130,6 +130,7 @@ class Client(aiomqtt.Client):
                             "sensor_identifier": sensor_identifier,
                             "revision": heartbeat.revision,
                             "creation_timestamp": heartbeat.timestamp,
+                            "position_in_transmission": i,
                             "severity": "system",
                             "subject": "Heartbeat",
                             "details": json.dumps({"success": heartbeat.success}),
@@ -172,11 +173,12 @@ class Client(aiomqtt.Client):
                         "sensor_identifier": sensor_identifier,
                         "revision": status.revision,
                         "creation_timestamp": status.timestamp,
+                        "position_in_transmission": i,
                         "severity": status.severity,
                         "subject": status.subject,
                         "details": status.details,
                     }
-                    for status in message.statuses
+                    for i, status in enumerate(message.statuses)
                 ],
             )
             await self.database_client.executemany(query, arguments)

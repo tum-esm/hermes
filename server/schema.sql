@@ -84,6 +84,7 @@ CREATE TABLE statuses (
     revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
+    position_in_transmission INT NOT NULL,
     severity TEXT NOT NULL,
     subject TEXT NOT NULL,
     details TEXT
