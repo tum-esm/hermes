@@ -2,12 +2,19 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" CASCADE;
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
 
--- Function to convert a TIMESTAMPTZ into a unix timestamp
-CREATE FUNCTION unixtime (tstz TIMESTAMPTZ) RETURNS DOUBLE PRECISION
+-- Function to convert TIMESTAMPTZ into unix timestamp
+CREATE FUNCTION timestamptz_to_unixtime (tstz TIMESTAMPTZ) RETURNS DOUBLE PRECISION
     LANGUAGE SQL
     IMMUTABLE
     RETURNS NULL ON NULL INPUT
     RETURN extract(epoch from tstz at time zone 'utc')::DOUBLE PRECISION;
+
+-- Function to convert unix timestamp into TIMESTAMPTZ
+CREATE FUNCTION unixtime_to_timestamptz (unixtime DOUBLE PRECISION) RETURNS TIMESTAMPTZ
+    LANGUAGE SQL
+    IMMUTABLE
+    RETURNS NULL ON NULL INPUT
+    RETURN ('epoch'::TIMESTAMPTZ + unixtime * '1 second'::INTERVAL);
 
 
 CREATE TABLE sensors (

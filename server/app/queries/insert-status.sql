@@ -10,7 +10,7 @@ INSERT INTO statuses (
 VALUES (
     {sensor_identifier},
     {revision},
-    ('epoch'::TIMESTAMPTZ + {creation_timestamp} * '1 second'::INTERVAL),
+    unixtime_to_timestamptz({creation_timestamp}),
     now(),
     {severity},
     {subject},

@@ -1,7 +1,7 @@
 WITH aggregation AS (
     SELECT
         sensor_identifier,
-        array_agg(ARRAY[unixtime(bucket_timestamp), measurements_count]) AS measurements_counts
+        array_agg(ARRAY[timestamptz_to_unixtime(bucket_timestamp), measurements_count]) AS measurements_counts
     FROM measurements_aggregation_4_hours
     WHERE bucket_timestamp > now() - INTERVAL '28 days'
     GROUP BY sensor_identifier
