@@ -205,9 +205,10 @@ class Client(aiomqtt.Client):
                         "sensor_identifier": sensor_identifier,
                         "revision": measurement.revision,
                         "creation_timestamp": measurement.timestamp,
+                        "position_in_transmission": i,
                         "measurement": measurement.value,
                     }
-                    for measurement in message.measurements
+                    for i, measurement in enumerate(message.measurements)
                 ],
             )
             await self.database_client.executemany(query, arguments)

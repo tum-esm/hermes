@@ -51,7 +51,7 @@ CREATE TABLE measurements (
     revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
-    -- Add position in transaction column?
+    position_in_transmission INT NOT NULL,
     measurement JSONB NOT NULL
 );
 

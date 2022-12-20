@@ -3,6 +3,7 @@ INSERT INTO measurements (
     revision,
     creation_timestamp,
     receipt_timestamp,
+    position_in_transmission,
     measurement
 )
 VALUES (
@@ -10,5 +11,6 @@ VALUES (
     {revision},
     unixtime_to_timestamptz({creation_timestamp}),
     now(),
+    {position_in_transmission},
     {measurement}
 );
