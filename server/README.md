@@ -54,7 +54,7 @@ The payloads are JSON encoded and have the following structure:
 ```javascript
 {
   // the array structure allows to batch messages
-  "log-messages": [
+  "log_messages": [
     {
       "severity": "warning", // one of info, warning, error
       "revision": 0,
