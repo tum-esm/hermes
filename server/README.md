@@ -17,8 +17,8 @@
 The communication between the sensors and the server runs over four MQTT topics:
 
 - `configurations/<sensor-identifier>` for configurations from the server
-- `heartbeats/<sensor-identifier>` for system messages from sensors
-- `statuses/<sensor-identifier>` for log messages from sensors
+- `heartbeats/<sensor-identifier>` for heartbeats and system messages from sensors
+- `log-messages/<sensor-identifier>` for log messages from sensors
 - `measurements/<sensor-identifier>` for measurements from sensors
 
 ### Payloads
@@ -49,12 +49,12 @@ The payloads are JSON encoded and have the following structure:
 }
 ```
 
-**`statuses/<sensor-identifier>`:**
+**`log-messages/<sensor-identifier>`:**
 
 ```javascript
 {
   // the array structure allows to batch messages
-  "statuses": [
+  "log-messages": [
     {
       "severity": "warning", // one of info, warning, error
       "revision": 0,

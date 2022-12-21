@@ -112,51 +112,6 @@ async def put_sensors(request):
     return starlette.responses.JSONResponse(status_code=204, content=None)
 
 
-@validation.validate(schema=validation.StreamSensorsRequest)
-async def stream_sensors(request):
-    """Stream aggregated information about sensors via Server Sent Events.
-
-    This includes:
-      - the number of measurements in 4 hour intervals over the last 28 days
-    Ideas:
-      - last sensor heartbeats
-      - last measurement timestamps
-
-    TODO choose sensors to stream based on user name and authorization
-    """
-
-    # first version: just return new aggregation in fixed interval
-    # improvements:
-    # - use a cache (redis?) to store the last aggregation?
-    # - then we can return the cached value immediately and update the cache when a new
-    #   measurement comes in
-    # - or better: re-aggregate fixed interval, but only if there are new measurements
-
-    async def stream(request):
-        while True:
-            query, arguments = database.build(
-                template="aggregate-measurements.sql",
-                template_arguments={},
-                query_arguments={
-                    "sensor_names": request.query.sensor_names,
-                },
-            )
-            result = await database_client.fetch(query, *arguments)
-            # TODO handle exceptions
-            yield sse.ServerSentEvent(data=database.dictify(result)).encode()
-            await asyncio.sleep(5)
-
-    return starlette.responses.StreamingResponse(
-        content=stream(request),
-        status_code=200,
-        headers={
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        },
-    )
-
-
 async def get_sensors(request):
     """Return configurations of selected sensors."""
     raise errors.NotImplementedError()
@@ -164,7 +119,7 @@ async def get_sensors(request):
 
 @validation.validate(schema=validation.GetMeasurementsRequest)
 async def get_measurements(request):
-    """Return measurements sorted chronologically, optionally filtered.
+    """Return pages of measurements sorted descending by creation timestamp.
 
     - maybe we can choose based on some header, if we page or export the data
     - for export, we can also offer start/end timestamps parameters
@@ -188,6 +143,51 @@ async def get_measurements(request):
     return starlette.responses.JSONResponse(
         status_code=200,
         content=database.dictify(result),
+    )
+
+
+@validation.validate(schema=validation.StreamSensorsRequest)
+async def stream_sensors(request):
+    """Stream aggregated information about sensors via Server Sent Events.
+
+    This includes:
+      - the number of measurements in 4 hour intervals over the last 28 days
+    Ideas:
+      - last sensor heartbeats
+      - last measurement timestamps
+
+    TODO choose sensors to stream based on user name and authorization
+    """
+
+    # first version: just return new aggregation in fixed interval
+    # improvements:
+    # - use a cache (redis?) to store the last aggregation?
+    # - then we can return the cached value immediately and update the cache when a new
+    #   measurement comes in
+    # - or better: re-aggregate fixed interval, but only if there are new measurements
+
+    async def stream(request):
+        while True:
+            query, arguments = database.build(
+                template="aggregate-sensors.sql",
+                template_arguments={},
+                query_arguments={
+                    "sensor_names": request.query.sensor_names,
+                },
+            )
+            result = await database_client.fetch(query, *arguments)
+            # TODO handle exceptions
+            yield sse.ServerSentEvent(data=database.dictify(result)).encode()
+            await asyncio.sleep(5)
+
+    return starlette.responses.StreamingResponse(
+        content=stream(request),
+        status_code=200,
+        headers={
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
     )
 
 
@@ -243,7 +243,7 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
         starlette.routing.Route(
-            path="/measurements/{sensor_identifier}",
+            path="/sensors/{sensor_identifier}/measurements",
             endpoint=get_measurements,
             methods=["GET"],
         ),

@@ -43,7 +43,7 @@ CREATE TABLE configurations (
 );
 
 -- Defining the primary key like this (setting the sort order) makes the query to get the latest revision faster
-CREATE UNIQUE INDEX sensor_identifier_revision_index ON configurations (sensor_identifier ASC, revision DESC);
+CREATE UNIQUE INDEX ON configurations (sensor_identifier ASC, revision DESC);
 
 
 CREATE TABLE measurements (
@@ -55,7 +55,7 @@ CREATE TABLE measurements (
     measurement JSONB NOT NULL
 );
 
-CREATE UNIQUE INDEX sensor_identifier_creation_timestamp_index ON measurements (sensor_identifier ASC, creation_timestamp DESC);
+CREATE UNIQUE INDEX ON measurements (sensor_identifier ASC, creation_timestamp DESC);
 
 SELECT create_hypertable('measurements', 'creation_timestamp');
 
@@ -79,7 +79,7 @@ SELECT add_continuous_aggregate_policy(
 );
 
 
-CREATE TABLE statuses (
+CREATE TABLE log_messages (
     sensor_identifier UUID NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
     revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
@@ -90,11 +90,11 @@ CREATE TABLE statuses (
     details TEXT
 );
 
-CREATE UNIQUE INDEX sensor_identifier_creation_timestamp_index ON statuses (sensor_identifier ASC, creation_timestamp DESC);
+CREATE UNIQUE INDEX ON log_messages (sensor_identifier ASC, creation_timestamp DESC);
 
-SELECT create_hypertable('statuses', 'creation_timestamp');
+SELECT create_hypertable('log_messages', 'creation_timestamp');
 
 SELECT add_retention_policy(
-    relation => 'statuses',
+    relation => 'log_messages',
     drop_after => INTERVAL '120 days'
 );

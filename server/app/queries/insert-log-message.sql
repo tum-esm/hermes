@@ -1,4 +1,4 @@
-INSERT INTO statuses (
+INSERT INTO log_messages (
     sensor_identifier,
     revision,
     creation_timestamp,

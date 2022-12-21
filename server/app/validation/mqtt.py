@@ -18,7 +18,7 @@ class HeartbeatsMessage(types._BaseModel):
     )
 
 
-class Status(types._BaseModel):
+class LogMessage(types._BaseModel):
     severity: typing.Literal["info", "warning", "error"]
     revision: types.Revision
     timestamp: types.Timestamp
@@ -32,9 +32,9 @@ class Status(types._BaseModel):
     ) | None = None
 
 
-class StatusesMessage(types._BaseModel):
-    statuses: pydantic.conlist(
-        item_type=Status, min_items=1, max_items=constants.Limit.MEDIUM - 1
+class LogMessagesMessage(types._BaseModel):
+    log_messages: pydantic.conlist(
+        item_type=LogMessage, min_items=1, max_items=constants.Limit.MEDIUM - 1
     )
 
 

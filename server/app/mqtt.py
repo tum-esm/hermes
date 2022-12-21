@@ -111,7 +111,7 @@ class Client(aiomqtt.Client):
         """Process incoming sensor heartbeats.
 
         Heartbeat messages are critical to the system working correctly. This is in
-        contrast to status messages, which only fulfill a kind of logging functionality
+        contrast to log messages, which only fulfill a logging functionality
         that allows us to see errors on the sensors straight from the dashboard.
         On receival of a heartbeat, we:
 
@@ -122,9 +122,9 @@ class Client(aiomqtt.Client):
             # We process each heartheat individually in separate transactions
             try:
                 with self.database_client.transaction():
-                    # Write heartbeat as status message in the database
+                    # Write heartbeat as log message in the database
                     query, arguments = database.build(
-                        template="insert-status.sql",
+                        template="insert-log-message.sql",
                         template_arguments={},
                         query_arguments={
                             "sensor_identifier": sensor_identifier,
@@ -160,35 +160,35 @@ class Client(aiomqtt.Client):
             except Exception as e:
                 logger.error(f"[MQTT] Unknown error: {repr(e)}")
 
-    async def _process_statuses_message(
-        self, sensor_identifier: str, message: validation.StatusesMessage
+    async def _process_log_messages_message(
+        self, sensor_identifier: str, message: validation.LogMessagesMessage
     ) -> None:
-        """Write incoming sensor statuses to the database."""
+        """Write incoming sensor log messages to the database."""
         try:
             query, arguments = database.build(
-                template="insert-status.sql",
+                template="insert-log-message.sql",
                 template_arguments={},
                 query_arguments=[
                     {
                         "sensor_identifier": sensor_identifier,
-                        "revision": status.revision,
-                        "creation_timestamp": status.timestamp,
+                        "revision": log_message.revision,
+                        "creation_timestamp": log_message.timestamp,
                         "position_in_transmission": i,
-                        "severity": status.severity,
-                        "subject": status.subject,
-                        "details": status.details,
+                        "severity": log_message.severity,
+                        "subject": log_message.subject,
+                        "details": log_message.details,
                     }
-                    for i, status in enumerate(message.statuses)
+                    for i, log_message in enumerate(message.log_messages)
                 ],
             )
             await self.database_client.executemany(query, arguments)
             logger.info(
-                f"[MQTT] Processed {len(message.statuses)} statuses from"
+                f"[MQTT] Processed {len(message.log_messages)} log messages from"
                 f" {sensor_identifier}"
             )
         except asyncpg.ForeignKeyViolationError:
             logger.warning(
-                "[MQTT] Failed to process statuses; Sensor not known:"
+                "[MQTT] Failed to process log messages; Sensor not known:"
                 f" {sensor_identifier}"
             )
         except Exception as e:
@@ -229,15 +229,15 @@ class Client(aiomqtt.Client):
     async def listen(self) -> None:
         """Listen to incoming sensor MQTT messages and process them."""
         wildcard_heartbeats = "heartbeats/+"
-        wildcard_statuses = "statuses/+"
+        wildcard_log_messages = "log-messages/+"
         wildcard_measurements = "measurements/+"
 
         async with self.messages() as messages:
             # Subscribe to all topics
             await self.subscribe(wildcard_heartbeats, qos=1, timeout=10)
             logger.info(f"[MQTT] Subscribed to: {wildcard_heartbeats}")
-            await self.subscribe(wildcard_statuses, qos=1, timeout=10)
-            logger.info(f"[MQTT] Subscribed to: {wildcard_statuses}")
+            await self.subscribe(wildcard_log_messages, qos=1, timeout=10)
+            logger.info(f"[MQTT] Subscribed to: {wildcard_log_messages}")
             await self.subscribe(wildcard_measurements, qos=1, timeout=10)
             logger.info(f"[MQTT] Subscribed to: {wildcard_measurements}")
 
@@ -258,11 +258,11 @@ class Client(aiomqtt.Client):
                             sensor_identifier=sensor_identifier,
                             message=validation.HeartbeatsMessage(**payload),
                         )
-                    if message.topic.matches(wildcard_statuses):
+                    if message.topic.matches(wildcard_log_messages):
                         matched = True
-                        await self._process_statuses_message(
+                        await self._process_log_messages_message(
                             sensor_identifier=sensor_identifier,
-                            message=validation.StatusesMessage(**payload),
+                            message=validation.LogMessagesMessage(**payload),
                         )
                     if message.topic.matches(wildcard_measurements):
                         matched = True
