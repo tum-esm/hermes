@@ -1,20 +1,44 @@
-import attrs
+import pydantic
 
 import app.validation.constants as constants
+
+########################################################################################
+# Base model
+########################################################################################
+
+
+class _BaseModel(pydantic.BaseModel):
+    class Config:
+        max_anystr_length = constants.Limit.LARGE
+        extra = pydantic.Extra["forbid"]
+        frozen = True
 
 
 ########################################################################################
 # Types
 ########################################################################################
 
-JSONValues = int | float | str | bool | None
+
+SensorName = pydantic.constr(strict=True, regex=constants.Pattern.SENSOR_NAME.value)
+ValueIdentifier = pydantic.constr(
+    strict=True, regex=constants.Pattern.VALUE_IDENTIFIER.value
+)
+
+Revision = pydantic.conint(strict=True, ge=0, lt=constants.Limit.MAXINT4)
+# TODO what are the real min/max values here? How do we handle overflow?
+# During validation somehow, or by handling the database error?
+Timestamp = pydantic.confloat(strict=True, ge=0, lt=constants.Limit.MAXINT4)
+
+
+JSONValue = int | float | str | bool | None
+
 
 ########################################################################################
-# Attrs converters
+# Validators
 ########################################################################################
 
 
-def _convert_query_string_to_list(string: str) -> list[str]:
+def _split_string(string: str) -> list[str]:
     """Convert a comma-separated string to a list of strings."""
     # split(",") returns [""] if string is empty, and we don't want that
     return string.split(",") if string else []
@@ -24,6 +48,7 @@ def _convert_query_string_to_list(string: str) -> list[str]:
 # Attrs validators
 ########################################################################################
 
+'''
 
 def _validate_end_greater_equal_start(instance, attribute, value):
     """Validate that end timestamp is >= to the start timestamp."""
@@ -91,3 +116,6 @@ POSITIVE_FLOAT_QUERY_FIELD = attrs.field(
 SENSOR_NAME_FIELD = attrs.field(validator=SENSOR_NAME_VALIDATOR)
 POSITIVE_INTEGER_FIELD = attrs.field(validator=POSITIVE_INTEGER_VALIDATOR)
 JSON_FIELD = attrs.field(validator=JSON_VALIDATOR)
+
+
+'''

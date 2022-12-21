@@ -3,52 +3,25 @@ import typing
 import pydantic
 
 import app.validation.constants as constants
-from app.validation.fields import JSONValues
+import app.validation.types as types
 
 
-########################################################################################
-# Types
-########################################################################################
-
-
-ValueIdentifier = pydantic.constr(
-    strict=True,
-    regex=constants.Pattern.VALUE_IDENTIFIER.value,
-)
-Revision = pydantic.conint(strict=True, ge=0, lt=constants.Limit.MAXINT4)
-# TODO what are the real min/max values here? How do we handle overflow?
-# During validation somehow, or by handling the database error?
-Timestamp = pydantic.confloat(strict=True, ge=0, lt=constants.Limit.MAXINT4)
-
-
-########################################################################################
-# Models
-########################################################################################
-
-
-class _BaseModel(pydantic.BaseModel):
-    class Config:
-        max_anystr_length = constants.Limit.LARGE
-        extra = pydantic.Extra["forbid"]
-        frozen = True
-
-
-class Heartbeat(_BaseModel):
-    revision: Revision
-    timestamp: Timestamp
+class Heartbeat(types._BaseModel):
+    revision: types.Revision
+    timestamp: types.Timestamp
     success: bool  # Did the sensor successfully process the configuration?
 
 
-class HeartbeatsMessage(_BaseModel):
+class HeartbeatsMessage(types._BaseModel):
     heartbeats: pydantic.conlist(
         item_type=Heartbeat, min_items=1, max_items=constants.Limit.MEDIUM - 1
     )
 
 
-class Status(_BaseModel):
+class Status(types._BaseModel):
     severity: typing.Literal["info", "warning", "error"]
-    revision: Revision
-    timestamp: Timestamp
+    revision: types.Revision
+    timestamp: types.Timestamp
     # TODO Cut off the string at max length instead of rejecting it
     subject: pydantic.constr(
         strict=True, min_length=1, max_length=constants.Limit.LARGE - 1
@@ -59,20 +32,20 @@ class Status(_BaseModel):
     ) | None = None
 
 
-class StatusesMessage(_BaseModel):
+class StatusesMessage(types._BaseModel):
     statuses: pydantic.conlist(
         item_type=Status, min_items=1, max_items=constants.Limit.MEDIUM - 1
     )
 
 
-class Measurement(_BaseModel):
-    revision: Revision
-    timestamp: Timestamp
+class Measurement(types._BaseModel):
+    revision: types.Revision
+    timestamp: types.Timestamp
     # TODO Validate the values more thoroughly for min and max limits/lengths
-    value: dict[ValueIdentifier, JSONValues]
+    value: dict[types.ValueIdentifier, types.JSONValue]
 
 
-class MeasurementsMessage(_BaseModel):
+class MeasurementsMessage(types._BaseModel):
     measurements: pydantic.conlist(
         item_type=Measurement, min_items=1, max_items=constants.Limit.MEDIUM - 1
     )
