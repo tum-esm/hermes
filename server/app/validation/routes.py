@@ -68,12 +68,16 @@ class _PutSensorsRequestPath(types._BaseModel):
     sensor_name: types.SensorName
 
 
-class _StreamSensorsRequestPath(types._BaseModel):
-    pass
-
-
 class _GetMeasurementsRequestPath(types._BaseModel):
     sensor_identifier: types.SensorIdentifier
+
+
+class _GetLogMessagesAggregatesRequestPath(types._BaseModel):
+    sensor_identifier: types.SensorIdentifier
+
+
+class _StreamSensorsRequestPath(types._BaseModel):
+    pass
 
 
 ########################################################################################
@@ -87,15 +91,6 @@ class _PostSensorsRequestQuery(types._BaseModel):
 
 class _PutSensorsRequestQuery(types._BaseModel):
     pass
-
-
-class _StreamSensorsRequestQuery(types._BaseModel):
-    sensor_names: list[types.SensorName]
-
-    # Validators
-    _sensor_names_split_string = pydantic.validator(
-        "sensor_names", allow_reuse=True, pre=True
-    )(types._split_string)
 
 
 class _GetMeasurementsRequestQuery(types._BaseModel):
@@ -115,6 +110,19 @@ class _GetMeasurementsRequestQuery(types._BaseModel):
         return v
 
 
+class _GetLogMessagesAggregatesRequestQuery(types._BaseModel):
+    pass
+
+
+class _StreamSensorsRequestQuery(types._BaseModel):
+    sensor_names: list[types.SensorName]
+
+    # Validators
+    _sensor_names_split_string = pydantic.validator(
+        "sensor_names", allow_reuse=True, pre=True
+    )(types._split_string)
+
+
 ########################################################################################
 # Body models
 ########################################################################################
@@ -130,11 +138,15 @@ class _PutSensorsRequestBody(types._BaseModel):
     configuration: types.Json
 
 
-class _StreamSensorsRequestBody(types._BaseModel):
+class _GetMeasurementsRequestBody(types._BaseModel):
     pass
 
 
-class _GetMeasurementsRequestBody(types._BaseModel):
+class _GetLogMessagesAggregatesRequestBody(types._BaseModel):
+    pass
+
+
+class _StreamSensorsRequestBody(types._BaseModel):
     pass
 
 
@@ -156,13 +168,19 @@ class PutSensorsRequest(_Request):
     body: _PutSensorsRequestBody
 
 
-class StreamSensorsRequest(_Request):
-    path: _StreamSensorsRequestPath
-    query: _StreamSensorsRequestQuery
-    body: _StreamSensorsRequestBody
-
-
 class GetMeasurementsRequest(_Request):
     path: _GetMeasurementsRequestPath
     query: _GetMeasurementsRequestQuery
     body: _GetMeasurementsRequestBody
+
+
+class GetLogMessagesAggregatesRequest(_Request):
+    path: _GetLogMessagesAggregatesRequestPath
+    query: _GetLogMessagesAggregatesRequestQuery
+    body: _GetLogMessagesAggregatesRequestBody
+
+
+class StreamSensorsRequest(_Request):
+    path: _StreamSensorsRequestPath
+    query: _StreamSensorsRequestQuery
+    body: _StreamSensorsRequestBody

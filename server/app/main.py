@@ -146,6 +146,26 @@ async def get_measurements(request):
     )
 
 
+@validation.validate(schema=validation.GetLogMessagesAggregatesRequest)
+async def get_log_messages_aggregates(request):
+    """Return aggregation of sensor log messages."""
+    try:
+        query, arguments = database.build(
+            template="aggregate-log-messages.sql",
+            template_arguments={},
+            query_arguments={"sensor_identifier": request.path.sensor_identifier},
+        )
+        result = await database_client.fetch(query, *arguments)
+    except Exception as e:
+        logger.error(f"[GET /log-messages] Unknown error: {repr(e)}")
+        raise errors.InternalServerError()
+    # Return successful response
+    return starlette.responses.JSONResponse(
+        status_code=200,
+        content=database.dictify(result),
+    )
+
+
 @validation.validate(schema=validation.StreamSensorsRequest)
 async def stream_sensors(request):
     """Stream aggregated information about sensors via Server Sent Events.
@@ -245,6 +265,11 @@ app = starlette.applications.Starlette(
         starlette.routing.Route(
             path="/sensors/{sensor_identifier}/measurements",
             endpoint=get_measurements,
+            methods=["GET"],
+        ),
+        starlette.routing.Route(
+            path="/sensors/{sensor_identifier}/log-messages/aggregates",
+            endpoint=get_log_messages_aggregates,
             methods=["GET"],
         ),
         starlette.routing.Route(

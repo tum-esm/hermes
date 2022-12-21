@@ -8,5 +8,5 @@ SELECT
     timestamptz_to_unixtime(max(creation_timestamp)) as last_creation_timestamp,
     count(*) as count
 FROM log_messages
-WHERE sensor_identifier = ANY({sensor_identifiers}) AND severity = ANY(ARRAY['warning', 'error'])
-GROUP BY severity, subject;
+WHERE sensor_identifier = {sensor_identifier} AND severity = ANY(ARRAY['warning', 'error'])
+GROUP BY sensor_identifier, severity, subject;
