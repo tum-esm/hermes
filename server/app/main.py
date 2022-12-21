@@ -176,10 +176,8 @@ async def get_measurements(request):
             template_arguments={},
             query_arguments={
                 "sensor_identifier": request.path.sensor_identifier,
-                "method": request.query.method,
+                "direction": request.query.direction,
                 "creation_timestamp": request.query.creation_timestamp,
-                "receipt_timestamp": request.query.receipt_timestamp,
-                "position_in_transmission": request.query.position_in_transmission,
             },
         )
         result = await database_client.fetch(query, *arguments)

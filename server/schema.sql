@@ -55,7 +55,7 @@ CREATE TABLE measurements (
     measurement JSONB NOT NULL
 );
 
-CREATE INDEX sensor_identifier_creation_timestamp_index ON measurements (sensor_identifier ASC, creation_timestamp DESC);
+CREATE UNIQUE INDEX sensor_identifier_creation_timestamp_index ON measurements (sensor_identifier ASC, creation_timestamp DESC);
 
 SELECT create_hypertable('measurements', 'creation_timestamp');
 
@@ -90,7 +90,7 @@ CREATE TABLE statuses (
     details TEXT
 );
 
--- CREATE INDEX sensor_identifier_creation_timestamp_index ON statuses (sensor_identifier ASC, creation_timestamp DESC);
+CREATE UNIQUE INDEX sensor_identifier_creation_timestamp_index ON statuses (sensor_identifier ASC, creation_timestamp DESC);
 
 SELECT create_hypertable('statuses', 'creation_timestamp');
 

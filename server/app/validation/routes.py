@@ -97,22 +97,19 @@ class _StreamSensorsRequestQuery(types._BaseModel):
 
 
 class _GetMeasurementsRequestQuery(types._BaseModel):
-    method: typing.Literal[None, "previous", "next"] = None
+    direction: typing.Literal[None, "previous", "next"] = None
     creation_timestamp: types.Timestamp = None
-    receipt_timestamp: types.Timestamp = None
-    position_in_transmission: types.PositiveInteger = None
 
-    @pydantic.validator(
-        "creation_timestamp",
-        "receipt_timestamp",
-        "position_in_transmission",
-        always=True,
-    )
+    @pydantic.validator("creation_timestamp", always=True)
     def check_exists(cls, v, values, field):
-        if values.get("method") is not None and v is None:
-            raise ValueError(f"Must specify '{field.name}' when 'method' is specified")
-        if values.get("method") is None and v is not None:
-            raise ValueError(f"Must specify 'method' when '{field.name}' is specified")
+        if values.get("direction") is not None and v is None:
+            raise ValueError(
+                f"Must specify '{field.name}' when 'direction' is specified"
+            )
+        if values.get("direction") is None and v is not None:
+            raise ValueError(
+                f"Must specify 'direction' when '{field.name}' is specified"
+            )
         return v
 
 
