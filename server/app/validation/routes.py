@@ -42,8 +42,10 @@ def validate(schema: type[_Request]) -> typing.Callable:
                     path=request.path_params, query=request.query_params, body=body
                 )
             except (TypeError, ValueError) as e:
-                # TODO Improve log message
-                logger.warning(f"[HTTP] Invalid request: {repr(e)}")
+                logger.warning(
+                    f"[{request.method} {request.url.path}] Request failed validation:"
+                    f" {repr(e)}"
+                )
                 raise errors.BadRequestError()
 
             return await func(request)
