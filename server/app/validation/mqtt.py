@@ -41,8 +41,7 @@ class StatusesMessage(types._BaseModel):
 class Measurement(types._BaseModel):
     revision: types.Revision
     timestamp: types.Timestamp
-    # TODO Validate the values more thoroughly for min and max limits/lengths
-    value: dict[types.ValueIdentifier, types.JSONValue]
+    value: types.Json
 
 
 class MeasurementsMessage(types._BaseModel):

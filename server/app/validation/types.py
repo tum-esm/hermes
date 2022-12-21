@@ -28,12 +28,15 @@ ValueIdentifier = pydantic.constr(
     strict=True, regex=constants.Pattern.VALUE_IDENTIFIER.value
 )
 Revision = pydantic.conint(strict=True, ge=0, lt=constants.Limit.MAXINT4)
+PositiveInteger = pydantic.conint(strict=True, ge=0, lt=constants.Limit.MAXINT4)
+
+# TODO Validate the values more thoroughly for min and max limits/lengths
+JsonValue = int | float | str | bool | None
+Json = dict[ValueIdentifier, JsonValue]
+
 # TODO what are the real min/max values here? How do we handle overflow?
 # During validation somehow, or by handling the database error?
 Timestamp = pydantic.confloat(strict=True, ge=0, lt=constants.Limit.MAXINT4)
-
-
-JSONValue = int | float | str | bool | None
 
 
 ########################################################################################

@@ -10,8 +10,8 @@ import app.database as database
 import app.errors as errors
 import app.mqtt as mqtt
 import app.settings as settings
-import app.validation as validation
 import app.sse as sse
+import app.validation as validation
 from app.logs import logger
 
 
@@ -121,6 +121,8 @@ async def stream_sensors(request):
     Ideas:
       - last sensor heartbeats
       - last measurement timestamps
+
+    TODO choose sensors to stream based on user name and authorization
     """
 
     # first version: just return new aggregation in fixed interval
@@ -162,25 +164,27 @@ async def get_sensors(request):
 
 @validation.validate(schema=validation.GetMeasurementsRequest)
 async def get_measurements(request):
-    """Return measurements sorted chronologically, optionally filtered."""
+    """Return measurements sorted chronologically, optionally filtered.
+
+    - maybe we can choose based on some header, if we page or export the data
+    - for export, we can also offer start/end timestamps parameters
+    - we should also be able to choose multiple sensors to return the data for
+    """
     try:
         query, arguments = database.build(
             template="fetch-measurements.sql",
-            template_arguments={"request": request},
+            template_arguments={},
             query_arguments={
-                "sensor_identifiers": request.query.sensors,
-                "start_timestamp": request.query.start,
-                "end_timestamp": request.query.end,
-                "skip": request.query.skip,
-                "limit": request.query.limit,
+                "sensor_identifier": request.path.sensor_identifier,
+                "method": request.query.method,
+                "creation_timestamp": request.query.creation_timestamp,
+                "receipt_timestamp": request.query.receipt_timestamp,
+                "position_in_transmission": request.query.position_in_transmission,
             },
         )
-        # TODO limiting size and paginating is fine for now, but we should also
-        # either implement streaming or some other way to export the data in different
-        # formats (parquet, ...)
         result = await database_client.fetch(query, *arguments)
     except Exception as e:
-        logger.error(f"[PUT /sensors] Unknown error: {repr(e)}")
+        logger.error(f"[GET /measurements] Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
@@ -241,7 +245,7 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
         starlette.routing.Route(
-            path="/measurements",
+            path="/measurements/{sensor_identifier}",
             endpoint=get_measurements,
             methods=["GET"],
         ),

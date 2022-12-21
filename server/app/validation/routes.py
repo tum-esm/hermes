@@ -98,55 +98,11 @@ class _StreamSensorsRequestQueryParameters(types._BaseModel):
     )(types._split_string)
 
 
-# - translate validation completely to pydantic
-# - remove hacky jinja2 template stuff
-# - finish GET /measurements route
-# - change named parameters so they're compatible with sqlfluff? (:param?)
-
-
 class _GetMeasurementsRequestQueryParameters(types._BaseModel):
-    pass
-
-
-class _GetMeasurementsRequestQueryParameters(types._BaseModel):
-    """
-    method: str = attrs.field(
-        validator=attrs.optional(
-
-
-    values: list[str] = attrs.field(
-        default="",
-        converter=_convert_query_string_to_list,
-        validator=attrs.validators.deep_iterable(
-            iterable_validator=attrs.validators.instance_of(list),
-            member_validator=VALUE_IDENTIFIER_VALIDATOR,
-        ),
-    )
-    start: int = POSITIVE_FLOAT_QUERY_FIELD
-    end: int = attrs.field(
-        default=None,
-        converter=attrs.converters.optional(int),
-        validator=attrs.validators.optional(
-            attrs.validators.and_(
-                POSITIVE_FLOAT_VALIDATOR,
-                _validate_end_greater_equal_start,
-            )
-        ),
-    )
-    skip: int = attrs.field(
-        default=0,
-        converter=int,
-        validator=POSITIVE_INTEGER_VALIDATOR,
-    )
-    limit: int = attrs.field(
-        default=constants.Limit.MEDIUM,
-        converter=int,
-        validator=attrs.validators.and_(
-            POSITIVE_INTEGER_VALIDATOR,
-            attrs.validators.le(constants.Limit.LARGE),
-        ),
-    )
-    """
+    method: typing.Literal[None, "previous", "next"] = None
+    creation_timestamp: types.Timestamp = None
+    receipt_timestamp: types.Timestamp = None
+    position_in_transmission: types.PositiveInteger = None
 
 
 ########################################################################################
@@ -156,12 +112,12 @@ class _GetMeasurementsRequestQueryParameters(types._BaseModel):
 
 class _PostSensorsRequestBody(types._BaseModel):
     sensor_name: types.SensorName
-    configuration: dict[types.ValueIdentifier, types.JSONValue]
+    configuration: types.Json
 
 
 class _PutSensorsRequestBody(types._BaseModel):
     sensor_name: types.SensorName
-    configuration: dict[types.ValueIdentifier, types.JSONValue]
+    configuration: types.Json
 
 
 class _StreamSensorsRequestBody(types._BaseModel):

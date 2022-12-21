@@ -43,6 +43,9 @@ def build(
     injections. asyncpg doesn't support named arguments, adding them seems taped on.
     I tried SQLAlchemy, but found it too unflexible and slow to program. I want to
     write directly in SQL and have the queries in separate files.
+
+    TODO remove jinja2 templating
+    TODO change named parameters so they're compatible with sqlfluff? (:param?)
     """
     query = templates.get_template(template).render(**template_arguments)
     # Get the names of the query arguments in some fixed order
