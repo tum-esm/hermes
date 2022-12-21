@@ -27,8 +27,10 @@ SensorIdentifier = pydantic.constr(
 ValueIdentifier = pydantic.constr(
     strict=True, regex=constants.Pattern.VALUE_IDENTIFIER.value
 )
-Revision = pydantic.conint(strict=True, ge=0, lt=constants.Limit.MAXINT4)
-PositiveInteger = pydantic.conint(strict=True, ge=0, lt=constants.Limit.MAXINT4)
+
+# TODO Make strict when pydantic v2 is released (used for path and query parameters)
+Revision = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
+PositiveInteger = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
 
 # TODO Validate the values more thoroughly for min and max limits/lengths
 JsonValue = int | float | str | bool | None
@@ -36,7 +38,8 @@ Json = dict[ValueIdentifier, JsonValue]
 
 # TODO what are the real min/max values here? How do we handle overflow?
 # During validation somehow, or by handling the database error?
-Timestamp = pydantic.confloat(strict=True, ge=0, lt=constants.Limit.MAXINT4)
+# TODO Make strict when pydantic v2 is released
+Timestamp = pydantic.confloat(ge=0, lt=constants.Limit.MAXINT4)
 
 
 ########################################################################################

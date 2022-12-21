@@ -20,8 +20,8 @@ from app.logs import logger
 
 
 class _Request(types._BaseModel):
-    path_parameters: object
-    query_parameters: object
+    path: object
+    query: object
     body: object
 
 
@@ -39,9 +39,7 @@ def validate(schema: type[_Request]) -> typing.Callable:
                 body = await request.body()
                 body = {} if len(body) == 0 else json.loads(body.decode())
                 request = schema(
-                    path_parameters=request.path_params,
-                    query_parameters=request.query_params,
-                    body=body,
+                    path=request.path_params, query=request.query_params, body=body
                 )
             except (TypeError, ValueError) as e:
                 # TODO Improve log message
@@ -60,19 +58,19 @@ def validate(schema: type[_Request]) -> typing.Callable:
 ########################################################################################
 
 
-class _PostSensorsRequestPathParameters(types._BaseModel):
+class _PostSensorsRequestPath(types._BaseModel):
     pass
 
 
-class _PutSensorsRequestPathParameters(types._BaseModel):
+class _PutSensorsRequestPath(types._BaseModel):
     sensor_name: types.SensorName
 
 
-class _StreamSensorsRequestPathParameters(types._BaseModel):
+class _StreamSensorsRequestPath(types._BaseModel):
     pass
 
 
-class _GetMeasurementsRequestPathParameters(types._BaseModel):
+class _GetMeasurementsRequestPath(types._BaseModel):
     sensor_identifier: types.SensorIdentifier
 
 
@@ -81,15 +79,15 @@ class _GetMeasurementsRequestPathParameters(types._BaseModel):
 ########################################################################################
 
 
-class _PostSensorsRequestQueryParameters(types._BaseModel):
+class _PostSensorsRequestQuery(types._BaseModel):
     pass
 
 
-class _PutSensorsRequestQueryParameters(types._BaseModel):
+class _PutSensorsRequestQuery(types._BaseModel):
     pass
 
 
-class _StreamSensorsRequestQueryParameters(types._BaseModel):
+class _StreamSensorsRequestQuery(types._BaseModel):
     sensor_names: list[types.SensorName]
 
     # Validators
@@ -98,11 +96,24 @@ class _StreamSensorsRequestQueryParameters(types._BaseModel):
     )(types._split_string)
 
 
-class _GetMeasurementsRequestQueryParameters(types._BaseModel):
+class _GetMeasurementsRequestQuery(types._BaseModel):
     method: typing.Literal[None, "previous", "next"] = None
     creation_timestamp: types.Timestamp = None
     receipt_timestamp: types.Timestamp = None
     position_in_transmission: types.PositiveInteger = None
+
+    @pydantic.validator(
+        "creation_timestamp",
+        "receipt_timestamp",
+        "position_in_transmission",
+        always=True,
+    )
+    def check_exists(cls, v, values, field):
+        if values.get("method") is not None and v is None:
+            raise ValueError(f"Must specify '{field.name}' when 'method' is specified")
+        if values.get("method") is None and v is not None:
+            raise ValueError(f"Must specify 'method' when '{field.name}' is specified")
+        return v
 
 
 ########################################################################################
@@ -135,24 +146,24 @@ class _GetMeasurementsRequestBody(types._BaseModel):
 
 # TODO Can we generate these automatically?
 class PostSensorsRequest(_Request):
-    path_parameters: _PostSensorsRequestPathParameters
-    query_parameters: _PostSensorsRequestQueryParameters
+    path: _PostSensorsRequestPath
+    query: _PostSensorsRequestQuery
     body: _PostSensorsRequestBody
 
 
 class PutSensorsRequest(_Request):
-    path_parameters: _PutSensorsRequestPathParameters
-    query_parameters: _PutSensorsRequestQueryParameters
+    path: _PutSensorsRequestPath
+    query: _PutSensorsRequestQuery
     body: _PutSensorsRequestBody
 
 
 class StreamSensorsRequest(_Request):
-    path_parameters: _StreamSensorsRequestPathParameters
-    query_parameters: _StreamSensorsRequestQueryParameters
+    path: _StreamSensorsRequestPath
+    query: _StreamSensorsRequestQuery
     body: _StreamSensorsRequestBody
 
 
 class GetMeasurementsRequest(_Request):
-    path_parameters: _GetMeasurementsRequestPathParameters
-    query_parameters: _GetMeasurementsRequestQueryParameters
+    path: _GetMeasurementsRequestPath
+    query: _GetMeasurementsRequestQuery
     body: _GetMeasurementsRequestBody
