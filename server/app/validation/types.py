@@ -2,6 +2,7 @@ import pydantic
 
 import app.validation.constants as constants
 
+
 ########################################################################################
 # Base model
 ########################################################################################
@@ -20,10 +21,12 @@ class _BaseModel(pydantic.BaseModel):
 
 
 SensorName = pydantic.constr(strict=True, regex=constants.Pattern.SENSOR_NAME.value)
+SensorIdentifier = pydantic.constr(
+    strict=True, regex=constants.Pattern.SENSOR_IDENTIFIER.value
+)
 ValueIdentifier = pydantic.constr(
     strict=True, regex=constants.Pattern.VALUE_IDENTIFIER.value
 )
-
 Revision = pydantic.conint(strict=True, ge=0, lt=constants.Limit.MAXINT4)
 # TODO what are the real min/max values here? How do we handle overflow?
 # During validation somehow, or by handling the database error?

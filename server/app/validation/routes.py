@@ -73,8 +73,7 @@ class _StreamSensorsRequestPathParameters(types._BaseModel):
 
 
 class _GetMeasurementsRequestPathParameters(types._BaseModel):
-    # TODO: Add proper validation for sensor_identifier UUID v4 (see git history)
-    sensor_identifier: str
+    sensor_identifier: types.SensorIdentifier
 
 
 ########################################################################################
