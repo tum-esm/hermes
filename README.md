@@ -8,7 +8,7 @@ The sensors communicate with the server via MQTT. The server stores the data in 
 
 ## Main goals 🎯
 
-1. The network and sensors are to function reliably and autonomously
+1. The network and sensors function reliably and autonomously
 1. The status of the sensors can be observed in real-time and remotely
 1. The software on the sensors can be updated remotely
 1. The software is reusable for other sensor networks without changes
