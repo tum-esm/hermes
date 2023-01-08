@@ -1,7 +1,7 @@
 from app.validation.mqtt import (
     HeartbeatsMessage,
-    MeasurementsMessage,
     LogMessagesMessage,
+    MeasurementsMessage,
 )
 from app.validation.routes import (
     GetLogMessagesAggregatesRequest,
