@@ -1,4 +1,4 @@
-CREATE EXTENSION IF NOT EXISTS 'uuid-ossp' CASCADE;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" CASCADE;
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
 
@@ -20,14 +20,14 @@ CREATE FUNCTION unixtime_to_timestamptz (unixtime DOUBLE PRECISION) RETURNS TIME
 CREATE TABLE networks (
     network_identifier UUID PRIMARY KEY,
     network_name TEXT UNIQUE NOT NULL,
-    creation_timestamp TIMESTAMPTZ NOT NULL,
+    creation_timestamp TIMESTAMPTZ NOT NULL
 );
 
 
 CREATE TABLE sensors (
-    network_identifier UUID NOT NULL REFERENCES networks (network_identifier) ON DELETE CASCADE,
     sensor_identifier UUID PRIMARY KEY,
     sensor_name TEXT UNIQUE NOT NULL,
+    -- network_identifier UUID NOT NULL REFERENCES networks (network_identifier) ON DELETE CASCADE,
     creation_timestamp TIMESTAMPTZ NOT NULL
 );
 
@@ -36,7 +36,7 @@ CREATE TABLE users (
     user_identifier UUID PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
-    password_hash TEXT NOT NULL,
+    password_hash TEXT NOT NULL
 );
 
 
@@ -55,7 +55,7 @@ CREATE TABLE sessions (
     user_identifier UUID NOT NULL REFERENCES users (user_identifier) ON DELETE CASCADE,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     last_access_timestamp TIMESTAMPTZ NOT NULL,
-    token_hash TEXT NOT NULL,
+    token_hash TEXT NOT NULL
 );
 
 
