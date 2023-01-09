@@ -31,10 +31,10 @@ sleep 4
 # Run the database initialization script
 ./scripts/initialize
 # Run in development mode
-poetry run poetry run uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --reload-include "*.sql" --log-level debug || status=$?
+poetry run uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --reload-include "*.sql" --log-level debug || status=$?
 # Stop and remove the Mosquitto docker container
 docker stop mosquitto >/dev/null
 # Stop and remove the PostgreSQL docker container
 docker stop postgres >/dev/null
 # Exit with captured status code
-exit $status
+echo ${status=0}

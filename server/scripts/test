@@ -37,4 +37,4 @@ docker stop mosquitto >/dev/null
 # Stop and remove the PostgreSQL docker container
 docker stop postgres >/dev/null
 # Exit with captured status code
-exit $status
+echo ${status=0}
