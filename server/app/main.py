@@ -124,6 +124,7 @@ async def get_measurements(request):
     - maybe we can choose based on some header, if we page or export the data
     - for export, we can also offer start/end timestamps parameters
     - we should also be able to choose multiple sensors to return the data for
+    -> it's probably best to have a separate endpoint for export
     """
     try:
         query, arguments = database.build(

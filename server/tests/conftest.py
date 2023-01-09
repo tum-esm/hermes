@@ -12,4 +12,4 @@ def anyio_backend():
 async def cleanup():
     """Delete all data in the database after a test."""
     yield
-    await main.database_client.execute("DELETE FROM sensors")
+    await main.database_client.execute("DELETE FROM sensors;")
