@@ -31,8 +31,10 @@ sleep 4
 # Run the database initialization script
 ./scripts/initialize
 # Run the tests
-poetry run pytest --cov=app --cov-report=term-missing tests "$@" ||:
+poetry run pytest --cov=app --cov-report=term-missing tests "$@" || status=$?
 # Stop and remove the Mosquitto docker container
 docker stop mosquitto >/dev/null
 # Stop and remove the PostgreSQL docker container
 docker stop postgres >/dev/null
+# Exit with captured status code
+exit $status
