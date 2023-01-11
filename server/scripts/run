@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+# Change into the project's directory
+cd "$(dirname "$0")/.."
+
+# Create and run the docker container
+docker run --env-file .env --publish 8000:8000 --rm server

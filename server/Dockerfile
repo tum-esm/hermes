@@ -15,8 +15,7 @@ COPY pyproject.toml poetry.lock /
 
 # Install dependencies
 RUN poetry config virtualenvs.create false && \
-    poetry install --no-ansi --no-interaction && \
-    rm pyproject.toml poetry.lock
+    poetry install --no-ansi --no-interaction
 
 EXPOSE 8000
 
@@ -27,4 +26,4 @@ ENV COMMIT_SHA=${commit_sha} BRANCH_NAME=${branch_name}
 
 COPY /app /app
 
-CMD uvicorn app.main:app --host 0.0.0.0 --port 8000
+CMD poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000
