@@ -13,12 +13,6 @@ templates = jinja2.Environment(
 )
 
 
-def extract(path):
-    """Extract the individual SQL statements from a file that contains multiple."""
-    with open(path) as file:
-        return file.read().split("\n\n\n")
-
-
 def dictify(result: typing.Sequence[asyncpg.Record]) -> list[dict]:
     """Cast a database SELECT result into a list of dictionaries."""
     return [dict(record) for record in result]
