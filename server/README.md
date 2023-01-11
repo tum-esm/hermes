@@ -7,12 +7,16 @@
 
 ### Deployment
 
+The server is backed by PostgreSQL and an MQTT broker. During development and testing these services are automatically spun up locally for you. In production, it's better to deploy them independently from the server. Cloud providers can help with this.
+
+When you have your PostgreSQL instance and the MQTT broker ready:
+
 - specify your environment variables in a `.env` file (see `.env.example`)
-- _more info coming soon_
+- initialize the database via `(set -a && source .env && ./scripts/initialize)`
+
+The easiest way to deploy the server is via Docker. Many cloud providers offer a way to deploy Docker images automatically from a git repository. If you prefer to build and run the Docker image manually, you can do that via `./scripts/build` and `./scripts/run`.
 
 ## MQTT
-
-### Topics
 
 The communication between the sensors and the server runs over four MQTT topics:
 
