@@ -1,5 +1,5 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" CASCADE;
-CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "timescaledb";
 
 
 -- Function to convert TIMESTAMPTZ into unix timestamp
