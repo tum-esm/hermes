@@ -125,6 +125,8 @@ async def get_measurements(request):
     - for export, we can also offer start/end timestamps parameters
     - we should also be able to choose multiple sensors to return the data for
     -> it's probably best to have a separate endpoint for export
+
+    - use status code 206 for partial content?
     """
     try:
         query, arguments = database.build(

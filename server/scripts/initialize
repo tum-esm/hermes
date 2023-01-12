@@ -24,6 +24,7 @@ async def initialize():
     """Initialize the database tables, indexes, and constraints."""
     connection = await asyncpg.connect(
         host=os.environ["POSTGRESQL_URL"],
+        port=os.environ["POSTGRESQL_PORT"],
         user=os.environ["POSTGRESQL_IDENTIFIER"],
         password=os.environ["POSTGRESQL_PASSWORD"],
         database=os.environ["POSTGRESQL_DATABASE"],

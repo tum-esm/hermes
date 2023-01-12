@@ -70,6 +70,7 @@ class Client:
     async def __aenter__(self):
         self.connection = await asyncpg.connect(
             host=settings.POSTGRESQL_URL,
+            port=settings.POSTGRESQL_PORT,
             user=settings.POSTGRESQL_IDENTIFIER,
             password=settings.POSTGRESQL_PASSWORD,
             database=settings.POSTGRESQL_DATABASE,
