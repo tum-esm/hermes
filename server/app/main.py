@@ -28,6 +28,12 @@ async def get_status(request):
     )
 
 
+@validation.validate(schema=validation.CreateUserRequest)
+async def create_user(request):
+    """Create a new user based on the given account data."""
+    raise errors.NotImplementedError()
+
+
 @validation.validate(schema=validation.PostSensorsRequest)
 async def post_sensors(request):
     """Create a new sensor and configuration."""
@@ -149,8 +155,8 @@ async def get_measurements(request):
     )
 
 
-@validation.validate(schema=validation.GetLogMessagesAggregatesRequest)
-async def get_log_messages_aggregates(request):
+@validation.validate(schema=validation.GetLogMessagesAggregationRequest)
+async def get_log_messages_aggregation(request):
     """Return aggregation of sensor log messages."""
     try:
         query, arguments = database.build(
@@ -214,6 +220,11 @@ async def stream_sensors(request):
     )
 
 
+async def create_access_token(request):
+    """Create access token from username and password."""
+    raise errors.NotImplementedError()
+
+
 database_client = None
 mqtt_client = None
 
@@ -251,6 +262,11 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
         starlette.routing.Route(
+            path="/users",
+            endpoint=create_user,
+            methods=["POST"],
+        ),
+        starlette.routing.Route(
             path="/sensors",
             endpoint=post_sensors,
             methods=["POST"],
@@ -271,14 +287,19 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
         starlette.routing.Route(
-            path="/sensors/{sensor_identifier}/log-messages/aggregates",
-            endpoint=get_log_messages_aggregates,
+            path="/sensors/{sensor_identifier}/log-messages/aggregation",
+            endpoint=get_log_messages_aggregation,
             methods=["GET"],
         ),
         starlette.routing.Route(
             path="/streams/sensors",
             endpoint=stream_sensors,
             methods=["GET"],
+        ),
+        starlette.routing.Route(
+            path="/authentication",
+            endpoint=create_access_token,
+            methods=["POST"],
         ),
     ],
     lifespan=lifespan,

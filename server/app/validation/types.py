@@ -19,8 +19,7 @@ class _BaseModel(pydantic.BaseModel):
 # Types
 ########################################################################################
 
-
-SensorName = pydantic.constr(strict=True, regex=constants.Pattern.SENSOR_NAME.value)
+Name = pydantic.constr(strict=True, regex=constants.Pattern.NAME.value)
 SensorIdentifier = pydantic.constr(
     strict=True, regex=constants.Pattern.SENSOR_IDENTIFIER.value
 )
@@ -32,7 +31,7 @@ ValueIdentifier = pydantic.constr(
 Revision = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
 PositiveInteger = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
 
-# TODO Validate the values more thoroughly for min and max limits/lengths
+# TODO Validate the values more thoroughly for min and max limits/lengths (#fields)
 JsonValue = int | float | str | bool | None
 Json = dict[ValueIdentifier, JsonValue]
 

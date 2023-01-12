@@ -17,6 +17,14 @@ CREATE FUNCTION unixtime_to_timestamptz (unixtime DOUBLE PRECISION) RETURNS TIME
     RETURN ('epoch'::TIMESTAMPTZ + unixtime * '1 second'::INTERVAL);
 
 
+CREATE TABLE users (
+    user_identifier UUID PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    creation_timestamp TIMESTAMPTZ NOT NULL,
+    password_hash TEXT NOT NULL
+);
+
+
 CREATE TABLE networks (
     network_identifier UUID PRIMARY KEY,
     network_name TEXT UNIQUE NOT NULL,
@@ -29,14 +37,6 @@ CREATE TABLE sensors (
     sensor_name TEXT UNIQUE NOT NULL,
     -- network_identifier UUID NOT NULL REFERENCES networks (network_identifier) ON DELETE CASCADE,
     creation_timestamp TIMESTAMPTZ NOT NULL
-);
-
-
-CREATE TABLE users (
-    user_identifier UUID PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
-    creation_timestamp TIMESTAMPTZ NOT NULL,
-    password_hash TEXT NOT NULL
 );
 
 

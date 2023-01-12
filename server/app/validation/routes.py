@@ -60,19 +60,23 @@ def validate(schema: type[_Request]) -> typing.Callable:
 ########################################################################################
 
 
+class _CreateUserRequestPath(types._BaseModel):
+    pass
+
+
 class _PostSensorsRequestPath(types._BaseModel):
     pass
 
 
 class _PutSensorsRequestPath(types._BaseModel):
-    sensor_name: types.SensorName
+    sensor_name: types.Name
 
 
 class _GetMeasurementsRequestPath(types._BaseModel):
     sensor_identifier: types.SensorIdentifier
 
 
-class _GetLogMessagesAggregatesRequestPath(types._BaseModel):
+class _GetLogMessagesAggregationRequestPath(types._BaseModel):
     sensor_identifier: types.SensorIdentifier
 
 
@@ -83,6 +87,10 @@ class _StreamSensorsRequestPath(types._BaseModel):
 ########################################################################################
 # Query models
 ########################################################################################
+
+
+class _CreateUserRequestQuery(types._BaseModel):
+    pass
 
 
 class _PostSensorsRequestQuery(types._BaseModel):
@@ -110,12 +118,12 @@ class _GetMeasurementsRequestQuery(types._BaseModel):
         return v
 
 
-class _GetLogMessagesAggregatesRequestQuery(types._BaseModel):
+class _GetLogMessagesAggregationRequestQuery(types._BaseModel):
     pass
 
 
 class _StreamSensorsRequestQuery(types._BaseModel):
-    sensor_names: list[types.SensorName]
+    sensor_names: list[types.Name]
 
     # Validators
     _sensor_names_split_string = pydantic.validator(
@@ -128,13 +136,18 @@ class _StreamSensorsRequestQuery(types._BaseModel):
 ########################################################################################
 
 
+class _CreateUserRequestBody(types._BaseModel):
+    username: types.Name
+    password: types.Password
+
+
 class _PostSensorsRequestBody(types._BaseModel):
-    sensor_name: types.SensorName
+    sensor_name: types.Name
     configuration: types.Json
 
 
 class _PutSensorsRequestBody(types._BaseModel):
-    sensor_name: types.SensorName
+    sensor_name: types.Name
     configuration: types.Json
 
 
@@ -142,7 +155,7 @@ class _GetMeasurementsRequestBody(types._BaseModel):
     pass
 
 
-class _GetLogMessagesAggregatesRequestBody(types._BaseModel):
+class _GetLogMessagesAggregationRequestBody(types._BaseModel):
     pass
 
 
@@ -152,10 +165,16 @@ class _StreamSensorsRequestBody(types._BaseModel):
 
 ########################################################################################
 # Request models
+# TODO Can we generate these automatically?
 ########################################################################################
 
 
-# TODO Can we generate these automatically?
+class CreateUserRequest(_Request):
+    path: _CreateUserRequestPath
+    query: _CreateUserRequestQuery
+    body: _CreateUserRequestBody
+
+
 class PostSensorsRequest(_Request):
     path: _PostSensorsRequestPath
     query: _PostSensorsRequestQuery
@@ -174,10 +193,10 @@ class GetMeasurementsRequest(_Request):
     body: _GetMeasurementsRequestBody
 
 
-class GetLogMessagesAggregatesRequest(_Request):
-    path: _GetLogMessagesAggregatesRequestPath
-    query: _GetLogMessagesAggregatesRequestQuery
-    body: _GetLogMessagesAggregatesRequestBody
+class GetLogMessagesAggregationRequest(_Request):
+    path: _GetLogMessagesAggregationRequestPath
+    query: _GetLogMessagesAggregationRequestQuery
+    body: _GetLogMessagesAggregationRequestBody
 
 
 class StreamSensorsRequest(_Request):
