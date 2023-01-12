@@ -6,6 +6,7 @@ import starlette.applications
 import starlette.responses
 import starlette.routing
 
+import app.auth as auth
 import app.database as database
 import app.errors as errors
 import app.mqtt as mqtt
@@ -30,8 +31,26 @@ async def get_status(request):
 
 @validation.validate(schema=validation.CreateUserRequest)
 async def create_user(request):
-    """Create a new user based on the given account data."""
-    raise errors.NotImplementedError()
+    """Create a new user from the given account data."""
+    try:
+        query, arguments = database.build(
+            template="create-user.sql",
+            template_arguments={},
+            query_arguments={
+                "username": request.body.username,
+                "password_hash": auth.hash_password(request.body.password),
+            },
+        )
+        result = await database_client.fetch(query, *arguments)
+        user_identifier = database.dictify(result)[0]["user_identifier"]
+    except asyncpg.exceptions.UniqueViolationError:
+        logger.warning("[POST /users] User already exists")
+        raise errors.ConflictError()
+    except Exception as e:
+        logger.error(f"[POST /users] Unknown error: {repr(e)}")
+        raise errors.InternalServerError()
+    # TODO Return user_identifier and/or token?
+    return starlette.responses.JSONResponse(status_code=201, content=None)
 
 
 @validation.validate(schema=validation.PostSensorsRequest)

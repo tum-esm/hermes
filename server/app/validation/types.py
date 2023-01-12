@@ -26,6 +26,7 @@ SensorIdentifier = pydantic.constr(
 ValueIdentifier = pydantic.constr(
     strict=True, regex=constants.Pattern.VALUE_IDENTIFIER.value
 )
+Password = pydantic.constr(strict=True, min_length=8, max_length=constants.Limit.MEDIUM)
 
 # TODO Make strict when pydantic v2 is released (used for path and query parameters)
 Revision = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
