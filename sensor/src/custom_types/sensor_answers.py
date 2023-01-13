@@ -37,3 +37,14 @@ class WindSensorStatus(BaseModel):
     reference_voltage: float
     sensor_id: str
     last_update_time: float
+
+
+class HeatedEnclosureMeasurement(BaseModel):
+    target: float
+    allowed_deviation: float
+    measured: float
+
+
+class HeatedEnclosureRelaisStatus(BaseModel):
+    heater_is_on: bool
+    fan_is_on: bool
