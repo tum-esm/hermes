@@ -6,3 +6,5 @@ sensor/data/
 !.gitkeep
 .env.testing
 data/**/*.json
+enclosure.ino.*
+.vscode/
