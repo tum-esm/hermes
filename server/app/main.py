@@ -37,6 +37,7 @@ async def create_user(request):
     access_token_hash = auth.hash_token(access_token)
     try:
         async with database_client.transaction():
+            # Create new user
             query, arguments = database.build(
                 template="create-user.sql",
                 template_arguments={},
@@ -47,6 +48,7 @@ async def create_user(request):
             )
             result = await database_client.fetch(query, *arguments)
             user_identifier = database.dictify(result)[0]["user_identifier"]
+            # Create new session
             query, arguments = database.build(
                 template="create-session.sql",
                 template_arguments={},
@@ -73,7 +75,7 @@ async def post_sensors(request):
     """Create a new sensor and configuration."""
     try:
         async with database_client.transaction():
-            # Insert sensor
+            # Create new sensor
             query, arguments = database.build(
                 template="create-sensor.sql",
                 template_arguments={},
@@ -254,7 +256,7 @@ async def stream_sensors(request):
     )
 
 
-async def create_access_token(request):
+async def create_session(request):
     """Create access token from username and password."""
     raise errors.NotImplementedError()
 
@@ -286,6 +288,11 @@ async def lifespan(app):
 
             yield
             task.cancel()
+            # Wait for the MQTT listener task to be cancelled
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
 
 app = starlette.applications.Starlette(
@@ -332,7 +339,7 @@ app = starlette.applications.Starlette(
         ),
         starlette.routing.Route(
             path="/authentication",
-            endpoint=create_access_token,
+            endpoint=create_session,
             methods=["POST"],
         ),
     ],
