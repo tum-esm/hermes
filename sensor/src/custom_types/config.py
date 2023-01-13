@@ -39,10 +39,14 @@ class ValveConfig(BaseModel):
 
 
 class HeatedEnclosureConfig(BaseModel):
+    device_path: str
     target_temperature: float
     allowed_deviation: float
 
     # validators
+    _val_device_path = validator("device_path", pre=True, allow_reuse=True)(
+        validate_str()
+    )
     _val_target_temperature = validator(
         "target_temperature", pre=True, allow_reuse=True
     )(

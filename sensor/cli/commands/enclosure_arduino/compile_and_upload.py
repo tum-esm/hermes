@@ -11,7 +11,7 @@ ARDUINO_CONFIG_TEMPLATE_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.templat
 ARDUINO_CONFIG_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.h")
 
 
-@click.command(help="List all connected arduino boards")
+@click.command(help="Compile and upload the code to the arduino")
 def compile_and_upload() -> None:
 
     with open(ARDUINO_CONFIG_TEMPLATE_PATH) as f:
@@ -42,13 +42,10 @@ def compile_and_upload() -> None:
         + f"{ARDUINO_SCRIPT_PATH}"
     )
 
-    # TODO: add device path to command params
-    device_path = "/dev/cu.usbserial-AB0O2OIH"
-
     utils.run_shell_command(
         f"arduino-cli upload --verbose "
         + "--fqbn arduino:avr:nano:cpu=atmega328old "
-        + f"--port {device_path} "
+        + f"--port {automation_config.heated_enclosure.device_path} "
         + f"--input-dir {ARDUINO_SCRIPT_PATH} "
         + f"{ARDUINO_SCRIPT_PATH}"
     )

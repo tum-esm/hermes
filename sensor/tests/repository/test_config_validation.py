@@ -70,6 +70,7 @@ def test_config_validation() -> None:
         },
         {
             "heated_enclosure": {
+                "device_path": "something",
                 "target_temperature": -10,
                 "allowed_deviation": 15,
             },
