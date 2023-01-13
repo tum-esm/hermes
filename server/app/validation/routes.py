@@ -84,6 +84,10 @@ class _StreamSensorsRequestPath(types._BaseModel):
     pass
 
 
+class _CreateSessionRequestPath(types._BaseModel):
+    pass
+
+
 ########################################################################################
 # Query models
 ########################################################################################
@@ -131,6 +135,10 @@ class _StreamSensorsRequestQuery(types._BaseModel):
     )(types._split_string)
 
 
+class _CreateSessionRequestQuery(types._BaseModel):
+    pass
+
+
 ########################################################################################
 # Body models
 ########################################################################################
@@ -161,6 +169,11 @@ class _GetLogMessagesAggregationRequestBody(types._BaseModel):
 
 class _StreamSensorsRequestBody(types._BaseModel):
     pass
+
+
+class _CreateSessionRequestBody(types._BaseModel):
+    username: types.Name
+    password: types.Password
 
 
 ########################################################################################
@@ -203,3 +216,9 @@ class StreamSensorsRequest(_Request):
     path: _StreamSensorsRequestPath
     query: _StreamSensorsRequestQuery
     body: _StreamSensorsRequestBody
+
+
+class CreateSessionRequest(_Request):
+    path: _CreateSessionRequestPath
+    query: _CreateSessionRequestQuery
+    body: _CreateSessionRequestBody

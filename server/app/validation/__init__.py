@@ -4,6 +4,7 @@ from app.validation.mqtt import (
     MeasurementsMessage,
 )
 from app.validation.routes import (
+    CreateSessionRequest,
     CreateUserRequest,
     GetLogMessagesAggregationRequest,
     GetMeasurementsRequest,
@@ -18,6 +19,7 @@ __all__ = [
     "MeasurementsMessage",
     "LogMessagesMessage",
     "CreateUserRequest",
+    "CreateSessionRequest",
     "GetLogMessagesAggregationRequest",
     "GetMeasurementsRequest",
     "PostSensorsRequest",
