@@ -12,4 +12,6 @@ def anyio_backend():
 async def cleanup():
     """Delete all data in the database after a test."""
     yield
+    await main.database_client.execute("DELETE FROM users;")
+    await main.database_client.execute("DELETE FROM networks;")
     await main.database_client.execute("DELETE FROM sensors;")

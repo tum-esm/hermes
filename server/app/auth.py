@@ -1,7 +1,7 @@
 import hashlib
 import secrets
 
-import passlib
+import passlib.context
 
 
 ########################################################################################

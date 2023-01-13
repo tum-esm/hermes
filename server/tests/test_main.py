@@ -48,6 +48,22 @@ async def test_reading_status(http_client):
 
 
 ########################################################################################
+# Route: POST /users
+########################################################################################
+
+
+@pytest.mark.anyio
+async def test_creating_user(http_client, cleanup):
+    """Test creating a user."""
+    response = await http_client.post(
+        url="/users",
+        json={"username": "squirtle", "password": "12345678"},
+    )
+    assert returns(response, 201)
+    assert set(response.json().keys()) == {"user_identifier", "access_token"}
+
+
+########################################################################################
 # Route: POST /sensors
 ########################################################################################
 
