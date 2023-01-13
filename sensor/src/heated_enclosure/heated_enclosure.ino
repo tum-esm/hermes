@@ -8,27 +8,29 @@
 #include <DallasTemperature.h>
 
 #define ONE_WIRE_BUS 2  // sensor DS18B20 on digital pin 2
-#define HEATER 4 // control of heater relais
-#define FAN 3 // control of fan relais
+#define HEATER 3 // control of heater relais
+#define FAN 4 // control of fan relais
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 float measured_temperature;
 
+bool heater_is_on = false;
+bool fan_is_on = false;
+
 void setup(void) { 
   Serial.begin(9600);
   sensors.begin();
+
   pinMode(HEATER,OUTPUT);
   pinMode(FAN,OUTPUT);
-  digitalWrite(HEATER,LOW);
-  digitalWrite(FAN,LOW);
 } 
 
 void loop(void){ 
   if(sensors.getDS18Count() == 0){
     Serial.println("no temperature sensor");
-    digitalWrite(HEATER,LOW);
-    digitalWrite(FAN,LOW);
+    digitalWrite(HEATER,heater_is_on ? HIGH : LOW);
+    digitalWrite(FAN,fan_is_on ? HIGH : LOW);
   }
 
   // there can be more than one temperature sensor on the databus
@@ -46,23 +48,27 @@ void loop(void){
   Serial.print(measured_temperature);
   Serial.println(";");
 
-  // three thresholds from the two parameters (see Moritz' master's thesis)
-  if(measured_temperature < TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION){
-    digitalWrite(HEATER,HIGH);
-    Serial.println("heater: on");
+  if(measured_temperature < (TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION)){
+    heater_is_on = true;
   }
   if(measured_temperature > TARGET_TEMPERATURE){
-    digitalWrite(HEATER,LOW);
-    Serial.println("heater: off");
+    heater_is_on = false;
   }
-  if(measured_temperature > TARGET_TEMPERATURE + ALLOWED_TEMPERATURE_DEVIATION){
-    digitalWrite(FAN,HIGH);
-    Serial.println("fan: on");
+  if(measured_temperature > (TARGET_TEMPERATURE + ALLOWED_TEMPERATURE_DEVIATION)){
+    fan_is_on = true;
   }
   if(measured_temperature < TARGET_TEMPERATURE){
-    digitalWrite(FAN,LOW);
-    Serial.println("fan: off");
+    fan_is_on = false;
   }
+
+  Serial.print("heater: ");
+  Serial.print(heater_is_on ? "on" : "off");
+  Serial.print("; fan: ");
+  Serial.print(fan_is_on ? "on" : "off");
+  Serial.println(";");
+
+  digitalWrite(HEATER,heater_is_on ? LOW : HIGH);
+  digitalWrite(FAN,fan_is_on ? LOW : HIGH);
 
   delay(5000);
 }
