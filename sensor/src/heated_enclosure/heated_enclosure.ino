@@ -15,12 +15,11 @@ int sensorCount;
 bool climate_state;
 float measured_temperature;
 
-float upper_temperature = 22; 
-float lower_temperature = 19;
+const int TARGET_TEMPERATURE = 30;
+const int ALLOWED_TEMPERATURE_DEVIATION = 1.5;
 
 void setup(void) { 
   Serial.begin(9600); //Starten der seriellen Kommunikation mit 9600 baud
-  Serial.println("Temperatursensor - DS18B20"); 
   sensors.begin(); //Starten der Kommunikation mit dem Sensor
   sensorCount = sensors.getDS18Count(); //Lesen der Anzahl der angeschlossenen Temperatursensoren.
   pinMode(HEATER,OUTPUT);
@@ -32,22 +31,28 @@ void setup(void) {
 void loop(void){ 
   // set both relais to LOW state
   if(sensorCount == 0){
-    Serial.println("Es wurde kein Temperatursensor gefunden!");
+    Serial.println("no temperature sensor");
   }
   //Es können mehr als 1 Temperatursensor am Datenbus angschlossen werden.
   //Anfordern der Temperaturwerte aller angeschlossenen Temperatursensoren.
   sensors.requestTemperatures(); 
   measured_temperature = sensors.getTempCByIndex(0);
+  Serial.println("version: 0.1.0");
+  Serial.print("temperature: ");
   Serial.println(measured_temperature);
 
-  if(measured_temperature <= lower_temperature){
+  if(measured_temperature < TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION){
+    digitalWrite(HEATER,HIGH);
+  }
+  if(measured_temperature > TARGET_TEMPERATURE){
     digitalWrite(HEATER,LOW);
+  }
+  if(measured_temperature > TARGET_TEMPERATURE + ALLOWED_TEMPERATURE_DEVIATION){
     digitalWrite(FAN,HIGH);
   }
-  if(measured_temperature >= upper_temperature){
-    digitalWrite(HEATER,HIGH);
+  if(measured_temperature < TARGET_TEMPERATURE){
     digitalWrite(FAN,LOW);
   }
 
-  delay(1000);
+  delay(2000);
 }
