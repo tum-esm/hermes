@@ -31,8 +31,11 @@ class WindSensorInterface:
         )
         self.power_pin.on()
 
-        self.rs232_interface = utils.serial_interfaces.SerialWindSensorInterface(
-            port=utils.Constants.WindSensor.serial_port
+        self.rs232_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
+            port=utils.Constants.WindSensor.serial_port,
+            baudrate=19200,
+            encoding="cp1252",
+            line_endling="\r\n",
         )
         self.wind_measurement: Optional[custom_types.WindSensorData] = None
         self.device_status: Optional[custom_types.WindSensorStatus] = None

@@ -1,4 +1,5 @@
 import fcntl
+from typing import Literal
 import serial
 import re
 import time
@@ -49,24 +50,32 @@ class SerialCO2SensorInterface:
                 time.sleep(0.05)
 
 
-class SerialWindSensorInterface:
-    def __init__(self, port: str) -> None:
+class SerialOneDirectionalInterface:
+    def __init__(
+        self,
+        port: str,
+        baudrate: Literal[19200, 9600],
+        encoding: Literal["cp1252", "utf-8"] = "utf-8",
+        line_endling: str = "\n",
+    ) -> None:
         self.serial_interface = serial.Serial(
             port=port,
-            baudrate=19200,
+            baudrate=baudrate,
             bytesize=8,
             parity="N",
             stopbits=1,
         )
         self.current_input_stream = ""
+        self.encoding = encoding
+        self.line_ending = line_endling
 
     def get_messages(self) -> list[str]:
         new_input_bytes = self.serial_interface.read_all()
         if new_input_bytes is None:
             return []
 
-        self.current_input_stream += new_input_bytes.decode("cp1252")
-        separate_messages = self.current_input_stream.split("\r\n")
+        self.current_input_stream += new_input_bytes.decode(self.encoding)
+        separate_messages = self.current_input_stream.split(self.line_ending)
         self.current_input_stream = separate_messages[-1]
         return separate_messages[:-1]
 
