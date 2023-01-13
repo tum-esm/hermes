@@ -8,23 +8,12 @@ import os
 
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
+CONFIG_TEMPLATE_PATH = os.path.join(PROJECT_DIR, "config", "config.template.json")
 sys.path.append(PROJECT_DIR)
 from src.custom_types import Config
 
-
-VALID_CONFIG = {
-    "version": "0.1.0",
-    "revision": 1,
-    "general": {
-        "station_name": "a-unique-node-id",
-    },
-    "valves": {
-        "air_inlets": [
-            {"number": 1, "direction": 300},
-            {"number": 2, "direction": 50},
-        ]
-    },
-}
+with open(CONFIG_TEMPLATE_PATH, "r") as f:
+    VALID_CONFIG = json.load(f)
 
 
 # adapted from https://gist.github.com/angstwad/bf22d1822c38a92ec0a9

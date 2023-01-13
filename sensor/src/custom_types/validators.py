@@ -22,7 +22,7 @@ def validate_float(
                 return v
             else:
                 raise ValueError(f"value cannot be None")
-        if not isinstance(v, float):
+        if not isinstance(v, (int, float)):
             raise ValueError(f'"{v}" is not a float')
         if minimum is not None and v < minimum:
             raise ValueError(f'"{v}" is smaller than {minimum}')
