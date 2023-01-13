@@ -1,9 +1,6 @@
 from typing import Literal
 from pydantic import BaseModel, validator
-from .validators import (
-    validate_int,
-    validate_str,
-)
+from .validators import validate_int, validate_str, validate_float
 
 
 class GeneralConfig(BaseModel):
@@ -24,10 +21,10 @@ class AirInletConfig(BaseModel):
 
     # validators
     _val_number = validator("number", pre=True, allow_reuse=True)(
-        validate_int(allowed=[1, 2, 3, 4])
+        validate_int(allowed=[1, 2, 3, 4]),
     )
     _val_direction = validator("direction", pre=True, allow_reuse=True)(
-        validate_int(minimum=0, maximum=359)
+        validate_int(minimum=0, maximum=359),
     )
 
     class Config:
@@ -41,6 +38,24 @@ class ValveConfig(BaseModel):
         extra = "forbid"
 
 
+class HeatedEnclosureConfig(BaseModel):
+    target_temperature: float
+    allowed_deviation: float
+
+    # validators
+    _val_target_temperature = validator(
+        "target_temperature", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=0, maximum=50),
+    )
+    _val_allowed_deviation = validator("allowed_deviation", pre=True, allow_reuse=True)(
+        validate_float(minimum=0, maximum=10),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
 class Config(BaseModel):
     """The config.json for each sensor"""
 
@@ -48,6 +63,7 @@ class Config(BaseModel):
     revision: int
     general: GeneralConfig
     valves: ValveConfig
+    heated_enclosure: HeatedEnclosureConfig
 
     # validators
     _val_version = validator("version", pre=True, allow_reuse=True)(

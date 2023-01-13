@@ -9,5 +9,9 @@
             { "number": 1, "direction": 300 },
             { "number": 2, "direction": 50 }
         ]
+    },
+    "heated_enclosure": {
+        "target_temperature": 40,
+        "allowed_deviation": 3
     }
 }

@@ -79,6 +79,12 @@ def test_config_validation() -> None:
                 ]
             }
         },
+        {
+            "heated_enclosure": {
+                "target_temperature": -10,
+                "allowed_deviation": 15,
+            },
+        },
     ]:
         try:
             invalid_config = merge_dicts(deepcopy(VALID_CONFIG), modification)
