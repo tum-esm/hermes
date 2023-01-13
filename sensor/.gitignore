@@ -7,4 +7,5 @@ sensor/data/
 .env.testing
 data/**/*.json
 heated_enclosure.ino.*
+config.h
 .vscode/
