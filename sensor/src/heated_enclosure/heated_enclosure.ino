@@ -1,3 +1,6 @@
+// pass variables from outside
+#include "config.h"
+
 // https://github.com/PaulStoffregen/OneWire
 #include <OneWire.h>
 
@@ -14,9 +17,6 @@ DallasTemperature sensors(&oneWire); //Übergabe der OnewWire Referenz zum kommu
 int sensorCount;
 bool climate_state;
 float measured_temperature;
-
-const int TARGET_TEMPERATURE = 30;
-const int ALLOWED_TEMPERATURE_DEVIATION = 1.5;
 
 void setup(void) { 
   Serial.begin(9600); //Starten der seriellen Kommunikation mit 9600 baud
@@ -37,9 +37,15 @@ void loop(void){
   //Anfordern der Temperaturwerte aller angeschlossenen Temperatursensoren.
   sensors.requestTemperatures(); 
   measured_temperature = sensors.getTempCByIndex(0);
-  Serial.println("version: 0.1.0");
-  Serial.print("temperature: ");
-  Serial.println(measured_temperature);
+  Serial.print("version: ");
+  Serial.print(CODEBASE_VERSION);
+  Serial.print("; target: ");
+  Serial.print(TARGET_TEMPERATURE);
+  Serial.print("; allowed deviation: ");
+  Serial.print(ALLOWED_TEMPERATURE_DEVIATION);
+  Serial.print("; measured: ");
+  Serial.print(measured_temperature);
+  Serial.println(";");
 
   if(measured_temperature < TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION){
     digitalWrite(HEATER,HIGH);
@@ -54,5 +60,5 @@ void loop(void){
     digitalWrite(FAN,LOW);
   }
 
-  delay(2000);
+  delay(5000);
 }
