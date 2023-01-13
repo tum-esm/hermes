@@ -1,6 +1,7 @@
 import os
 import click
 import utils
+from src.utils import ConfigInterface
 
 dirname = os.path.dirname
 PROJECT_DIR = dirname(dirname(dirname(dirname(os.path.abspath(__file__)))))
@@ -16,12 +17,16 @@ def compile_and_upload() -> None:
     with open(ARDUINO_CONFIG_TEMPLATE_PATH) as f:
         config_content = f.read()
 
-    # TODO: use version from pyproject.toml
-    # TODO: use params from config
+    automation_config = ConfigInterface.read()
+
     for k, v in {
-        "CODEBASE_VERSION": '"0.1.0"',
-        "TARGET_TEMPERATURE": "40",
-        "ALLOWED_TEMPERATURE_DEVIATION": "3",
+        "CODEBASE_VERSION": f'"{automation_config.version}"',
+        "TARGET_TEMPERATURE": str(
+            automation_config.heated_enclosure.target_temperature
+        ),
+        "ALLOWED_TEMPERATURE_DEVIATION": str(
+            automation_config.heated_enclosure.allowed_deviation
+        ),
     }.items():
         config_content = config_content.replace(f"%{k}%", v)
 

@@ -1,3 +1,10 @@
+import os
+import sys
+
+dirname = os.path.dirname
+PROJECT_DIR = dirname(dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_DIR)
+
 import click
 import commands
 
