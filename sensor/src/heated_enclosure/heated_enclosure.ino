@@ -7,36 +7,35 @@
 // https://github.com/milesburton/Arduino-Temperature-Control-Library
 #include <DallasTemperature.h>
 
-#define ONE_WIRE_BUS 2  //Sensor DS18B20 am digitalen Pin 2
-#define HEATER 4 //Control of heater relais
-#define FAN 3 //Control of fan relais
+#define ONE_WIRE_BUS 2  // sensor DS18B20 on digital pin 2
+#define HEATER 4 // control of heater relais
+#define FAN 3 // control of fan relais
 
-OneWire oneWire(ONE_WIRE_BUS); //
-DallasTemperature sensors(&oneWire); //Übergabe der OnewWire Referenz zum kommunizieren mit dem Sensor.
-
-int sensorCount;
-bool climate_state;
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
 float measured_temperature;
 
 void setup(void) { 
-  Serial.begin(9600); //Starten der seriellen Kommunikation mit 9600 baud
-  sensors.begin(); //Starten der Kommunikation mit dem Sensor
-  sensorCount = sensors.getDS18Count(); //Lesen der Anzahl der angeschlossenen Temperatursensoren.
+  Serial.begin(9600);
+  sensors.begin();
   pinMode(HEATER,OUTPUT);
   pinMode(FAN,OUTPUT);
-  digitalWrite(HEATER,HIGH);
-  digitalWrite(FAN,HIGH);
+  digitalWrite(HEATER,LOW);
+  digitalWrite(FAN,LOW);
 } 
 
 void loop(void){ 
-  // set both relais to LOW state
-  if(sensorCount == 0){
+  if(sensors.getDS18Count() == 0){
     Serial.println("no temperature sensor");
+    digitalWrite(HEATER,LOW);
+    digitalWrite(FAN,LOW);
   }
-  //Es können mehr als 1 Temperatursensor am Datenbus angschlossen werden.
-  //Anfordern der Temperaturwerte aller angeschlossenen Temperatursensoren.
+
+  // there can be more than one temperature sensor on the databus
   sensors.requestTemperatures(); 
   measured_temperature = sensors.getTempCByIndex(0);
+
+  // print out all params for validation by the raspi
   Serial.print("version: ");
   Serial.print(CODEBASE_VERSION);
   Serial.print("; target: ");
@@ -47,6 +46,7 @@ void loop(void){
   Serial.print(measured_temperature);
   Serial.println(";");
 
+  // three thresholds from the two parameters (see Moritz' master's thesis)
   if(measured_temperature < TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION){
     digitalWrite(HEATER,HIGH);
   }
