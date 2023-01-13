@@ -51,11 +51,9 @@ CREATE TABLE permissions (
 
 
 CREATE TABLE sessions (
-    session_identifier UUID PRIMARY KEY,
+    access_token_hash TEXT PRIMARY KEY,
     user_identifier UUID NOT NULL REFERENCES users (user_identifier) ON DELETE CASCADE,
-    creation_timestamp TIMESTAMPTZ NOT NULL,
-    last_access_timestamp TIMESTAMPTZ NOT NULL,
-    token_hash TEXT NOT NULL
+    creation_timestamp TIMESTAMPTZ NOT NULL
 );
 
 
