@@ -2,8 +2,8 @@ import asgi_lifespan
 import httpx
 import pytest
 
-import app.main as main
 import app.errors as errors
+import app.main as main
 
 
 @pytest.fixture(scope="session")
@@ -62,7 +62,7 @@ async def test_creating_user(http_client, cleanup):
 
 
 @pytest.mark.anyio
-async def test_creating_duplicate_user(http_client, cleanup):
+async def test_creating_user_with_duplicate(http_client, cleanup):
     """Test creating a user when it already exists."""
     response = await http_client.post(
         url="/users",
@@ -192,3 +192,18 @@ async def test_reading_measurements(http_client, cleanup):
     """Test reading measurements."""
     response = await http_client.get("/measurements")
     assert returns(response, 200)
+
+
+########################################################################################
+# Route: POST /authentication
+########################################################################################
+
+
+@pytest.mark.anyio
+async def test_creating_session_with_not_exists(http_client, cleanup):
+    """Test authenticating a user that doesn't exist."""
+    response = await http_client.post(
+        url="/authentication",
+        json={"username": "magnemite", "password": "12345678"},
+    )
+    assert returns(response, errors.NotFoundError)
