@@ -5,11 +5,11 @@ import utils, custom_types
 
 @click.command(help="List all connected arduino boards")
 def list_boards() -> None:
+    stdout = utils.run_shell_command("arduino-cli board list --format json")
     try:
-        stdout = utils.run_shell_command("arduino-cli board list --format json")
         board_list = custom_types.BoardList(boards=json.loads(stdout))
     except Exception as e:
-        utils.print_red("command did not respond as expected")
+        utils.print_red("command output could not be parsed")
         raise e
 
     for board in board_list.boards:

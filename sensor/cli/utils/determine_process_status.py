@@ -2,8 +2,8 @@ from typing import Optional
 import os
 import psutil
 
-dir = os.path.dirname
-PROJECT_DIR = dir(dir(os.path.abspath(__file__)))
+dirname = os.path.dirname
+PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 INTERPRETER_PATH = os.path.join(PROJECT_DIR, ".venv", "bin", "python")
 SCRIPT_PATH = os.path.join(PROJECT_DIR, "run.py")
 

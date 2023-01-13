@@ -1,4 +1,5 @@
 import click
+from .compile_and_upload import compile_and_upload
 from .list_boards import list_boards
 
 
@@ -8,3 +9,4 @@ def enclosure_arduino() -> None:
 
 
 enclosure_arduino.add_command(list_boards, name="list-boards")
+enclosure_arduino.add_command(compile_and_upload, name="compile-and-upload")
