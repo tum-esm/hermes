@@ -1,5 +1,4 @@
 from typing import Optional
-import click
 import os
 import psutil
 
@@ -7,14 +6,6 @@ dir = os.path.dirname
 PROJECT_DIR = dir(dir(os.path.abspath(__file__)))
 INTERPRETER_PATH = os.path.join(PROJECT_DIR, ".venv", "bin", "python")
 SCRIPT_PATH = os.path.join(PROJECT_DIR, "run.py")
-
-
-def print_green(text: str) -> None:
-    click.echo(click.style(text, fg="green"))
-
-
-def print_red(text: str) -> None:
-    click.echo(click.style(text, fg="red"))
 
 
 def process_is_running() -> Optional[int]:

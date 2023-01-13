@@ -7,6 +7,7 @@ def cli() -> None:
     pass
 
 
+cli.add_command(commands.enclosure_arduino, name="enclosure-arduino")
 cli.add_command(commands.start, name="start")
 cli.add_command(commands.stop, name="stop")
 cli.add_command(commands.is_running, name="is-running")
