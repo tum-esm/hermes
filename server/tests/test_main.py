@@ -3,6 +3,7 @@ import httpx
 import pytest
 
 import app.main as main
+import app.errors as errors
 
 
 @pytest.fixture(scope="session")
@@ -23,10 +24,7 @@ def returns(response, check):
     """Check that a httpx request returns with a specific status code or error."""
     if isinstance(check, int):
         return response.status_code == check
-    return (
-        response.status_code == check.STATUS_CODE
-        and response.json()["detail"] == check.DETAIL
-    )
+    return response.status_code == check.STATUS_CODE and response.text == check.DETAIL
 
 
 ########################################################################################
@@ -61,6 +59,20 @@ async def test_creating_user(http_client, cleanup):
     )
     assert returns(response, 201)
     assert set(response.json().keys()) == {"user_identifier", "access_token"}
+
+
+@pytest.mark.anyio
+async def test_creating_duplicate_user(http_client, cleanup):
+    """Test creating a user when it already exists."""
+    response = await http_client.post(
+        url="/users",
+        json={"username": "squirtle", "password": "12345678"},
+    )
+    response = await http_client.post(
+        url="/users",
+        json={"username": "squirtle", "password": "12345678"},
+    )
+    assert returns(response, errors.ConflictError)
 
 
 ########################################################################################
