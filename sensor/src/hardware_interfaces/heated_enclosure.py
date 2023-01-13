@@ -1,7 +1,15 @@
+import os
 import time
 from typing import Optional
 from src import utils, custom_types
 import re
+
+dirname = os.path.dirname
+PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
+ARDUINO_SCRIPT_PATH = os.path.join(PROJECT_DIR, "src", "heated_enclosure")
+
+ARDUINO_CONFIG_TEMPLATE_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.template.h")
+ARDUINO_CONFIG_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.h")
 
 number_regex = r"\d+(\.\d+)?"
 measurement_pattern = re.compile(
@@ -20,7 +28,13 @@ class HeatedEnclosureInterface:
         self.logger = utils.Logger(origin="heated-enclosure")
         self.config = config
 
-        # TODO: flash software onto device
+        self.logger.info("Compiling firmware of arduino")
+        HeatedEnclosureInterface.compile_firmware(config)
+        self.logger.info("Compiling firmware of arduino")
+        HeatedEnclosureInterface.upload_firmware(config)
+        self.logger.info("Arduino firmware successfully updated")
+
+        time.sleep(0.5)
 
         self.serial_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
             port=utils.Constants.WindSensor.serial_port,
@@ -67,3 +81,36 @@ class HeatedEnclosureInterface:
     def get_current_relais_status(self) -> Optional[custom_types.WindSensorStatus]:
         self._update_current_values()
         return self.relais_status
+
+    @staticmethod
+    def compile_firmware(config: custom_types.Config) -> None:
+        for k, v in {
+            "CODEBASE_VERSION": f'"{config.version}"',
+            "TARGET_TEMPERATURE": str(config.heated_enclosure.target_temperature),
+            "ALLOWED_TEMPERATURE_DEVIATION": str(
+                config.heated_enclosure.allowed_deviation
+            ),
+        }.items():
+            config_content = config_content.replace(f"%{k}%", v)
+
+        with open(ARDUINO_CONFIG_PATH, "w") as f:
+            f.write(config_content)
+
+        utils.run_shell_command(
+            f"arduino-cli compile --verbose "
+            + f"--fqbn arduino:avr:nano:cpu=atmega328old "
+            + f"--output-dir {ARDUINO_SCRIPT_PATH} "
+            + f"--library {os.path.join(ARDUINO_SCRIPT_PATH, 'OneWire-2.3.7')} "
+            + f"--library {os.path.join(ARDUINO_SCRIPT_PATH, 'DallasTemperature-3.9.0')} "
+            + f"{ARDUINO_SCRIPT_PATH}"
+        )
+
+    @staticmethod
+    def upload_firmware(config: custom_types.Config) -> None:
+        utils.run_shell_command(
+            f"arduino-cli upload --verbose "
+            + "--fqbn arduino:avr:nano:cpu=atmega328old "
+            + f"--port {config.heated_enclosure.device_path} "
+            + f"--input-dir {ARDUINO_SCRIPT_PATH} "
+            + f"{ARDUINO_SCRIPT_PATH}"
+        )
