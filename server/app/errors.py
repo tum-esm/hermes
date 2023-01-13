@@ -11,6 +11,11 @@ class BadRequestError(_CustomError):
     DETAIL = "Bad Request"
 
 
+class UnauthorizedError(_CustomError):
+    STATUS_CODE = 401
+    DETAIL = "Unauthorized"
+
+
 class NotFoundError(_CustomError):
     STATUS_CODE = 404
     DETAIL = "Not Found"

@@ -256,9 +256,49 @@ async def stream_sensors(request):
     )
 
 
+@validation.validate(schema=validation.CreateSessionRequest)
 async def create_session(request):
-    """Create access token from username and password."""
-    raise errors.NotImplementedError()
+    """Authenticate a user from username and password and return access token."""
+    try:
+        # Read user
+        query, arguments = database.build(
+            template="read-user.sql",
+            template_arguments={},
+            query_arguments={"username": request.body.username},
+        )
+        result = await database_client.fetch(query, *arguments)
+        user_identifier = database.dictify(result)[0]["user_identifier"]
+        password_hash = database.dictify(result)[0]["password_hash"]
+    except IndexError:
+        logger.warning("[POST /authentication] User not found")
+        raise errors.NotFoundError()
+    except Exception as e:
+        logger.error(f"[POST /authentication] Unknown error: {repr(e)}")
+        raise errors.InternalServerError()
+    # Check if password hashes match
+    if not auth.verify_password(request.body.password, password_hash):
+        logger.warning("[POST /authentication] Invalid password")
+        raise errors.UnauthorizedError()
+    access_token = auth.generate_token()
+    try:
+        # Create new session
+        query, arguments = database.build(
+            template="create-session.sql",
+            template_arguments={},
+            query_arguments={
+                "access_token_hash": auth.hash_token(access_token),
+                "user_identifier": user_identifier,
+            },
+        )
+        await database_client.execute(query, *arguments)
+    except Exception as e:
+        logger.error(f"[POST /authentication] Unknown error: {repr(e)}")
+        raise errors.InternalServerError()
+    # Return successful response
+    return starlette.responses.JSONResponse(
+        status_code=200,
+        content={"access_token": access_token, "user_identifier": user_identifier},
+    )
 
 
 database_client = None
