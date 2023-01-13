@@ -49,15 +49,19 @@ void loop(void){
   // three thresholds from the two parameters (see Moritz' master's thesis)
   if(measured_temperature < TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION){
     digitalWrite(HEATER,HIGH);
+    Serial.println("heater: on");
   }
   if(measured_temperature > TARGET_TEMPERATURE){
     digitalWrite(HEATER,LOW);
+    Serial.println("heater: off");
   }
   if(measured_temperature > TARGET_TEMPERATURE + ALLOWED_TEMPERATURE_DEVIATION){
     digitalWrite(FAN,HIGH);
+    Serial.println("fan: on");
   }
   if(measured_temperature < TARGET_TEMPERATURE){
     digitalWrite(FAN,LOW);
+    Serial.println("fan: off");
   }
 
   delay(5000);
