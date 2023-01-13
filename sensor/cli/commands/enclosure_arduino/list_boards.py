@@ -1,11 +1,12 @@
 import json
 import click
 import utils, custom_types
+from src.utils import run_shell_command
 
 
 @click.command(help="List all connected arduino boards")
 def list_boards() -> None:
-    stdout = utils.run_shell_command("arduino-cli board list --format json")
+    stdout = run_shell_command("arduino-cli board list --format json")
     try:
         board_list = custom_types.BoardList(boards=json.loads(stdout))
     except Exception as e:

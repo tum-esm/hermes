@@ -45,7 +45,7 @@ class HeatedEnclosureInterface:
         self.last_update_time: float = time.time()
 
     def _update_current_values(self) -> None:
-        new_messages = self.rs232_interface.get_messages()
+        new_messages = self.serial_interface.get_messages()
         now = round(time.time())
         for message in new_messages:
             if measurement_pattern.match(message) is not None:
@@ -58,11 +58,11 @@ class HeatedEnclosureInterface:
                         + f"Device uses {used_software_version}"
                     )
                 parsed_message = "".join(
-                    float(c)
+                    c
                     for c in message[len(used_software_version) + 11 :]
                     if c.isnumeric() or c in [";", "."]
                 )
-                t, ad, m = parsed_message.split(",")
+                t, ad, m = [float(v) for v in parsed_message.split(";")]
                 self.measurement = custom_types.HeatedEnclosureMeasurement(
                     target=t, allowed_deviation=ad, measured=m
                 )
@@ -74,16 +74,23 @@ class HeatedEnclosureInterface:
                 )
                 self.last_update_time = now
 
-    def get_current_measurement(self) -> Optional[custom_types.WindSensorData]:
+    def get_current_measurement(
+        self,
+    ) -> Optional[custom_types.HeatedEnclosureMeasurement]:
         self._update_current_values()
         return self.measurement
 
-    def get_current_relais_status(self) -> Optional[custom_types.WindSensorStatus]:
+    def get_current_relais_status(
+        self,
+    ) -> Optional[custom_types.HeatedEnclosureRelaisStatus]:
         self._update_current_values()
         return self.relais_status
 
     @staticmethod
     def compile_firmware(config: custom_types.Config) -> None:
+        with open(ARDUINO_CONFIG_TEMPLATE_PATH, "r") as f:
+            config_content = f.read()
+
         for k, v in {
             "CODEBASE_VERSION": f'"{config.version}"',
             "TARGET_TEMPERATURE": str(config.heated_enclosure.target_temperature),
