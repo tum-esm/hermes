@@ -32,3 +32,18 @@ class MainboardSensorInterface:
             enclosure_humidity=round(bme280_data.humidity, 1),
             enclosure_pressure=round(bme280_data.pressure, 1),
         )
+
+    def check_errors(self) -> None:
+        """logs warnings when mainboard or CPU temperature are above 70°C"""
+        system_data = self.get_system_data()
+
+        if system_data.mainboard_temperature > 70:
+            self.logger.warning(
+                f"mainboard temperature is very high ({system_data.mainboard_temperature}°C)",
+                config=self.config,
+            )
+        if system_data.cpu_temperature is not None and system_data.cpu_temperature > 70:
+            self.logger.warning(
+                f"cpu temperature is very high ({system_data.cpu_temperature}°C)",
+                config=self.config,
+            )

@@ -9,6 +9,7 @@ class SystemCheckProcedure:
         self.logger = utils.Logger(origin="system-checks")
         self.config = config
         self.mainboard_sensor = hardware_interfaces.MainboardSensorInterface()
+        self.heated_enclosure = hardware_interfaces.HeatedEnclosureInterface()
 
     def run(self) -> None:
         # evaluate system ambient conditions
@@ -21,16 +22,10 @@ class SystemCheckProcedure:
             f"enclosure humidity = {system_data.enclosure_humidity} % rH, "
             + f"enclosure pressure = {system_data.enclosure_pressure} hPa"
         )
-        if system_data.mainboard_temperature > 70:
-            self.logger.warning(
-                f"mainboard temperature is very high ({system_data.mainboard_temperature}°C)",
-                config=self.config,
-            )
-        if system_data.cpu_temperature is not None and system_data.cpu_temperature > 70:
-            self.logger.warning(
-                f"cpu temperature is very high ({system_data.cpu_temperature}°C)",
-                config=self.config,
-            )
+        self.mainboard_sensor.check_errors()
+
+        # interact with heated enclosure
+        # TODO: data from heated enclosure
 
         # evaluate disk usage
         disk_usage = psutil.disk_usage("/")
