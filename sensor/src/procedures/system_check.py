@@ -8,8 +8,8 @@ class SystemCheckProcedure:
     def __init__(self, config: custom_types.Config) -> None:
         self.logger = utils.Logger(origin="system-checks")
         self.config = config
-        self.mainboard_sensor = hardware_interfaces.MainboardSensorInterface()
-        self.heated_enclosure = hardware_interfaces.HeatedEnclosureInterface()
+        self.mainboard_sensor = hardware_interfaces.MainboardSensorInterface(config)
+        self.heated_enclosure = hardware_interfaces.HeatedEnclosureInterface(config)
 
     def run(self) -> None:
         # evaluate system ambient conditions

@@ -7,7 +7,7 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 DST_FILE_PATH = os.path.join(PROJECT_DIR, "logs", "headless-enclosure-data.json")
 
 
-def write_data(data: custom_types.HeatedEnclosureData):
+def write_data(data: custom_types.HeatedEnclosureData) -> None:
     # read current list
     if os.path.exists(DST_FILE_PATH):
         with open(DST_FILE_PATH, "r") as f:
