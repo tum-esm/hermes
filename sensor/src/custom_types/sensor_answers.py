@@ -39,12 +39,10 @@ class WindSensorStatus(BaseModel):
     last_update_time: float
 
 
-class HeatedEnclosureMeasurement(BaseModel):
+class HeatedEnclosureData(BaseModel):
     target: float
     allowed_deviation: float
     measured: float
-
-
-class HeatedEnclosureRelaisStatus(BaseModel):
     heater_is_on: bool
     fan_is_on: bool
+    last_update_time: float

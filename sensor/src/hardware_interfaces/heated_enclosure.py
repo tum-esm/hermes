@@ -12,11 +12,11 @@ ARDUINO_CONFIG_TEMPLATE_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.templat
 ARDUINO_CONFIG_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.h")
 
 number_regex = r"\d+(\.\d+)?"
-measurement_pattern = re.compile(
+data_pattern = re.compile(
     f"version: {number_regex}; target: {number_regex}; allowed "
-    + f"deviation: {number_regex}; measured: {number_regex};"
+    + f"deviation: {number_regex}; measured: {number_regex}; "
+    + "heater: (on|off); fan: (on|off)"
 )
-relais_status_pattern = re.compile(r"heater: (on|off); fan: (on|off)")
 
 
 class HeatedEnclosureInterface:
@@ -40,15 +40,13 @@ class HeatedEnclosureInterface:
             port=utils.Constants.WindSensor.serial_port,
             baudrate=9600,
         )
-        self.measurement: Optional[custom_types.HeatedEnclosureMeasurement] = None
-        self.relais_status: Optional[custom_types.HeatedEnclosureRelaisStatus] = None
-        self.last_update_time: float = time.time()
+        self.data: Optional[custom_types.HeatedEnclosureData] = None
 
     def _update_current_values(self) -> None:
         new_messages = self.serial_interface.get_messages()
         now = round(time.time())
         for message in new_messages:
-            if measurement_pattern.match(message) is not None:
+            if data_pattern.match(message) is not None:
                 # determine the software currently used by the arduino
                 # raise exception if software us too old
                 used_software_version = message.split(";")[0].replace("version: ", "")
@@ -57,34 +55,31 @@ class HeatedEnclosureInterface:
                         f"Not running the expected software version. "
                         + f"Device uses {used_software_version}"
                     )
-                parsed_message = "".join(
-                    c
-                    for c in message[len(used_software_version) + 11 :]
-                    if c.isnumeric() or c in [";", "."]
-                )
-                t, ad, m = [float(v) for v in parsed_message.split(";")]
-                self.measurement = custom_types.HeatedEnclosureMeasurement(
-                    target=t, allowed_deviation=ad, measured=m
-                )
-                self.last_update_time = now
-            if relais_status_pattern.match(message) is not None:
-                self.device_status = custom_types.HeatedEnclosureRelaisStatus(
-                    heater_is_on=("heater: on" in message),
-                    fan_is_on=("fan: on" in message),
-                )
-                self.last_update_time = now
 
-    def get_current_measurement(
-        self,
-    ) -> Optional[custom_types.HeatedEnclosureMeasurement]:
-        self._update_current_values()
-        return self.measurement
+                message_items = message[len(used_software_version) + 11 :].split(";")
+                target, allowed_deviation, measured = [
+                    float(string)
+                    for string in [
+                        character
+                        for character in message_items[:3]
+                        if character.isnumeric()
+                    ]
+                ]
+                heater_is_on, fan_is_on = [
+                    "on" in string for string in message_items[3:]
+                ]
+                self.measurement = custom_types.HeatedEnclosureData(
+                    target=target,
+                    allowed_deviation=allowed_deviation,
+                    measured=measured,
+                    heater_is_on=heater_is_on,
+                    fan_is_on=fan_is_on,
+                    last_update_time=now,
+                )
 
-    def get_current_relais_status(
-        self,
-    ) -> Optional[custom_types.HeatedEnclosureRelaisStatus]:
+    def get_current_data(self) -> Optional[custom_types.HeatedEnclosureData]:
         self._update_current_values()
-        return self.relais_status
+        return self.data
 
     @staticmethod
     def compile_firmware(config: custom_types.Config) -> None:
@@ -121,3 +116,33 @@ class HeatedEnclosureInterface:
             + f"--input-dir {ARDUINO_SCRIPT_PATH} "
             + f"{ARDUINO_SCRIPT_PATH}"
         )
+
+    def check_errors(self) -> None:
+        """raises the HeatedEnclosureInterface.DeviceFailure exception
+        when the enclosure has not send any data in two minutes; logs a
+        warning when the enclosure temperature exceeds 55°C
+        """
+        self._update_current_values()
+
+        if self.data is None:
+            self.logger.debug("waiting 6 seconds for data")
+            time.sleep(6)
+
+        self._update_current_values()
+
+        if self.data is None:
+            raise HeatedEnclosureInterface.DeviceFailure(
+                "heated enclosure doesn't send any data"
+            )
+
+        if self.data.measured > 55:
+            self.logger.warning(
+                "high temperatures inside heated enclosure: "
+                + f"{self.measurement.measured} °C",
+                config=self.config,
+            )
+
+        if time.time() - self.data.last_update_time > 120:
+            raise HeatedEnclosureInterface.DeviceFailure(
+                "last heated enclosure data is older than two minutes"
+            )

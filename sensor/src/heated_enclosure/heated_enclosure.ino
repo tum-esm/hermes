@@ -46,7 +46,6 @@ void loop(void){
   Serial.print(ALLOWED_TEMPERATURE_DEVIATION);
   Serial.print("; measured: ");
   Serial.print(measured_temperature);
-  Serial.println(";");
 
   if(measured_temperature < (TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION)){
     heater_is_on = true;
@@ -61,7 +60,7 @@ void loop(void){
     fan_is_on = false;
   }
 
-  Serial.print("heater: ");
+  Serial.print("; heater: ");
   Serial.print(heater_is_on ? "on" : "off");
   Serial.print("; fan: ");
   Serial.print(fan_is_on ? "on" : "off");

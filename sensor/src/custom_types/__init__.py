@@ -4,8 +4,7 @@ from .sensor_answers import (
     MainboardSensorData,
     WindSensorData,
     WindSensorStatus,
-    HeatedEnclosureMeasurement,
-    HeatedEnclosureRelaisStatus,
+    HeatedEnclosureData,
 )
 from .mqtt import (
     MQTTConfig,
