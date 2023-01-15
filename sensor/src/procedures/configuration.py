@@ -19,10 +19,6 @@ import os
 import shutil
 from src import custom_types, utils
 
-# TODO: statically type config request message
-# TODO: save config.json into new version subdir
-# TODO: run tests on the new version
-
 REPOSITORY = "tum-esm/insert-name-here"
 
 
@@ -33,10 +29,14 @@ class ConfigurationProcedure:
         self.logger = utils.Logger(origin="configuration")
         self.config = config
 
-    def run(self, mqtt_request: str) -> None:
-        self._download_code("v1.0.0-alpha.1")
-        self._set_up_venv("v1.0.0-alpha.1")
-        # TODO: implement configuration procedure
+    def run(self, mqtt_request: custom_types.MQTTConfigurationRequest) -> None:
+        self._download_code(mqtt_request.configuration.version)
+        self._set_up_venv(mqtt_request.configuration.version)
+
+        # TODO: save config.json into new version subdir
+        # TODO: run tests on the new version
+        # TODO: emit error or success message
+        # TODO: possibly switch cli pointer
 
     def _download_code(self, version: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""

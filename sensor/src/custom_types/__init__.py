@@ -17,4 +17,5 @@ from .mqtt import (
     MQTTMeasurementMessage,
     ActiveMQTTMessageQueue,
     ArchivedMQTTMessageQueue,
+    MQTTConfigurationRequest,
 )
