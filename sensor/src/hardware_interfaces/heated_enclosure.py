@@ -42,7 +42,7 @@ class HeatedEnclosureInterface:
         )
         self.data: Optional[custom_types.HeatedEnclosureData] = None
 
-    def _update_current_values(self) -> None:
+    def _update_data(self) -> None:
         new_messages = self.serial_interface.get_messages()
         now = round(time.time())
         for message in new_messages:
@@ -82,7 +82,7 @@ class HeatedEnclosureInterface:
                 )
 
     def get_current_data(self) -> Optional[custom_types.HeatedEnclosureData]:
-        self._update_current_values()
+        self._update_data()
         return self.data
 
     @staticmethod
@@ -126,13 +126,13 @@ class HeatedEnclosureInterface:
         when the enclosure has not send any data in two minutes; logs a
         warning when the enclosure temperature exceeds 55°C
         """
-        self._update_current_values()
+        self._update_data()
 
         if self.data is None:
             self.logger.debug("waiting 6 seconds for data")
             time.sleep(6)
 
-        self._update_current_values()
+        self._update_data()
 
         if self.data is None:
             raise HeatedEnclosureInterface.DeviceFailure(
