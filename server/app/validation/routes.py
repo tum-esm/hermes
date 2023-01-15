@@ -39,7 +39,10 @@ def validate(schema: type[_Request]) -> typing.Callable:
                 body = await request.body()
                 body = {} if len(body) == 0 else json.loads(body.decode())
                 request = schema(
-                    path=request.path_params, query=request.query_params, body=body
+                    headers=request.headers,
+                    path=request.path_params,
+                    query=request.query_params,
+                    body=body,
                 )
             except (TypeError, ValueError) as e:
                 logger.warning(
@@ -183,42 +186,49 @@ class _CreateSessionRequestBody(types._BaseModel):
 
 
 class CreateUserRequest(_Request):
+    headers: dict
     path: _CreateUserRequestPath
     query: _CreateUserRequestQuery
     body: _CreateUserRequestBody
 
 
 class PostSensorsRequest(_Request):
+    headers: dict
     path: _PostSensorsRequestPath
     query: _PostSensorsRequestQuery
     body: _PostSensorsRequestBody
 
 
 class PutSensorsRequest(_Request):
+    headers: dict
     path: _PutSensorsRequestPath
     query: _PutSensorsRequestQuery
     body: _PutSensorsRequestBody
 
 
 class GetMeasurementsRequest(_Request):
+    headers: dict
     path: _GetMeasurementsRequestPath
     query: _GetMeasurementsRequestQuery
     body: _GetMeasurementsRequestBody
 
 
 class GetLogMessagesAggregationRequest(_Request):
+    headers: dict
     path: _GetLogMessagesAggregationRequestPath
     query: _GetLogMessagesAggregationRequestQuery
     body: _GetLogMessagesAggregationRequestBody
 
 
 class StreamSensorsRequest(_Request):
+    headers: dict
     path: _StreamSensorsRequestPath
     query: _StreamSensorsRequestQuery
     body: _StreamSensorsRequestBody
 
 
 class CreateSessionRequest(_Request):
+    headers: dict
     path: _CreateSessionRequestPath
     query: _CreateSessionRequestQuery
     body: _CreateSessionRequestBody

@@ -11,7 +11,7 @@ import app.validation.constants as constants
 class _BaseModel(pydantic.BaseModel):
     class Config:
         max_anystr_length = constants.Limit.LARGE
-        extra = pydantic.Extra["forbid"]
+        extra = pydantic.Extra.forbid
         frozen = True
 
 
