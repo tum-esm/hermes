@@ -48,6 +48,11 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
                     {"number": 2, "direction": 50},
                 ]
             },
+            "heated_enclosure": {
+                "device_path": "/dev/cu.usbserial-AB0O2OIH",
+                "target_temperature": 25,
+                "allowed_deviation": 3,
+            },
         }
     )
 
