@@ -13,3 +13,4 @@ config.h
 # code download artifacts
 insert-name-here-*/
 insert-name-here-*.tar.gz
+insert-name-here-cli.sh

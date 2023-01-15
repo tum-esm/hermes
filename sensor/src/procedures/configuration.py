@@ -18,6 +18,7 @@ if version upgrade
 import json
 import os
 import shutil
+import sys
 from src import custom_types, utils
 
 REPOSITORY = "tum-esm/insert-name-here"
@@ -39,8 +40,10 @@ class ConfigurationProcedure:
 
         try:
             self._run_pytests(version)
-            # TODO: emitsuccess message
-            # TODO: switch cli pointer
+            # TODO: emit test success message
+            self._update_cli_pointer(version)
+            # TODO: emit pointer update success message
+            sys.exit()
         except Exception as e:
             # TODO: emit error message
             pass
@@ -108,3 +111,13 @@ class ConfigurationProcedure:
         utils.run_shell_command(
             f"{venv_path} -m pytest tests/", working_directory=dst_path
         )
+
+    def _update_cli_pointer(self, version: str) -> None:
+        """make the file pointing to the used cli to the new version's cli"""
+        root_path = "$HOME/Documents/insert-name-here"
+        with open(f"{root_path}/insert-name-here-cli.sh", "w") as f:
+            f.write(
+                "set -o errexit\n\n"
+                + f"{root_path}/{version}/.venv/bin/python "
+                + f"{root_path}/{version}/cli/main.py $*"
+            )
