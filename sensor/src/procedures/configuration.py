@@ -32,6 +32,17 @@ code_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}"
 venv_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}/.venv"
 
 
+def clear_path(path: str) -> bool:
+    """remove a file or directory, returns true if it existed"""
+    if os.path.isfile(path):
+        os.remove(path)
+        return True
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+        return True
+    return False
+
+
 class ConfigurationProcedure:
     """runs when a config change has been requested"""
 
@@ -58,11 +69,10 @@ class ConfigurationProcedure:
 
     def _download_code(self, version: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""
+        if clear_path(code_path(version)):
+            self.logger.info("removed old code")
 
-        assert not os.path.exists(
-            code_path(version)
-        ), f'dst directory "{code_path(version)}" exists'
-
+        # download release using the github cli
         utils.run_shell_command(
             f"gh release download --repo={REPOSITORY} --archive=tar.gz v{version}",
         )
@@ -82,6 +92,9 @@ class ConfigurationProcedure:
 
     def _set_up_venv(self, version: str) -> None:
         """set up a virtual python3.9 environment inside the version subdirectory"""
+        if clear_path(venv_path(version)):
+            self.logger.info("removed old virtual environment")
+
         # create virtual environment
         utils.run_shell_command(f"python3.9 -m venv {venv_path(version)}")
 
