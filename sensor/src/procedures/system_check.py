@@ -25,7 +25,15 @@ class SystemCheckProcedure:
         self.mainboard_sensor.check_errors()
 
         # interact with heated enclosure
-        # TODO: data from heated enclosure
+        heated_enclosure_data = self.heated_enclosure.get_current_data()
+        if heated_enclosure_data is not None:
+            self.logger.debug(
+                f"heated enclosure temperature = {heated_enclosure_data.measured} °C, "
+                + f"heated enclosure heater = is {'on' if heated_enclosure_data.heater_is_on else 'off'}, "
+                + f"heated enclosure fan = is {'on' if heated_enclosure_data.fan_is_on else 'off'}"
+            )
+            # TODO: send heated enclosure data via MQTT
+        self.heated_enclosure.check_errors()
 
         # evaluate disk usage
         disk_usage = psutil.disk_usage("/")
