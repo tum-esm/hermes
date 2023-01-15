@@ -21,7 +21,9 @@ import shutil
 import sys
 from src import custom_types, utils
 
-REPOSITORY = "tum-esm/insert-name-here"
+NAME = "insert-name-here"
+REPOSITORY = f"tum-esm/{NAME}"
+ROOT_PATH = f"$HOME/Documents/{NAME}"
 
 
 class ConfigurationProcedure:
@@ -51,53 +53,57 @@ class ConfigurationProcedure:
     def _download_code(self, version: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""
 
-        dst_dir = f"$HOME/Documents/insert-name-here/{version}"
-        assert not os.path.exists(dst_dir), f'dst directory "{dst_dir}" exists'
+        assert not os.path.exists(
+            f"{ROOT_PATH}/{version}"
+        ), f'dst directory "{ROOT_PATH}/{version}" exists'
 
         utils.run_shell_command(
             f"gh release download --repo={REPOSITORY} --archive=tar.gz v{version}",
         )
-        archive_label = f"insert-name-here-{version}"
 
         # extract code archive
-        utils.run_shell_command(f"tar -xf {archive_label}.tar.gz")
+        utils.run_shell_command(f"tar -xf {NAME}-{version}.tar.gz")
 
         # move sensor subdirectory
         shutil.move(
-            f"{archive_label}/sensor",
-            f"$HOME/Documents/insert-name-here/{version}",
+            f"{NAME}-{version}/sensor",
+            f"{ROOT_PATH}/{version}",
         )
 
         # remove download assets
-        os.remove(f"{archive_label}.tar.gz")
-        shutil.rmtree(archive_label)
+        os.remove(f"{NAME}-{version}.tar.gz")
+        shutil.rmtree(f"{NAME}-{version}")
 
     def _set_up_venv(self, version: str) -> None:
         """set up a virtual python3.9 environment inside the version subdirectory"""
 
-        dst_dir = f"$HOME/Documents/insert-name-here/{version}"
-
         # create virtual environment
-        utils.run_shell_command(f"python3.9 -m venv .venv", working_directory=dst_dir)
+        utils.run_shell_command(
+            f"python3.9 -m venv .venv",
+            working_directory=f"{ROOT_PATH}/{version}",
+        )
 
         # install dependencies
-        utils.run_shell_command(f"poetry install", working_directory=dst_dir)
+        utils.run_shell_command(
+            f"poetry install",
+            working_directory=f"{ROOT_PATH}/{version}",
+        )
 
     def _dump_new_config(
         self, mqtt_request: custom_types.MQTTConfigurationRequest
     ) -> None:
         """write new config config to json file"""
 
-        new_config_path = (
-            "$HOME/Documents/insert-name-here/"
-            + f"{mqtt_request.configuration.version}/config/config.json"
-        )
-        with open(new_config_path, "w") as f:
+        with open(
+            f"{ROOT_PATH}/{mqtt_request.configuration.version}/config/config.json",
+            "w",
+        ) as f:
             json.dump(
                 {
                     "revision": mqtt_request.revision,
                     **mqtt_request.configuration.dict(),
                 },
+                f,
                 indent=4,
             )
 
@@ -106,18 +112,16 @@ class ConfigurationProcedure:
         ensure that everything is running. If the new version's code doesn't
         run properly, there should be more pytests."""
 
-        dst_path = f"$HOME/Documents/insert-name-here/{version}"
-        venv_path = f"{dst_path}/.venv/bin/python"
         utils.run_shell_command(
-            f"{venv_path} -m pytest tests/", working_directory=dst_path
+            f"{ROOT_PATH}/{version}/.venv/bin/python -m pytest tests/",
+            working_directory=f"{ROOT_PATH}/{version}",
         )
 
     def _update_cli_pointer(self, version: str) -> None:
         """make the file pointing to the used cli to the new version's cli"""
-        root_path = "$HOME/Documents/insert-name-here"
-        with open(f"{root_path}/insert-name-here-cli.sh", "w") as f:
+        with open(f"{ROOT_PATH}/{NAME}-cli.sh", "w") as f:
             f.write(
                 "set -o errexit\n\n"
-                + f"{root_path}/{version}/.venv/bin/python "
-                + f"{root_path}/{version}/cli/main.py $*"
+                + f"{ROOT_PATH}/{version}/.venv/bin/python "
+                + f"{ROOT_PATH}/{version}/cli/main.py $*"
             )
