@@ -76,6 +76,10 @@ class HeatedEnclosureInterface:
                     fan_is_on=fan_is_on,
                     last_update_time=now,
                 )
+            elif message.replace(" ", "") != "":
+                raise HeatedEnclosureInterface.DeviceFailure(
+                    f'arduino sends unknown messages formats: "{message}"'
+                )
 
     def get_current_data(self) -> Optional[custom_types.HeatedEnclosureData]:
         self._update_current_values()
