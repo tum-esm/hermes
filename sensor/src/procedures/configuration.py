@@ -31,13 +31,19 @@ class ConfigurationProcedure:
         self.config = config
 
     def run(self, mqtt_request: custom_types.MQTTConfigurationRequest) -> None:
-        self._download_code(mqtt_request.configuration.version)
-        self._set_up_venv(mqtt_request.configuration.version)
+        version = mqtt_request.configuration.version
+
+        self._download_code(version)
+        self._set_up_venv(version)
         self._dump_new_config(mqtt_request)
 
-        # TODO: run tests on the new version
-        # TODO: emit error or success message
-        # TODO: possibly switch cli pointer
+        try:
+            self._run_pytests(version)
+            # TODO: emitsuccess message
+            # TODO: switch cli pointer
+        except Exception as e:
+            # TODO: emit error message
+            pass
 
     def _download_code(self, version: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""
@@ -91,3 +97,14 @@ class ConfigurationProcedure:
                 },
                 indent=4,
             )
+
+    def _run_pytests(self, version: str) -> None:
+        """run all pytests for the new version. The pytest tests should
+        ensure that everything is running. If the new version's code doesn't
+        run properly, there should be more pytests."""
+
+        dst_path = f"$HOME/Documents/insert-name-here/{version}"
+        venv_path = f"{dst_path}/.venv/bin/python"
+        utils.run_shell_command(
+            f"{venv_path} -m pytest tests/", working_directory=dst_path
+        )
