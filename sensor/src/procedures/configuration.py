@@ -19,11 +19,17 @@ import json
 import os
 import shutil
 import sys
+from typing import Callable
 from src import custom_types, utils
 
 NAME = "insert-name-here"
 REPOSITORY = f"tum-esm/{NAME}"
 ROOT_PATH = f"$HOME/Documents/{NAME}"
+
+tarball_path: Callable[[str], str] = lambda version: f"{NAME}-{version}.tar.gz"
+tarball_content_path: Callable[[str], str] = lambda version: f"{NAME}-{version}"
+code_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}"
+venv_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}/.venv"
 
 
 class ConfigurationProcedure:
@@ -54,40 +60,33 @@ class ConfigurationProcedure:
         """uses the GitHub CLI to download the code for a specific release"""
 
         assert not os.path.exists(
-            f"{ROOT_PATH}/{version}"
-        ), f'dst directory "{ROOT_PATH}/{version}" exists'
+            code_path(version)
+        ), f'dst directory "{code_path(version)}" exists'
 
         utils.run_shell_command(
             f"gh release download --repo={REPOSITORY} --archive=tar.gz v{version}",
         )
 
         # extract code archive
-        utils.run_shell_command(f"tar -xf {NAME}-{version}.tar.gz")
+        utils.run_shell_command(f"tar -xf {tarball_path(version)}")
 
         # move sensor subdirectory
         shutil.move(
-            f"{NAME}-{version}/sensor",
-            f"{ROOT_PATH}/{version}",
+            f"{tarball_content_path(version)}/sensor",
+            code_path(version),
         )
 
         # remove download assets
-        os.remove(f"{NAME}-{version}.tar.gz")
-        shutil.rmtree(f"{NAME}-{version}")
+        os.remove(tarball_path(version))
+        shutil.rmtree(tarball_content_path(version))
 
     def _set_up_venv(self, version: str) -> None:
         """set up a virtual python3.9 environment inside the version subdirectory"""
-
         # create virtual environment
-        utils.run_shell_command(
-            f"python3.9 -m venv .venv",
-            working_directory=f"{ROOT_PATH}/{version}",
-        )
+        utils.run_shell_command(f"python3.9 -m venv {venv_path(version)}")
 
         # install dependencies
-        utils.run_shell_command(
-            f"poetry install",
-            working_directory=f"{ROOT_PATH}/{version}",
-        )
+        utils.run_shell_command(f"poetry install", working_directory=code_path(version))
 
     def _dump_new_config(
         self, mqtt_request: custom_types.MQTTConfigurationRequest
@@ -95,7 +94,7 @@ class ConfigurationProcedure:
         """write new config config to json file"""
 
         with open(
-            f"{ROOT_PATH}/{mqtt_request.configuration.version}/config/config.json",
+            f"{code_path(mqtt_request.configuration.version)}/config/config.json",
             "w",
         ) as f:
             json.dump(
@@ -113,8 +112,8 @@ class ConfigurationProcedure:
         run properly, there should be more pytests."""
 
         utils.run_shell_command(
-            f"{ROOT_PATH}/{version}/.venv/bin/python -m pytest tests/",
-            working_directory=f"{ROOT_PATH}/{version}",
+            f"{venv_path(version)}/bin/python -m pytest tests/",
+            working_directory=code_path(version),
         )
 
     def _update_cli_pointer(self, version: str) -> None:
@@ -122,6 +121,6 @@ class ConfigurationProcedure:
         with open(f"{ROOT_PATH}/{NAME}-cli.sh", "w") as f:
             f.write(
                 "set -o errexit\n\n"
-                + f"{ROOT_PATH}/{version}/.venv/bin/python "
-                + f"{ROOT_PATH}/{version}/cli/main.py $*"
+                + f"{venv_path(version)}/bin/python "
+                + f"{code_path(version)}/cli/main.py $*"
             )
