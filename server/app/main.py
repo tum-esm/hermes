@@ -73,39 +73,7 @@ async def create_user(request):
 @validation.validate(schema=validation.PostSensorsRequest)
 async def post_sensors(request):
     """Create a new sensor and configuration."""
-
-    try:
-        access_token = request.headers["Authorization"]
-        if not access_token.startswith("Bearer "):
-            logger.warning(
-                f"{request.method} {request.url.path} -- Invalid Authorization header"
-            )
-            raise errors.UnauthorizedError()
-        access_token = access_token[7:]
-    except KeyError:
-        logger.warning(
-            f"{request.method} {request.url.path} -- Missing Authorization header"
-        )
-        raise errors.UnauthorizedError()
-    try:
-        query, arguments = database.build(
-            template="read-session.sql",
-            template_arguments={},
-            query_arguments={"access_token_hash": auth.hash_token(access_token)},
-        )
-        result = await database_client.fetch(query, *arguments)
-        user_identifier = database.dictify(result)[0]["user_identifier"]
-    except IndexError:
-        logger.warning(f"{request.method} {request.url.path} -- Invalid access token")
-        raise errors.UnauthorizedError()
-    except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
-        raise errors.InternalServerError()
-    """
-
-
-
-    """
+    user_identifier = await auth.authenticate(request, database_client)
     try:
         async with database_client.transaction():
             # Create new sensor
@@ -349,7 +317,7 @@ async def lifespan(app):
     global database_client
     global mqtt_client
     async with database.Client() as x:
-        async with mqtt.Client(x) as y:
+        async with mqtt.Client(database_client=x) as y:
             # Make clients globally available
             database_client = x
             mqtt_client = y
