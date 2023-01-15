@@ -15,6 +15,7 @@ if version upgrade
 8. Call `sys.exit()`
 """
 
+import json
 import os
 import shutil
 from src import custom_types, utils
@@ -32,8 +33,8 @@ class ConfigurationProcedure:
     def run(self, mqtt_request: custom_types.MQTTConfigurationRequest) -> None:
         self._download_code(mqtt_request.configuration.version)
         self._set_up_venv(mqtt_request.configuration.version)
+        self._dump_new_config(mqtt_request)
 
-        # TODO: save config.json into new version subdir
         # TODO: run tests on the new version
         # TODO: emit error or success message
         # TODO: possibly switch cli pointer
@@ -72,3 +73,21 @@ class ConfigurationProcedure:
 
         # install dependencies
         utils.run_shell_command(f"poetry install", working_directory=dst_dir)
+
+    def _dump_new_config(
+        self, mqtt_request: custom_types.MQTTConfigurationRequest
+    ) -> None:
+        """write new config config to json file"""
+
+        new_config_path = (
+            "$HOME/Documents/insert-name-here/"
+            + f"{mqtt_request.configuration.version}/config/config.json"
+        )
+        with open(new_config_path, "w") as f:
+            json.dump(
+                {
+                    "revision": mqtt_request.revision,
+                    **mqtt_request.configuration.dict(),
+                },
+                indent=4,
+            )
