@@ -39,6 +39,8 @@ def validate(schema: type[_Request]) -> typing.Callable:
                 body = await request.body()
                 body = {} if len(body) == 0 else json.loads(body.decode())
                 request = schema(
+                    method=request.method,
+                    url=request.url,
                     headers=request.headers,
                     path=request.path_params,
                     query=request.query_params,
@@ -186,6 +188,8 @@ class _CreateSessionRequestBody(types._BaseModel):
 
 
 class CreateUserRequest(_Request):
+    method: str
+    url: object
     headers: dict
     path: _CreateUserRequestPath
     query: _CreateUserRequestQuery
@@ -193,6 +197,8 @@ class CreateUserRequest(_Request):
 
 
 class PostSensorsRequest(_Request):
+    method: str
+    url: object
     headers: dict
     path: _PostSensorsRequestPath
     query: _PostSensorsRequestQuery
@@ -200,6 +206,8 @@ class PostSensorsRequest(_Request):
 
 
 class PutSensorsRequest(_Request):
+    method: str
+    url: object
     headers: dict
     path: _PutSensorsRequestPath
     query: _PutSensorsRequestQuery
@@ -207,6 +215,8 @@ class PutSensorsRequest(_Request):
 
 
 class GetMeasurementsRequest(_Request):
+    method: str
+    url: object
     headers: dict
     path: _GetMeasurementsRequestPath
     query: _GetMeasurementsRequestQuery
@@ -214,6 +224,8 @@ class GetMeasurementsRequest(_Request):
 
 
 class GetLogMessagesAggregationRequest(_Request):
+    method: str
+    url: object
     headers: dict
     path: _GetLogMessagesAggregationRequestPath
     query: _GetLogMessagesAggregationRequestQuery
@@ -221,6 +233,8 @@ class GetLogMessagesAggregationRequest(_Request):
 
 
 class StreamSensorsRequest(_Request):
+    method: str
+    url: object
     headers: dict
     path: _StreamSensorsRequestPath
     query: _StreamSensorsRequestQuery
@@ -228,6 +242,8 @@ class StreamSensorsRequest(_Request):
 
 
 class CreateSessionRequest(_Request):
+    method: str
+    url: object
     headers: dict
     path: _CreateSessionRequestPath
     query: _CreateSessionRequestQuery

@@ -59,10 +59,10 @@ async def create_user(request):
             )
             await database_client.execute(query, *arguments)
     except asyncpg.exceptions.UniqueViolationError:
-        logger.warning("[POST /users] User already exists")
+        logger.warning(f"{request.method} {request.url.path} -- User already exists")
         raise errors.ConflictError()
     except Exception as e:
-        logger.error(f"[POST /users] Unknown error: {repr(e)}")
+        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     return starlette.responses.JSONResponse(
         status_code=201,
@@ -101,10 +101,10 @@ async def post_sensors(request):
             configuration=request.body.configuration,
         )
     except asyncpg.exceptions.UniqueViolationError:
-        logger.warning("[POST /sensors] Sensor already exists")
+        logger.warning(f"{request.method} {request.url.path} -- Sensor already exists")
         raise errors.ConflictError()
     except Exception as e:
-        logger.error(f"[POST /sensors] Unknown error: {repr(e)}")
+        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
     # TODO Return sensor_identifier and revision? Same for PUT?
@@ -145,10 +145,10 @@ async def put_sensors(request):
             configuration=request.body.configuration,
         )
     except IndexError:
-        logger.warning("[PUT /sensors] Sensor doesn't exist")
+        logger.warning(f"{request.method} {request.url.path} -- Sensor doesn't exist")
         raise errors.NotFoundError()
     except Exception as e:
-        logger.error(f"[PUT /sensors] Unknown error: {repr(e)}")
+        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(status_code=204, content=None)
@@ -182,7 +182,7 @@ async def get_measurements(request):
         )
         result = await database_client.fetch(query, *arguments)
     except Exception as e:
-        logger.error(f"[GET /measurements] Unknown error: {repr(e)}")
+        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
@@ -202,7 +202,7 @@ async def get_log_messages_aggregation(request):
         )
         result = await database_client.fetch(query, *arguments)
     except Exception as e:
-        logger.error(f"[GET /log-messages] Unknown error: {repr(e)}")
+        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
@@ -270,14 +270,14 @@ async def create_session(request):
         user_identifier = database.dictify(result)[0]["user_identifier"]
         password_hash = database.dictify(result)[0]["password_hash"]
     except IndexError:
-        logger.warning("[POST /authentication] User not found")
+        logger.warning(f"{request.method} {request.url.path} -- User not found")
         raise errors.NotFoundError()
     except Exception as e:
-        logger.error(f"[POST /authentication] Unknown error: {repr(e)}")
+        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Check if password hashes match
     if not auth.verify_password(request.body.password, password_hash):
-        logger.warning("[POST /authentication] Invalid password")
+        logger.warning(f"{request.method} {request.url.path} -- Invalid password")
         raise errors.UnauthorizedError()
     access_token = auth.generate_token()
     try:
@@ -292,7 +292,7 @@ async def create_session(request):
         )
         await database_client.execute(query, *arguments)
     except Exception as e:
-        logger.error(f"[POST /authentication] Unknown error: {repr(e)}")
+        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
