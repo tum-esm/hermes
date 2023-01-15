@@ -1,13 +1,28 @@
+import json
+import os
 import time
-from src import utils, hardware_interfaces
+from src import utils, hardware_interfaces, custom_types
+
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+DST_FILE_PATH = os.path.join(PROJECT_DIR, "logs", "headless-enclosure-data.json")
 
 
-# TODO: log to file instead of print
-# TODO: add timestamp to logs
+def write_data(data: custom_types.HeatedEnclosureData):
+    # read current list
+    if os.path.exists(DST_FILE_PATH):
+        with open(DST_FILE_PATH, "r") as f:
+            current_list = json.load(f)
+        assert isinstance(current_list, list), "dst file is not a list"
+    else:
+        current_list = []
+
+    # append data and save new list
+    new_list = current_list + [data.dict()]
+    with open(DST_FILE_PATH, "w") as f:
+        json.dump(new_list, f)
+
 
 if __name__ == "__main__":
-    pass
-
     config = utils.ConfigInterface.read()
     heated_enclosure = hardware_interfaces.HeatedEnclosureInterface(config)
 
@@ -23,10 +38,6 @@ if __name__ == "__main__":
         if (last_update_time is None) or (
             last_update_time != current_data.last_update_time
         ):
-            # TODO: add message to log stream
-            pass
+            write_data(current_data)
 
         time.sleep(1)
-
-    # TODO: run heater enclosure interface
-    # TODO: record measurement activity every 10 seconds in a dedicated file
