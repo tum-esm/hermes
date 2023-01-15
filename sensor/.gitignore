@@ -9,3 +9,7 @@ data/**/*.json
 heated_enclosure.ino.*
 config.h
 .vscode/
+
+# code download artifacts
+insert-name-here-*/
+insert-name-here-*.tar.gz

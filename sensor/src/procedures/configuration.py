@@ -15,7 +15,17 @@ if version upgrade
 8. Call `sys.exit()`
 """
 
+import os
+import shutil
+import requests
 from src import custom_types, utils
+
+# TODO: statically type config request message
+# TODO: create new venv
+# TODO: install new dependencies
+# TODO: run tests on the new version
+
+REPOSITORY = "tum-esm/insert-name-here"
 
 
 class ConfigurationProcedure:
@@ -26,5 +36,28 @@ class ConfigurationProcedure:
         self.config = config
 
     def run(self, mqtt_request: str) -> None:
-        pass
+        self._download_code("v1.0.0-alpha.1")
         # TODO: implement configuration procedure
+
+    def _download_code(self, version: str) -> None:
+        """uses the GitHub CLI to download the code for a specific release"""
+        dst_dir = f"$HOME/Documents/insert-name-here/{version}"
+        assert not os.path.exists(dst_dir), f'dst directory "{dst_dir}" exists'
+
+        utils.run_shell_command(
+            f"gh release download --repo={REPOSITORY} --archive=tar.gz v{version}",
+        )
+        archive_label = f"insert-name-here-{version}"
+
+        # extract code archive
+        utils.run_shell_command(f"tar -xf {archive_label}.tar.gz")
+
+        # move sensor subdirectory
+        shutil.move(
+            f"{archive_label}/sensor",
+            f"$HOME/Documents/insert-name-here/{version}",
+        )
+
+        # remove download assets
+        os.remove(f"{archive_label}.tar.gz")
+        shutil.rmtree(archive_label)
