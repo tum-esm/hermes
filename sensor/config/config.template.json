@@ -2,7 +2,13 @@
     "version": "0.1.0",
     "revision": 1,
     "general": {
-        "station_name": "some-useful-name"
+        "station_name": "some-useful-name",
+        "active_components": {
+            "measurement": false,
+            "calibration": false,
+            "heated_enclosure": false,
+            "mqtt": false
+        }
     },
     "hardware": {
         "pumped_litres_per_round": 0.003

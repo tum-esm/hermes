@@ -1,10 +1,26 @@
 from typing import Literal
 from pydantic import BaseModel, validator
-from .validators import validate_int, validate_str, validate_float
+from .validators import validate_int, validate_str, validate_float, validate_bool
+
+
+class ActiveComponentsConfig(BaseModel):
+    measurement: bool
+    calibration: bool
+    heated_enclosure: bool
+    mqtt: bool
+
+    # validators
+    _val_bool = validator("*", pre=True, allow_reuse=True)(
+        validate_bool(),
+    )
+
+    class Config:
+        extra = "forbid"
 
 
 class GeneralConfig(BaseModel):
     station_name: str
+    active_components: ActiveComponentsConfig
 
     # validators
     _val_station_name = validator("station_name", pre=True, allow_reuse=True)(
