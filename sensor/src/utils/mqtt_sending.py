@@ -37,7 +37,9 @@ class SendingMQTTClient:
         # start the processing of messages in that sending queue
         if SendingMQTTClient.sending_loop_process is None:
             new_process = multiprocessing.Process(
-                target=SendingMQTTClient.sending_loop, args=(lock,)
+                target=SendingMQTTClient.sending_loop,
+                args=(lock,),
+                daemon=True,
             )
             new_process.start()
             SendingMQTTClient.sending_loop_process = new_process
@@ -155,6 +157,12 @@ class SendingMQTTClient:
 
         while True:
             # TODO: heartbeat messages, https://github.com/tum-esm/insert-name-here/issues/29
+
+            config = utils.ConfigInterface.read()
+            if not config.general.active_components.mqtt:
+                logger.debug("mqtt message sending is disabled, waiting 60 seconds")
+                time.sleep(60)
+                continue
 
             with lock:
                 active_queue = SendingMQTTClient._load_active_queue()

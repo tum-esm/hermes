@@ -30,6 +30,8 @@ def run() -> None:
         return
 
     # TODO: init configuration-procedure instance
+    
+    utils.SendingMQTTClient.init_sending_loop_process()
 
     try:
         config = utils.ConfigInterface.read()
