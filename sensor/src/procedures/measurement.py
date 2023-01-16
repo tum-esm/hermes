@@ -79,7 +79,7 @@ class MeasurementProcedure:
 
         # determine new valve
         new_valve = min(
-            self.config.air_inlets,
+            self.config.measurement.air_inlets,
             key=lambda x: utils.math.distance_between_angles(
                 x.direction, wind_data.direction_avg
             ),
@@ -88,9 +88,9 @@ class MeasurementProcedure:
         # perform switch
         if self.active_valve_number is None:
             self.logger.info(f"enabeling air inlet {new_valve}")
-            self._switch_to_valve_number(new_valve.number)
+            self._switch_to_valve_number(new_valve.valve_number)
         else:
-            if self.active_valve_number != new_valve.number:
+            if self.active_valve_number != new_valve.valve_number:
                 if wind_data.speed_avg < 0.2:
                     self.logger.debug(
                         f"wind speed very low ({wind_data.speed_avg} m/s)"
@@ -98,7 +98,7 @@ class MeasurementProcedure:
                     self.logger.info(f"staying at air inlet {new_valve}")
                 else:
                     self.logger.info(f"switching to air inlet {new_valve}")
-                    self._switch_to_valve_number(new_valve.number)
+                    self._switch_to_valve_number(new_valve.valve_number)
             else:
                 self.logger.info(f"staying at air inlet {new_valve}")
 

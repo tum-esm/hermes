@@ -7,10 +7,14 @@
     "hardware": {
         "pumped_litres_per_round": 0.003
     },
-    "air_inlets": [
-        { "number": 1, "direction": 300, "pipe_length": 50 },
-        { "number": 2, "direction": 50, "pipe_length": 50 }
-    ],
+    "measurement": {
+        "minutes_per_measurement_interval": 2,
+        "seconds_between_measurements": 6,
+        "air_inlets": [
+            { "valve_number": 1, "direction": 300, "tube_length": 50 },
+            { "valve_number": 2, "direction": 50, "tube_length": 50 }
+        ]
+    },
     "calibration": {
         "flushing_minutes": 5,
         "litres_per_minute": 0.5,

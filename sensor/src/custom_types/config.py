@@ -35,19 +35,40 @@ class HardwareConfig(BaseModel):
 # -----------------------------------------------------------------------------
 
 
-class AirInletConfig(BaseModel):
-    number: Literal[1, 2, 3, 4]
+class MeasurementAirInletConfig(BaseModel):
+    valve_number: Literal[1, 2, 3, 4]
     direction: int
-    pipe_length: float
+    tube_length: float
 
     # validators
-    _val_number = validator("number", pre=True, allow_reuse=True)(
+    _val_number = validator("valve_number", pre=True, allow_reuse=True)(
         validate_int(allowed=[1, 2, 3, 4]),
     )
     _val_direction = validator("direction", pre=True, allow_reuse=True)(
         validate_int(minimum=0, maximum=359),
     )
-    _val_pipe_length = validator("pipe_length", pre=True, allow_reuse=True)(
+    _val_tube_length = validator("tube_length", pre=True, allow_reuse=True)(
+        validate_float(minimum=1, maximum=100),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
+class MeasurementConfig(BaseModel):
+    minutes_per_measurement_interval: float
+    seconds_between_measurements: float
+    air_inlets: list[MeasurementAirInletConfig]
+
+    # validators
+    _val_minutes_per_measurement_interval = validator(
+        "minutes_per_measurement_interval", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=1, maximum=100),
+    )
+    _val_seconds_between_measurements = validator(
+        "seconds_between_measurements", pre=True, allow_reuse=True
+    )(
         validate_float(minimum=1, maximum=100),
     )
 
@@ -126,7 +147,7 @@ class Config(BaseModel):
     revision: int
     general: GeneralConfig
     hardware: HardwareConfig
-    air_inlets: list[AirInletConfig]
+    measurement: MeasurementConfig
     calibration: CalibrationConfig
     heated_enclosure: HeatedEnclosureConfig
 
