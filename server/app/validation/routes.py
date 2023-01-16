@@ -2,7 +2,6 @@ import json
 import typing
 
 import pydantic
-import starlette
 
 import app.errors as errors
 import app.validation.types as types
@@ -15,26 +14,15 @@ from app.logs import logger
 
 
 ########################################################################################
-# Abstract request class
-########################################################################################
-
-
-class _Request(types._BaseModel):
-    path: object
-    query: object
-    body: object
-
-
-########################################################################################
 # Route validation decorator
 ########################################################################################
 
 
-def validate(schema: type[_Request]) -> typing.Callable:
+def validate(schema):
     """Decorator to enforce proper validation for the given starlette route."""
 
     def decorator(func):
-        async def wrapper(request: starlette.requests.Request):
+        async def wrapper(request):
             try:
                 body = await request.body()
                 body = {} if len(body) == 0 else json.loads(body.decode())
@@ -48,7 +36,7 @@ def validate(schema: type[_Request]) -> typing.Callable:
                 )
             except (TypeError, ValueError) as e:
                 logger.warning(
-                    f"[{request.method} {request.url.path}] Request failed validation:"
+                    f"{request.method} {request.url.path} -- Request failed validation:"
                     f" {repr(e)}"
                 )
                 raise errors.BadRequestError()
@@ -63,6 +51,10 @@ def validate(schema: type[_Request]) -> typing.Callable:
 ########################################################################################
 # Path models
 ########################################################################################
+
+
+class _ReadStatusRequestPath(types._BaseModel):
+    pass
 
 
 class _CreateUserRequestPath(types._BaseModel):
@@ -96,6 +88,10 @@ class _CreateSessionRequestPath(types._BaseModel):
 ########################################################################################
 # Query models
 ########################################################################################
+
+
+class _ReadStatusRequestQuery(types._BaseModel):
+    pass
 
 
 class _CreateUserRequestQuery(types._BaseModel):
@@ -149,6 +145,10 @@ class _CreateSessionRequestQuery(types._BaseModel):
 ########################################################################################
 
 
+class _ReadStatusRequestBody(types._BaseModel):
+    pass
+
+
 class _CreateUserRequestBody(types._BaseModel):
     username: types.Name
     password: types.Password
@@ -188,7 +188,16 @@ class _CreateSessionRequestBody(types._BaseModel):
 ########################################################################################
 
 
-class CreateUserRequest(_Request):
+class ReadStatusRequest(types._BaseModel):
+    method: str
+    url: object
+    headers: dict
+    path: _ReadStatusRequestPath
+    query: _ReadStatusRequestQuery
+    body: _ReadStatusRequestBody
+
+
+class CreateUserRequest(types._BaseModel):
     method: str
     url: object
     headers: dict
@@ -197,7 +206,7 @@ class CreateUserRequest(_Request):
     body: _CreateUserRequestBody
 
 
-class CreateSensorRequest(_Request):
+class CreateSensorRequest(types._BaseModel):
     method: str
     url: object
     headers: dict
@@ -206,7 +215,7 @@ class CreateSensorRequest(_Request):
     body: _CreateSensorRequestBody
 
 
-class UpdateSensorRequest(_Request):
+class UpdateSensorRequest(types._BaseModel):
     method: str
     url: object
     headers: dict
@@ -215,7 +224,7 @@ class UpdateSensorRequest(_Request):
     body: _UpdateSensorRequestBody
 
 
-class ReadMeasurementsRequest(_Request):
+class ReadMeasurementsRequest(types._BaseModel):
     method: str
     url: object
     headers: dict
@@ -224,7 +233,7 @@ class ReadMeasurementsRequest(_Request):
     body: _ReadMeasurementsRequestBody
 
 
-class ReadLogMessageAggregatesRequest(_Request):
+class ReadLogMessageAggregatesRequest(types._BaseModel):
     method: str
     url: object
     headers: dict
@@ -233,7 +242,7 @@ class ReadLogMessageAggregatesRequest(_Request):
     body: _ReadLogMessageAggregatesRequestBody
 
 
-class StreamSensorsRequest(_Request):
+class StreamSensorsRequest(types._BaseModel):
     method: str
     url: object
     headers: dict
@@ -242,7 +251,7 @@ class StreamSensorsRequest(_Request):
     body: _StreamSensorsRequestBody
 
 
-class CreateSessionRequest(_Request):
+class CreateSessionRequest(types._BaseModel):
     method: str
     url: object
     headers: dict

@@ -16,6 +16,7 @@ import app.validation as validation
 from app.logs import logger
 
 
+@validation.validate(schema=validation.ReadStatusRequest)
 async def read_status(request):
     """Return some status information about the server."""
     return starlette.responses.JSONResponse(
