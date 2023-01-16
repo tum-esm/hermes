@@ -11,7 +11,7 @@ from src.custom_types import Config
 
 
 @pytest.mark.ci
-def test_default_config() -> None:
+def test_config_template() -> None:
     with open(CONFIG_TEMPLATE_PATH, "r") as f:
         default_config = json.load(f)
     Config(**default_config)
