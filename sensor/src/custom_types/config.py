@@ -83,26 +83,6 @@ class MeasurementTimingConfig(BaseModel):
         extra = "forbid"
 
 
-class MeasurementPumpSpeedConfig(BaseModel):
-    litres_per_minute_on_valve_switching: float
-    litres_per_minute_on_measurements: float
-
-    # validators
-    _val_litres_per_minute_on_valve_switching = validator(
-        "litres_per_minute_on_valve_switching", pre=True, allow_reuse=True
-    )(
-        validate_float(minimum=0.001, maximum=30),
-    )
-    _val_litres_per_minute_on_measurements = validator(
-        "litres_per_minute_on_measurements", pre=True, allow_reuse=True
-    )(
-        validate_float(minimum=0.001, maximum=30),
-    )
-
-    class Config:
-        extra = "forbid"
-
-
 class MeasurementAirInletConfig(BaseModel):
     valve_number: Literal[1, 2, 3, 4]
     direction: int
@@ -125,9 +105,15 @@ class MeasurementAirInletConfig(BaseModel):
 
 class MeasurementConfig(BaseModel):
     timing: MeasurementTimingConfig
-    pump_speed: MeasurementPumpSpeedConfig
+    pumped_litres_per_minute: float
     air_inlets: list[MeasurementAirInletConfig]
 
+    # validators
+    _val_pumped_litres_per_minute = validator(
+        "pumped_litres_per_minute", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=0.1, maximum=30),
+    )
     _val_air_inlets = validator("air_inlets", pre=True, allow_reuse=True)(
         validate_list(min_len=1),
     )
@@ -157,14 +143,16 @@ class CalibrationGasConfig(BaseModel):
 
 class CalibrationConfig(BaseModel):
     flushing_minutes: float
-    litres_per_minute: float
+    pumped_litres_per_minute: float
     gases: list[CalibrationGasConfig]
 
     # validators
     _val_flushing_minutes = validator("flushing_minutes", pre=True, allow_reuse=True)(
         validate_int(minimum=0, maximum=60),
     )
-    _val_litres_per_minute = validator("litres_per_minute", pre=True, allow_reuse=True)(
+    _val_pumped_litres_per_minute = validator(
+        "pumped_litres_per_minute", pre=True, allow_reuse=True
+    )(
         validate_float(minimum=0, maximum=30),
     )
 

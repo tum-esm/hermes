@@ -27,7 +27,7 @@ class MeasurementProcedure:
         # pump (runs continuously)
         self.pump_interface = hardware_interfaces.PumpInterface(config)
         self.pump_interface.set_desired_pump_rps(
-            self.config.measurement.pump_speed.litres_per_minute_on_measurements
+            self.config.measurement.pumped_litres_per_minute
             / (60 * self.config.hardware.pumped_litres_per_round)
         )
         time.sleep(1)
@@ -46,12 +46,8 @@ class MeasurementProcedure:
         """
 
         self.valve_interfaces.set_active_input(new_air_inlet.valve_number)
-        self.pump_interface.set_desired_pump_rps(
-            self.config.measurement.pump_speed.litres_per_minute_on_valve_switching
-            / (60 * self.config.hardware.pumped_litres_per_round)
-        )
 
-        # pump length
+        # pump air out of the new tube
         tube_volume_in_litres = (
             3.141592
             * pow(self.config.hardware.inner_tube_diameter_millimiters * 0.5 * 0.01, 2)
@@ -59,15 +55,11 @@ class MeasurementProcedure:
             * 10
         )
         required_pumping_time = tube_volume_in_litres / (
-            self.config.measurement.pump_speed.litres_per_minute_on_valve_switching / 60
+            self.config.measurement.pumped_litres_per_minute / 60
         )
         self.logger.debug(f"pumping {required_pumping_time} second(s)")
         time.sleep(required_pumping_time)
 
-        self.pump_interface.set_desired_pump_rps(
-            self.config.measurement.pump_speed.litres_per_minute_on_measurements
-            / (60 * self.config.hardware.pumped_litres_per_round)
-        )
         self.active_air_inlet = new_air_inlet
 
     def _get_current_wind_data(self) -> custom_types.WindSensorData:
