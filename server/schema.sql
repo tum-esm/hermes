@@ -36,7 +36,7 @@ CREATE TABLE sensors (
     sensor_identifier UUID PRIMARY KEY,
     sensor_name TEXT NOT NULL,
     network_identifier UUID NOT NULL REFERENCES networks (network_identifier) ON DELETE CASCADE,
-    creation_timestamp TIMESTAMPTZ NOT NULL
+    creation_timestamp TIMESTAMPTZ NOT NULL,
 
     UNIQUE (sensor_name, network_identifier)
 );
