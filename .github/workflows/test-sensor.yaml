@@ -23,11 +23,11 @@ jobs:
             # check-out repo and set-up python
             - name: Check out repository
               uses: actions/checkout@v3
-            - name: Set up Python 3.10.6
+            - name: Set up Python 3.9.16
               id: setup-python
               uses: actions/setup-python@v3
               with:
-                  python-version: 3.10.6
+                  python-version: 3.9.16
 
             # install & configure poetry
             - name: Install Poetry

@@ -26,22 +26,12 @@ def test_config() -> None:
 
     # check allowed pump speed
     max_litres_per_minute = MAX_PUMP_RPS * config.hardware.pumped_litres_per_round * 60
-    assert (
-        config.measurement.pump_speed.litres_per_minute_on_measurements
-        <= max_litres_per_minute
-    ), (
-        "cconfig.measurement.pump_speed.litres_per_minute_on_measurements is"
-        + f" above the maximum of {max_litres_per_minute} litres per minute"
+    assert config.measurement.pumped_litres_per_minute <= max_litres_per_minute, (
+        "config.measurement.pumped_litres_per_minute is above the maximum "
+        + f"of {max_litres_per_minute} litres per minute"
     )
-    assert (
-        config.measurement.pump_speed.litres_per_minute_on_valve_switching
-        <= max_litres_per_minute
-    ), (
-        "config.measurement.pump_speed.litres_per_minute_on_valve_switching is"
-        + f" above the maximum of {max_litres_per_minute} litres per minute"
-    )
-    assert config.calibration.litres_per_minute <= max_litres_per_minute, (
-        "config.calibration.litres_per_minute is above the maximum "
+    assert config.calibration.pumped_litres_per_minute <= max_litres_per_minute, (
+        "config.calibration.pumped_litres_per_minute is above the maximum "
         + f"of {max_litres_per_minute} litres per minute"
     )
 
