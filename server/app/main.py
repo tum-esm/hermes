@@ -131,8 +131,10 @@ async def create_sensor(request):
         logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
-    # TODO Return sensor_identifier and revision? Same for PUT?
-    return starlette.responses.JSONResponse(status_code=201, content=None)
+    return starlette.responses.JSONResponse(
+        status_code=201,
+        content={"sensor_identifier": sensor_identifier, "revision": revision},
+    )
 
 
 @validation.validate(schema=validation.UpdateSensorRequest)
@@ -178,7 +180,10 @@ async def update_sensor(request):
         logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
         raise errors.InternalServerError()
     # Return successful response
-    return starlette.responses.JSONResponse(status_code=204, content=None)
+    return starlette.responses.JSONResponse(
+        status_code=204,
+        content={"sensor_identifier": sensor_identifier, "revision": revision},
+    )
 
 
 async def read_sensors(request):
