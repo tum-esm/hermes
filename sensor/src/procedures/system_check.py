@@ -1,3 +1,4 @@
+from typing import Optional
 import psutil
 from src import hardware_interfaces, custom_types, utils
 
@@ -9,7 +10,9 @@ class SystemCheckProcedure:
         self.logger = utils.Logger(origin="system-checks")
         self.config = config
         self.mainboard_sensor = hardware_interfaces.MainboardSensorInterface(config)
-        self.heated_enclosure = hardware_interfaces.HeatedEnclosureInterface(config)
+        self.heated_enclosure: Optional[
+            hardware_interfaces.HeatedEnclosureInterface
+        ] = None
 
     def run(self) -> None:
         # evaluate system ambient conditions
@@ -25,15 +28,21 @@ class SystemCheckProcedure:
         self.mainboard_sensor.check_errors()
 
         # interact with heated enclosure
-        heated_enclosure_data = self.heated_enclosure.get_current_data()
-        if heated_enclosure_data is not None:
-            self.logger.debug(
-                f"heated enclosure temperature = {heated_enclosure_data.measured} °C, "
-                + f"heated enclosure heater = is {'on' if heated_enclosure_data.heater_is_on else 'off'}, "
-                + f"heated enclosure fan = is {'on' if heated_enclosure_data.fan_is_on else 'off'}"
-            )
-            # TODO: send heated enclosure data via MQTT
-        self.heated_enclosure.check_errors()
+        if self.config.general.active_components.heated_enclosure:
+            if self.heated_enclosure is None:
+                self.heated_enclosure = hardware_interfaces.HeatedEnclosureInterface(
+                    self.config
+                )
+
+            heated_enclosure_data = self.heated_enclosure.get_current_data()
+            if heated_enclosure_data is not None:
+                self.logger.debug(
+                    f"heated enclosure temperature = {heated_enclosure_data.measured} °C, "
+                    + f"heated enclosure heater = is {'on' if heated_enclosure_data.heater_is_on else 'off'}, "
+                    + f"heated enclosure fan = is {'on' if heated_enclosure_data.fan_is_on else 'off'}"
+                )
+                # TODO: send heated enclosure data via MQTT
+            self.heated_enclosure.check_errors()
 
         # evaluate disk usage
         disk_usage = psutil.disk_usage("/")
@@ -56,5 +65,6 @@ class SystemCheckProcedure:
             )
 
         # mqtt sending loop
-        utils.SendingMQTTClient.check_errors()
-        utils.SendingMQTTClient.log_statistics()
+        if self.config.general.active_components.mqtt:
+            utils.SendingMQTTClient.check_errors()
+            utils.SendingMQTTClient.log_statistics()
