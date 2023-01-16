@@ -29,8 +29,8 @@ PositiveInteger = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
 
 Key = pydantic.constr(strict=True, regex=constants.Pattern.KEY.value)
 # TODO Validate the values more thoroughly for min and max limits/lengths (#fields)
-JsonValue = int | float | str | bool | None
-Json = dict[JsonKey, JsonValue]
+Value = int | float | str | bool | None
+Json = dict[Key, Value]
 
 # TODO what are the real min/max values here? How do we handle overflow?
 # During validation somehow, or by handling the database error?

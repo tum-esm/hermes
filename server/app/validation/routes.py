@@ -69,19 +69,19 @@ class _CreateUserRequestPath(types._BaseModel):
     pass
 
 
-class _PostSensorsRequestPath(types._BaseModel):
+class _CreateSensorRequestPath(types._BaseModel):
     pass
 
 
-class _PutSensorsRequestPath(types._BaseModel):
+class _UpdateSensorRequestPath(types._BaseModel):
     sensor_name: types.Name
 
 
-class _GetMeasurementsRequestPath(types._BaseModel):
+class _ReadMeasurementsRequestPath(types._BaseModel):
     sensor_identifier: types.Identifier
 
 
-class _GetLogMessagesAggregationRequestPath(types._BaseModel):
+class _ReadLogMessageAggregatesRequestPath(types._BaseModel):
     sensor_identifier: types.Identifier
 
 
@@ -102,15 +102,15 @@ class _CreateUserRequestQuery(types._BaseModel):
     pass
 
 
-class _PostSensorsRequestQuery(types._BaseModel):
+class _CreateSensorRequestQuery(types._BaseModel):
     pass
 
 
-class _PutSensorsRequestQuery(types._BaseModel):
+class _UpdateSensorRequestQuery(types._BaseModel):
     pass
 
 
-class _GetMeasurementsRequestQuery(types._BaseModel):
+class _ReadMeasurementsRequestQuery(types._BaseModel):
     direction: typing.Literal[None, "previous", "next"] = None
     creation_timestamp: types.Timestamp = None
 
@@ -127,7 +127,7 @@ class _GetMeasurementsRequestQuery(types._BaseModel):
         return v
 
 
-class _GetLogMessagesAggregationRequestQuery(types._BaseModel):
+class _ReadLogMessageAggregatesRequestQuery(types._BaseModel):
     pass
 
 
@@ -154,22 +154,22 @@ class _CreateUserRequestBody(types._BaseModel):
     password: types.Password
 
 
-class _PostSensorsRequestBody(types._BaseModel):
+class _CreateSensorRequestBody(types._BaseModel):
     sensor_name: types.Name
     network_identifier: types.Identifier
     configuration: types.Json
 
 
-class _PutSensorsRequestBody(types._BaseModel):
+class _UpdateSensorRequestBody(types._BaseModel):
     sensor_name: types.Name
     configuration: types.Json
 
 
-class _GetMeasurementsRequestBody(types._BaseModel):
+class _ReadMeasurementsRequestBody(types._BaseModel):
     pass
 
 
-class _GetLogMessagesAggregationRequestBody(types._BaseModel):
+class _ReadLogMessageAggregatesRequestBody(types._BaseModel):
     pass
 
 
@@ -197,40 +197,40 @@ class CreateUserRequest(_Request):
     body: _CreateUserRequestBody
 
 
-class PostSensorsRequest(_Request):
+class CreateSensorRequest(_Request):
     method: str
     url: object
     headers: dict
-    path: _PostSensorsRequestPath
-    query: _PostSensorsRequestQuery
-    body: _PostSensorsRequestBody
+    path: _CreateSensorRequestPath
+    query: _CreateSensorRequestQuery
+    body: _CreateSensorRequestBody
 
 
-class PutSensorsRequest(_Request):
+class UpdateSensorRequest(_Request):
     method: str
     url: object
     headers: dict
-    path: _PutSensorsRequestPath
-    query: _PutSensorsRequestQuery
-    body: _PutSensorsRequestBody
+    path: _UpdateSensorRequestPath
+    query: _UpdateSensorRequestQuery
+    body: _UpdateSensorRequestBody
 
 
-class GetMeasurementsRequest(_Request):
+class ReadMeasurementsRequest(_Request):
     method: str
     url: object
     headers: dict
-    path: _GetMeasurementsRequestPath
-    query: _GetMeasurementsRequestQuery
-    body: _GetMeasurementsRequestBody
+    path: _ReadMeasurementsRequestPath
+    query: _ReadMeasurementsRequestQuery
+    body: _ReadMeasurementsRequestBody
 
 
-class GetLogMessagesAggregationRequest(_Request):
+class ReadLogMessageAggregatesRequest(_Request):
     method: str
     url: object
     headers: dict
-    path: _GetLogMessagesAggregationRequestPath
-    query: _GetLogMessagesAggregationRequestQuery
-    body: _GetLogMessagesAggregationRequestBody
+    path: _ReadLogMessageAggregatesRequestPath
+    query: _ReadLogMessageAggregatesRequestQuery
+    body: _ReadLogMessageAggregatesRequestBody
 
 
 class StreamSensorsRequest(_Request):

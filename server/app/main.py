@@ -16,7 +16,7 @@ import app.validation as validation
 from app.logs import logger
 
 
-async def get_status(request):
+async def read_status(request):
     """Return some status information about the server."""
     return starlette.responses.JSONResponse(
         status_code=200,
@@ -70,12 +70,13 @@ async def create_user(request):
     )
 
 
-@validation.validate(schema=validation.PostSensorsRequest)
-async def post_sensors(request):
+@validation.validate(schema=validation.CreateSensorRequest)
+async def create_sensor(request):
     """Create a new sensor and configuration."""
     user_identifier = await auth.authenticate(request, database_client)
     try:
         # Check permissions
+        # TODO merge with read-session.sql ? -> join, but only one request
         query, arguments = database.build(
             template="read-permission.sql",
             template_arguments={},
@@ -114,7 +115,7 @@ async def post_sensors(request):
             )
             result = await database_client.fetch(query, *arguments)
             revision = database.dictify(result)[0]["revision"]
-        # Send MQTT message
+        # Send MQTT message with configuration
         await mqtt_client.publish_configuration(
             sensor_identifier=sensor_identifier,
             revision=revision,
@@ -134,9 +135,12 @@ async def post_sensors(request):
     return starlette.responses.JSONResponse(status_code=201, content=None)
 
 
-@validation.validate(schema=validation.PutSensorsRequest)
-async def put_sensors(request):
-    """Update an existing sensor's configuration."""
+@validation.validate(schema=validation.UpdateSensorRequest)
+async def update_sensor(request):
+    """Update an existing sensor's configuration.
+
+    TODO split in two, update sensor and update configuration
+    """
     try:
         async with database_client.transaction():
             # Update sensor
@@ -161,7 +165,7 @@ async def put_sensors(request):
             )
             result = await database_client.fetch(query, *arguments)
             revision = database.dictify(result)[0]["revision"]
-        # Send MQTT message
+        # Send MQTT message with configuration
         await mqtt_client.publish_configuration(
             sensor_identifier=sensor_identifier,
             revision=revision,
@@ -177,13 +181,13 @@ async def put_sensors(request):
     return starlette.responses.JSONResponse(status_code=204, content=None)
 
 
-async def get_sensors(request):
+async def read_sensors(request):
     """Return configurations of selected sensors."""
     raise errors.NotImplementedError()
 
 
-@validation.validate(schema=validation.GetMeasurementsRequest)
-async def get_measurements(request):
+@validation.validate(schema=validation.ReadMeasurementsRequest)
+async def read_measurements(request):
     """Return pages of measurements sorted descending by creation timestamp.
 
     - maybe we can choose based on some header, if we page or export the data
@@ -214,8 +218,8 @@ async def get_measurements(request):
     )
 
 
-@validation.validate(schema=validation.GetLogMessagesAggregationRequest)
-async def get_log_messages_aggregation(request):
+@validation.validate(schema=validation.ReadLogMessageAggregatesRequest)
+async def read_log_message_aggregates(request):
     """Return aggregation of sensor log messages."""
     try:
         query, arguments = database.build(
@@ -362,7 +366,7 @@ app = starlette.applications.Starlette(
     routes=[
         starlette.routing.Route(
             path="/status",
-            endpoint=get_status,
+            endpoint=read_status,
             methods=["GET"],
         ),
         starlette.routing.Route(
@@ -372,27 +376,27 @@ app = starlette.applications.Starlette(
         ),
         starlette.routing.Route(
             path="/sensors",
-            endpoint=post_sensors,
+            endpoint=create_sensor,
             methods=["POST"],
         ),
         starlette.routing.Route(
             path="/sensors/{sensor_name}",
-            endpoint=put_sensors,
+            endpoint=update_sensor,
             methods=["PUT"],
         ),
         starlette.routing.Route(
             path="/sensors",
-            endpoint=get_sensors,
+            endpoint=read_sensors,
             methods=["GET"],
         ),
         starlette.routing.Route(
             path="/sensors/{sensor_identifier}/measurements",
-            endpoint=get_measurements,
+            endpoint=read_measurements,
             methods=["GET"],
         ),
         starlette.routing.Route(
-            path="/sensors/{sensor_identifier}/log-messages/aggregation",
-            endpoint=get_log_messages_aggregation,
+            path="/sensors/{sensor_identifier}/log-messages/aggregates",
+            endpoint=read_log_message_aggregates,
             methods=["GET"],
         ),
         starlette.routing.Route(
