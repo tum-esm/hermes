@@ -78,11 +78,11 @@ class _PutSensorsRequestPath(types._BaseModel):
 
 
 class _GetMeasurementsRequestPath(types._BaseModel):
-    sensor_identifier: types.SensorIdentifier
+    sensor_identifier: types.Identifier
 
 
 class _GetLogMessagesAggregationRequestPath(types._BaseModel):
-    sensor_identifier: types.SensorIdentifier
+    sensor_identifier: types.Identifier
 
 
 class _StreamSensorsRequestPath(types._BaseModel):
@@ -156,6 +156,7 @@ class _CreateUserRequestBody(types._BaseModel):
 
 class _PostSensorsRequestBody(types._BaseModel):
     sensor_name: types.Name
+    network_identifier: types.Identifier
     configuration: types.Json
 
 

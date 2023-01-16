@@ -20,21 +20,17 @@ class _BaseModel(pydantic.BaseModel):
 ########################################################################################
 
 Name = pydantic.constr(strict=True, regex=constants.Pattern.NAME.value)
-SensorIdentifier = pydantic.constr(
-    strict=True, regex=constants.Pattern.SENSOR_IDENTIFIER.value
-)
-ValueIdentifier = pydantic.constr(
-    strict=True, regex=constants.Pattern.VALUE_IDENTIFIER.value
-)
+Identifier = pydantic.constr(strict=True, regex=constants.Pattern.IDENTIFIER.value)
 Password = pydantic.constr(strict=True, min_length=8, max_length=constants.Limit.MEDIUM)
 
 # TODO Make strict when pydantic v2 is released (used for path and query parameters)
 Revision = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
 PositiveInteger = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
 
+Key = pydantic.constr(strict=True, regex=constants.Pattern.KEY.value)
 # TODO Validate the values more thoroughly for min and max limits/lengths (#fields)
 JsonValue = int | float | str | bool | None
-Json = dict[ValueIdentifier, JsonValue]
+Json = dict[JsonKey, JsonValue]
 
 # TODO what are the real min/max values here? How do we handle overflow?
 # During validation somehow, or by handling the database error?
