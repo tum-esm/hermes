@@ -51,6 +51,46 @@ class HardwareConfig(BaseModel):
 # -----------------------------------------------------------------------------
 
 
+class MeasurementTimingConfig(BaseModel):
+    seconds_per_measurement_interval: float
+    seconds_per_measurement: float
+
+    # validators
+    _val_seconds_per_measurement_interval = validator(
+        "seconds_per_measurement_interval", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=10, maximum=7200),
+    )
+    _val_seconds_per_measurement = validator(
+        "seconds_per_measurement", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=1, maximum=300),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
+class MeasurementPumpSpeedConfig(BaseModel):
+    litres_per_minute_on_valve_switching: float
+    litres_per_minute_on_measurements: float
+
+    # validators
+    _val_litres_per_minute_on_valve_switching = validator(
+        "litres_per_minute_on_valve_switching", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=0.001, maximum=30),
+    )
+    _val_litres_per_minute_on_measurements = validator(
+        "litres_per_minute_on_measurements", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=0.001, maximum=30),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
 class MeasurementAirInletConfig(BaseModel):
     valve_number: Literal[1, 2, 3, 4]
     direction: int
@@ -72,21 +112,9 @@ class MeasurementAirInletConfig(BaseModel):
 
 
 class MeasurementConfig(BaseModel):
-    minutes_per_measurement_interval: float
-    seconds_between_measurements: float
+    timing: MeasurementTimingConfig
+    pump_speed: MeasurementPumpSpeedConfig
     air_inlets: list[MeasurementAirInletConfig]
-
-    # validators
-    _val_minutes_per_measurement_interval = validator(
-        "minutes_per_measurement_interval", pre=True, allow_reuse=True
-    )(
-        validate_float(minimum=1, maximum=100),
-    )
-    _val_seconds_between_measurements = validator(
-        "seconds_between_measurements", pre=True, allow_reuse=True
-    )(
-        validate_float(minimum=1, maximum=100),
-    )
 
     class Config:
         extra = "forbid"

@@ -14,8 +14,14 @@
         "pumped_litres_per_round": 0.003
     },
     "measurement": {
-        "minutes_per_measurement_interval": 2,
-        "seconds_between_measurements": 6,
+        "timing": {
+            "seconds_per_measurement_interval": 120,
+            "seconds_per_measurement": 6
+        },
+        "pump_speed": {
+            "litres_per_minute_on_valve_switching": 8,
+            "litres_per_minute_on_measurements": 4
+        },
         "air_inlets": [
             { "valve_number": 1, "direction": 300, "tube_length": 50 },
             { "valve_number": 2, "direction": 50, "tube_length": 50 }
