@@ -27,16 +27,6 @@ void setup(void) {
 } 
 
 void loop(void){ 
-  if(sensors.getDS18Count() == 0){
-    Serial.println("no temperature sensor");
-    digitalWrite(HEATER,heater_is_on ? HIGH : LOW);
-    digitalWrite(FAN,fan_is_on ? HIGH : LOW);
-  }
-
-  // there can be more than one temperature sensor on the databus
-  sensors.requestTemperatures(); 
-  measured_temperature = sensors.getTempCByIndex(0);
-
   // print out all params for validation by the raspi
   Serial.print("version: ");
   Serial.print(CODEBASE_VERSION);
@@ -45,19 +35,31 @@ void loop(void){
   Serial.print("; allowed deviation: ");
   Serial.print(ALLOWED_TEMPERATURE_DEVIATION);
   Serial.print("; measured: ");
-  Serial.print(measured_temperature);
 
-  if(measured_temperature < (TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION)){
-    heater_is_on = true;
-  }
-  if(measured_temperature > TARGET_TEMPERATURE){
+  if(sensors.getDS18Count() == 0){
+    Serial.print("no temperature sensor detected");
     heater_is_on = false;
-  }
-  if(measured_temperature > (TARGET_TEMPERATURE + ALLOWED_TEMPERATURE_DEVIATION)){
-    fan_is_on = true;
-  }
-  if(measured_temperature < TARGET_TEMPERATURE){
     fan_is_on = false;
+  
+  } else {
+    Serial.print(measured_temperature);
+
+    // there can be more than one temperature sensor on the databus
+    sensors.requestTemperatures(); 
+    measured_temperature = sensors.getTempCByIndex(0);
+
+    if(measured_temperature < (TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION)){
+      heater_is_on = true;
+    }
+    if(measured_temperature > TARGET_TEMPERATURE){
+      heater_is_on = false;
+    }
+    if(measured_temperature > (TARGET_TEMPERATURE + ALLOWED_TEMPERATURE_DEVIATION)){
+      fan_is_on = true;
+    }
+    if(measured_temperature < TARGET_TEMPERATURE){
+      fan_is_on = false;
+    }
   }
 
   Serial.print("; heater: ");
@@ -66,6 +68,8 @@ void loop(void){
   Serial.print(fan_is_on ? "on" : "off");
   Serial.println(";");
 
+  // the relaise are currently reversed (HIGH = no current)
+  // TODO: will this be switched?
   digitalWrite(HEATER,heater_is_on ? LOW : HIGH);
   digitalWrite(FAN,fan_is_on ? LOW : HIGH);
 
