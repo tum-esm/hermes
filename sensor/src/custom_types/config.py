@@ -15,9 +15,24 @@ class GeneralConfig(BaseModel):
         extra = "forbid"
 
 
+class HardwareConfig(BaseModel):
+    pumped_litres_per_round: float
+
+    # validators
+    _val_pumped_litres_per_round = validator(
+        "pumped_litres_per_round", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=0.0001, maximum=1),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
 class AirInletConfig(BaseModel):
     number: Literal[1, 2, 3, 4]
     direction: int
+    pipe_length: float
 
     # validators
     _val_number = validator("number", pre=True, allow_reuse=True)(
@@ -26,13 +41,9 @@ class AirInletConfig(BaseModel):
     _val_direction = validator("direction", pre=True, allow_reuse=True)(
         validate_int(minimum=0, maximum=359),
     )
-
-    class Config:
-        extra = "forbid"
-
-
-class ValveConfig(BaseModel):
-    air_inlets: list[AirInletConfig]
+    _val_pipe_length = validator("pipe_length", pre=True, allow_reuse=True)(
+        validate_float(minimum=1, maximum=100),
+    )
 
     class Config:
         extra = "forbid"
@@ -66,7 +77,8 @@ class Config(BaseModel):
     version: Literal["0.1.0"]
     revision: int
     general: GeneralConfig
-    valves: ValveConfig
+    hardware: HardwareConfig
+    air_inlets: list[AirInletConfig]
     heated_enclosure: HeatedEnclosureConfig
 
     # validators
