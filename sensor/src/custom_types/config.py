@@ -42,12 +42,18 @@ class GeneralConfig(BaseModel):
 
 class HardwareConfig(BaseModel):
     pumped_litres_per_round: float
+    inner_tube_diameter_millimiters: float
 
     # validators
     _val_pumped_litres_per_round = validator(
         "pumped_litres_per_round", pre=True, allow_reuse=True
     )(
         validate_float(minimum=0.0001, maximum=1),
+    )
+    _val_inner_tube_diameter_millimiters = validator(
+        "inner_tube_diameter_millimiters", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=1, maximum=20),
     )
 
     class Config:

@@ -1,4 +1,4 @@
-from .config import Config
+from .config import Config, MeasurementAirInletConfig
 from .sensor_answers import (
     CO2SensorData,
     MainboardSensorData,

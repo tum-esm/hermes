@@ -11,7 +11,8 @@
         }
     },
     "hardware": {
-        "pumped_litres_per_round": 0.003
+        "pumped_litres_per_round": 0.003,
+        "inner_tube_diameter_millimiters": 4
     },
     "measurement": {
         "timing": {

@@ -22,7 +22,7 @@ class MeasurementProcedure:
         # valve switching
         self.wind_sensor_interface = hardware_interfaces.WindSensorInterface(config)
         self.valve_interfaces = hardware_interfaces.ValveInterface(config)
-        self.active_valve_number: Optional[Literal[1, 2, 3, 4]] = None
+        self.active_air_inlet: Optional[custom_types.MeasurementAirInletConfig] = None
 
         # pump (runs continuously)
         self.pump_interface = hardware_interfaces.PumpInterface(config)
@@ -37,26 +37,38 @@ class MeasurementProcedure:
         self.co2_sensor_interface = hardware_interfaces.CO2SensorInterface(config)
         self.last_measurement_time: float = 0
 
-    def _switch_to_valve_number(self, new_valve_number: Literal[1, 2, 3, 4]) -> None:
+    def _switch_to_air_inlet(
+        self, new_air_inlet: custom_types.MeasurementAirInletConfig
+    ) -> None:
         """
         1. switches to a different valve
         2. pumps 50 meters worth of air (or some other pipe length at the new valve)
         """
 
-        self.valve_interfaces.set_active_input(new_valve_number)
+        self.valve_interfaces.set_active_input(new_air_inlet.valve_number)
         self.pump_interface.set_desired_pump_rps(
             self.config.measurement.pump_speed.litres_per_minute_on_valve_switching
             / (60 * self.config.hardware.pumped_litres_per_round)
         )
 
-        time.sleep(10)
-        # TODO: https://github.com/tum-esm/insert-name-here/issues/35
+        # pump length
+        tube_volume_in_litres = (
+            3.141592
+            * pow(self.config.hardware.inner_tube_diameter_millimiters * 0.5 * 0.01, 2)
+            * new_air_inlet.tube_length
+            * 10
+        )
+        required_pumping_time = tube_volume_in_litres / (
+            self.config.measurement.pump_speed.litres_per_minute_on_valve_switching / 60
+        )
+        self.logger.debug(f"pumping {required_pumping_time} second(s)")
+        time.sleep(required_pumping_time)
 
         self.pump_interface.set_desired_pump_rps(
             self.config.measurement.pump_speed.litres_per_minute_on_measurements
             / (60 * self.config.hardware.pumped_litres_per_round)
         )
-        self.active_valve_number = new_valve_number
+        self.active_air_inlet = new_air_inlet
 
     def _get_current_wind_data(self) -> custom_types.WindSensorData:
         """
@@ -87,7 +99,7 @@ class MeasurementProcedure:
         wind_data = self._get_current_wind_data()
 
         # determine new valve
-        new_valve = min(
+        new_air_inlet = min(
             self.config.measurement.air_inlets,
             key=lambda x: utils.math.distance_between_angles(
                 x.direction, wind_data.direction_avg
@@ -95,21 +107,19 @@ class MeasurementProcedure:
         )
 
         # perform switch
-        if self.active_valve_number is None:
-            self.logger.info(f"enabeling air inlet {new_valve}")
-            self._switch_to_valve_number(new_valve.valve_number)
+        if self.active_air_inlet is None:
+            self.logger.info(f"enabeling air inlet {new_air_inlet.dict()}")
+            self._switch_to_air_inlet(new_air_inlet)
         else:
-            if self.active_valve_number != new_valve.valve_number:
-                if wind_data.speed_avg < 0.2:
-                    self.logger.debug(
-                        f"wind speed very low ({wind_data.speed_avg} m/s)"
-                    )
-                    self.logger.info(f"staying at air inlet {new_valve}")
-                else:
-                    self.logger.info(f"switching to air inlet {new_valve}")
-                    self._switch_to_valve_number(new_valve.valve_number)
+            if wind_data.speed_avg < 0.2:
+                self.logger.debug(f"wind speed very low ({wind_data.speed_avg} m/s)")
+                self.logger.info(f"staying at air inlet {self.active_air_inlet.dict()}")
             else:
-                self.logger.info(f"staying at air inlet {new_valve}")
+                if self.active_air_inlet.valve_number != new_air_inlet.valve_number:
+                    self.logger.info(f"switching to air inlet {new_air_inlet.dict()}")
+                    self._switch_to_air_inlet(new_air_inlet)
+                else:
+                    self.logger.info(f"staying at air inlet {new_air_inlet.dict()}")
 
     def _update_input_air_calibration(self) -> None:
         """
