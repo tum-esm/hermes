@@ -1,6 +1,12 @@
 from typing import Literal
 from pydantic import BaseModel, validator
-from .validators import validate_int, validate_str, validate_float, validate_bool
+from .validators import (
+    validate_int,
+    validate_str,
+    validate_float,
+    validate_bool,
+    validate_list,
+)
 
 
 class ActiveComponentsConfig(BaseModel):
@@ -116,6 +122,10 @@ class MeasurementConfig(BaseModel):
     pump_speed: MeasurementPumpSpeedConfig
     air_inlets: list[MeasurementAirInletConfig]
 
+    _val_air_inlets = validator("air_inlets", pre=True, allow_reuse=True)(
+        validate_list(min_len=1),
+    )
+
     class Config:
         extra = "forbid"
 
@@ -150,6 +160,13 @@ class CalibrationConfig(BaseModel):
     )
     _val_litres_per_minute = validator("litres_per_minute", pre=True, allow_reuse=True)(
         validate_float(minimum=0, maximum=30),
+    )
+
+    # we have only implemented multi-point calibration for now
+    # that is why min_len=2, but single-point calibration is
+    # easy to implement
+    _val_gases = validator("gases", pre=True, allow_reuse=True)(
+        validate_list(min_len=2),
     )
 
     class Config:

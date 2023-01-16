@@ -10,6 +10,9 @@ sys.path.append(PROJECT_DIR)
 from src.custom_types import Config
 
 
+MAX_PUMP_RPS = 70
+
+
 @pytest.mark.integration
 def test_config() -> None:
     """checks whether the used config.json makes sense:
@@ -22,16 +25,25 @@ def test_config() -> None:
         config = Config(**json.load(f))
 
     # check allowed pump speed
-    max_litres_per_minute = 70 * config.hardware.pumped_litres_per_round * 60
+    max_litres_per_minute = MAX_PUMP_RPS * config.hardware.pumped_litres_per_round * 60
     assert (
         config.measurement.pump_speed.litres_per_minute_on_measurements
         <= max_litres_per_minute
+    ), (
+        "cconfig.measurement.pump_speed.litres_per_minute_on_measurements is"
+        + f" above the maximum of {max_litres_per_minute} litres per minute"
     )
     assert (
         config.measurement.pump_speed.litres_per_minute_on_valve_switching
         <= max_litres_per_minute
+    ), (
+        "config.measurement.pump_speed.litres_per_minute_on_valve_switching is"
+        + f" above the maximum of {max_litres_per_minute} litres per minute"
     )
-    assert config.calibration.litres_per_minute <= max_litres_per_minute
+    assert config.calibration.litres_per_minute <= max_litres_per_minute, (
+        "config.calibration.litres_per_minute is above the maximum "
+        + f"of {max_litres_per_minute} litres per minute"
+    )
 
     # check valve numbers
     valve_numbers = [ai.valve_number for ai in config.measurement.air_inlets] + [
@@ -41,3 +53,19 @@ def test_config() -> None:
     assert len(valve_numbers) == len(
         unique_valve_numbers
     ), "multiple things use the same valve number"
+
+    # check air inlet directions
+    air_inlet_directions = [ai.direction for ai in config.measurement.air_inlets]
+    unique_air_inlet_directions = list(set(air_inlet_directions))
+    assert len(air_inlet_directions) == len(
+        unique_air_inlet_directions
+    ), "multiple air inlets use the same direction"
+
+    # check calibration gas concentrations
+    calibration_gas_concentrations = [
+        cg.concentration for cg in config.calibration.gases
+    ]
+    unique_calibration_gas_concentrations = list(set(calibration_gas_concentrations))
+    assert len(calibration_gas_concentrations) == len(
+        unique_calibration_gas_concentrations
+    ), "multiple calibration gases use the same concentration"
