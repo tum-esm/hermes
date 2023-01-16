@@ -10,7 +10,7 @@ from ..pytest_fixtures import mqtt_client_environment, mqtt_sending_loop, log_fi
 from ..pytest_utils import expect_log_lines, wait_for_condition
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
-LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
+CONFIG_TEMPLATE_PATH = join(PROJECT_DIR, "config", "config.template.json")
 sys.path.append(PROJECT_DIR)
 
 from src import utils, custom_types
@@ -37,24 +37,9 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     assert active_mqtt_message_queue.max_identifier == 0
     assert len(active_mqtt_message_queue.messages) == 0
 
-    config = custom_types.Config(
-        **{
-            "version": "0.1.0",
-            "revision": 17,
-            "general": {"station_name": "pytest-dummy-config"},
-            "valves": {
-                "air_inlets": [
-                    {"number": 1, "direction": 300},
-                    {"number": 2, "direction": 50},
-                ]
-            },
-            "heated_enclosure": {
-                "device_path": "/dev/cu.usbserial-AB0O2OIH",
-                "target_temperature": 25,
-                "allowed_deviation": 3,
-            },
-        }
-    )
+    with open(CONFIG_TEMPLATE_PATH) as f:
+        config = custom_types.Config(**json.load(f))
+        config.revision = 17
 
     # enqueue dummy message
     dummy_measurement_message = custom_types.MQTTMeasurementMessageBody(

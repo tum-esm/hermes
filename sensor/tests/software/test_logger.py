@@ -9,7 +9,7 @@ from os.path import dirname, abspath, join
 import sys
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
-LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
+CONFIG_TEMPLATE_PATH = join(PROJECT_DIR, "config", "config.template.json")
 ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
 sys.path.append(PROJECT_DIR)
 
@@ -20,24 +20,9 @@ from src import utils, custom_types
 
 @pytest.mark.ci
 def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
-    config = custom_types.Config(
-        **{
-            "version": "0.1.0",
-            "revision": 17,
-            "general": {"station_name": "pytest-dummy-config"},
-            "valves": {
-                "air_inlets": [
-                    {"number": 1, "direction": 300},
-                    {"number": 2, "direction": 50},
-                ]
-            },
-            "heated_enclosure": {
-                "device_path": "/dev/cu.usbserial-AB0O2OIH",
-                "target_temperature": 25,
-                "allowed_deviation": 3,
-            },
-        }
-    )
+    with open(CONFIG_TEMPLATE_PATH) as f:
+        config = custom_types.Config(**json.load(f))
+        config.revision = 17
 
     generated_log_lines = [
         "pytests - DEBUG - some message a",

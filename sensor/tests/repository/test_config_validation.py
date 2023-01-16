@@ -48,11 +48,9 @@ def test_config_validation() -> None:
         {"version": "0.2.0"},
         {"general": {"station_name", 30}},
         {
-            "valves": {
-                "air_inlets": [
-                    {"number": 1, "direction": 300, "additional key": 30},
-                ]
-            }
+            "air_inlets": [
+                {"number": 1, "direction": 300},  # missing key "pipe_length"
+            ]
         },
         {
             "valves": {
@@ -62,11 +60,13 @@ def test_config_validation() -> None:
             }
         },
         {
-            "valves": {
-                "air_inlets": [
-                    {"number": "1", "direction": 300},
-                ]
-            }
+            "air_inlets": [
+                {
+                    "number": "1",
+                    "direction": 300,
+                    "pipe_length": 50,
+                },  # invalid type of "number"
+            ]
         },
         {
             "heated_enclosure": {
