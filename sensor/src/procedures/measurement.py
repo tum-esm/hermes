@@ -26,7 +26,10 @@ class MeasurementProcedure:
 
         # pump (runs continuously)
         self.pump_interface = hardware_interfaces.PumpInterface(config)
-        self.pump_interface.set_desired_pump_rps(20)
+        self.pump_interface.set_desired_pump_rps(
+            self.config.measurement.pump_speed.litres_per_minute_on_measurements
+            / (60 * self.config.hardware.pumped_litres_per_round)
+        )
         time.sleep(1)
 
         # measurements
@@ -41,12 +44,18 @@ class MeasurementProcedure:
         """
 
         self.valve_interfaces.set_active_input(new_valve_number)
-        self.pump_interface.set_desired_pump_rps(40)
+        self.pump_interface.set_desired_pump_rps(
+            self.config.measurement.pump_speed.litres_per_minute_on_valve_switching
+            / (60 * self.config.hardware.pumped_litres_per_round)
+        )
 
         time.sleep(10)
         # TODO: https://github.com/tum-esm/insert-name-here/issues/35
 
-        self.pump_interface.set_desired_pump_rps(20)
+        self.pump_interface.set_desired_pump_rps(
+            self.config.measurement.pump_speed.litres_per_minute_on_measurements
+            / (60 * self.config.hardware.pumped_litres_per_round)
+        )
         self.active_valve_number = new_valve_number
 
     def _get_current_wind_data(self) -> custom_types.WindSensorData:
@@ -141,12 +150,21 @@ class MeasurementProcedure:
         # do regular measurements for about 2 minutes
         while True:
             now = time.time()
-            if now - start_time > 120:
+            if (
+                now - start_time
+                > self.config.measurement.timing.seconds_per_measurement_interval
+            ):
                 break
 
             time_since_last_measurement = now - self.last_measurement_time
-            if time_since_last_measurement < 5:
-                time.sleep(5 - time_since_last_measurement)
+            if (
+                time_since_last_measurement
+                < self.config.measurement.timing.seconds_per_measurement
+            ):
+                time.sleep(
+                    self.config.measurement.timing.seconds_per_measurement
+                    - time_since_last_measurement
+                )
             self.last_measurement_time = now
 
             current_sensor_data = self.co2_sensor_interface.get_current_concentration()
