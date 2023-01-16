@@ -15,6 +15,9 @@ class GeneralConfig(BaseModel):
         extra = "forbid"
 
 
+# -----------------------------------------------------------------------------
+
+
 class HardwareConfig(BaseModel):
     pumped_litres_per_round: float
 
@@ -27,6 +30,9 @@ class HardwareConfig(BaseModel):
 
     class Config:
         extra = "forbid"
+
+
+# -----------------------------------------------------------------------------
 
 
 class AirInletConfig(BaseModel):
@@ -47,6 +53,45 @@ class AirInletConfig(BaseModel):
 
     class Config:
         extra = "forbid"
+
+
+# -----------------------------------------------------------------------------
+
+
+class CalibrationGasConfig(BaseModel):
+    valve_number: Literal[1, 2, 3, 4]
+    concentration: float
+
+    # validators
+    _val_valve_number = validator("valve_number", pre=True, allow_reuse=True)(
+        validate_int(allowed=[1, 2, 3, 4]),
+    )
+    _val_concentration = validator("concentration", pre=True, allow_reuse=True)(
+        validate_float(minimum=0, maximum=10000),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
+class CalibrationConfig(BaseModel):
+    flushing_minutes: float
+    litres_per_minute: float
+    gases: list[CalibrationGasConfig]
+
+    # validators
+    _val_flushing_minutes = validator("flushing_minutes", pre=True, allow_reuse=True)(
+        validate_int(minimum=0, maximum=60),
+    )
+    _val_litres_per_minute = validator("litres_per_minute", pre=True, allow_reuse=True)(
+        validate_float(minimum=0, maximum=30),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
+# -----------------------------------------------------------------------------
 
 
 class HeatedEnclosureConfig(BaseModel):
@@ -71,6 +116,9 @@ class HeatedEnclosureConfig(BaseModel):
         extra = "forbid"
 
 
+# -----------------------------------------------------------------------------
+
+
 class Config(BaseModel):
     """The config.json for each sensor"""
 
@@ -79,6 +127,7 @@ class Config(BaseModel):
     general: GeneralConfig
     hardware: HardwareConfig
     air_inlets: list[AirInletConfig]
+    calibration: CalibrationConfig
     heated_enclosure: HeatedEnclosureConfig
 
     # validators

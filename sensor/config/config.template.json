@@ -11,6 +11,14 @@
         { "number": 1, "direction": 300, "pipe_length": 50 },
         { "number": 2, "direction": 50, "pipe_length": 50 }
     ],
+    "calibration": {
+        "flushing_minutes": 5,
+        "litres_per_minute": 0.5,
+        "gases": [
+            { "valve_number": 3, "concentration": 400 },
+            { "valve_number": 4, "concentration": 800 }
+        ]
+    },
     "heated_enclosure": {
         "device_path": "/dev/cu.usbserial-AB0O2OIH",
         "target_temperature": 40,
