@@ -27,16 +27,18 @@ CREATE TABLE users (
 
 CREATE TABLE networks (
     network_identifier UUID PRIMARY KEY,
-    network_name TEXT UNIQUE NOT NULL,
+    network_name TEXT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL
 );
 
 
 CREATE TABLE sensors (
     sensor_identifier UUID PRIMARY KEY,
-    sensor_name TEXT UNIQUE NOT NULL,
-    -- network_identifier UUID NOT NULL REFERENCES networks (network_identifier) ON DELETE CASCADE,
+    sensor_name TEXT NOT NULL,
+    network_identifier UUID NOT NULL REFERENCES networks (network_identifier) ON DELETE CASCADE,
     creation_timestamp TIMESTAMPTZ NOT NULL
+
+    UNIQUE (sensor_name, network_identifier)
 );
 
 
@@ -44,7 +46,7 @@ CREATE TABLE permissions (
     user_identifier UUID NOT NULL REFERENCES users (user_identifier) ON DELETE CASCADE,
     network_identifier UUID NOT NULL REFERENCES networks (network_identifier) ON DELETE CASCADE,
     creation_timestamp TIMESTAMPTZ NOT NULL,
-    -- Add permission levels here (e.g. admin, read-only, etc.)?
+    -- Add permission levels here (e.g. admin, user, read-only)
 
     PRIMARY KEY (user_identifier, network_identifier)
 );
