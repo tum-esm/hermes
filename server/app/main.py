@@ -75,12 +75,31 @@ async def post_sensors(request):
     """Create a new sensor and configuration."""
     user_identifier = await auth.authenticate(request, database_client)
     try:
+        # Check permissions
+        query, arguments = database.build(
+            template="read-permission.sql",
+            template_arguments={},
+            query_arguments={
+                "user_identifier": user_identifier,
+                "network_identifier": request.body.network_identifier,
+            },
+        )
+        result = await database_client.fetch(query, *arguments)
+        if not database.dictify(result):
+            # TODO if user is read-only, return 403 -> "Insufficient authorization"
+            logger.warning(
+                f"{request.method} {request.url.path} -- Missing authorization"
+            )
+            raise errors.NotFoundError()
         async with database_client.transaction():
             # Create new sensor
             query, arguments = database.build(
                 template="create-sensor.sql",
                 template_arguments={},
-                query_arguments={"sensor_name": request.body.sensor_name},
+                query_arguments={
+                    "sensor_name": request.body.sensor_name,
+                    "network_identifier": request.body.network_identifier,
+                },
             )
             result = await database_client.fetch(query, *arguments)
             sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
@@ -101,6 +120,9 @@ async def post_sensors(request):
             revision=revision,
             configuration=request.body.configuration,
         )
+    except asyncpg.ForeignKeyViolationError:
+        logger.warning(f"{request.method} {request.url.path} -- Network not found")
+        raise errors.NotFoundError()
     except asyncpg.exceptions.UniqueViolationError:
         logger.warning(f"{request.method} {request.url.path} -- Sensor already exists")
         raise errors.ConflictError()
