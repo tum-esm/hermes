@@ -6,10 +6,11 @@ import gpiozero
 
 class ValveInterface:
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger("valves")
-        self.config = config
-        self.pin_factory = utils.gpio.get_pin_factory()
+        self.logger, self.config = utils.Logger("valves"), config
+        self.logger.info("Starting initialization")
 
+        # set up valve control pin connections
+        self.pin_factory = utils.gpio.get_pin_factory()
         self.valves: dict[Literal[1, 2, 3, 4], gpiozero.OutputDevice] = {
             1: gpiozero.OutputDevice(
                 Constants.Valves.pin_1_out,
@@ -37,6 +38,8 @@ class ValveInterface:
             ),
         }
         self.set_active_input(1)
+
+        self.logger.info("Finished initialization")
 
     def set_active_input(self, no: Literal[1, 2, 3, 4]) -> None:
         for number, device in self.valves.items():

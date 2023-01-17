@@ -13,8 +13,10 @@ class PumpInterface:
         by more than 15% from the desired rps"""
 
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger("pump")
-        self.config = config
+        self.logger, self.config = utils.Logger("pump"), config
+        self.logger.info("Starting initialization")
+
+        # pin factory required for hardware PWM
         self.pin_factory = utils.gpio.get_pin_factory()
 
         # pins for setting desired pump speed
@@ -50,6 +52,8 @@ class PumpInterface:
         )
         self.rps_monitoring_process.start()
 
+        self.logger.info("Finished initialization")
+
     def set_desired_pump_rps(self, rps: float) -> None:
         """set rps between 0 and 70"""
         assert 0 <= rps <= 70, f"rps have to be between 0 and 70 (passed {rps})"
@@ -83,7 +87,7 @@ class PumpInterface:
         rps_monitoring_exceptions: queue.Queue[str],
     ) -> None:
         """monitors the rps of the pump interface. this function
-        is blocking, hence it is called in a thread"""
+        is blocking, hence it is started in a thread"""
 
         logger = utils.Logger(origin="pump-rps-monitoring")
         current_rps_update_time = time.time()
