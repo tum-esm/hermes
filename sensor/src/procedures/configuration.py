@@ -47,7 +47,7 @@ class ConfigurationProcedure:
     """runs when a config change has been requested"""
 
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(origin="configuration")
+        self.logger = utils.Logger(origin="configuration-procedure")
         self.config = config
 
     def run(self, mqtt_request: custom_types.MQTTConfigurationRequest) -> None:

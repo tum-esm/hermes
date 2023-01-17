@@ -41,8 +41,19 @@ def run() -> None:
         # TODO: fetch newest config from pinned topic messages
         #       and perform configuration procedure
 
+    # a single hardware interface that is only used by one procedure at a time
     hardware_interface = hardware.HardwareInterface(config)
+
+    # logging system statistics and reporting hardware/system errors
     system_check_prodecure = procedures.SystemCheckProcedure(config, hardware_interface)
+
+    # updating the configuration/the software version on request
+    configuration_prodecure = procedures.ConfigurationProcedure(config)
+
+    # using the two reference gas bottles to calibrate the CO2 sensor
+    calibration_prodecure = procedures.CalibrationProcedure(config, hardware_interface)
+
+    # doing regular measurements
     measurement_prodecure = procedures.MeasurementProcedure(config, hardware_interface)
 
     backoff_time_bucket_index = 0
@@ -58,7 +69,6 @@ def run() -> None:
             # TODO: read mqtt messages
             # TODO: optionally call configuration routine -> triggers a restart if config is accepted
             # TODO: optionally call calibration routing
-            # TODO: run teardown of other procedures before configuration/calibration
 
             # if messages are empty, run regular measurements
             logger.info("running measurements")
