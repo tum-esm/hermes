@@ -7,14 +7,18 @@ from src import utils, custom_types
 
 class MainboardSensorInterface:
     def __init__(self, config: custom_types.Config) -> None:
+        self.logger, self.config = utils.Logger("mainboard-sensor"), config
+        self.logger.info("Starting initialization")
+
+        # set up connection to BME280 sensor
         self.i2c_device = smbus2.SMBus(1)
         self.bus = smbus2.SMBus(1)
         self.calibration_params = bme280.load_calibration_params(
             self.bus,
             utils.Constants.MainboardSensor.i2c_address,
         )
-        self.logger = utils.Logger("mainboard-sensor")
-        self.config = config
+
+        self.logger.info("Finished initialization")
 
     def _get_cpu_temperature(self) -> Optional[float]:
         s = os.popen("vcgencmd measure_temp").readline()

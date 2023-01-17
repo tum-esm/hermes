@@ -25,22 +25,25 @@ class HeatedEnclosureInterface:
         or when the code could not be uploaded to the device"""
 
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(origin="heated-enclosure")
-        self.config = config
+        self.logger, self.config = utils.Logger(origin="heated-enclosure"), config
+        self.logger.info("Starting initialization")
 
-        self.logger.info("Compiling firmware of arduino")
+        # flash firmware onto arduino
+        self.logger.debug("Compiling firmware of arduino")
         HeatedEnclosureInterface.compile_firmware(config)
-        self.logger.info("Compiling firmware of arduino")
+        self.logger.debug("Uploading firmware of arduino")
         HeatedEnclosureInterface.upload_firmware(config)
-        self.logger.info("Arduino firmware successfully updated")
+        self.logger.debug("Arduino firmware is now up to date")
 
+        # open serial data connection to process arduino logs
         time.sleep(0.5)
-
         self.serial_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
             port=utils.Constants.WindSensor.serial_port,
             baudrate=9600,
         )
         self.data: Optional[custom_types.HeatedEnclosureData] = None
+
+        self.logger.info("Finished initialization")
 
     def _update_data(self) -> None:
         new_messages = self.serial_interface.get_messages()
@@ -87,6 +90,7 @@ class HeatedEnclosureInterface:
 
     @staticmethod
     def compile_firmware(config: custom_types.Config) -> None:
+        """compile arduino software, static because this is also used by the CLI"""
         with open(ARDUINO_CONFIG_TEMPLATE_PATH, "r") as f:
             config_content = f.read()
 
@@ -113,6 +117,7 @@ class HeatedEnclosureInterface:
 
     @staticmethod
     def upload_firmware(config: custom_types.Config) -> None:
+        """upload the arduino software, static because this is also used by the CLI"""
         utils.run_shell_command(
             f"arduino-cli upload --verbose "
             + "--fqbn arduino:avr:nano:cpu=atmega328old "
