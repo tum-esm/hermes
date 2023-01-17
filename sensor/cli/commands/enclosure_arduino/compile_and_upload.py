@@ -1,6 +1,6 @@
 import click
 from src.utils import ConfigInterface
-from src.hardware_interfaces import HeatedEnclosureInterface
+from src.hardware import HeatedEnclosureInterface
 
 
 @click.command(help="Compile and upload the code to the arduino")

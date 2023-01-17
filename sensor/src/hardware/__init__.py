@@ -1,17 +1,16 @@
 from src import custom_types
-from src.hardware_interfaces import (
-    AirInletSensorInterface,
-    CO2SensorInterface,
-    HeatedEnclosureInterface,
-    MainboardSensorInterface,
-    PumpInterface,
-    UPSInterface,
-    ValveInterface,
-    WindSensorInterface,
-)
+
+from .air_inlet_sensor import AirInletSensorInterface
+from .co2_sensor import CO2SensorInterface
+from .heated_enclosure import HeatedEnclosureInterface
+from .mainboard_sensor import MainboardSensorInterface
+from .pump import PumpInterface
+from .ups import UPSInterface
+from .valve import ValveInterface
+from .wind_sensor import WindSensorInterface
 
 
-class HardwareInterfaceBundle:
+class HardwareInterface:
     def __init__(self, config: custom_types.Config) -> None:
         # measurement sensors
         self.air_inlet_sensor = AirInletSensorInterface()

@@ -5,9 +5,9 @@ dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
 sys.path.append(PROJECT_DIR)
 
-from src import hardware_interfaces
+from src import hardware
 
-config = hardware_interfaces.ConfigInterface.read()
-pump = hardware_interfaces.PumpInterface(config)
+config = hardware.ConfigInterface.read()
+pump = hardware.PumpInterface(config)
 pump.set_desired_pump_rps(0)
 pump.teardown()

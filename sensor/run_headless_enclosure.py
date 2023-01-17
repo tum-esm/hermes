@@ -1,7 +1,7 @@
 import json
 import os
 import time
-from src import utils, hardware_interfaces, custom_types
+from src import utils, hardware, custom_types
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 DST_FILE_PATH = os.path.join(PROJECT_DIR, "logs", "headless-enclosure-data.json")
@@ -24,7 +24,7 @@ def write_data(data: custom_types.HeatedEnclosureData) -> None:
 
 if __name__ == "__main__":
     config = utils.ConfigInterface.read()
-    heated_enclosure = hardware_interfaces.HeatedEnclosureInterface(config)
+    heated_enclosure = hardware.HeatedEnclosureInterface(config)
 
     print("sleeping 6 seconds to wait for data")
     time.sleep(6)

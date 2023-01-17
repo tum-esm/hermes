@@ -6,11 +6,11 @@ dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
 sys.path.append(PROJECT_DIR)
 
-from src import utils, hardware_interfaces
+from src import utils, hardware
 
 
-config = hardware_interfaces.ConfigInterface.read()
-co2_sensor = hardware_interfaces.CO2SensorInterface(
+config = hardware.ConfigInterface.read()
+co2_sensor = hardware.CO2SensorInterface(
     config, logger=utils.Logger(config, origin="co2-sensor", print_to_console=True)
 )
 

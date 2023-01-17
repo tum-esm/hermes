@@ -7,12 +7,12 @@ dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
 sys.path.append(PROJECT_DIR)
 
-from src import utils, hardware_interfaces
+from src import utils, hardware
 
 
 try:
-    config = hardware_interfaces.ConfigInterface.read()
-    interface = hardware_interfaces.co2_sensor.RS232Interface()
+    config = hardware.ConfigInterface.read()
+    interface = hardware.co2_sensor.RS232Interface()
     sensor_power_pin = gpiozero.OutputDevice(
         pin=utils.Constants.co2_sensor.pin_power_out
     )

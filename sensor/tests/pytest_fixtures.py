@@ -9,7 +9,7 @@ from os.path import dirname, abspath, join, isfile
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
-from src import utils, hardware_interfaces
+from src import utils, hardware
 
 
 def _save_file(
