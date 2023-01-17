@@ -17,7 +17,6 @@ class MainboardSensorInterface:
             self.bus,
             utils.Constants.MainboardSensor.i2c_address,
         )
-
         self.logger.info("Finished initialization")
 
     def _get_cpu_temperature(self) -> Optional[float]:
@@ -53,3 +52,7 @@ class MainboardSensorInterface:
                 f"cpu temperature is very high ({system_data.cpu_temperature}°C)",
                 config=self.config,
             )
+
+    def teardown(self) -> None:
+        """ends all hardware/system connections"""
+        self.bus.close()

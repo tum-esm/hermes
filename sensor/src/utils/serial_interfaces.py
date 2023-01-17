@@ -79,6 +79,10 @@ class SerialOneDirectionalInterface:
         self.current_input_stream = separate_messages[-1]
         return separate_messages[:-1]
 
+    def close(self) -> None:
+        """close connection"""
+        self.serial_interface.close()
+
 
 class SerialI2CInterface:
     def __init__(self, address: int = 0, device: int = 1) -> None:

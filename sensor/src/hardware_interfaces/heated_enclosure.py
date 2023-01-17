@@ -155,3 +155,7 @@ class HeatedEnclosureInterface:
             raise HeatedEnclosureInterface.DeviceFailure(
                 "last heated enclosure data is older than two minutes"
             )
+
+    def teardown(self) -> None:
+        """ends all hardware/system connections"""
+        self.serial_interface.close()

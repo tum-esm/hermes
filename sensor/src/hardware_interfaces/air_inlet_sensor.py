@@ -20,11 +20,8 @@ class AirInletSensorInterface:
         # execute Softreset Command  (default T=14Bit RH=12)
         self.i2c_interface.write([0xFE])
         time.sleep(0.05)
-
         temperature = self._read_temperature()
         humidity = self._read_humidity()
-        self.i2c_interface.close()
-
         return temperature, humidity
 
     def _read_temperature(self) -> Optional[float]:
@@ -64,3 +61,7 @@ class AirInletSensorInterface:
                 else:
                     crc = crc << 1
         return crc == data[length]
+
+    def teardown(self) -> None:
+        """ends all hardware/system connections"""
+        self.i2c_interface.close()
