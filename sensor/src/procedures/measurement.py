@@ -2,7 +2,7 @@
 
 import time
 from typing import Literal, Optional
-from src import custom_types, utils, hardware_interfaces
+from src import custom_types, utils, hardware
 
 
 class MeasurementProcedure:
@@ -15,37 +15,33 @@ class MeasurementProcedure:
     4. Do 2 minutes of measurements
     """
 
-    def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(origin="measurements")
-        self.config = config
+    def __init__(
+        self,
+        config: custom_types.Config,
+        hardware_interface: hardware.HardwareInterface,
+    ) -> None:
+        self.logger, self.config = utils.Logger(origin="measurement-procedure"), config
+        self.hardware_interface = hardware_interface
 
-        # valve switching
-        self.wind_sensor_interface = hardware_interfaces.WindSensorInterface(config)
-        self.valve_interfaces = hardware_interfaces.ValveInterface(config)
+        # state variables
         self.active_air_inlet: Optional[custom_types.MeasurementAirInletConfig] = None
+        self.last_measurement_time: float = 0
 
-        # pump (runs continuously)
-        self.pump_interface = hardware_interfaces.PumpInterface(config)
+        # set up pump to run continuously
         self.pump_interface.set_desired_pump_rps(
             self.config.measurement.pumped_litres_per_minute
             / (60 * self.config.hardware.pumped_litres_per_round)
         )
         time.sleep(1)
 
-        # measurements
-        self.air_inlet_sensor = hardware_interfaces.AirInletSensorInterface()
-        self.co2_sensor_interface = hardware_interfaces.CO2SensorInterface(config)
-        self.last_measurement_time: float = 0
-
     def _switch_to_air_inlet(
         self, new_air_inlet: custom_types.MeasurementAirInletConfig
     ) -> None:
         """
         1. switches to a different valve
-        2. pumps 50 meters worth of air (or some other pipe length at the new valve)
+        2. pumps air according to tube length
         """
-
-        self.valve_interfaces.set_active_input(new_air_inlet.valve_number)
+        self.hardware_interface.valves.set_active_input(new_air_inlet.valve_number)
 
         # pump air out of the new tube
         tube_volume_in_litres = (
@@ -70,7 +66,9 @@ class MeasurementProcedure:
         start_time = time.time()
 
         while True:
-            wind_data = self.wind_sensor_interface.get_current_wind_measurement()
+            wind_data = (
+                self.hardware_interface.wind_sensor.get_current_wind_measurement()
+            )
             if wind_data is not None:
                 return wind_data
             self.logger.debug("no current wind data, waiting 2 seconds")
@@ -118,8 +116,8 @@ class MeasurementProcedure:
         1. fetches the latest temperature and pressure data at air inlet
         2. sends these values to the CO2 sensor
         """
-        _, humidity = self.air_inlet_sensor.get_current_values()
-        self.co2_sensor_interface.set_calibration_values(humidity=humidity)
+        _, humidity = self.hardware_interface.air_inlet_sensor.get_current_values()
+        self.hardware_interface.co2_sensor.set_calibration_values(humidity=humidity)
         if humidity is None:
             self.logger.warning(
                 "could not read humidity value from SHT21", config=self.config
@@ -137,13 +135,7 @@ class MeasurementProcedure:
         the measurements will be sent to the MQTT client right
         during the collection (2 minutes)
         """
-
         start_time = time.time()
-
-        # check whether sensors or pump report any errors
-        self.co2_sensor_interface.check_errors()
-        self.wind_sensor_interface.check_errors()
-        self.pump_interface.check_errors()
 
         # possibly switches valve every two minutes
         self._update_input_valve()
@@ -169,7 +161,9 @@ class MeasurementProcedure:
                 )
             self.last_measurement_time = now
 
-            current_sensor_data = self.co2_sensor_interface.get_current_concentration()
+            current_sensor_data = (
+                self.hardware_interface.co2_sensor.get_current_concentration()
+            )
             self.logger.info(f"new measurement: {current_sensor_data}")
             utils.SendingMQTTClient.enqueue_message(
                 message_body=custom_types.MQTTMeasurementMessageBody(
@@ -178,10 +172,3 @@ class MeasurementProcedure:
                     revision=self.config.revision,
                 ),
             )
-
-    def teardown(self) -> None:
-        """ends all hardware/system connections"""
-        self.wind_sensor_interface.teardown()
-        self.valve_interfaces.teardown()
-        self.pump_interface.teardown()
-        self.co2_sensor_interface.teardown()

@@ -1,22 +1,21 @@
-from typing import Optional
 import psutil
-from src import hardware_interfaces, custom_types, utils
+from src import hardware, custom_types, utils
 
 
 class SystemCheckProcedure:
     """runs every mainloop call"""
 
-    def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(origin="system-checks")
-        self.config = config
-        self.mainboard_sensor = hardware_interfaces.MainboardSensorInterface(config)
-        self.heated_enclosure: Optional[
-            hardware_interfaces.HeatedEnclosureInterface
-        ] = None
+    def __init__(
+        self,
+        config: custom_types.Config,
+        hardware_interface: hardware.HardwareInterface,
+    ) -> None:
+        self.logger, self.config = utils.Logger(origin="system-check-procedure"), config
+        self.hardware_interface = hardware_interface
 
     def run(self) -> None:
         # evaluate system ambient conditions
-        system_data = self.mainboard_sensor.get_system_data()
+        system_data = self.hardware_interface.mainboard_sensor.get_system_data()
         self.logger.debug(
             f"mainboard temp. = {system_data.mainboard_temperature} °C, "
             + f"raspi cpu temp. = {system_data.cpu_temperature} °C"
@@ -25,16 +24,17 @@ class SystemCheckProcedure:
             f"enclosure humidity = {system_data.enclosure_humidity} % rH, "
             + f"enclosure pressure = {system_data.enclosure_pressure} hPa"
         )
-        self.mainboard_sensor.check_errors()
 
         # interact with heated enclosure
         if self.config.general.active_components.heated_enclosure:
             if self.heated_enclosure is None:
-                self.heated_enclosure = hardware_interfaces.HeatedEnclosureInterface(
-                    self.config
+                self.heated_enclosure = (
+                    self.hardware_interface.HeatedEnclosureInterface(self.config)
                 )
 
-            heated_enclosure_data = self.heated_enclosure.get_current_data()
+            heated_enclosure_data = (
+                self.hardware_interface.heated_enclosure.get_current_data()
+            )
             if heated_enclosure_data is not None:
                 self.logger.debug(
                     f"heated enclosure temperature = {heated_enclosure_data.measured} °C, "
@@ -42,7 +42,6 @@ class SystemCheckProcedure:
                     + f"heated enclosure fan = is {'on' if heated_enclosure_data.fan_is_on else 'off'}"
                 )
                 # TODO: send heated enclosure data via MQTT
-            self.heated_enclosure.check_errors()
 
         # evaluate disk usage
         disk_usage = psutil.disk_usage("/")
@@ -64,7 +63,8 @@ class SystemCheckProcedure:
                 f"CPU usage is very high ({cpu_usage_percent} %)", config=self.config
             )
 
-        # mqtt sending loop
+        # check for errors
+        self.hardware_interface.check_errors()
         if self.config.general.active_components.mqtt:
             utils.SendingMQTTClient.check_errors()
             utils.SendingMQTTClient.log_statistics()

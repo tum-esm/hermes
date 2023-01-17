@@ -1,6 +1,6 @@
 import os
 import time
-from src import procedures, utils, hardware_interfaces
+from src import procedures, utils, hardware
 
 
 def run() -> None:
@@ -41,9 +41,9 @@ def run() -> None:
         # TODO: fetch newest config from pinned topic messages
         #       and perform configuration procedure
 
-    hardware_interface_bundle = hardware_interfaces.HardwareInterfaceBundle(config)
-    system_check_prodecure = procedures.SystemCheckProcedure(config)
-    measurement_prodecure = procedures.MeasurementProcedure(config)
+    hardware_interface = hardware.HardwareInterface(config)
+    system_check_prodecure = procedures.SystemCheckProcedure(config, hardware_interface)
+    measurement_prodecure = procedures.MeasurementProcedure(config, hardware_interface)
 
     backoff_time_bucket_index = 0
     backoff_time_buckets = [15, 60, 300, 900]
