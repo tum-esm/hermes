@@ -6,3 +6,5 @@ from .pump import PumpInterface
 from .ups import UPSInterface
 from .valve import ValveInterface
 from .wind_sensor import WindSensorInterface
+
+from .hardware_interface_bundle import HardwareInterfaceBundle

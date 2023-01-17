@@ -1,6 +1,6 @@
 import os
 import time
-from src import procedures, utils
+from src import procedures, utils, hardware_interfaces
 
 
 def run() -> None:
@@ -30,7 +30,7 @@ def run() -> None:
         return
 
     # TODO: init configuration-procedure instance
-    
+
     utils.SendingMQTTClient.init_sending_loop_process()
 
     try:
@@ -41,6 +41,7 @@ def run() -> None:
         # TODO: fetch newest config from pinned topic messages
         #       and perform configuration procedure
 
+    hardware_interface_bundle = hardware_interfaces.HardwareInterfaceBundle(config)
     system_check_prodecure = procedures.SystemCheckProcedure(config)
     measurement_prodecure = procedures.MeasurementProcedure(config)
 

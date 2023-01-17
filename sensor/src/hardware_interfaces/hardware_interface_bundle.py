@@ -11,7 +11,7 @@ from src.hardware_interfaces import (
 )
 
 
-class HardwareInterfaces:
+class HardwareInterfaceBundle:
     def __init__(self, config: custom_types.Config) -> None:
         # measurement sensors
         self.air_inlet_sensor = AirInletSensorInterface()
