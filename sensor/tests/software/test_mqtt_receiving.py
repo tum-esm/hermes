@@ -57,4 +57,4 @@ def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
 
     messages = receiving_client.get_messages()
     print(f"messages = {messages}")
-    assert messages == [{"topic": config_topic, "payload": message}]
+    assert messages == [message]
