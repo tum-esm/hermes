@@ -1,8 +1,4 @@
-from typing import Optional
-import smbus2
-import bme280
-import os
-from src import utils, custom_types
+from src import custom_types
 from src.hardware_interfaces import (
     AirInletSensorInterface,
     CO2SensorInterface,
@@ -31,6 +27,15 @@ class HardwareInterfaces:
         self.mainboard_sensor = MainboardSensorInterface(config)
         self.ups = UPSInterface(config)
 
+    def check_errors(self) -> None:
+        """checks for detectable hardware errors"""
+        self.logger.info("checking for hardware errors")
+        self.co2_sensor.check_errors()
+        self.wind_sensor.check_errors()
+        self.pump.check_errors()
+        self.heated_enclosure.check_errors()
+        self.mainboard_sensor.check_errors()
+
     def teardown(self) -> None:
         """ends all hardware/system connections"""
         self.air_inlet_sensor.teardown()
@@ -41,5 +46,3 @@ class HardwareInterfaces:
         self.heated_enclosure.teardown()
         self.mainboard_sensor.teardown()
         self.ups.teardown()
-
-    # TODO: move check_errors in here
