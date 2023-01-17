@@ -38,22 +38,29 @@ class ReceivingMQTTClient:
             + f"{mqtt_config.station_identifier}"
         )
 
+    def get_messages(self) -> list[Any]:
+        global mqtt_message_queue
+
+        new_messages = []
+        while True:
+            try:
+                new_messages.append(mqtt_message_queue.get(block=False))
+            except queue.Empty:
+                break
+
+        return new_messages
+
     def get_config_message(self) -> Optional[custom_types.MQTTConfigurationRequest]:
         global mqtt_message_queue
 
         new_config_messages: list[custom_types.MQTTConfigurationRequest] = []
-        while True:
+        for m in self.get_messages():
             try:
-                new_message = mqtt_message_queue.get(block=False)
-            except queue.Empty:
-                break
-            try:
-                new_config_message = custom_types.MQTTConfigurationRequest(
-                    **new_message
-                )
-                new_config_messages.append(new_config_message)
+                new_config_messages.append(custom_types.MQTTConfigurationRequest(**m))
             except:
                 pass
 
         if len(new_config_messages) > 0:
             return max(new_config_messages, key=lambda m: m.revision)
+        else:
+            return None

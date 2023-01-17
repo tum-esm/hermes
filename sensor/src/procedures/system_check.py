@@ -27,8 +27,8 @@ class SystemCheckProcedure:
 
         # interact with heated enclosure
         if self.config.general.active_components.heated_enclosure:
-            if self.heated_enclosure is None:
-                self.heated_enclosure = (
+            if self.hardware_interface.heated_enclosure is None:
+                self.hardware_interface.heated_enclosure = (
                     self.hardware_interface.HeatedEnclosureInterface(self.config)
                 )
 

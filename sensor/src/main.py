@@ -76,7 +76,7 @@ def run() -> None:
                 configuration_prodecure.run(new_config_message)
 
                 # reinit if update is unsuccessful
-                hardware_interface.reinit()
+                hardware_interface.reinitialize(config)
 
             if calibration_prodecure.is_due():
                 logger.info("running calibration procedure")

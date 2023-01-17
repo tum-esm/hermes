@@ -1,4 +1,4 @@
-from src import custom_types
+from src import custom_types, utils
 
 from .air_inlet_sensor import AirInletSensorInterface
 from .co2_sensor import CO2SensorInterface
@@ -12,6 +12,8 @@ from .wind_sensor import WindSensorInterface
 
 class HardwareInterface:
     def __init__(self, config: custom_types.Config) -> None:
+        self.logger = utils.Logger("hardware-interface")
+
         # measurement sensors
         self.air_inlet_sensor = AirInletSensorInterface()
         self.co2_sensor = CO2SensorInterface(config)
@@ -51,4 +53,17 @@ class HardwareInterface:
     def reinitialize(self, config: custom_types.Config) -> None:
         """reinitialize after an unsuccessful update"""
         self.logger.info("running hardware reinitialization")
-        self.__init__(config)
+
+        # measurement sensors
+        self.air_inlet_sensor = AirInletSensorInterface()
+        self.co2_sensor = CO2SensorInterface(config)
+        self.wind_sensor = WindSensorInterface(config)
+
+        # measurement actors
+        self.pump = PumpInterface(config)
+        self.valves = ValveInterface(config)
+
+        # enclosure controls
+        self.heated_enclosure = HeatedEnclosureInterface(config)
+        self.mainboard_sensor = MainboardSensorInterface(config)
+        self.ups = UPSInterface(config)
