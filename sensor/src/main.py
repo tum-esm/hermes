@@ -66,20 +66,23 @@ def run() -> None:
             logger.info("running system checks")
             system_check_prodecure.run()
 
-            # TODO: read mqtt messages
-            if time.time() < 0:
-                # disconnect all hardware components to test new
-                # config, possibly reinit if update is unsuccessful
+            logger.info("checking for new config messages")
+            new_config_message = mqtt_receiver.get_config_message()
+            if new_config_message is not None:
+                # disconnect all hardware components to test new config
                 hardware_interface.teardown()
-                configuration_prodecure.run(
-                    custom_types.MQTTConfigurationRequest(
-                        **{"revision": 1, "configuration": {"version": "0.2.0"}}
-                    )
-                )
+
+                logger.info("running configuration procedure")
+                configuration_prodecure.run(new_config_message)
+
+                # reinit if update is unsuccessful
                 hardware_interface.reinit()
 
             if calibration_prodecure.is_due():
+                logger.info("running calibration procedure")
                 calibration_prodecure.run()
+            else:
+                logger.info("calibration procedure is not due")
 
             # if messages are empty, run regular measurements
             logger.info("running measurements")

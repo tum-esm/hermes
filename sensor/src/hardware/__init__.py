@@ -37,6 +37,8 @@ class HardwareInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
+        self.logger.info("running hardware teardown")
+
         self.air_inlet_sensor.teardown()
         self.co2_sensor.teardown()
         self.wind_sensor.teardown()
@@ -48,4 +50,5 @@ class HardwareInterface:
 
     def reinitialize(self, config: custom_types.Config) -> None:
         """reinitialize after an unsuccessful update"""
+        self.logger.info("running hardware reinitialization")
         self.__init__(config)

@@ -1,12 +1,12 @@
 import json
 import queue
-from typing import Any
+from typing import Any, Optional
 import paho.mqtt.client
 from .logger import Logger
 from .mqtt_connection import MQTTConnection
+from src import custom_types
 
-# TODO: statically type config messages
-mqtt_message_queue: queue.Queue[dict[Any]] = queue.Queue(maxsize=1024)  # type:ignore
+mqtt_message_queue: queue.Queue[dict] = queue.Queue(maxsize=1024)  # type:ignore
 
 
 def on_message(
@@ -19,7 +19,7 @@ def on_message(
     logger.debug(f"received message: {msg}")
     try:
         payload = json.loads(msg.payload.decode())
-        mqtt_message_queue.put({"topic": msg.topic, "payload": payload})
+        mqtt_message_queue.put(payload)
     except json.JSONDecodeError:
         logger.warning(f"could not decode message payload on message: {msg}")
 
@@ -38,14 +38,22 @@ class ReceivingMQTTClient:
             + f"{mqtt_config.station_identifier}"
         )
 
-    def get_messages(self) -> list[Any]:
+    def get_config_message(self) -> Optional[custom_types.MQTTConfigurationRequest]:
         global mqtt_message_queue
 
-        new_messages = []
+        new_config_messages: list[custom_types.MQTTConfigurationRequest] = []
         while True:
             try:
-                new_messages.append(mqtt_message_queue.get(block=False))
+                new_message = mqtt_message_queue.get(block=False)
             except queue.Empty:
                 break
+            try:
+                new_config_message = custom_types.MQTTConfigurationRequest(
+                    **new_message
+                )
+                new_config_messages.append(new_config_message)
+            except:
+                pass
 
-        return new_messages
+        if len(new_config_messages) > 0:
+            return max(new_config_messages, key=lambda m: m.revision)

@@ -53,6 +53,8 @@ class ConfigurationProcedure:
     def run(self, mqtt_request: custom_types.MQTTConfigurationRequest) -> None:
         version = mqtt_request.configuration.version
 
+        # TODO: treat new version differently as same version
+
         self._download_code(version)
         self._set_up_venv(version)
         self._dump_new_config(mqtt_request)
