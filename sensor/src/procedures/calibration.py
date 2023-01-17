@@ -16,3 +16,9 @@ class CalibrationProcedure:
         pass
 
         # TODO: implement calibration procedure
+
+    def is_due(self) -> bool:
+        """returns true when calibration procedure should run now"""
+        # TODO: calculate due dates based on config params
+
+        return False

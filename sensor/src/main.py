@@ -1,6 +1,6 @@
 import os
 import time
-from src import procedures, utils, hardware
+from src import custom_types, utils, hardware, procedures
 
 
 def run() -> None:
@@ -67,8 +67,19 @@ def run() -> None:
             system_check_prodecure.run()
 
             # TODO: read mqtt messages
-            # TODO: optionally call configuration routine -> triggers a restart if config is accepted
-            # TODO: optionally call calibration routing
+            if time.time() < 0:
+                # disconnect all hardware components to test new
+                # config, possibly reinit if update is unsuccessful
+                hardware_interface.teardown()
+                configuration_prodecure.run(
+                    custom_types.MQTTConfigurationRequest(
+                        **{"revision": 1, "configuration": {"version": "0.2.0"}}
+                    )
+                )
+                hardware_interface.reinit()
+
+            if calibration_prodecure.is_due():
+                calibration_prodecure.run()
 
             # if messages are empty, run regular measurements
             logger.info("running measurements")

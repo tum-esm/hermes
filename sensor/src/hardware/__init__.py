@@ -45,3 +45,7 @@ class HardwareInterface:
         self.heated_enclosure.teardown()
         self.mainboard_sensor.teardown()
         self.ups.teardown()
+
+    def reinitialize(self, config: custom_types.Config) -> None:
+        """reinitialize after an unsuccessful update"""
+        self.__init__(config)
