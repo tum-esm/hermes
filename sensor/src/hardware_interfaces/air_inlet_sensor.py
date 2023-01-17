@@ -8,9 +8,12 @@ from src import utils
 
 class AirInletSensorInterface:
     def __init__(self) -> None:
+        self.logger = utils.Logger(origin="air-inlet-sensor")
+        self.logger.info("Starting initialization")
         self.i2c_interface = utils.serial_interfaces.SerialI2CInterface(
             address=0x40, device=1
         )
+        self.logger.info("Finished initialization")
 
     def get_current_values(self) -> tuple[Optional[float], Optional[float]]:
         """get tuple of temperature and humidity"""

@@ -21,17 +21,24 @@ class CO2SensorInterface:
         """raised when the CO2 probe "errs" command responds with an error"""
 
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(origin="co2-sensor")
-        self.config = config
+        self.logger, self.config = utils.Logger(origin="co2-sensor"), config
+        self.logger.info("Starting initialization")
 
-        self.rs232_interface = utils.serial_interfaces.SerialCO2SensorInterface(
-            port=utils.Constants.CO2Sensor.serial_port
-        )
+        # power pin to power up/down wind sensor
         self.pin_factory = utils.gpio.get_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
             pin=utils.Constants.CO2Sensor.power_pin_out, pin_factory=self.pin_factory
         )
+
+        # serial connection to receive data from wind sensor
+        self.rs232_interface = utils.serial_interfaces.SerialCO2SensorInterface(
+            port=utils.Constants.CO2Sensor.serial_port
+        )
+
+        # turn the sensor off and on and set it to our default settings
         self._reset_sensor()
+
+        self.logger.info("Finished initialization")
 
     def _reset_sensor(self) -> None:
         """reset the sensors default settings by turning it off and on and

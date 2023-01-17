@@ -22,15 +22,17 @@ class WindSensorInterface:
         low voltage or has not sent any data in a while"""
 
     def __init__(self, config: custom_types.Config) -> None:
-        self.logger = utils.Logger(origin="co2-sensor")
-        self.config = config
+        self.logger, self.config = utils.Logger(origin="wind-sensor"), config
+        self.logger.info("Starting initialization")
 
+        # power pin to power up/down wind sensor
         self.pin_factory = utils.gpio.get_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
             pin=utils.Constants.WindSensor.power_pin_out, pin_factory=self.pin_factory
         )
         self.power_pin.on()
 
+        # serial connection to receive data from wind sensor
         self.rs232_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
             port=utils.Constants.WindSensor.serial_port,
             baudrate=19200,
@@ -39,6 +41,8 @@ class WindSensorInterface:
         )
         self.wind_measurement: Optional[custom_types.WindSensorData] = None
         self.device_status: Optional[custom_types.WindSensorStatus] = None
+
+        self.logger.info("Finished initialization")
 
     def _update_current_values(self) -> None:
         new_messages = self.rs232_interface.get_messages()
