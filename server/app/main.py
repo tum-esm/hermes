@@ -113,7 +113,7 @@ async def create_sensor(request):
         logger.warning(f"{request.method} {request.url.path} -- Network not found")
         raise errors.NotFoundError()
     except asyncpg.exceptions.UniqueViolationError:
-        logger.warning(f"{request.method} {request.url.path} -- Sensor already exists")
+        logger.warning(f"{request.method} {request.url.path} -- Sensor exists")
         raise errors.ConflictError()
     except Exception as e:
         logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
@@ -129,8 +129,12 @@ async def create_sensor(request):
 async def update_sensor(request):
     """Update an existing sensor's configuration.
 
-    TODO split in two, update sensor and update configuration
+    TODO split in two: update sensor and update configuration
     """
+    user_identifier, permissions = await auth.authenticate(request, database_client)
+    if request.body.network_identifier not in permissions:
+        logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
+        raise errors.NotFoundError()
     try:
         async with database_client.transaction():
             # Update sensor
@@ -169,7 +173,7 @@ async def update_sensor(request):
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
-        status_code=204,
+        status_code=200,
         content={"sensor_identifier": sensor_identifier, "revision": revision},
     )
 

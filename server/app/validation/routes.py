@@ -162,6 +162,7 @@ class _CreateSensorRequestBody(types._BaseModel):
 
 class _UpdateSensorRequestBody(types._BaseModel):
     sensor_name: types.Name
+    network_identifier: types.Identifier
     configuration: types.Json
 
 
