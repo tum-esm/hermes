@@ -23,21 +23,22 @@ class HeatedEnclosureInterface:
         self.logger, self.config = utils.Logger(origin="heated-enclosure"), config
         self.logger.info("Starting initialization")
 
+        self.arduino_address = HeatedEnclosureInterface.get_arduino_address()
+        self.measurement: Optional[custom_types.HeatedEnclosureData] = None
+
         # flash firmware onto arduino
         self.logger.debug("Compiling firmware of arduino")
         HeatedEnclosureInterface.compile_firmware(config)
         self.logger.debug("Uploading firmware of arduino")
-        HeatedEnclosureInterface.upload_firmware(config)
+        HeatedEnclosureInterface.upload_firmware(self.arduino_address)
         self.logger.debug("Arduino firmware is now up to date")
 
         # open serial data connection to process arduino logs
         time.sleep(3)
         self.serial_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
-            port=self.config.heated_enclosure.device_path,
+            port=f"/dev/{self.arduino_address}",
             baudrate=9600,
         )
-        self.measurement: Optional[custom_types.HeatedEnclosureData] = None
-
         self.logger.info("Finished initialization")
 
     def _update_data(self) -> None:
@@ -74,6 +75,19 @@ class HeatedEnclosureInterface:
         return self.measurement
 
     @staticmethod
+    def get_arduino_address() -> str:
+        active_usb_ports = utils.run_shell_command('ls /dev | grep -i "ttyUSB"').split(
+            "\n"
+        )
+        last_arduino_usb_port = utils.run_shell_command(
+            'dmesg | grep -i "FTDI USB Serial Device converter now attached to" | tail -n 1'
+        ).split(" ")[-1]
+        if last_arduino_usb_port in active_usb_ports:
+            return last_arduino_usb_port
+        else:
+            raise HeatedEnclosureInterface.DeviceFailure("No Arduino found")
+
+    @staticmethod
     def compile_firmware(config: custom_types.Config) -> None:
         """compile arduino software, static because this is also used by the CLI"""
         with open(ARDUINO_CONFIG_TEMPLATE_PATH, "r") as f:
@@ -101,12 +115,13 @@ class HeatedEnclosureInterface:
         )
 
     @staticmethod
-    def upload_firmware(config: custom_types.Config) -> None:
+    def upload_firmware(arduino_address: str) -> None:
         """upload the arduino software, static because this is also used by the CLI"""
+
         utils.run_shell_command(
             f"arduino-cli upload --verbose "
             + "--fqbn arduino:avr:nano:cpu=atmega328old "
-            + f"--port {config.heated_enclosure.device_path} "
+            + f"--port {arduino_address} "
             + f"--input-dir {ARDUINO_SCRIPT_PATH} "
             + f"{ARDUINO_SCRIPT_PATH}"
         )
@@ -118,31 +133,31 @@ class HeatedEnclosureInterface:
         """
         self._update_data()
 
-        if self.data is None:
+        if self.measurement is None:
             self.logger.debug("waiting 10 seconds for data")
             time.sleep(10)
 
         self._update_data()
 
-        if self.data is None:
+        if self.measurement is None:
             raise HeatedEnclosureInterface.DeviceFailure(
                 "heated enclosure doesn't send any data"
             )
 
-        if self.data.measured is None:
+        if self.measurement.measured is None:
             self.logger.warning(
                 "enclosure temperature sensor not connected",
                 config=self.config,
             )
         else:
-            if self.data.measured > 55:
+            if self.measurement.measured > 55:
                 self.logger.warning(
                     "high temperatures inside heated enclosure: "
                     + f"{self.measurement.measured} °C",
                     config=self.config,
                 )
 
-        if time.time() - self.data.last_update_time > 120:
+        if time.time() - self.measurement.last_update_time > 120:
             raise HeatedEnclosureInterface.DeviceFailure(
                 "last heated enclosure data is older than two minutes"
             )

@@ -34,7 +34,6 @@
         ]
     },
     "heated_enclosure": {
-        "device_path": "/dev/cu.usbserial-AB0O2OIH",
         "target_temperature": 40,
         "allowed_deviation": 3
     }

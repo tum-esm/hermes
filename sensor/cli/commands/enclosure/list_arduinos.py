@@ -1,14 +1,11 @@
 import click
-from src.utils import run_shell_command
+from src.hardware import HeatedEnclosureInterface
 
 
-@click.command(help="List all connected arduino boards")
+@click.command(help="Get the arduino's USB port (the arduino connected last)")
 def list_arduinos() -> None:
-    active_usb_ports = run_shell_command('ls /dev | grep -i "ttyUSB"').split("\n")
-    last_arduino_usb_port = run_shell_command(
-        'dmesg | grep -i "FTDI USB Serial Device converter now attached to" | tail -n 1'
-    ).split(" ")[-1]
-    if last_arduino_usb_port in active_usb_ports:
-        click.echo(str([last_arduino_usb_port]))
-    else:
-        click.echo("[]")
+    try:
+        click.echo(HeatedEnclosureInterface.get_arduino_address())
+    except HeatedEnclosureInterface.DeviceFailure:
+        click.echo("no Arduino found")
+        exit(-1)

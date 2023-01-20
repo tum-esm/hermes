@@ -11,6 +11,8 @@ def compile_and_upload() -> None:
     HeatedEnclosureInterface.compile_firmware(config)
 
     click.echo("uploading")
-    HeatedEnclosureInterface.upload_firmware(config)
+    HeatedEnclosureInterface.upload_firmware(
+        HeatedEnclosureInterface.get_arduino_address()
+    )
 
     click.echo("done")
