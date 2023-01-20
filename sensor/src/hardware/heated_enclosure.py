@@ -13,9 +13,11 @@ ARDUINO_CONFIG_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.h")
 
 number_regex = r"\d+(\.\d+)?"
 data_pattern = re.compile(
-    f"version: {number_regex}; target: {number_regex}; allowed "
-    + f"deviation: {number_regex}; measured: {number_regex}; "
-    + "heater: (on|off); fan: (on|off)"
+    f"^version: {number_regex}; "
+    + f"target: {number_regex}; "
+    + f"allowed deviation: {number_regex}; "
+    + f"measured: ({number_regex}|no temperature sensor); "
+    + "heater: (on|off); fan: (on|off);$"
 )
 
 
@@ -36,9 +38,9 @@ class HeatedEnclosureInterface:
         self.logger.debug("Arduino firmware is now up to date")
 
         # open serial data connection to process arduino logs
-        time.sleep(0.5)
+        time.sleep(2)
         self.serial_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
-            port=utils.Constants.WindSensor.serial_port,
+            port=self.config.heated_enclosure.device_path,
             baudrate=9600,
         )
         self.data: Optional[custom_types.HeatedEnclosureData] = None
@@ -59,15 +61,15 @@ class HeatedEnclosureInterface:
                         + f"Device uses {used_software_version}"
                     )
 
-                message_items = message[len(used_software_version) + 11 :].split(";")
+                message_items = message[len(used_software_version) + 11 :].split("; ")
                 target, allowed_deviation, measured = [
-                    float(string)
-                    for string in [
-                        character
-                        for character in message_items[:3]
-                        if character.isnumeric()
-                    ]
+                    string.split(": ")[1] for string in message_items[:3]
                 ]
+                # TODO
+                if "no temperature sensor" in measured:
+                    raise HeatedEnclosureInterface.DeviceFailure(
+                        f"arduino does not detect temperature sensor"
+                    )
                 heater_is_on, fan_is_on = [
                     "on" in string for string in message_items[3:]
                 ]
@@ -134,8 +136,8 @@ class HeatedEnclosureInterface:
         self._update_data()
 
         if self.data is None:
-            self.logger.debug("waiting 6 seconds for data")
-            time.sleep(6)
+            self.logger.debug("waiting 8 seconds for data")
+            time.sleep(8)
 
         self._update_data()
 

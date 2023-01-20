@@ -37,16 +37,15 @@ void loop(void){
   Serial.print("; measured: ");
 
   if(sensors.getDS18Count() == 0){
-    Serial.print("no temperature sensor detected");
+    Serial.print("no temperature sensor");
     heater_is_on = false;
     fan_is_on = false;
   
   } else {
-    Serial.print(measured_temperature);
-
     // there can be more than one temperature sensor on the databus
     sensors.requestTemperatures(); 
     measured_temperature = sensors.getTempCByIndex(0);
+    Serial.print(measured_temperature);
 
     if(measured_temperature < (TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION)){
       heater_is_on = true;

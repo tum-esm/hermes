@@ -26,8 +26,8 @@ if __name__ == "__main__":
     config = utils.ConfigInterface.read()
     heated_enclosure = hardware.HeatedEnclosureInterface(config)
 
-    print("sleeping 6 seconds to wait for data")
-    time.sleep(6)
+    print("sleeping 8 seconds to wait for data")
+    time.sleep(8)
 
     last_update_time = None
 
