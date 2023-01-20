@@ -18,6 +18,7 @@ pydantic = "^1.10.2"
 python-dotenv = "^0.21.0"
 deepdiff = "^6.2.2"
 mypy = "^0.991"
+filelock = "^3.9.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"

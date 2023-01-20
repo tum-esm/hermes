@@ -9,6 +9,7 @@ data/**/*.json
 heated_enclosure.ino.*
 config.h
 .vscode/
+*.lock
 
 # code download artifacts
 insert-name-here-*/
