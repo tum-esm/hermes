@@ -32,9 +32,7 @@ if __name__ == "__main__":
                 current_data = heated_enclosure.get_current_data()
                 assert current_data is not None, "enclosure doesn't send any data"
 
-                if (last_update_time is None) or (
-                    last_update_time != current_data.last_update_time
-                ):
+                if last_update_time != current_data.last_update_time:
                     write_data(current_data)
                     last_update_time = current_data.last_update_time
 
