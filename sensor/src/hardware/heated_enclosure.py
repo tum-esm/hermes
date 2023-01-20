@@ -36,8 +36,7 @@ class HeatedEnclosureInterface:
         # open serial data connection to process arduino logs
         time.sleep(3)
         self.serial_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
-            port=f"/dev/{self.arduino_address}",
-            baudrate=9600,
+            port=self.arduino_address, baudrate=9600
         )
         self.logger.info("Finished initialization")
 
@@ -83,7 +82,7 @@ class HeatedEnclosureInterface:
             'dmesg | grep -i "FTDI USB Serial Device converter now attached to" | tail -n 1'
         ).split(" ")[-1]
         if last_arduino_usb_port in active_usb_ports:
-            return last_arduino_usb_port
+            return f"/dev/{last_arduino_usb_port}"
         else:
             raise HeatedEnclosureInterface.DeviceFailure("No Arduino found")
 
