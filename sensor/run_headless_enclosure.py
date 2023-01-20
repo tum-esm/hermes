@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import os
 import time
@@ -18,7 +19,7 @@ def write_data(data: custom_types.HeatedEnclosureData) -> None:
 if __name__ == "__main__":
     try:
         with lock:
-            print(f"acquired lock with PID {os.getpid()}")
+            print(f"acquired lock with PID {os.getpid()} at {datetime.now()}")
             config = utils.ConfigInterface.read()
             heated_enclosure = hardware.HeatedEnclosureInterface(config)
 
@@ -39,4 +40,4 @@ if __name__ == "__main__":
 
                 time.sleep(1)
     except filelock.Timeout:
-        print("could not acquire lock")
+        print(f"could not acquire lock from pid {os.getpid()}")
