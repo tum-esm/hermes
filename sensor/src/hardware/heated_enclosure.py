@@ -31,12 +31,12 @@ class HeatedEnclosureInterface:
         self.logger.debug("Arduino firmware is now up to date")
 
         # open serial data connection to process arduino logs
-        time.sleep(2)
+        time.sleep(3)
         self.serial_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
             port=self.config.heated_enclosure.device_path,
             baudrate=9600,
         )
-        self.data: Optional[custom_types.HeatedEnclosureData] = None
+        self.measurement: Optional[custom_types.HeatedEnclosureData] = None
 
         self.logger.info("Finished initialization")
 
@@ -49,9 +49,9 @@ class HeatedEnclosureInterface:
                     **json.loads(message)
                 )
             except Exception as e:
-                raise e
                 raise HeatedEnclosureInterface.DeviceFailure(
-                    f"arduino sends unknown messages formats: {repr(message)}"
+                    f"arduino sends unknown messages formats:"
+                    + f" {repr(message)}, Exception: {e}"
                 )
 
             if parsed_message.version != self.config.version:
@@ -71,7 +71,7 @@ class HeatedEnclosureInterface:
 
     def get_current_data(self) -> Optional[custom_types.HeatedEnclosureData]:
         self._update_data()
-        return self.data
+        return self.measurement
 
     @staticmethod
     def compile_firmware(config: custom_types.Config) -> None:
@@ -119,8 +119,8 @@ class HeatedEnclosureInterface:
         self._update_data()
 
         if self.data is None:
-            self.logger.debug("waiting 8 seconds for data")
-            time.sleep(8)
+            self.logger.debug("waiting 10 seconds for data")
+            time.sleep(10)
 
         self._update_data()
 
