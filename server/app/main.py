@@ -74,25 +74,12 @@ async def create_user(request):
 @validation.validate(schema=validation.CreateSensorRequest)
 async def create_sensor(request):
     """Create a new sensor and configuration."""
-    user_identifier = await auth.authenticate(request, database_client)
+    user_identifier, permissions = await auth.authenticate(request, database_client)
+    if request.body.network_identifier not in permissions:
+        # TODO if user is read-only, return 403 -> "Insufficient authorization"
+        logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
+        raise errors.NotFoundError()
     try:
-        # Check permissions
-        # TODO merge with read-session.sql ? -> join, but only one request
-        query, arguments = database.build(
-            template="read-permission.sql",
-            template_arguments={},
-            query_arguments={
-                "user_identifier": user_identifier,
-                "network_identifier": request.body.network_identifier,
-            },
-        )
-        result = await database_client.fetch(query, *arguments)
-        if not database.dictify(result):
-            # TODO if user is read-only, return 403 -> "Insufficient authorization"
-            logger.warning(
-                f"{request.method} {request.url.path} -- Missing authorization"
-            )
-            raise errors.NotFoundError()
         async with database_client.transaction():
             # Create new sensor
             query, arguments = database.build(
@@ -255,6 +242,8 @@ async def stream_sensors(request):
       - last measurement timestamps
 
     TODO choose sensors to stream based on user name and authorization
+    TODO offer choice between different time periods -> adapt interval accordingly (or
+         better: let the frontend choose)
     """
 
     # first version: just return new aggregation in fixed interval
