@@ -28,16 +28,16 @@ void setup(void) {
 
 void loop(void){ 
   // print out all params for validation by the raspi
-  Serial.print("version: ");
+  Serial.print("{\"version\": \"");
   Serial.print(CODEBASE_VERSION);
-  Serial.print("; target: ");
+  Serial.print("\", \"target\": ");
   Serial.print(TARGET_TEMPERATURE);
-  Serial.print("; allowed deviation: ");
+  Serial.print(", \"allowed_deviation\": ");
   Serial.print(ALLOWED_TEMPERATURE_DEVIATION);
-  Serial.print("; measured: ");
+  Serial.print(", \"measured\": ");
 
   if(sensors.getDS18Count() == 0){
-    Serial.print("no temperature sensor");
+    Serial.print("null");
     heater_is_on = false;
     fan_is_on = false;
   
@@ -61,11 +61,11 @@ void loop(void){
     }
   }
 
-  Serial.print("; heater: ");
-  Serial.print(heater_is_on ? "on" : "off");
-  Serial.print("; fan: ");
-  Serial.print(fan_is_on ? "on" : "off");
-  Serial.println(";");
+  Serial.print(", \"heater\": ");
+  Serial.print(heater_is_on ? "\"on\"" : "\"off\"");
+  Serial.print(", \"fan\": ");
+  Serial.print(fan_is_on ? "\"on\"" : "\"off\"");
+  Serial.println("}");
 
   // the relaise are currently reversed (HIGH = no current)
   // TODO: will this be switched?

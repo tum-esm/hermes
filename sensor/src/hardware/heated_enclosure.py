@@ -1,8 +1,10 @@
+import json
 import os
 import time
-from typing import Optional
+from typing import Literal, Optional
 from src import utils, custom_types
 import re
+from pydantic import BaseModel, validator
 
 dirname = os.path.dirname
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
@@ -10,15 +12,6 @@ ARDUINO_SCRIPT_PATH = os.path.join(PROJECT_DIR, "src", "heated_enclosure")
 
 ARDUINO_CONFIG_TEMPLATE_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.template.h")
 ARDUINO_CONFIG_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.h")
-
-number_regex = r"\d+(\.\d+)?"
-data_pattern = re.compile(
-    f"^version: {number_regex}; "
-    + f"target: {number_regex}; "
-    + f"allowed deviation: {number_regex}; "
-    + f"measured: ({number_regex}|no temperature sensor); "
-    + "heater: (on|off); fan: (on|off);$"
-)
 
 
 class HeatedEnclosureInterface:
@@ -49,42 +42,32 @@ class HeatedEnclosureInterface:
 
     def _update_data(self) -> None:
         new_messages = self.serial_interface.get_messages()
-        now = round(time.time())
         for message in new_messages:
-            if data_pattern.match(message) is not None:
-                # determine the software currently used by the arduino
-                # raise exception if software us too old
-                used_software_version = message.split(";")[0].replace("version: ", "")
-                if used_software_version != self.config.version:
-                    raise HeatedEnclosureInterface.DeviceFailure(
-                        f"Not running the expected software version. "
-                        + f"Device uses {used_software_version}"
-                    )
-
-                message_items = message[len(used_software_version) + 11 :].split("; ")
-                target, allowed_deviation, measured = [
-                    string.split(": ")[1] for string in message_items[:3]
-                ]
-                # TODO
-                if "no temperature sensor" in measured:
-                    raise HeatedEnclosureInterface.DeviceFailure(
-                        f"arduino does not detect temperature sensor"
-                    )
-                heater_is_on, fan_is_on = [
-                    "on" in string for string in message_items[3:]
-                ]
-                self.measurement = custom_types.HeatedEnclosureData(
-                    target=target,
-                    allowed_deviation=allowed_deviation,
-                    measured=measured,
-                    heater_is_on=heater_is_on,
-                    fan_is_on=fan_is_on,
-                    last_update_time=now,
+            message = message.strip("\n\r")
+            try:
+                parsed_message = custom_types.RawHeatedEnclosureData(
+                    **json.loads(message)
                 )
-            elif message.replace(" ", "") != "":
+            except Exception as e:
+                raise e
                 raise HeatedEnclosureInterface.DeviceFailure(
-                    f'arduino sends unknown messages formats: "{message}"'
+                    f"arduino sends unknown messages formats: {repr(message)}"
                 )
+
+            if parsed_message.version != self.config.version:
+                raise HeatedEnclosureInterface.DeviceFailure(
+                    f"Not running the expected software version. "
+                    + f"Device uses {parsed_message.version}"
+                )
+
+            self.measurement = custom_types.HeatedEnclosureData(
+                target=parsed_message.target,
+                allowed_deviation=parsed_message.allowed_deviation,
+                measured=parsed_message.measured,
+                heater_is_on=("on" in parsed_message.heater),
+                fan_is_on=("on" in parsed_message.fan),
+                last_update_time=round(time.time()),
+            )
 
     def get_current_data(self) -> Optional[custom_types.HeatedEnclosureData]:
         self._update_data()
@@ -146,12 +129,18 @@ class HeatedEnclosureInterface:
                 "heated enclosure doesn't send any data"
             )
 
-        if self.data.measured > 55:
+        if self.data.measured is None:
             self.logger.warning(
-                "high temperatures inside heated enclosure: "
-                + f"{self.measurement.measured} °C",
+                "enclosure temperature sensor not connected",
                 config=self.config,
             )
+        else:
+            if self.data.measured > 55:
+                self.logger.warning(
+                    "high temperatures inside heated enclosure: "
+                    + f"{self.measurement.measured} °C",
+                    config=self.config,
+                )
 
         if time.time() - self.data.last_update_time > 120:
             raise HeatedEnclosureInterface.DeviceFailure(
