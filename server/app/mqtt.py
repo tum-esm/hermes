@@ -124,7 +124,7 @@ class Client(aiomqtt.Client):
                 with self.database_client.transaction():
                     # Write heartbeat as log message in the database
                     query, arguments = database.build(
-                        template="insert-log-message.sql",
+                        template="create-log-message.sql",
                         template_arguments={},
                         query_arguments={
                             "sensor_identifier": sensor_identifier,
@@ -166,7 +166,7 @@ class Client(aiomqtt.Client):
         """Write incoming sensor log messages to the database."""
         try:
             query, arguments = database.build(
-                template="insert-log-message.sql",
+                template="create-log-message.sql",
                 template_arguments={},
                 query_arguments=[
                     {
@@ -200,7 +200,7 @@ class Client(aiomqtt.Client):
         """Write incoming sensor measurements to the database."""
         try:
             query, arguments = database.build(
-                template="insert-measurement.sql",
+                template="create-measurement.sql",
                 template_arguments={},
                 query_arguments=[
                     {

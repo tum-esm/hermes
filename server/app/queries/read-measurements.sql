@@ -13,4 +13,4 @@ WHERE
         END
     )
 ORDER BY creation_timestamp DESC
-LIMIT 32;
+LIMIT 64;
