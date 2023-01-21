@@ -36,8 +36,8 @@ async def create_user(request):
     password_hash = auth.hash_password(request.body.password)
     access_token = auth.generate_token()
     access_token_hash = auth.hash_token(access_token)
-    try:
-        async with database_client.transaction():
+    async with database_client.transaction():
+        try:
             # Create new user
             query, arguments = database.build(
                 template="create-user.sql",
@@ -49,6 +49,17 @@ async def create_user(request):
             )
             result = await database_client.fetch(query, *arguments)
             user_identifier = database.dictify(result)[0]["user_identifier"]
+        except asyncpg.exceptions.UniqueViolationError:
+            logger.warning(
+                f"{request.method} {request.url.path} -- User already exists"
+            )
+            raise errors.ConflictError()
+        except Exception as e:
+            logger.error(
+                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
+            )
+            raise errors.InternalServerError()
+        try:
             # Create new session
             query, arguments = database.build(
                 template="create-session.sql",
@@ -59,12 +70,12 @@ async def create_user(request):
                 },
             )
             await database_client.execute(query, *arguments)
-    except asyncpg.exceptions.UniqueViolationError:
-        logger.warning(f"{request.method} {request.url.path} -- User already exists")
-        raise errors.ConflictError()
-    except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
-        raise errors.InternalServerError()
+        except Exception as e:
+            logger.error(
+                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
+            )
+            raise errors.InternalServerError()
+    # Return successful response
     return starlette.responses.JSONResponse(
         status_code=201,
         content={"access_token": access_token, "user_identifier": user_identifier},
@@ -79,8 +90,8 @@ async def create_sensor(request):
         # TODO if user is read-only, return 403 -> "Insufficient authorization"
         logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
         raise errors.NotFoundError()
-    try:
-        async with database_client.transaction():
+    async with database_client.transaction():
+        try:
             # Create new sensor
             query, arguments = database.build(
                 template="create-sensor.sql",
@@ -92,6 +103,18 @@ async def create_sensor(request):
             )
             result = await database_client.fetch(query, *arguments)
             sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
+        except asyncpg.ForeignKeyViolationError:
+            logger.warning(f"{request.method} {request.url.path} -- Network not found")
+            raise errors.NotFoundError()
+        except asyncpg.exceptions.UniqueViolationError:
+            logger.warning(f"{request.method} {request.url.path} -- Sensor exists")
+            raise errors.ConflictError()
+        except Exception as e:
+            logger.error(
+                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
+            )
+            raise errors.InternalServerError()
+        try:
             # Create new configuration
             query, arguments = database.build(
                 template="create-configuration.sql",
@@ -103,21 +126,17 @@ async def create_sensor(request):
             )
             result = await database_client.fetch(query, *arguments)
             revision = database.dictify(result)[0]["revision"]
-        # Send MQTT message with configuration
-        await mqtt_client.publish_configuration(
-            sensor_identifier=sensor_identifier,
-            revision=revision,
-            configuration=request.body.configuration,
-        )
-    except asyncpg.ForeignKeyViolationError:
-        logger.warning(f"{request.method} {request.url.path} -- Network not found")
-        raise errors.NotFoundError()
-    except asyncpg.exceptions.UniqueViolationError:
-        logger.warning(f"{request.method} {request.url.path} -- Sensor exists")
-        raise errors.ConflictError()
-    except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
-        raise errors.InternalServerError()
+        except Exception as e:
+            logger.error(
+                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
+            )
+            raise errors.InternalServerError()
+    # Send MQTT message with configuration
+    await mqtt_client.publish_configuration(
+        sensor_identifier=sensor_identifier,
+        revision=revision,
+        configuration=request.body.configuration,
+    )
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=201,
@@ -283,6 +302,7 @@ async def stream_sensors(request):
             yield sse.ServerSentEvent(data=database.dictify(result)).encode()
             await asyncio.sleep(5)
 
+    # Return successful response
     return starlette.responses.StreamingResponse(
         content=stream(request),
         status_code=200,
