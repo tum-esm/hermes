@@ -135,46 +135,58 @@ async def update_sensor(request):
     if request.body.network_identifier not in permissions:
         logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
         raise errors.NotFoundError()
-    try:
-        async with database_client.transaction():
+    async with database_client.transaction():
+        try:
             # Update sensor
             query, arguments = database.build(
                 template="update-sensor.sql",
                 template_arguments={},
                 query_arguments={
-                    "sensor_name": request.path.sensor_name,
-                    "new_sensor_name": request.body.sensor_name,
+                    "sensor_identifier": request.path.sensor_identifier,
+                    "sensor_name": request.body.sensor_name,
                 },
             )
-            result = await database_client.fetch(query, *arguments)
-            sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
+            result = await database_client.execute(query, *arguments)
+        except Exception as e:
+            logger.error(
+                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
+            )
+            raise errors.InternalServerError()
+        if result != "UPDATE 1":
+            logger.warning(
+                f"{request.method} {request.url.path} -- Sensor doesn't exist"
+            )
+            raise errors.NotFoundError()
+        try:
             # Create new configuration
             query, arguments = database.build(
                 template="create-configuration.sql",
                 template_arguments={},
                 query_arguments={
-                    "sensor_identifier": sensor_identifier,
+                    "sensor_identifier": request.path.sensor_identifier,
                     "configuration": request.body.configuration,
                 },
             )
             result = await database_client.fetch(query, *arguments)
             revision = database.dictify(result)[0]["revision"]
-        # Send MQTT message with configuration
-        await mqtt_client.publish_configuration(
-            sensor_identifier=sensor_identifier,
-            revision=revision,
-            configuration=request.body.configuration,
-        )
-    except IndexError:
-        logger.warning(f"{request.method} {request.url.path} -- Sensor doesn't exist")
-        raise errors.NotFoundError()
-    except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
-        raise errors.InternalServerError()
+        except Exception as e:
+            logger.error(
+                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
+            )
+            raise errors.InternalServerError()
+    # Send MQTT message with configuration
+    await mqtt_client.publish_configuration(
+        sensor_identifier=request.path.sensor_identifier,
+        revision=revision,
+        configuration=request.body.configuration,
+    )
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=200,
-        content={"sensor_identifier": sensor_identifier, "revision": revision},
+        content={
+            "sensor_identifier": request.path.sensor_identifier,
+            "revision": revision,
+        },
     )
 
 
@@ -379,7 +391,7 @@ app = starlette.applications.Starlette(
             methods=["POST"],
         ),
         starlette.routing.Route(
-            path="/sensors/{sensor_name}",
+            path="/sensors/{sensor_identifier}",
             endpoint=update_sensor,
             methods=["PUT"],
         ),

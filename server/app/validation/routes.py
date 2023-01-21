@@ -66,7 +66,7 @@ class _CreateSensorRequestPath(types._BaseModel):
 
 
 class _UpdateSensorRequestPath(types._BaseModel):
-    sensor_name: types.Name
+    sensor_identifier: types.Identifier
 
 
 class _ReadMeasurementsRequestPath(types._BaseModel):
