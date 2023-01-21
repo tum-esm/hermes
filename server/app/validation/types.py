@@ -28,8 +28,10 @@ Revision = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
 PositiveInteger = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
 
 Key = pydantic.constr(strict=True, regex=constants.Pattern.KEY.value)
-# TODO Validate the values more thoroughly for min and max limits/lengths (#fields)
-Value = int | float | str | bool | None
+# TODO Validate the values more thoroughly for min and max limits/lengths
+# number of JSON fields or nesting depth could be interesting as well
+# Or, check the actual size of the JSON / length of the JSON string
+Value = bool | int | float | str | dict | None
 Json = dict[Key, Value]
 
 # TODO what are the real min/max values here? How do we handle overflow?
