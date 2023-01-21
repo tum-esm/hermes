@@ -77,8 +77,8 @@ class _ReadLogMessageAggregatesRequestPath(types._BaseModel):
     sensor_identifier: types.Identifier
 
 
-class _StreamSensorsRequestPath(types._BaseModel):
-    pass
+class _StreamNetworkRequestPath(types._BaseModel):
+    network_identifier: types.Identifier
 
 
 class _CreateSessionRequestPath(types._BaseModel):
@@ -127,13 +127,8 @@ class _ReadLogMessageAggregatesRequestQuery(types._BaseModel):
     pass
 
 
-class _StreamSensorsRequestQuery(types._BaseModel):
-    sensor_names: list[types.Name]
-
-    # Validators
-    _sensor_names_split_string = pydantic.validator(
-        "sensor_names", allow_reuse=True, pre=True
-    )(types._split_string)
+class _StreamNetworkRequestQuery(types._BaseModel):
+    pass
 
 
 class _CreateSessionRequestQuery(types._BaseModel):
@@ -174,7 +169,7 @@ class _ReadLogMessageAggregatesRequestBody(types._BaseModel):
     pass
 
 
-class _StreamSensorsRequestBody(types._BaseModel):
+class _StreamNetworkRequestBody(types._BaseModel):
     pass
 
 
@@ -243,13 +238,13 @@ class ReadLogMessageAggregatesRequest(types._BaseModel):
     body: _ReadLogMessageAggregatesRequestBody
 
 
-class StreamSensorsRequest(types._BaseModel):
+class StreamNetworkRequest(types._BaseModel):
     method: str
     url: object
     headers: dict
-    path: _StreamSensorsRequestPath
-    query: _StreamSensorsRequestQuery
-    body: _StreamSensorsRequestBody
+    path: _StreamNetworkRequestPath
+    query: _StreamNetworkRequestQuery
+    body: _StreamNetworkRequestBody
 
 
 class CreateSessionRequest(types._BaseModel):

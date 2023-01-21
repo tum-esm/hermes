@@ -10,7 +10,7 @@ from app.validation.routes import (
     ReadLogMessageAggregatesRequest,
     ReadMeasurementsRequest,
     ReadStatusRequest,
-    StreamSensorsRequest,
+    StreamNetworkRequest,
     UpdateSensorRequest,
     validate,
 )
@@ -25,7 +25,7 @@ __all__ = [
     "ReadLogMessageAggregatesRequest",
     "ReadMeasurementsRequest",
     "ReadStatusRequest",
-    "StreamSensorsRequest",
+    "StreamNetworkRequest",
     "UpdateSensorRequest",
     "validate",
 ]

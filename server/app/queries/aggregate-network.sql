@@ -1,3 +1,4 @@
+-- Aggregate information about sensors
 WITH aggregation AS (
     SELECT
         sensor_identifier,
@@ -6,13 +7,12 @@ WITH aggregation AS (
     WHERE bucket_timestamp > now() - INTERVAL '28 days'
     GROUP BY sensor_identifier
 )
-
+-- Filter by sensors belonging to the given network
 SELECT
-    sensor_name,
     sensor_identifier,
+    sensor_name,
     coalesce(measurements_counts, ARRAY[]::int[][]) AS measurements_counts
-FROM sensors
+FROM networks
+JOIN sensors USING (network_identifier)
 LEFT JOIN aggregation USING (sensor_identifier)
-WHERE sensor_name = ANY({sensor_names})
-
--- Also push the most recent measurement to the client?
+WHERE network_identifier = {network_identifier}

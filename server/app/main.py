@@ -227,7 +227,7 @@ async def read_measurements(request):
     """
     try:
         query, arguments = database.build(
-            template="fetch-measurements.sql",
+            template="read-measurements.sql",
             template_arguments={},
             query_arguments={
                 "sensor_identifier": request.path.sensor_identifier,
@@ -266,9 +266,9 @@ async def read_log_message_aggregates(request):
     )
 
 
-@validation.validate(schema=validation.StreamSensorsRequest)
-async def stream_sensors(request):
-    """Stream aggregated information about sensors via Server Sent Events.
+@validation.validate(schema=validation.StreamNetworkRequest)
+async def stream_network(request):
+    """Stream status of sensors in a network via Server Sent Events.
 
     This includes:
       - the number of measurements in 4 hour intervals over the last 28 days
@@ -276,31 +276,25 @@ async def stream_sensors(request):
       - last sensor heartbeats
       - last measurement timestamps
 
-    TODO choose sensors to stream based on user name and authorization
     TODO offer choice between different time periods -> adapt interval accordingly (or
          better: let the frontend choose)
+    TODO switch to simple HTTP GET requests with polling if we're not pushing
+         based on events
     """
-
-    # first version: just return new aggregation in fixed interval
-    # improvements:
-    # - use a cache (redis?) to store the last aggregation?
-    # - then we can return the cached value immediately and update the cache when a new
-    #   measurement comes in
-    # - or better: re-aggregate fixed interval, but only if there are new measurements
 
     async def stream(request):
         while True:
             query, arguments = database.build(
-                template="aggregate-sensors.sql",
+                template="aggregate-network.sql",
                 template_arguments={},
                 query_arguments={
-                    "sensor_names": request.query.sensor_names,
+                    "network_identifier": request.path.network_identifier,
                 },
             )
             result = await database_client.fetch(query, *arguments)
             # TODO handle exceptions
             yield sse.ServerSentEvent(data=database.dictify(result)).encode()
-            await asyncio.sleep(5)
+            await asyncio.sleep(10)
 
     # Return successful response
     return starlette.responses.StreamingResponse(
@@ -365,12 +359,7 @@ mqtt_client = None
 
 @contextlib.asynccontextmanager
 async def lifespan(app):
-    """Manage lifetime of database client and MQTT client.
-
-    This creates the necessary database tables if they don't exist yet. It also starts
-    a new asyncio task that listens for incoming sensor measurements over MQTT messages
-    and stores them in the database.
-    """
+    """Manage lifetime of database client and MQTT client."""
     global database_client
     global mqtt_client
     async with database.Client() as x:
@@ -431,8 +420,8 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
         starlette.routing.Route(
-            path="/streams/sensors",
-            endpoint=stream_sensors,
+            path="/streams/{network_identifier}",
+            endpoint=stream_network,
             methods=["GET"],
         ),
         starlette.routing.Route(
