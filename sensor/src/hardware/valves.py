@@ -37,6 +37,7 @@ class ValveInterface:
                 pin_factory=self.pin_factory,
             ),
         }
+        self.active_input: Literal[1, 2, 3, 4] = 1
         self.set_active_input(1)
 
         self.logger.info("Finished initialization")
@@ -47,6 +48,8 @@ class ValveInterface:
                 device.on()
             else:
                 device.off()
+
+        self.active_input = no
         self.logger.info(f"switching to valve {no}")
 
     def teardown(self) -> None:

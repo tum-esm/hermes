@@ -1,5 +1,7 @@
 from datetime import datetime
 import math
+import random
+import time
 from src import custom_types, utils, hardware
 
 
@@ -17,27 +19,47 @@ class CalibrationProcedure:
     def run(self) -> None:
         calibration_time = datetime.utcnow().timestamp()
 
-        # TODO: choose random calibration gas order
+        # randomize calibration gas order
+        calibration_gases = self.config.calibration.gases.copy()
+        random.shuffle(calibration_gases)
 
-        # TODO: for each calibration gas
+        previous_measurement_valve_input = self.hardware_interface.valves.active_input
 
-        # TODO: switch air inlet
+        for gas in calibration_gases:
+            self.hardware_interface.co2_sensor.start_calibration_sampling()
+            self.hardware_interface.valves.set_active_input(gas.valve_number)
 
-        self.hardware_interface.co2_sensor.start_calibration_sampling()
+            # flush tube with calibration gas
+            self.hardware_interface.pump.set_desired_pump_speed(
+                unit="litres_per_minute",
+                value=self.config.calibration.flushing.pumped_litres_per_minute,
+            )
+            time.sleep(self.config.calibration.flushing.seconds)
 
-        # TODO: set pump to 0.5 litres per minute
-        # TODO: wait 5 minutes
-        # TODO: take 20 measurements and average them
+            # sample measurements and average them
+            self.hardware_interface.pump.set_desired_pump_speed(
+                unit="litres_per_minute",
+                value=self.config.calibration.sampling.pumped_litres_per_minute,
+            )
+            sampling_data: list[custom_types.CO2SensorData] = []
+            # TODO: perform sampling
+            # TODO: perform averaging
 
-        self.hardware_interface.co2_sensor.stop_calibration_sampling()
-
-        # TODO: send new correction values to CO2 sensor
+            # send correction values to sensor
+            self.hardware_interface.co2_sensor.stop_calibration_sampling()
+            # TODO: send LCI data to CO2 sensor
 
         # FIXME: after all gases, check with the last gas again?
 
-        # TODO: switch air inlet
-
-        # TODO: pump at configurable speed for 5 minutes
+        # clean up tube again
+        self.hardware_interface.valves.set_active_input(
+            previous_measurement_valve_input
+        )
+        self.hardware_interface.pump.set_desired_pump_speed(
+            unit="litres_per_minute",
+            value=self.config.calibration.cleaning.pumped_litres_per_minute,
+        )
+        time.sleep(self.config.calibration.cleaning.seconds)
 
         # save last calibration time
         state = utils.StateInterface.read()
