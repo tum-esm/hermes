@@ -21,12 +21,19 @@ class CalibrationProcedure:
 
         # randomize calibration gas order
         calibration_gases = self.config.calibration.gases.copy()
+        reference_values: list[float] = []
         random.shuffle(calibration_gases)
 
+        # save the currently active valve input for later
         previous_measurement_valve_input = self.hardware_interface.valves.active_input
 
+        # start the calibration sampling
+        self.hardware_interface.co2_sensor.start_calibration_sampling()
+        self.hardware_interface.co2_sensor.set_filter_setting(
+            average=self.config.calibration.sampling.seconds_per_sample
+        )
+
         for gas in calibration_gases:
-            self.hardware_interface.co2_sensor.start_calibration_sampling()
             self.hardware_interface.valves.set_active_input(gas.valve_number)
 
             # flush tube with calibration gas
@@ -42,14 +49,23 @@ class CalibrationProcedure:
                 value=self.config.calibration.sampling.pumped_litres_per_minute,
             )
             sampling_data: list[custom_types.CO2SensorData] = []
-            # TODO: perform sampling
-            # TODO: perform averaging
+            for _ in range(self.config.calibration.sampling.sample_count):
+                sampling_data.append(
+                    self.hardware_interface.co2_sensor.get_current_concentration()
+                )
+                # TODO: is this how  the average filter works or do we need time.sleep() as well
+            reference_values.append(
+                sum([d.raw for d in sampling_data]) / len(sampling_data)
+            )
 
-            # send correction values to sensor
-            self.hardware_interface.co2_sensor.stop_calibration_sampling()
-            # TODO: send LCI data to CO2 sensor
+        # start the calibration sampling, reset CO2 sensor to default filters
+        self.hardware_interface.co2_sensor.stop_calibration_sampling()
+        self.hardware_interface.co2_sensor.set_filter_setting()
 
-        # FIXME: after all gases, check with the last gas again?
+        # send correction values to sensor
+        # TODO: send LCI data to CO2 sensor
+
+        # TODO: after all gases, check with the last gas again?
 
         # clean up tube again
         self.hardware_interface.valves.set_active_input(
@@ -71,6 +87,11 @@ class CalibrationProcedure:
 
         # load state, kept during configuration procedures
         state = utils.StateInterface.read()
+        current_utc_timestamp = datetime.utcnow().timestamp()
+
+        # TODO: skip calibration when sensor has had power for
+        # less than 30 minutes -> a full warming up is required
+        # for maximum accuracy
 
         # if last calibration time is unknown, calibrate now
         # should only happen when the state.json is not copied
@@ -81,7 +102,6 @@ class CalibrationProcedure:
         seconds_per_calibration_interval = (
             3600 * self.config.calibration.hours_between_calibrations
         )
-        current_utc_timestamp = datetime.utcnow().timestamp()
         last_calibration_due_time = (
             math.floor(current_utc_timestamp / seconds_per_calibration_interval)
             * seconds_per_calibration_interval

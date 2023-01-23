@@ -36,9 +36,9 @@
             "pumped_litres_per_minute": 0.5
         },
         "sampling": {
-            "seconds": 300,
             "pumped_litres_per_minute": 0.5,
-            "sample_count": 20
+            "sample_count": 20,
+            "seconds_per_sample": 300
         },
         "cleaning": {
             "seconds": 300,

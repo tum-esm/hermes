@@ -160,14 +160,11 @@ class CalibrationFlushingConfig(BaseModel):
 
 
 class CalibrationSamplingConfig(BaseModel):
-    seconds: float
     pumped_litres_per_minute: float
     sample_count: int
+    seconds_per_sample: int
 
     # validators
-    _val_seconds = validator("seconds", pre=True, allow_reuse=True)(
-        validate_float(minimum=0, maximum=1800),
-    )
     _val_pumped_litres_per_minute = validator(
         "pumped_litres_per_minute", pre=True, allow_reuse=True
     )(
@@ -175,6 +172,11 @@ class CalibrationSamplingConfig(BaseModel):
     )
     _val_sample_count = validator("sample_count", pre=True, allow_reuse=True)(
         validate_int(minimum=0, maximum=500),
+    )
+    _val_seconds_per_sample = validator(
+        "seconds_per_sample", pre=True, allow_reuse=True
+    )(
+        validate_int(minimum=1, maximum=1800),
     )
 
     class Config:
