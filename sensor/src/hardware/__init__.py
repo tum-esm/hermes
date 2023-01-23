@@ -6,7 +6,8 @@ from .heated_enclosure import HeatedEnclosureInterface
 from .mainboard_sensor import MainboardSensorInterface
 from .pump import PumpInterface
 from .ups import UPSInterface
-from .valve import ValveInterface
+from .usb_ports import USBPortInterface
+from .valves import ValveInterface
 from .wind_sensor import WindSensorInterface
 
 
@@ -27,6 +28,7 @@ class HardwareInterface:
         self.heated_enclosure = HeatedEnclosureInterface(config)
         self.mainboard_sensor = MainboardSensorInterface(config)
         self.ups = UPSInterface(config)
+        self.usb_ports = USBPortInterface()
 
     def check_errors(self) -> None:
         """checks for detectable hardware errors"""

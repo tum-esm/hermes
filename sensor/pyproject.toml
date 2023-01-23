@@ -53,6 +53,7 @@ module = [
     "smbus2",
     "serial",
     "deepdiff",
+    "filelock"
 ]
 ignore_missing_imports = true
 
