@@ -61,6 +61,7 @@ class CO2SensorInterface:
             "range 1",
             'form "Raw " CO2RAWUC " ppm; Comp." CO2RAW " ppm; Filt. " CO2 " ppm"',
             "tc on",
+            "lc on",
             "rhc off",
             "pc off",
             "oc off",
@@ -91,6 +92,8 @@ class CO2SensorInterface:
         assert (
             median >= 0 and median <= 13
         ), "invalid calibration setting, median not in [0, 13]"
+
+        self.rs232_interface.flush_receiver_stream()
 
         self.rs232_interface.send_command(f"average {average}")
         self.rs232_interface.wait_for_answer()
@@ -125,6 +128,8 @@ class CO2SensorInterface:
         the internal temperature calibration is enabled by de-
         fault and uses the built-in temperature sensor.
         """
+
+        self.rs232_interface.flush_receiver_stream()
 
         if pressure is None:
             self.rs232_interface.send_command(f"pc off")
@@ -203,6 +208,16 @@ class CO2SensorInterface:
         self.rs232_interface.flush_receiver_stream()
         self.rs232_interface.send_command("corr")
         return self._format_raw_answer(self.rs232_interface.wait_for_answer())
+
+    def start_calibration_sampling(self) -> None:
+        self.rs232_interface.flush_receiver_stream()
+        self.rs232_interface.send_command("CALIB ON")
+        self.rs232_interface.wait_for_answer()
+
+    def stop_calibration_sampling(self) -> None:
+        self.rs232_interface.flush_receiver_stream()
+        self.rs232_interface.send_command("CALIB OFF")
+        self.rs232_interface.wait_for_answer()
 
     def check_errors(self) -> None:
         """checks whether the CO2 probe reports any errors. Possibly raises
