@@ -78,7 +78,7 @@ class HardwareInterface:
         self.mainboard_sensor = MainboardSensorInterface(config)
         self.ups = UPSInterface(config)
 
-    def hardware_reset(self) -> None:
+    def perform_hard_reset(self) -> None:
         """teardown and reinitialize all hardware interfaces,
         toggle the power of all USB ports inbetween"""
 

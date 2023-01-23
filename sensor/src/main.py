@@ -57,7 +57,7 @@ def run() -> None:
     measurement_prodecure = procedures.MeasurementProcedure(config, hardware_interface)
 
     backoff_time_bucket_index = 0
-    backoff_time_buckets = [15, 60, 300, 900]
+    backoff_time_buckets = [15, 60, 300, 1200]  # 15s, 1m, 5m, 20m
 
     while True:
         try:
@@ -94,9 +94,13 @@ def run() -> None:
         except Exception as e:
             logger.exception(e, config=config)
 
+            hardware_interface.perform_hard_reset()
+
             # wait for an increasing amount of time
             current_backoff_time = backoff_time_buckets[backoff_time_bucket_index]
             logger.error(f"waiting for {current_backoff_time} seconds", config=config)
             time.sleep(current_backoff_time)
-            if len(backoff_time_buckets) > (backoff_time_bucket_index + 1):
-                backoff_time_bucket_index += 1
+            backoff_time_bucket_index = min(
+                backoff_time_bucket_index + 1,
+                len(backoff_time_buckets) - 1,
+            )
