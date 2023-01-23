@@ -1,3 +1,4 @@
+import time
 from src import custom_types, utils
 
 from .air_inlet_sensor import AirInletSensorInterface
@@ -13,6 +14,7 @@ from .wind_sensor import WindSensorInterface
 
 class HardwareInterface:
     def __init__(self, config: custom_types.Config) -> None:
+        self.config = config
         self.logger = utils.Logger("hardware-interface")
 
         # measurement sensors
@@ -43,17 +45,23 @@ class HardwareInterface:
         """ends all hardware/system connections"""
         self.logger.info("running hardware teardown")
 
+        # measurement sensors
         self.air_inlet_sensor.teardown()
         self.co2_sensor.teardown()
         self.wind_sensor.teardown()
+
+        # measurement actors
         self.pump.teardown()
         self.valves.teardown()
+
+        # enclosure controls
         self.heated_enclosure.teardown()
         self.mainboard_sensor.teardown()
         self.ups.teardown()
 
     def reinitialize(self, config: custom_types.Config) -> None:
         """reinitialize after an unsuccessful update"""
+        self.config = config
         self.logger.info("running hardware reinitialization")
 
         # measurement sensors
@@ -69,3 +77,17 @@ class HardwareInterface:
         self.heated_enclosure = HeatedEnclosureInterface(config)
         self.mainboard_sensor = MainboardSensorInterface(config)
         self.ups = UPSInterface(config)
+
+    def hardware_reset(self) -> None:
+        """teardown and reinitialize all hardware interfaces,
+        toggle the power of all USB ports inbetween"""
+
+        self.logger.info("performing hardware reset")
+
+        self.teardown()
+        time.sleep(1)
+        self.usb_ports.toggle_usb_power()
+        time.sleep(1)
+        self.reinitialize(self.config)
+
+        self.logger.info("hardware reset successful")
