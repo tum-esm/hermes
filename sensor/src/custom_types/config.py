@@ -141,30 +141,76 @@ class CalibrationGasConfig(BaseModel):
         extra = "forbid"
 
 
-class CalibrationConfig(BaseModel):
-    hours_between_calibrations: float
-    flushing_minutes: float
+class CalibrationFlushingConfig(BaseModel):
+    seconds: float
     pumped_litres_per_minute: float
-    gases: list[CalibrationGasConfig]
 
     # validators
-    _val_hours_between_calibrations = validator(
-        "hours_between_calibrations", pre=True, allow_reuse=True
-    )(
-        validate_float(minimum=0.5),
-    )
-    _val_flushing_minutes = validator("flushing_minutes", pre=True, allow_reuse=True)(
-        validate_int(minimum=0, maximum=60),
+    _val_seconds = validator("seconds", pre=True, allow_reuse=True)(
+        validate_float(minimum=0, maximum=1800),
     )
     _val_pumped_litres_per_minute = validator(
         "pumped_litres_per_minute", pre=True, allow_reuse=True
     )(
-        validate_float(minimum=0, maximum=30),
+        validate_float(minimum=0, maximum=10000),
     )
 
+    class Config:
+        extra = "forbid"
+
+
+class CalibrationSamplingConfig(BaseModel):
+    seconds: float
+    pumped_litres_per_minute: float
+    sample_count: int
+
+    # validators
+    _val_seconds = validator("seconds", pre=True, allow_reuse=True)(
+        validate_float(minimum=0, maximum=1800),
+    )
+    _val_pumped_litres_per_minute = validator(
+        "pumped_litres_per_minute", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=0, maximum=10000),
+    )
+    _val_sample_count = validator("sample_count", pre=True, allow_reuse=True)(
+        validate_int(minimum=0, maximum=500),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
+class CalibrationCleaningConfig(BaseModel):
+    seconds: float
+    pumped_litres_per_minute: float
+
+    # validators
+    _val_seconds = validator("seconds", pre=True, allow_reuse=True)(
+        validate_float(minimum=0, maximum=1800),
+    )
+    _val_pumped_litres_per_minute = validator(
+        "pumped_litres_per_minute", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=0, maximum=10000),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
+class CalibrationConfig(BaseModel):
+    hours_between_calibrations: float
+    gases: list[CalibrationGasConfig]
+    flushing: CalibrationFlushingConfig
+    sampling: CalibrationSamplingConfig
+    cleaning: CalibrationCleaningConfig
+
+    # validators
+
     # we have only implemented multi-point calibration for now
-    # that is why min_len=2, but single-point calibration is
-    # easy to implement
+    # that is why min_len=2, but single-point calibration can be
+    # implemented in the future
     _val_gases = validator("gases", pre=True, allow_reuse=True)(
         validate_list(min_len=2),
     )

@@ -27,12 +27,23 @@
     },
     "calibration": {
         "hours_between_calibrations": 25,
-        "flushing_minutes": 5,
-        "pumped_litres_per_minute": 0.5,
         "gases": [
             { "valve_number": 3, "concentration": 400 },
             { "valve_number": 4, "concentration": 800 }
-        ]
+        ],
+        "flushing": {
+            "seconds": 300,
+            "pumped_litres_per_minute": 0.5
+        },
+        "sampling": {
+            "seconds": 300,
+            "pumped_litres_per_minute": 0.5,
+            "sample_count": 20
+        },
+        "cleaning": {
+            "seconds": 300,
+            "pumped_litres_per_minute": 0.5
+        }
     },
     "heated_enclosure": {
         "target_temperature": 40,

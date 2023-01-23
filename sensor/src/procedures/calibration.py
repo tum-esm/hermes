@@ -17,8 +17,6 @@ class CalibrationProcedure:
     def run(self) -> None:
         calibration_time = datetime.utcnow().timestamp()
 
-        # TODO: implement calibration procedure
-
         # TODO: choose random calibration gas order
 
         # TODO: for each calibration gas
