@@ -15,13 +15,19 @@ class CalibrationProcedure:
         self.hardware_interface = hardware_interface
 
     def run(self) -> None:
-        pass
+        calibration_time = datetime.utcnow().timestamp()
 
         # TODO: implement calibration procedure
 
+        # save last calibration time
+        state = utils.StateInterface.read()
+        state.last_calibration_time = calibration_time
+        utils.StateInterface.write(state)
+
     def is_due(self) -> bool:
         """returns true when calibration procedure should run now"""
-        # TODO: calculate due dates based on config params
+
+        # load state, kept during configuration procedures
         state = utils.StateInterface.read()
 
         # if last calibration time is unknown, calibrate now
