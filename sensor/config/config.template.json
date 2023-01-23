@@ -26,6 +26,7 @@
         ]
     },
     "calibration": {
+        "hours_between_calibrations": 25,
         "flushing_minutes": 5,
         "pumped_litres_per_minute": 0.5,
         "gases": [

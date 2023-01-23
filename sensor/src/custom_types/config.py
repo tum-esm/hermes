@@ -142,11 +142,17 @@ class CalibrationGasConfig(BaseModel):
 
 
 class CalibrationConfig(BaseModel):
+    hours_between_calibrations: float
     flushing_minutes: float
     pumped_litres_per_minute: float
     gases: list[CalibrationGasConfig]
 
     # validators
+    _val_hours_between_calibrations = validator(
+        "hours_between_calibrations", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=0.5),
+    )
     _val_flushing_minutes = validator("flushing_minutes", pre=True, allow_reuse=True)(
         validate_int(minimum=0, maximum=60),
     )
