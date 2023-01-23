@@ -28,9 +28,9 @@ class MeasurementProcedure:
         self.last_measurement_time: float = 0
 
         # set up pump to run continuously
-        self.hardware_interface.pump.set_desired_pump_rps(
-            self.config.measurement.pumped_litres_per_minute
-            / (60 * self.config.hardware.pumped_litres_per_round)
+        self.hardware_interface.pump.set_desired_pump_speed(
+            unit="litres_per_minute",
+            value=self.config.measurement.pumped_litres_per_minute,
         )
         time.sleep(1)
 

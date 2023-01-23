@@ -23,7 +23,7 @@ class StateInterface:
             last_upgrade_time=None,
             last_calibration_time=None,
         )
-        StateInterface.dump(new_empty_state)
+        StateInterface.write(new_empty_state)
         return new_empty_state
 
     @staticmethod

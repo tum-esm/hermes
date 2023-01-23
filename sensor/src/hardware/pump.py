@@ -1,6 +1,7 @@
 import multiprocessing
 import queue
 import time
+from typing import Literal, Optional
 import gpiozero
 import gpiozero.pins.pigpio
 from src import utils, custom_types
@@ -54,8 +55,16 @@ class PumpInterface:
 
         self.logger.info("Finished initialization")
 
-    def set_desired_pump_rps(self, rps: float) -> None:
+    def set_desired_pump_speed(
+        self,
+        unit: Literal["rps", "litres_per_minute"],
+        value: float,
+    ) -> None:
         """set rps between 0 and 70"""
+        rps: float = value
+        if unit == "litres_per_minute":
+            rps = value / (60 * self.config.hardware.pumped_litres_per_round)
+
         assert 0 <= rps <= 70, f"rps have to be between 0 and 70 (passed {rps})"
         self.control_pin.value = rps / 70
         self.desired_rps_queue.put((time.time(), rps))
@@ -75,7 +84,7 @@ class PumpInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
-        self.set_desired_pump_rps(0)
+        self.set_desired_pump_speed(unit="rps", value=0)
         self.rps_monitoring_process.terminate()
         self.pin_factory.close()
 
