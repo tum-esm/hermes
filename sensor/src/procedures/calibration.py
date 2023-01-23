@@ -19,6 +19,28 @@ class CalibrationProcedure:
 
         # TODO: implement calibration procedure
 
+        # TODO: choose random calibration gas order
+
+        # TODO: for each calibration gas
+
+        # TODO: switch air inlet
+
+        self.hardware_interface.co2_sensor.start_calibration_sampling()
+
+        # TODO: set pump to 0.5 litres per minute
+        # TODO: wait 5 minutes
+        # TODO: take 20 measurements and average them
+
+        self.hardware_interface.co2_sensor.stop_calibration_sampling()
+
+        # TODO: send new correction values to CO2 sensor
+
+        # FIXME: after all gases, check with the last gas again?
+
+        # TODO: switch air inlet
+
+        # TODO: pump at configurable speed for 5 minutes
+
         # save last calibration time
         state = utils.StateInterface.read()
         state.last_calibration_time = calibration_time
