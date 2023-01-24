@@ -49,14 +49,18 @@ if __name__ == "__main__":
                             "air_inlet_humidity": air_inlet_humidity,
                         }
                     )
+                    last_update_time = current_data.last_update_time
 
                 # cycle power on USB ports if Arduino hast answered for 2 minutes
                 assert last_update_time is not None
                 if (time.time() - last_update_time) > 120:
                     write_data({"hard_reset_time": time.time()})
+                    print("performing hard reset")
                     heated_enclosure.teardown()
                     hardware.USBPortInterface.toggle_usb_power()
                     heated_enclosure = hardware.HeatedEnclosureInterface(config)
+                    print("sleeping 10 seconds to wait for data")
+                    time.sleep(10)
 
                 time.sleep(1)
     except filelock.Timeout:
