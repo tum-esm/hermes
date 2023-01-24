@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import os
 import time
-from typing import Optional
+from typing import Any, Optional
 from src import utils, hardware, custom_types
 import filelock
 
@@ -12,16 +12,9 @@ LOCK_FILE_PATH = os.path.join(PROJECT_DIR, "logs", "headless-enclosure-data.lock
 lock = filelock.FileLock(LOCK_FILE_PATH, timeout=2)
 
 
-def write_data(
-    enclosure_data: custom_types.HeatedEnclosureData,
-    mainboard_sensor_data: custom_types.MainboardSensorData,
-) -> None:
+def write_data(data: dict[Any, Any]) -> None:
     with open(DST_FILE_PATH, "a") as f:
-        merged_dict = {
-            **enclosure_data.dict(),
-            **mainboard_sensor_data.dict(),
-        }
-        f.write(f"{json.dumps(merged_dict)}\n")
+        f.write(f"{json.dumps(data)}\n")
 
 
 if __name__ == "__main__":
@@ -31,6 +24,7 @@ if __name__ == "__main__":
             config = utils.ConfigInterface.read()
             heated_enclosure = hardware.HeatedEnclosureInterface(config)
             mainboard_sensor = hardware.MainboardSensorInterface(config)
+            air_inlet_sensor = hardware.AirInletSensorInterface()
 
             print("sleeping 10 seconds to wait for data")
             time.sleep(10)
@@ -42,11 +36,24 @@ if __name__ == "__main__":
                 assert current_data is not None, "enclosure doesn't send any data"
 
                 if last_update_time != current_data.last_update_time:
-                    write_data(current_data, mainboard_sensor.get_system_data())
-                    last_update_time = current_data.last_update_time
+                    (
+                        air_inlet_temperature,
+                        air_inlet_humidity,
+                    ) = air_inlet_sensor.get_current_values()
+                    mainboard_sensor_data = mainboard_sensor.get_system_data()
+                    write_data(
+                        {
+                            **current_data.dict(),
+                            **mainboard_sensor_data.dict(),
+                            "air_inlet_temperature": air_inlet_temperature,
+                            "air_inlet_humidity": air_inlet_humidity,
+                        }
+                    )
 
                 # cycle power on USB ports if Arduino hast answered for 2 minutes
+                assert last_update_time is not None
                 if (time.time() - last_update_time) > 120:
+                    write_data({"hard_reset_time": time.time()})
                     heated_enclosure.teardown()
                     hardware.USBPortInterface.toggle_usb_power()
                     heated_enclosure = hardware.HeatedEnclosureInterface(config)
