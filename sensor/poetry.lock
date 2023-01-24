@@ -638,6 +638,18 @@ files = [
 ]
 
 [[package]]
+name = "types-filelock"
+version = "3.2.7"
+description = "Typing stubs for filelock"
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "types-filelock-3.2.7.tar.gz", hash = "sha256:0673a25b45725c5c45661fe3744c3d8058653a16e683f0ae4a74afb44a0cdef4"},
+    {file = "types_filelock-3.2.7-py3-none-any.whl", hash = "sha256:ee0ee2b4ec3d491ebe71f7343e21435c3a07f910881275a94788cac42acf4339"},
+]
+
+[[package]]
 name = "types-paho-mqtt"
 version = "1.6.0.1"
 description = "Typing stubs for paho-mqtt"
@@ -688,4 +700,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "de20eb9fb8b3713ae38cc7a8d948976eedd4570c6ebb02c1f96adc73d6d7ded8"
+content-hash = "cba9f9bcefadc8bcf8cd5e5c5952686fafd2aee3c9d963155c0dad4a11f04ea6"

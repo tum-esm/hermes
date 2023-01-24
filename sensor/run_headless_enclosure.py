@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 import os
 import time
+from typing import Optional
 from src import utils, hardware, custom_types
 import filelock
 
@@ -26,7 +27,7 @@ if __name__ == "__main__":
             print("sleeping 10 seconds to wait for data")
             time.sleep(10)
 
-            last_update_time = None
+            last_update_time: Optional[float] = None
 
             while True:
                 current_data = heated_enclosure.get_current_data()
@@ -35,6 +36,12 @@ if __name__ == "__main__":
                 if last_update_time != current_data.last_update_time:
                     write_data(current_data)
                     last_update_time = current_data.last_update_time
+
+                # cycle power on USB ports if Arduino hast answered for 2 minutes
+                if (time.time() - last_update_time) > 120:
+                    heated_enclosure.teardown()
+                    hardware.USBPortInterface.toggle_usb_power()
+                    heated_enclosure = hardware.HeatedEnclosureInterface(config)
 
                 time.sleep(1)
     except filelock.Timeout:
