@@ -1,13 +1,13 @@
 from app.validation.mqtt import (
     HeartbeatsMessage,
-    LogMessagesMessage,
+    LogsMessage,
     MeasurementsMessage,
 )
 from app.validation.routes import (
     CreateSensorRequest,
     CreateSessionRequest,
     CreateUserRequest,
-    ReadLogMessageAggregatesRequest,
+    ReadLogsAggregatesRequest,
     ReadMeasurementsRequest,
     ReadStatusRequest,
     StreamNetworkRequest,
@@ -18,11 +18,11 @@ from app.validation.routes import (
 __all__ = [
     "HeartbeatsMessage",
     "MeasurementsMessage",
-    "LogMessagesMessage",
+    "LogsMessage",
     "CreateSensorRequest",
     "CreateUserRequest",
     "CreateSessionRequest",
-    "ReadLogMessageAggregatesRequest",
+    "ReadLogsAggregatesRequest",
     "ReadMeasurementsRequest",
     "ReadStatusRequest",
     "StreamNetworkRequest",

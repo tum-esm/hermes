@@ -73,7 +73,7 @@ class _ReadMeasurementsRequestPath(types._BaseModel):
     sensor_identifier: types.Identifier
 
 
-class _ReadLogMessageAggregatesRequestPath(types._BaseModel):
+class _ReadLogsAggregatesRequestPath(types._BaseModel):
     sensor_identifier: types.Identifier
 
 
@@ -123,7 +123,7 @@ class _ReadMeasurementsRequestQuery(types._BaseModel):
         return v
 
 
-class _ReadLogMessageAggregatesRequestQuery(types._BaseModel):
+class _ReadLogsAggregatesRequestQuery(types._BaseModel):
     pass
 
 
@@ -165,7 +165,7 @@ class _ReadMeasurementsRequestBody(types._BaseModel):
     pass
 
 
-class _ReadLogMessageAggregatesRequestBody(types._BaseModel):
+class _ReadLogsAggregatesRequestBody(types._BaseModel):
     pass
 
 
@@ -229,13 +229,13 @@ class ReadMeasurementsRequest(types._BaseModel):
     body: _ReadMeasurementsRequestBody
 
 
-class ReadLogMessageAggregatesRequest(types._BaseModel):
+class ReadLogsAggregatesRequest(types._BaseModel):
     method: str
     url: object
     headers: dict
-    path: _ReadLogMessageAggregatesRequestPath
-    query: _ReadLogMessageAggregatesRequestQuery
-    body: _ReadLogMessageAggregatesRequestBody
+    path: _ReadLogsAggregatesRequestPath
+    query: _ReadLogsAggregatesRequestQuery
+    body: _ReadLogsAggregatesRequestBody
 
 
 class StreamNetworkRequest(types._BaseModel):

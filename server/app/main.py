@@ -82,6 +82,51 @@ async def create_user(request):
     )
 
 
+@validation.validate(schema=validation.CreateSessionRequest)
+async def create_session(request):
+    """Authenticate a user from username and password and return access token."""
+    try:
+        # Read user
+        query, arguments = database.build(
+            template="read-user.sql",
+            template_arguments={},
+            query_arguments={"username": request.body.username},
+        )
+        result = await database_client.fetch(query, *arguments)
+        user_identifier = database.dictify(result)[0]["user_identifier"]
+        password_hash = database.dictify(result)[0]["password_hash"]
+    except IndexError:
+        logger.warning(f"{request.method} {request.url.path} -- User not found")
+        raise errors.NotFoundError()
+    except Exception as e:
+        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
+        raise errors.InternalServerError()
+    # Check if password hashes match
+    if not auth.verify_password(request.body.password, password_hash):
+        logger.warning(f"{request.method} {request.url.path} -- Invalid password")
+        raise errors.UnauthorizedError()
+    access_token = auth.generate_token()
+    try:
+        # Create new session
+        query, arguments = database.build(
+            template="create-session.sql",
+            template_arguments={},
+            query_arguments={
+                "access_token_hash": auth.hash_token(access_token),
+                "user_identifier": user_identifier,
+            },
+        )
+        await database_client.execute(query, *arguments)
+    except Exception as e:
+        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
+        raise errors.InternalServerError()
+    # Return successful response
+    return starlette.responses.JSONResponse(
+        status_code=200,
+        content={"access_token": access_token, "user_identifier": user_identifier},
+    )
+
+
 @validation.validate(schema=validation.CreateSensorRequest)
 async def create_sensor(request):
     """Create a new sensor and configuration."""
@@ -224,6 +269,8 @@ async def read_measurements(request):
     -> it's probably best to have a separate endpoint for export
 
     - use status code 206 for partial content?
+
+    TODO sort asc
     """
     try:
         query, arguments = database.build(
@@ -246,12 +293,12 @@ async def read_measurements(request):
     )
 
 
-@validation.validate(schema=validation.ReadLogMessageAggregatesRequest)
+@validation.validate(schema=validation.ReadLogsAggregatesRequest)
 async def read_log_message_aggregates(request):
     """Return aggregation of sensor log messages."""
     try:
         query, arguments = database.build(
-            template="aggregate-log-messages.sql",
+            template="aggregate-logs.sql",
             template_arguments={},
             query_arguments={"sensor_identifier": request.path.sensor_identifier},
         )
@@ -308,51 +355,6 @@ async def stream_network(request):
     )
 
 
-@validation.validate(schema=validation.CreateSessionRequest)
-async def create_session(request):
-    """Authenticate a user from username and password and return access token."""
-    try:
-        # Read user
-        query, arguments = database.build(
-            template="read-user.sql",
-            template_arguments={},
-            query_arguments={"username": request.body.username},
-        )
-        result = await database_client.fetch(query, *arguments)
-        user_identifier = database.dictify(result)[0]["user_identifier"]
-        password_hash = database.dictify(result)[0]["password_hash"]
-    except IndexError:
-        logger.warning(f"{request.method} {request.url.path} -- User not found")
-        raise errors.NotFoundError()
-    except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
-        raise errors.InternalServerError()
-    # Check if password hashes match
-    if not auth.verify_password(request.body.password, password_hash):
-        logger.warning(f"{request.method} {request.url.path} -- Invalid password")
-        raise errors.UnauthorizedError()
-    access_token = auth.generate_token()
-    try:
-        # Create new session
-        query, arguments = database.build(
-            template="create-session.sql",
-            template_arguments={},
-            query_arguments={
-                "access_token_hash": auth.hash_token(access_token),
-                "user_identifier": user_identifier,
-            },
-        )
-        await database_client.execute(query, *arguments)
-    except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
-        raise errors.InternalServerError()
-    # Return successful response
-    return starlette.responses.JSONResponse(
-        status_code=200,
-        content={"access_token": access_token, "user_identifier": user_identifier},
-    )
-
-
 database_client = None
 mqtt_client = None
 
@@ -395,6 +397,11 @@ app = starlette.applications.Starlette(
             methods=["POST"],
         ),
         starlette.routing.Route(
+            path="/authentication",
+            endpoint=create_session,
+            methods=["POST"],
+        ),
+        starlette.routing.Route(
             path="/sensors",
             endpoint=create_sensor,
             methods=["POST"],
@@ -415,7 +422,7 @@ app = starlette.applications.Starlette(
             methods=["GET"],
         ),
         starlette.routing.Route(
-            path="/sensors/{sensor_identifier}/log-messages/aggregates",
+            path="/sensors/{sensor_identifier}/logs/aggregates",
             endpoint=read_log_message_aggregates,
             methods=["GET"],
         ),
@@ -423,11 +430,6 @@ app = starlette.applications.Starlette(
             path="/streams/{network_identifier}",
             endpoint=stream_network,
             methods=["GET"],
-        ),
-        starlette.routing.Route(
-            path="/authentication",
-            endpoint=create_session,
-            methods=["POST"],
         ),
     ],
     lifespan=lifespan,
