@@ -14,7 +14,7 @@ pydantic = "^1.10.2"
 pendulum = "^2.1.2"
 asgi-lifespan = "^2.0.0"
 asyncio-mqtt = "^0.16.1"
-passlib = "^1.7.4"
+passlib = {extras = ["argon2"], version = "^1.7.4"}
 
 [tool.poetry.group.dev]
 optional = true
