@@ -16,6 +16,188 @@ When you have your PostgreSQL instance and the MQTT broker ready:
 
 The easiest way to deploy the server is via Docker. Many cloud providers offer a way to deploy Docker images automatically from a git repository. If you prefer to build and run the Docker image manually, you can do that via `./scripts/build` and `./scripts/run`.
 
+## HTTP routes
+
+**`GET /status`:**
+
+Read the status of the server.
+
+```python
+httpx.get(url="http://localhost:8000/status")
+```
+
+```javascript
+{
+    "environment": "production",
+    "commit_sha": "1a2984bf5ffda71207fb133d785eb486cb465618",
+    "branch_name": "main",
+    "start_time": 1674674178.5367813
+}
+```
+
+**`POST /users`:**
+
+Create a new user.
+
+```python
+httpx.post(
+    url="http://localhost:8000/users",
+    json={"username": "admin", "password": "12345678"},
+)
+```
+
+```javascript
+{
+    "access_token": "b6e33a5d4f1dc71b628de55767a6e7bb1087d71fbd60425859251e936bf1ab02",
+    "user_identifier": "a8323361-3c22-4f07-8c14-74bb7e8ec3a2"
+}
+```
+
+**`POST /authentication`:**
+
+Log in.
+
+```python
+httpx.post(
+    url="http://localhost:8000/authentication",
+    json={"username": "admin", "password": "12345678"},
+)
+```
+
+```javascript
+{
+    "access_token": "c186a32e88541b4ddb2f0bd59a68b7d68d8f8050757101fa836e2bf9b6bd04c2",
+    "user_identifier": "a8323361-3c22-4f07-8c14-74bb7e8ec3a2"
+}
+```
+
+**`POST /sensors`:**
+
+Create a new sensor.
+
+```python
+httpx.post(
+    url="http://localhost:8000/sensors",
+    headers={"authorization": "Bearer c186a32e88541b4ddb2f0bd59a68b7d68d8f8050757101fa836e2bf9b6bd04c2"},
+    json={
+        "sensor_name": "bulbasaur",
+        "network_identifier": "0a71a8d8-40c6-4086-a64e-58e38350cb53",
+        "configuration": {},
+    },
+)
+```
+
+```javascript
+{
+    "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
+    "revision": 0
+}
+```
+
+**`PUT /sensors/<sensor-identifier>`:**
+
+Update the sensor configuration.
+
+```python
+httpx.put(
+    url="http://localhost:8000/sensors/102ebc56-edb9-42be-aec0-15a6c1075c7e",
+    headers={"authorization": "Bearer c186a32e88541b4ddb2f0bd59a68b7d68d8f8050757101fa836e2bf9b6bd04c2"},
+    json={
+        "sensor_name": "bulbasaur",
+        "network_identifier": "0a71a8d8-40c6-4086-a64e-58e38350cb53",
+        "configuration": {
+            "value": 23,
+            "something": "else",
+        },
+    },
+)
+```
+
+```javascript
+{
+    "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
+    "revision": 16
+}
+```
+
+**`GET /sensors/<sensor-identifier>/measurements`:**
+
+Read the measurements of a sensor in pages, optionally with keyset parameters `direction` and `creation_timestamp`.
+
+```python
+httpx.get(
+    url="http://localhost:8000/sensors/102ebc56-edb9-42be-aec0-15a6c1075c7e/measurements",
+)
+```
+
+```javascript
+[
+    {
+        "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
+        "creation_timestamp": 1674677601.900101,
+        "measurement": {
+            "what": 42,
+            "tomorrow": true,
+            "somewhere": 347
+        }
+    },
+    {
+        "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
+        "creation_timestamp": 1674677604.365664,
+        "measurement": {
+            "what": 42,
+            "tomorrow": true,
+            "somewhere": 320
+        }
+    }
+]
+```
+
+**`GET /sensors/<sensor-identifier>/logs/aggregates`:**
+
+Read an aggregate of the sensor logs.
+
+```python
+httpx.get(
+    url="http://localhost:8000/sensors/102ebc56-edb9-42be-aec0-15a6c1075c7e/logs/aggregates",
+)
+```
+
+```javascript
+[
+    {
+        "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
+        "severity": "error",
+        "subject": "The CPU is burning",
+        "first_revision": 0,
+        "last_revision": 2,
+        "first_creation_timestamp": 1674678353.210926,
+        "last_creation_timestamp": 1674678408.210929,
+        "count": 2
+    },
+    {
+        "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
+        "severity": "warning",
+        "subject": "The CPU is pretty hot",
+        "first_revision": 2,
+        "last_revision": 2,
+        "first_creation_timestamp": 1674678412.210929,
+        "last_creation_timestamp": 1674678412.210929,
+        "count": 1
+    }
+]
+```
+
+**`GET /streams/<network-identifier>`:**
+
+Stream the activity of sensors via SSE.
+
+```python
+httpx.get(
+    url="http://localhost:8000/streams/0a71a8d8-40c6-4086-a64e-58e38350cb53",
+)
+```
+
 ## MQTT
 
 The communication between the sensors and the server runs over four MQTT topics:
