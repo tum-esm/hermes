@@ -31,20 +31,21 @@ def run_shell_command(
     return stdout.strip()
 
 
-# add `/home/pi/bin` to PATH variable
-
-new_bashrc_line = 'export PATH="/home/pi/bin:/home/pi/.local/bin:$PATH"'
+# extend `~/.bashrc` file
+with open("/boot/midcost-init-files/system/.bashrc", "r") as f:
+    new_bashrc_lines = [l for l in f.read().split("\n") if (not l.startswith("#"))]
 with open("~/.bashrc", "r") as f:
-    file_content = f.read()
-if new_bashrc_line not in file_content:
-    with open("~/.bashrc", "a") as f:
-        f.write(f"\n\n{new_bashrc_line}\n")
+    current_bashrc_content = f.read()
+for l in new_bashrc_lines:
+    if l not in current_bashrc_content:
+        with open("~/.bashrc", "a") as f:
+            f.write(f"\n\n{l}\n")
 
 # install dependencies
 print("Installing General Apt Packages")
 run_shell_command("apt update")
 run_shell_command(
-    "apt install software-properties-common make gcc vim git build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget pigpio arduino -y"
+    "apt install software-properties-common make gcc vim git build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget pigpio arduino exa -y"
 )
 
 print("Installing Python3.9 via Apt")
@@ -72,19 +73,19 @@ run_shell_command(
 # Add SSH files
 for src, dst in [
     (
-        "/boot/midcost-init-files/ssh_authorized_keys",
+        "/boot/midcost-init-files/ssh/authorized_keys",
         "/hom/pi/.ssh/authorized_keys",
     ),
     (
-        "/boot/midcost-init-files/ssh_id_ed25519_esm_technical_user",
+        "/boot/midcost-init-files/ssh/id_ed25519_esm_technical_user",
         "/hom/pi/.ssh/id_ed25519_esm_technical_user",
     ),
     (
-        "/boot/midcost-init-files/ssh_id_ed25519_esm_technical_user.pub",
+        "/boot/midcost-init-files/ssh/id_ed25519_esm_technical_user.pub",
         "/hom/pi/.ssh/id_ed25519_esm_technical_user.pub",
     ),
     (
-        "/boot/midcost-init-files/ssh_config.txt",
+        "/boot/midcost-init-files/ssh/config.txt",
         "/hom/pi/.ssh/config.txt",
     ),
 ]:
@@ -111,27 +112,57 @@ assert (
     "You've successfully authenticated" in gihub_ssh_response
 ), "GitHub Authentication failed"
 
-# remove old baserow IP logger
+# remove old baserow-ip-logger
 if os.path.isdir("/home/pi/Documents/baserow-ip-logger"):
     shutil.rmtree("/home/pi/Documents/baserow-ip-logger")
 
-# install baserow IP logger
+# install baserow-ip-logger
 run_shell_command(
     "git clone git@github.com:dostuffthatmatters/baserow-ip-logger.git "
     + "/home/pi/Documents/baserow-ip-logger"
 )
-run_shell_command("python3.9 -m venv .venv", working_directory="/home/pi/Documents/")
+run_shell_command("python3.9 -m venv /home/pi/Documents/.venv")
 run_shell_command(
     "source .venv/bin/activate && poetry install",
     working_directory="/home/pi/Documents/",
 )
 shutil.copyfile(
-    "/boot/midcost-init-files/baserow-ip-logger-config.json",
+    "/boot/midcost-init-files/baserow-ip-logger/config.json",
     "/home/pi/Documents/baserow-ip-logger/config.json",
 )
 
-# install insert-name-here codebase
+# install insert-name-here
+assert not os.path.isdir("/home/pi/Documents/insert-name-here")
+AUTOMATION_TAG = "1.0.0-beta.1"
+AUTOMATION_DIR = "/home/pi/Documents/insert-name-here"
 
+# download a specific tag via SSH
+run_shell_command(
+    "git clone git@github.com:tum-esm/insert-name-here.git "
+    + f"{AUTOMATION_DIR}/{AUTOMATION_TAG}"
+)
+run_shell_command(
+    f"git checkout {AUTOMATION_TAG}",
+    working_directory=f"{AUTOMATION_DIR}/{AUTOMATION_TAG}",
+)
+shutil.rmtree(f"{AUTOMATION_DIR}/{AUTOMATION_TAG}/.git")
+
+# install dependencies
+run_shell_command(f"python3.9 -m venv {AUTOMATION_DIR}/{AUTOMATION_TAG}/.venv")
+run_shell_command(
+    "source .venv/bin/activate && poetry install",
+    working_directory=f"{AUTOMATION_DIR}/{AUTOMATION_TAG}",
+)
+
+# copy config files
+shutil.copyfile(
+    "/boot/midcost-init-files/insert-name-here/config.json",
+    "/home/pi/Documents/insert-name-here/config/config.json",
+)
+shutil.copyfile(
+    "/boot/midcost-init-files/insert-name-here/.env",
+    "/home/pi/Documents/insert-name-here/config/.env",
+)
 
 # installing new crontab
-run_shell_command("crontab /boot/midcost-init-files/crontab")
+run_shell_command("crontab /boot/midcost-init-files/system/crontab")

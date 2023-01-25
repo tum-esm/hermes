@@ -25,9 +25,6 @@ The `boot-files/` should contain the following files:
         📁 baserow-ip-logger/
             📄 config.json
 
-        📁 crontab/
-            📄 crontab
-
         📁 insert-name-here/
             📄 .env
             📄 config.json
@@ -37,4 +34,8 @@ The `boot-files/` should contain the following files:
             📄 config.txt
             📄 id_ed25519_esm_technical_user
             📄 id_ed25519_esm_technical_user.pub
+
+        📁 system/
+            📄 .bashrc
+            📄 crontab
 ```
