@@ -11,24 +11,30 @@ python3 /boot/midcost-init-files/test-midcost-node.py
 
 The `boot-files/` should contain the following files:
 
-```bash
-# Wifi credentials for personal hotspots and eduroam
-wpa_supplicant.conf
+```
+📁 boot-files/
 
-# Setup script
-midcost-init-files/initialize_midcost_node.py
+    📄 wpa_supplicant.conf
+    📄 config.txt
 
-# SSH keys for GitHub Access
-midcost-init-files/ssh_authorized_keys
-midcost-init-files/ssh_config.txt
-midcost-init-files/ssh_id_ed25519_esm_technical_user
-midcost-init-files/ssh_id_ed25519_esm_technical_user.pub
+    📁 midcost-init-files/
 
-# Config.json files for baserow-ip-logger and insert-name-here
-midcost-init-files/baserow_ip_logger_config.json
-midcost-init-files/insert_name_here_config.json
-midcost-init-files/insert_name_here_env
+        📄initialize_midcost_node.py
+        📄test_midcost_node.py
 
-# Automatic job dispatching
-midcost-init-files/crontab
+        📁 baserow-ip-logger/
+            📄 config.json
+
+        📁 crontab/
+            📄 crontab
+
+        📁 insert-name-here/
+            📄 .env
+            📄 config.json
+
+        📁 ssh/
+            📄 authorized_keys
+            📄 config.txt
+            📄 id_ed25519_esm_technical_user
+            📄 id_ed25519_esm_technical_user.pub
 ```
