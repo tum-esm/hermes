@@ -159,7 +159,7 @@ class SendingMQTTClient:
             # TODO: heartbeat messages, https://github.com/tum-esm/insert-name-here/issues/29
 
             config = utils.ConfigInterface.read()
-            if not config.general.active_components.mqtt:
+            if not config.active_components.mqtt_data_sending:
                 logger.debug("mqtt message sending is disabled, waiting 60 seconds")
                 time.sleep(60)
                 continue

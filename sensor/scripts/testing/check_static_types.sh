@@ -1,15 +1,18 @@
 set -o errexit
 
-echo "Checking automation types"
+echo "Checking run.py"
 mypy run.py
 
-echo "Checking headless enclosure types"
+echo "Checking run_headless_enclosure.py"
 mypy run_headless_enclosure.py
 
-echo "Checking headless wind sensor types"
+echo "Checking run_headless_wind_sensor.py"
 mypy run_headless_wind_sensor.py
 
-echo "Checking CLI types"
+echo "Checking run_pump_cycle.py"
+mypy run_pump_cycle.py
+
+echo "Checking cli/main.py"
 mypy cli/main.py
 
 echo "Checking pytest types"

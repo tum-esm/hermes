@@ -26,7 +26,7 @@ class SystemCheckProcedure:
         )
 
         # interact with heated enclosure
-        if self.config.general.active_components.heated_enclosure:
+        if self.config.active_components.heated_enclosure_communication:
             if self.hardware_interface.heated_enclosure is None:
                 self.hardware_interface.heated_enclosure = (
                     self.hardware_interface.HeatedEnclosureInterface(self.config)
@@ -65,6 +65,6 @@ class SystemCheckProcedure:
 
         # check for errors
         self.hardware_interface.check_errors()
-        if self.config.general.active_components.mqtt:
+        if self.config.active_components.mqtt_data_sending:
             utils.SendingMQTTClient.check_errors()
             utils.SendingMQTTClient.log_statistics()
