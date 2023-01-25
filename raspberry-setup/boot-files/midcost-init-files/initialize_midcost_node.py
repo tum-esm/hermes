@@ -116,17 +116,18 @@ shutil.copyfile(
 # INSTALL INSERT-NAME-HERE
 
 assert not os.path.isdir(AUTOMATION_DIR)
+TMP_AUTOMATION_DIR = "/tmp/automation-dir"
 
 # download a specific tag via SSH
 run_shell_command(
-    "git clone git@github.com:tum-esm/insert-name-here.git "
-    + f"{AUTOMATION_DIR}/{AUTOMATION_TAG}"
+    "git clone git@github.com:tum-esm/insert-name-here.git " + f"{TMP_AUTOMATION_DIR}"
 )
 run_shell_command(
     f"git checkout {AUTOMATION_TAG}",
-    working_directory=f"{AUTOMATION_DIR}/{AUTOMATION_TAG}",
+    working_directory=f"{TMP_AUTOMATION_DIR}",
 )
-shutil.rmtree(f"{AUTOMATION_DIR}/{AUTOMATION_TAG}/.git")
+shutil.copytree(f"{TMP_AUTOMATION_DIR}/sensor", f"{AUTOMATION_DIR}/{AUTOMATION_TAG}")
+shutil.rmtree(TMP_AUTOMATION_DIR)
 
 # install dependencies
 run_shell_command(f"python3.9 -m venv {AUTOMATION_DIR}/{AUTOMATION_TAG}/.venv")
@@ -144,6 +145,15 @@ shutil.copyfile(
     "/boot/midcost-init-files/insert-name-here/.env",
     f"{AUTOMATION_DIR}/{AUTOMATION_TAG}/config/.env",
 )
+
+# make CLI point to release version
+with open(
+    "/boot/midcost-init-files/insert-name-here/insert-name-here-cli.template.sh"
+) as f:
+    cli_file_content = f.read()
+cli_file_content = cli_file_content.replace("%VERSION%", AUTOMATION_TAG)
+with open("/home/pi/insert-name-here/insert-name-here-cli.sh", "w") as f:
+    f.write(cli_file_content)
 
 # =============================================================================
 # ADD CRONTAB

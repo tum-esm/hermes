@@ -28,6 +28,7 @@ The `boot-files/` should contain the following files:
         📁 insert-name-here/
             📄 .env
             📄 config.json
+            📄 insert-name-here-cli.template.sh
 
         📁 ssh/
             📄 authorized_keys
