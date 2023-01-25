@@ -2,4 +2,6 @@ ssh_id_ed25519_esm_technical_user
 ssh_id_ed25519_esm_technical_user.pub
 ssh_authorized_keys
 wpa_supplicant.conf
-baserow-ip-logger-config.json
+baserow_ip_logger_config.json
+insert_name_here_config.json
+automation_mqtt_env

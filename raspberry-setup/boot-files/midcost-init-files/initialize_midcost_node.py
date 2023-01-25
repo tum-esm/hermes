@@ -111,17 +111,14 @@ assert (
     "You've successfully authenticated" in gihub_ssh_response
 ), "GitHub Authentication failed"
 
-# installing new crontab
-run_shell_command("crontab /boot/midcost-init-files/crontab")
-
 # remove old baserow IP logger
-if os.path.isdir("/home/pi/Documents/baserow-node-ip-management"):
-    shutil.rmtree("/home/pi/Documents/baserow-node-ip-management")
+if os.path.isdir("/home/pi/Documents/baserow-ip-logger"):
+    shutil.rmtree("/home/pi/Documents/baserow-ip-logger")
 
 # install baserow IP logger
 run_shell_command(
-    "git clone git@github.com:dostuffthatmatters/baserow-node-ip-management.git "
-    + "/home/pi/Documents/baserow-node-ip-management"
+    "git clone git@github.com:dostuffthatmatters/baserow-ip-logger.git "
+    + "/home/pi/Documents/baserow-ip-logger"
 )
 run_shell_command("python3.9 -m venv .venv", working_directory="/home/pi/Documents/")
 run_shell_command(
@@ -130,7 +127,11 @@ run_shell_command(
 )
 shutil.copyfile(
     "/boot/midcost-init-files/baserow-ip-logger-config.json",
-    "/home/pi/Documents/baserow-node-ip-management/config.json",
+    "/home/pi/Documents/baserow-ip-logger/config.json",
 )
 
-# TODO: run baserow test?
+# install insert-name-here codebase
+
+
+# installing new crontab
+run_shell_command("crontab /boot/midcost-init-files/crontab")
