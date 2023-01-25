@@ -4,20 +4,21 @@ All files in the `boot-files/` directory should be copied to a Raspberry Pi's `/
 python3 /boot/midcost-init-files/initialize-midcost-node.py
 ```
 
-The `boot-files/midcost-init-files/` directory should contain the following:
+The `boot-files/` should contain the following files:
 
 ```bash
-# Setup script
-initialize-midcost-node.py
+# Wifi credentials for personal hotspots and eduroam
+wpa_supplicant.conf
 
-# Wifi Credentials for personal hotspots and eduroam
-network_wpa_com*.conf
+# Setup script
+midcost-init-files/initialize-midcost-node.py
 
 # SSH keys for GitHub Access
-ssh_config.txt
-ssh_id_ed25519_esm_technical_user
-ssh_id_ed25519_esm_technical_user.pub
+midcost-init-files/ssh_authorized_keys
+midcost-init-files/ssh_config.txt
+midcost-init-files/ssh_id_ed25519_esm_technical_user
+midcost-init-files/ssh_id_ed25519_esm_technical_user.pub
 
 # Automatic job dispatching
-crontab
+midcost-init-files/crontab
 ```
