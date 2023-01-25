@@ -261,7 +261,11 @@ async def read_sensors(request):
 
 @validation.validate(schema=validation.ReadMeasurementsRequest)
 async def read_measurements(request):
-    """Return pages of measurements sorted descending by creation timestamp.
+    """Return pages of measurements sorted ascending by creation timestamp.
+
+    When no query parameters are given, the latest N measurements are returned. When
+    direction and creation_timestamp are given, the next/previous N measurements based
+    on the given timestamp are returned.
 
     - maybe we can choose based on some header, if we page or export the data
     - for export, we can also offer start/end timestamps parameters
@@ -269,8 +273,6 @@ async def read_measurements(request):
     -> it's probably best to have a separate endpoint for export
 
     - use status code 206 for partial content?
-
-    TODO sort asc
     """
     try:
         query, arguments = database.build(
@@ -289,7 +291,7 @@ async def read_measurements(request):
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=200,
-        content=database.dictify(result),
+        content=database.dictify(result)[::-1],
     )
 
 
