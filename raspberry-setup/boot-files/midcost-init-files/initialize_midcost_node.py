@@ -69,8 +69,12 @@ run_shell_command(
     "code --install-extension whatwewant.open-terminal --install-extension ms-python.python --install-extension VisualStudioExptTeam.vscodeintellicode --install-extension donjayamanne.python-environment-manager --install-extension bungcip.better-toml --install-extension yzhang.markdown-all-in-one --install-extension  christian-kohler.path-intellisense --install-extension ms-vscode.vscode-serial-monitor --install-extension Gruntfuggly.todo-tree --install-extension AnchovyStudios.zip-extract-all"
 )
 
-# Add SSH config and test GitHub Access to ESM Technical User
+# Add SSH files
 for src, dst in [
+    (
+        "/boot/midcost-init-files/ssh_authorized_keys",
+        "/hom/pi/.ssh/authorized_keys",
+    ),
     (
         "/boot/midcost-init-files/ssh_id_ed25519_esm_technical_user",
         "/hom/pi/.ssh/id_ed25519_esm_technical_user",
@@ -86,6 +90,17 @@ for src, dst in [
 ]:
     if not os.path.isfile(dst):
         shutil.copyfile(src, dst)
+
+# configure the SSH daemon
+print("Allow password access via SSH")
+with open("/etc/ssh/sshd_config", "r") as f:
+    sshd_config_content = f.read()
+sshd_config_content = sshd_config_content.replace(
+    "#PasswordAuthentication no", "PasswordAuthentication no"
+).replace("PasswordAuthentication no", "PasswordAuthentication yes")
+with open("/etc/ssh/sshd_config", "w") as f:
+    f.write(sshd_config_content)
+run_shell_command("service ssh restart")
 
 # test SSH keys with GitHub
 gihub_ssh_response = run_shell_command(

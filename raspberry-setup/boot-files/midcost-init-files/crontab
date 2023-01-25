@@ -1,0 +1,12 @@
+PATH="/home/pi/bin:/home/pi/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games"
+
+# start gpio daemon to access pins
+@reboot sudo pigpiod -n "127.0.0.1"
+
+# line format: minute | hour | day-of-month | month | day-of-week | command
+
+# report the local ip address to baserow
+*/2 * * * * /home/pi/Documents/baserow-node-ip-management/.venv/bin/python /home/pi/Documents/baserow-node-ip-management/run.py > /home/pi/Documents/baserow-node-ip-management/cron.log
+
+# start automation (if not already running)
+*/2 * * * * /home/pi/Documents/insert-name-here/insert-name-here-cli.sh start > /home/pi/Documents/insert-name-here/insert-name-here-cli.log
