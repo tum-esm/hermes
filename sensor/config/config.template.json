@@ -1,14 +1,11 @@
 {
     "version": "0.1.0",
     "revision": 1,
-    "general": {
-        "station_name": "some-useful-name",
-        "active_components": {
-            "measurement": false,
-            "calibration": false,
-            "heated_enclosure": false,
-            "mqtt": false
-        }
+    "active_components": {
+        "calibration_procedures": false,
+        "mqtt_data_sending": false,
+        "heated_enclosure_communication": false,
+        "pump_speed_monitoring": false
     },
     "hardware": {
         "pumped_litres_per_round": 0.003,

@@ -10,27 +10,14 @@ from .validators import (
 
 
 class ActiveComponentsConfig(BaseModel):
-    measurement: bool
-    calibration: bool
-    heated_enclosure: bool
-    mqtt: bool
+    calibration_procedures: bool
+    mqtt_data_sending: bool
+    heated_enclosure_communication: bool
+    pump_speed_monitoring: bool
 
     # validators
     _val_bool = validator("*", pre=True, allow_reuse=True)(
         validate_bool(),
-    )
-
-    class Config:
-        extra = "forbid"
-
-
-class GeneralConfig(BaseModel):
-    station_name: str
-    active_components: ActiveComponentsConfig
-
-    # validators
-    _val_station_name = validator("station_name", pre=True, allow_reuse=True)(
-        validate_str(min_len=3, max_len=64),
     )
 
     class Config:
@@ -250,7 +237,7 @@ class Config(BaseModel):
 
     version: Literal["0.1.0"]
     revision: int
-    general: GeneralConfig
+    active_components: ActiveComponentsConfig
     hardware: HardwareConfig
     measurement: MeasurementConfig
     calibration: CalibrationConfig
