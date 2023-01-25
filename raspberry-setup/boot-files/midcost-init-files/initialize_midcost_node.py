@@ -1,37 +1,11 @@
 import shutil
-import subprocess
 import os
-from typing import Optional
-
-ENV = os.environ.copy()
-ENV["PATH"] = "/home/pi/bin:/home/pi/.local/bin:" + ENV["PATH"]
+from utils import run_shell_command, IP_LOGGER_DIR, AUTOMATION_DIR, AUTOMATION_TAG
 
 
-def run_shell_command(
-    command: str,
-    working_directory: Optional[str] = None,
-    check_exit_code: bool = True,
-) -> str:
-    p = subprocess.run(
-        command,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        cwd=working_directory,
-        env=ENV,
-        working_directory="/home/pi",
-    )
-    stdout = p.stdout.decode("utf-8", errors="replace")
-    stderr = p.stderr.decode("utf-8", errors="replace")
-    if check_exit_code:
-        assert p.returncode == 0, (
-            f"command '{command}' failed with exit code "
-            + f"{p.returncode}: stderr = '{stderr}'"
-        )
-    return stdout.strip()
+# =============================================================================
+# EXTEND BASHRC FILE
 
-
-# extend `~/.bashrc` file
 with open("/boot/midcost-init-files/system/.bashrc", "r") as f:
     new_bashrc_lines = [l for l in f.read().split("\n") if (not l.startswith("#"))]
 with open("~/.bashrc", "r") as f:
@@ -41,7 +15,9 @@ for l in new_bashrc_lines:
         with open("~/.bashrc", "a") as f:
             f.write(f"\n\n{l}\n")
 
-# install dependencies
+# =============================================================================
+# INSTALL SYSTEM PACKAGES
+
 print("Installing General Apt Packages")
 run_shell_command("apt update")
 run_shell_command(
@@ -69,6 +45,9 @@ print("Installing VS Code Extensions")
 run_shell_command(
     "code --install-extension whatwewant.open-terminal --install-extension ms-python.python --install-extension VisualStudioExptTeam.vscodeintellicode --install-extension donjayamanne.python-environment-manager --install-extension bungcip.better-toml --install-extension yzhang.markdown-all-in-one --install-extension  christian-kohler.path-intellisense --install-extension ms-vscode.vscode-serial-monitor --install-extension Gruntfuggly.todo-tree --install-extension AnchovyStudios.zip-extract-all"
 )
+
+# =============================================================================
+# SET UP SSH
 
 # Add SSH files
 for src, dst in [
@@ -112,29 +91,31 @@ assert (
     "You've successfully authenticated" in gihub_ssh_response
 ), "GitHub Authentication failed"
 
+# =============================================================================
+# INSTALL BASEROW-IP-LOGGER
+
 # remove old baserow-ip-logger
-if os.path.isdir("/home/pi/Documents/baserow-ip-logger"):
-    shutil.rmtree("/home/pi/Documents/baserow-ip-logger")
+if os.path.isdir(IP_LOGGER_DIR):
+    shutil.rmtree(IP_LOGGER_DIR)
 
 # install baserow-ip-logger
 run_shell_command(
-    "git clone git@github.com:dostuffthatmatters/baserow-ip-logger.git "
-    + "/home/pi/Documents/baserow-ip-logger"
+    "git clone git@github.com:dostuffthatmatters/baserow-ip-logger.git " + IP_LOGGER_DIR
 )
-run_shell_command("python3.9 -m venv /home/pi/Documents/.venv")
+run_shell_command(f"python3.9 -m venv {IP_LOGGER_DIR}/.venv")
 run_shell_command(
     "source .venv/bin/activate && poetry install",
-    working_directory="/home/pi/Documents/",
+    working_directory=IP_LOGGER_DIR,
 )
 shutil.copyfile(
     "/boot/midcost-init-files/baserow-ip-logger/config.json",
-    "/home/pi/Documents/baserow-ip-logger/config.json",
+    f"{IP_LOGGER_DIR}/config.json",
 )
 
-# install insert-name-here
-assert not os.path.isdir("/home/pi/Documents/insert-name-here")
-AUTOMATION_TAG = "1.0.0-beta.1"
-AUTOMATION_DIR = "/home/pi/Documents/insert-name-here"
+# =============================================================================
+# INSTALL INSERT-NAME-HERE
+
+assert not os.path.isdir(AUTOMATION_DIR)
 
 # download a specific tag via SSH
 run_shell_command(
@@ -157,12 +138,14 @@ run_shell_command(
 # copy config files
 shutil.copyfile(
     "/boot/midcost-init-files/insert-name-here/config.json",
-    "/home/pi/Documents/insert-name-here/config/config.json",
+    f"{AUTOMATION_DIR}/{AUTOMATION_TAG}/config/config.json",
 )
 shutil.copyfile(
     "/boot/midcost-init-files/insert-name-here/.env",
-    "/home/pi/Documents/insert-name-here/config/.env",
+    f"{AUTOMATION_DIR}/{AUTOMATION_TAG}/config/.env",
 )
 
-# installing new crontab
+# =============================================================================
+# ADD CRONTAB
+
 run_shell_command("crontab /boot/midcost-init-files/system/crontab")
