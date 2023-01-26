@@ -1,4 +1,4 @@
-INSERT INTO log_messages (
+INSERT INTO logs (
     sensor_identifier,
     revision,
     creation_timestamp,

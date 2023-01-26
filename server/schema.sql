@@ -114,7 +114,7 @@ SELECT add_continuous_aggregate_policy(
 );
 
 
-CREATE TABLE log_messages (
+CREATE TABLE logs (
     sensor_identifier UUID NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
     revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
@@ -125,11 +125,11 @@ CREATE TABLE log_messages (
     details TEXT
 );
 
-CREATE UNIQUE INDEX ON log_messages (sensor_identifier ASC, creation_timestamp DESC);
+CREATE UNIQUE INDEX ON logs (sensor_identifier ASC, creation_timestamp DESC);
 
-SELECT create_hypertable('log_messages', 'creation_timestamp');
+SELECT create_hypertable('logs', 'creation_timestamp');
 
 SELECT add_retention_policy(
-    relation => 'log_messages',
+    relation => 'logs',
     drop_after => INTERVAL '120 days'
 );
