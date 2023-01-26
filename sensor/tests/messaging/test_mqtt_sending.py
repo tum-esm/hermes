@@ -7,7 +7,14 @@ from os.path import dirname, abspath, join
 import sys
 import deepdiff
 
-from ..pytest_fixtures import mqtt_client_environment, mqtt_sending_loop, log_files
+from ..pytest_fixtures import (
+    mqtt_client_environment,
+    mqtt_data_files,
+    mqtt_archiving_loop,
+    mqtt_sending_loop,
+    log_files,
+    sample_config,
+)
 from ..pytest_utils import expect_log_lines, wait_for_condition
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
@@ -31,15 +38,29 @@ MESSAGE_ARCHIVE_FILE = join(
 
 
 @pytest.mark.ci
-def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
+def test_messaging_without_sending(
+    mqtt_data_files: None,
+    mqtt_archiving_loop: None,
+    log_files: None,
+    sample_config: None,
+) -> None:
+    _test_messaging(sending_enabled=False)
 
-    utils.SendingMQTTClient.init_archiving_loop_process()
 
-    if not os.path.exists(ACTIVE_MESSAGES_FILE):
-        with open(ACTIVE_MESSAGES_FILE, "w") as f:
-            json.dump({"max_identifier": 0, "messages": []}, f)
+@pytest.mark.ci
+def test_messaging_with_sending(
+    mqtt_data_files: None,
+    mqtt_archiving_loop: None,
+    mqtt_sending_loop: None,
+    log_files: None,
+    sample_config: None,
+) -> None:
+    _test_messaging(sending_enabled=True)
 
+
+def _test_messaging(sending_enabled: bool) -> None:
     utils.SendingMQTTClient.check_errors()
+
     with open(ACTIVE_MESSAGES_FILE, "r") as f:
         active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
     assert active_mqtt_message_queue.max_identifier == 0
@@ -48,6 +69,7 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     with open(CONFIG_TEMPLATE_PATH) as f:
         config = custom_types.Config(**json.load(f))
         config.revision = 17
+        config.active_components.mqtt_data_sending = sending_enabled
 
     # enqueue dummy message
     dummy_measurement_message = custom_types.MQTTMeasurementMessageBody(
@@ -63,7 +85,9 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     assert active_mqtt_message_queue.max_identifier == 1
     assert len(active_mqtt_message_queue.messages) == 1
     assert active_mqtt_message_queue.messages[0].header.identifier == 1
-    assert active_mqtt_message_queue.messages[0].header.status == "sending-skipped"
+    assert active_mqtt_message_queue.messages[0].header.status == (
+        "pending" if sending_enabled else "sending-skipped"
+    )
     assert active_mqtt_message_queue.messages[0].body.revision == config.revision
     assert (
         deepdiff.DeepDiff(
@@ -97,7 +121,9 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
         ).messages
     assert len(archived_mqtt_messages) == 1
     assert archived_mqtt_messages[0].header.identifier == 1
-    assert archived_mqtt_messages[0].header.status == "sending-skipped"
+    assert archived_mqtt_messages[0].header.status == (
+        "delivered" if sending_enabled else "sending-skipped"
+    )
     assert (
         deepdiff.DeepDiff(
             archived_mqtt_messages[0].body.dict(),

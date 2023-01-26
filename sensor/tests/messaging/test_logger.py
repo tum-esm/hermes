@@ -47,6 +47,8 @@ def test_logger_with_sending(
 
 
 def _test_logger(sending_enabled: bool) -> None:
+    utils.SendingMQTTClient.check_errors()
+
     with open(CONFIG_PATH) as f:
         config = custom_types.Config(**json.load(f))
         config.revision = 17
@@ -223,3 +225,5 @@ def _test_logger(sending_enabled: bool) -> None:
             for m in message_archive.messages
         ]
     )
+
+    utils.SendingMQTTClient.check_errors()
