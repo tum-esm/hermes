@@ -22,10 +22,10 @@ class CO2SensorData(BaseModel):
 class MainboardSensorData(BaseModel):
     """units: °C for temperature, rH for humidity, hPa for pressure"""
 
-    mainboard_temperature: float
+    mainboard_temperature: Optional[float]
     cpu_temperature: Optional[float]
-    enclosure_humidity: float
-    enclosure_pressure: float
+    enclosure_humidity: Optional[float]
+    enclosure_pressure: Optional[float]
 
 
 class WindSensorData(BaseModel):
