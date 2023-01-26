@@ -9,7 +9,7 @@ from src.utils.constants import Constants
 number_regex = r"\d+(\.\d+)?"
 startup_regex = (
     f"GMP343 - Version STD {number_regex}\\r\\n"
-    + f"Copyright: Vaisala Oyj \\d{4} - \\d{4}"
+    + f"Copyright: Vaisala Oyj \\d{{4}} - \\d{{4}}"
 )
 measurement_regex = (
     f"Raw\\s*{number_regex} ppm; "
