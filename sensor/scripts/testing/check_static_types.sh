@@ -1,7 +1,7 @@
 set -o errexit
 
-echo "Checking run.py"
-mypy run.py
+echo "Checking run_automation.py"
+mypy run_automation.py
 
 echo "Checking run_headless_enclosure.py"
 mypy run_headless_enclosure.py
