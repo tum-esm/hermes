@@ -91,7 +91,7 @@ class MeasurementProcedure:
         # determine new valve
         new_air_inlet = min(
             self.config.measurement.air_inlets,
-            key=lambda x: utils.math.distance_between_angles(
+            key=lambda x: utils.distance_between_angles(
                 x.direction, wind_data.direction_avg
             ),
         )

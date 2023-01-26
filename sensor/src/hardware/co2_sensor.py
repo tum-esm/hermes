@@ -25,7 +25,7 @@ class CO2SensorInterface:
         self.logger.info("Starting initialization")
 
         # power pin to power up/down wind sensor
-        self.pin_factory = utils.gpio.get_pin_factory()
+        self.pin_factory = utils.get_gpio_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
             pin=utils.Constants.CO2Sensor.power_pin_out, pin_factory=self.pin_factory
         )

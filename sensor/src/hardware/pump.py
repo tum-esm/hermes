@@ -21,7 +21,7 @@ class PumpInterface:
         # INITIALIZING THE PUMP CONTROL PIN
 
         # pin factory required for hardware PWM
-        self.pin_factory = utils.gpio.get_pin_factory()
+        self.pin_factory = utils.get_gpio_pin_factory()
 
         # pins for setting desired pump speed
         self.control_pin = gpiozero.PWMOutputDevice(

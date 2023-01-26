@@ -9,7 +9,7 @@ class UPSInterface:
         self.logger.info("Starting initialization")
 
         # use underlying pigpio library
-        self.pin_factory = utils.gpio.get_pin_factory()
+        self.pin_factory = utils.get_gpio_pin_factory()
 
         # pin goes high if the system is powered by the UPS battery
         mode_input = gpiozero.DigitalInputDevice(

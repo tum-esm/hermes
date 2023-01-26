@@ -10,7 +10,7 @@ class ValveInterface:
         self.logger.info("Starting initialization")
 
         # set up valve control pin connections
-        self.pin_factory = utils.gpio.get_pin_factory()
+        self.pin_factory = utils.get_gpio_pin_factory()
         self.valves: dict[Literal[1, 2, 3, 4], gpiozero.OutputDevice] = {
             1: gpiozero.OutputDevice(
                 Constants.Valves.pin_1_out,
