@@ -1,7 +1,8 @@
 from datetime import datetime
+import json
 import os
 import time
-from typing import Generator, Optional
+from typing import Any, Generator, Optional
 import pytest
 import dotenv
 import sys
@@ -52,12 +53,8 @@ def mqtt_client_environment() -> Generator[None, None, None]:
 
     MQTT_ENV_VARS_PATH = join(PROJECT_DIR, "config", ".env.testing")
     dotenv.load_dotenv(MQTT_ENV_VARS_PATH)
-
     timestamp = round(time.time())
-    test_station_identifier = f"test-station-identifier-{timestamp}"
-    test_base_topic = f"development/test-{timestamp}/"
-    os.environ["INSERT_NAME_HERE_STATION_IDENTIFIER"] = test_station_identifier
-    os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"] = test_base_topic
+    os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"] = f"development/test-{timestamp}/"
 
     yield
 
@@ -65,7 +62,7 @@ def mqtt_client_environment() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, None]:
+def mqtt_data_files() -> Any:
     """start and stop the background sending loop of the SendingMQTTClient"""
 
     ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
@@ -89,17 +86,41 @@ def mqtt_sending_loop(mqtt_client_environment: None) -> Generator[None, None, No
 
     _save_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE, None)
     _save_file(MESSAGE_ARCHIVE_FILE, TMP_MESSAGE_ARCHIVE_FILE, None)
-    utils.SendingMQTTClient.init_sending_loop_process()
+
+    if not os.path.exists(ACTIVE_MESSAGES_FILE):
+        with open(ACTIVE_MESSAGES_FILE, "w") as f:
+            json.dump({"max_identifier": 0, "messages": []}, f, indent=4)
 
     yield
 
-    utils.SendingMQTTClient.deinit_sending_loop_process()
     _restore_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE)
     _restore_file(MESSAGE_ARCHIVE_FILE, TMP_MESSAGE_ARCHIVE_FILE)
 
 
 @pytest.fixture
-def log_files() -> Generator[None, None, None]:
+def mqtt_sending_loop(mqtt_client_environment: None) -> Any:
+    """start and stop the background sending loop of the SendingMQTTClient"""
+
+    utils.SendingMQTTClient.init_sending_loop_process()
+
+    yield
+
+    utils.SendingMQTTClient.deinit_sending_loop_process()
+
+
+@pytest.fixture
+def mqtt_archiving_loop(mqtt_client_environment: None) -> Any:
+    """start and stop the background sending loop of the SendingMQTTClient"""
+
+    utils.SendingMQTTClient.init_archiving_loop_process()
+
+    yield
+
+    utils.SendingMQTTClient.deinit_archiving_loop_process()
+
+
+@pytest.fixture
+def log_files() -> Any:
     """
     1. store actual log files in a temporary location
     2. set up a new, empty log file just for the test

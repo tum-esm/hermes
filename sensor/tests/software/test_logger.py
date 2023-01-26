@@ -4,7 +4,13 @@ import os
 import pytest
 
 from ..pytest_utils import expect_log_lines, wait_for_condition
-from ..pytest_fixtures import mqtt_client_environment, mqtt_sending_loop, log_files
+from ..pytest_fixtures import (
+    mqtt_client_environment,
+    mqtt_sending_loop,
+    mqtt_archiving_loop,
+    mqtt_data_files,
+    log_files,
+)
 from os.path import dirname, abspath, join
 import sys
 
@@ -19,14 +25,15 @@ from src import utils, custom_types
 
 
 @pytest.mark.ci
-def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
+def test_logger_without_sending(
+    mqtt_data_files: None,
+    mqtt_archiving_loop: None,
+    log_files: None,
+) -> None:
+    _test_logger(sending_enabled=False)
 
-    utils.SendingMQTTClient.init_archiving_loop_process()
 
-    if not os.path.exists(ACTIVE_MESSAGES_FILE):
-        with open(ACTIVE_MESSAGES_FILE, "w") as f:
-            json.dump({"max_identifier": 0, "messages": []}, f)
-
+def _test_logger(sending_enabled: bool) -> None:
     with open(CONFIG_TEMPLATE_PATH) as f:
         config = custom_types.Config(**json.load(f))
         config.revision = 17
@@ -123,7 +130,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
     expected_message_topic = (
         os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"]
         + "statuses/"
-        + os.environ["INSERT_NAME_HERE_STATION_IDENTIFIER"]
+        + utils.get_hostname()
     )
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
         message_archive = custom_types.ArchivedMQTTMessageQueue(messages=json.load(f))
