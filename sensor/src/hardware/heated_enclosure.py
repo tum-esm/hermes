@@ -23,24 +23,42 @@ class HeatedEnclosureInterface:
         self.logger, self.config = utils.Logger(origin="heated-enclosure"), config
         self.logger.info("Starting initialization")
 
-        self.arduino_address = HeatedEnclosureInterface.get_arduino_address()
+        self.arduino_address = ""
         self.measurement: Optional[custom_types.HeatedEnclosureData] = None
+        self.serial_interface: Optional[
+            utils.serial_interfaces.SerialOneDirectionalInterface
+        ] = None
 
-        # flash firmware onto arduino
-        self.logger.debug("Compiling firmware of arduino")
-        HeatedEnclosureInterface.compile_firmware(config)
-        self.logger.debug("Uploading firmware of arduino")
-        HeatedEnclosureInterface.upload_firmware(self.arduino_address)
-        self.logger.debug("Arduino firmware is now up to date")
+        # ---------------------------------------------------------------------
+        # CONNECTION TO ENCLOSURE ARDUINO (OPTIONAL)
 
-        # open serial data connection to process arduino logs
-        time.sleep(3)
-        self.serial_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
-            port=self.arduino_address, baudrate=9600
-        )
+        if self.config.active_components.heated_enclosure_communication:
+            HeatedEnclosureInterface.get_arduino_address()
+
+            # flash firmware onto arduino
+            self.logger.debug("Compiling firmware of arduino")
+            HeatedEnclosureInterface.compile_firmware(config)
+            self.logger.debug("Uploading firmware of arduino")
+            HeatedEnclosureInterface.upload_firmware(self.arduino_address)
+            self.logger.debug("Arduino firmware is now up to date")
+
+            # open serial data connection to process arduino logs
+            time.sleep(3)
+            self.serial_interface = (
+                utils.serial_interfaces.SerialOneDirectionalInterface(
+                    port=self.arduino_address, baudrate=9600
+                )
+            )
+
+        # ---------------------------------------------------------------------
+
         self.logger.info("Finished initialization")
 
     def _update_data(self) -> None:
+        if self.serial_interface is None:
+            # happens when component is not active
+            return
+
         new_messages = self.serial_interface.get_messages()
         for message in new_messages:
             message = message.strip("\n\r")
@@ -163,4 +181,8 @@ class HeatedEnclosureInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
+        if self.serial_interface is None:
+            # happens when component is not active
+            return
+
         self.serial_interface.close()
