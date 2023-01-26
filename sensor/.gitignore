@@ -1,4 +1,6 @@
 config.json
+*.tmp.json
+*.tmp.log
 nohup.out
 sensor/hidden/
 sensor/logs/

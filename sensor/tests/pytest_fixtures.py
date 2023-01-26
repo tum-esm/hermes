@@ -134,3 +134,18 @@ def log_files() -> Any:
     yield
 
     _restore_file(LOG_FILE, TMP_LOG_FILE)
+
+
+@pytest.fixture
+def sample_config() -> Any:
+    """use the config template as a temporary config file"""
+    CONFIG_FILE = join(PROJECT_DIR, "config", "config.json")
+    TMP_CONFIG_FILE = join(PROJECT_DIR, "config", "config.tmp.json")
+
+    with open(join(PROJECT_DIR, "config", "config.template.json")) as f:
+        sample_config = f.read()
+    _save_file(CONFIG_FILE, TMP_CONFIG_FILE, sample_config)
+
+    yield
+
+    _restore_file(CONFIG_FILE, TMP_CONFIG_FILE)

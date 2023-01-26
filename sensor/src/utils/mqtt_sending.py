@@ -266,12 +266,6 @@ class SendingMQTTClient:
         # -----------------------------------------------------------------
 
         while True:
-            config = utils.ConfigInterface.read()
-            if not config.active_components.mqtt_data_sending:
-                logger.debug("mqtt message sending is disabled, waiting 60 seconds")
-                time.sleep(60)
-                continue
-
             active_queue = SendingMQTTClient._load_active_queue()
             known_message_ids = [m.header.identifier for m in active_queue.messages]
 
