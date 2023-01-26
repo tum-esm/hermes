@@ -45,6 +45,7 @@ run_shell_command(
     + "pigpio "
     + "arduino "
     + "exa "
+    + "uhubctl "
 )
 
 print("Installing Python3.9 via Apt")
