@@ -8,6 +8,7 @@ from os.path import dirname
 import pytz
 import multiprocessing
 import multiprocessing.synchronize
+import filelock
 
 from src import custom_types
 
@@ -17,7 +18,8 @@ PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 ACTIVE_QUEUE_FILE = os.path.join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
 QUEUE_ARCHIVE_DIR = os.path.join(PROJECT_DIR, "data", "archive")
 
-lock = multiprocessing.Lock()
+active_queue_lock = filelock.FileLock(timeout=10)
+archive_lock = filelock.FileLock(timeout=30)
 
 
 class SendingMQTTClient:
@@ -25,21 +27,10 @@ class SendingMQTTClient:
 
     @staticmethod
     def init_sending_loop_process() -> None:
-        # generate an empty queue file if the file does not exist
-        with lock:
-            if not os.path.isfile(ACTIVE_QUEUE_FILE):
-                SendingMQTTClient._dump_active_queue(
-                    custom_types.ActiveMQTTMessageQueue(
-                        max_identifier=0,
-                        messages=[],
-                    )
-                )
-
         # start the processing of messages in that sending queue
         if SendingMQTTClient.sending_loop_process is None:
             new_process = multiprocessing.Process(
                 target=SendingMQTTClient.sending_loop,
-                args=(lock,),
                 daemon=True,
             )
             new_process.start()
@@ -61,7 +52,7 @@ class SendingMQTTClient:
                 SendingMQTTClient.sending_loop_process is not None
             ), "sending loop process has not been initialized"
 
-        with lock:
+        with active_queue_lock:
             active_queue = SendingMQTTClient._load_active_queue()
             new_header = custom_types.MQTTMessageHeader(
                 identifier=active_queue.max_identifier + 1,
@@ -88,13 +79,15 @@ class SendingMQTTClient:
             active_queue.max_identifier += 1
             SendingMQTTClient._dump_active_queue(active_queue)
 
+        # TODO: put archiving in a separate thread
         if not config.active_components.mqtt_data_sending:
             SendingMQTTClient._archive_messages()
 
     @staticmethod
     def _load_active_queue() -> custom_types.ActiveMQTTMessageQueue:
-        with open(ACTIVE_QUEUE_FILE, "r") as f:
-            active_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
+        with active_queue_lock:
+            with open(ACTIVE_QUEUE_FILE, "r") as f:
+                active_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
         return active_queue
 
     @staticmethod
@@ -102,11 +95,29 @@ class SendingMQTTClient:
         updated_active_queue: custom_types.ArchivedMQTTMessageQueue,
         known_message_ids: Optional[list[int]] = None,
     ) -> None:
-        if known_message_ids is None:
-            with open(ACTIVE_QUEUE_FILE, "w") as f:
-                json.dump(updated_active_queue.dict(), f, indent=4)
-        else:
-            with lock:
+        """save an active queue to the active queue json file;
+
+        use the `known_message_ids` parameter to mark which messages
+        have been present at the time of active queue loading -> by
+        this messages can be added from one thread while another one
+        is processing an active queue loaded before the additions
+        """
+
+        with active_queue_lock:
+
+            # generate an empty queue file if the file does not exist
+            if not os.path.isfile(ACTIVE_QUEUE_FILE):
+                SendingMQTTClient._dump_active_queue(
+                    custom_types.ActiveMQTTMessageQueue(
+                        max_identifier=0,
+                        messages=[],
+                    )
+                )
+
+            if known_message_ids is None:
+                with open(ACTIVE_QUEUE_FILE, "w") as f:
+                    json.dump(updated_active_queue.dict(), f, indent=4)
+            else:
                 # add messages that have been added since calling
                 # "_load_active_queue" at the beginning of the loop
                 racing_messages = list(
@@ -124,12 +135,39 @@ class SendingMQTTClient:
         """archive all message in the active queue that have the
         status `delivered` or `sending-skipped`"""
 
-        modified_lists: dict[str, list[custom_types.MQTTMessage]] = {}
-        filename_for_datestring: Callable[[str], str] = lambda date_string: join(
+        DateString = str
+        filename_for_datestring: Callable[
+            [DateString], str
+        ] = lambda date_string: os.path.join(
             QUEUE_ARCHIVE_DIR, f"delivered-mqtt-messages-{date_string}.json"
         )
 
-        # TODO: determine messages to be archived from active queue
+        # ---------------------------------------------------------------------
+        # LOAD CURRENT ACTIVE QUEUE
+
+        active_queue = SendingMQTTClient._load_active_queue()
+        known_message_ids = [m.header.identifier for m in active_queue.messages]
+
+        messages_to_be_archived: dict[DateString, list[custom_types.MQTTMessage]] = {}
+        archived_message_ids: list[int] = []
+
+        # ---------------------------------------------------------------------
+        # DETERMINE MESSAGES TO BE ARCHIVED
+
+        for m in active_queue.messages:
+            if m.header.status in ["delivered", "sending-skipped"]:
+                archived_message_ids.append(m.header.identifier)
+                date_string = datetime.datetime.fromtimestamp(
+                    m.body.timestamp, tz=pytz.timezone("UTC")
+                ).strftime("%Y-%m-%d")
+                if date_string not in messages_to_be_archived.keys():
+                    messages_to_be_archived[date_string] = []
+                messages_to_be_archived[date_string].append(m)
+
+        # ---------------------------------------------------------------------
+        # DUMP ARCHIVE MESSAGES
+
+        # TODO
 
         for m in messages:
             date_string = datetime.datetime.fromtimestamp(
@@ -156,6 +194,19 @@ class SendingMQTTClient:
             ]
             with open(filename_for_datestring(date_string), "w") as f:
                 json.dump(dict_list, f, indent=4)
+
+                # ---------------------------------------------------------------------
+        # DUMP REMAINING ACTIVE MESSAGES
+
+        active_queue.messages = list(
+            filter(
+                lambda m: m.header.identifier not in archived_message_ids,
+                active_queue.messages,
+            )
+        )
+        SendingMQTTClient._dump_active_queue(
+            active_queue, known_message_ids=known_message_ids
+        )
 
     @staticmethod
     def sending_loop(lock: multiprocessing.synchronize.Lock) -> None:
@@ -192,17 +243,13 @@ class SendingMQTTClient:
         # -----------------------------------------------------------------
 
         while True:
-            # TODO: heartbeat messages,
-            # https://github.com/tum-esm/insert-name-here/issues/29
-
             config = utils.ConfigInterface.read()
             if not config.active_components.mqtt_data_sending:
                 logger.debug("mqtt message sending is disabled, waiting 60 seconds")
                 time.sleep(60)
                 continue
 
-            with lock:
-                active_queue = SendingMQTTClient._load_active_queue()
+            active_queue = SendingMQTTClient._load_active_queue()
             known_message_ids = [m.header.identifier for m in active_queue.messages]
 
             processed_message_ids: dict[
