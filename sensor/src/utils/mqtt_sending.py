@@ -113,7 +113,7 @@ class SendingMQTTClient:
 
     @staticmethod
     def _dump_active_queue(
-        updated_active_queue: custom_types.ArchivedMQTTMessageQueue,
+        updated_active_queue: custom_types.ActiveMQTTMessageQueue,
         known_message_ids: Optional[list[int]] = None,
     ) -> None:
         """save an active queue to the active queue json file;
@@ -141,12 +141,11 @@ class SendingMQTTClient:
             else:
                 # add messages that have been added since calling
                 # "_load_active_queue" at the beginning of the loop
-                racing_messages = list(
-                    filter(
-                        lambda m: m.header.identifier not in known_message_ids,
-                        SendingMQTTClient._load_active_queue().messages,
-                    )
-                )
+                racing_messages = [
+                    m
+                    for m in SendingMQTTClient._load_active_queue().messages
+                    if (m.header.identifier not in known_message_ids)
+                ]
                 updated_active_queue.messages += racing_messages
                 with open(ACTIVE_QUEUE_FILE, "w") as f:
                     json.dump(updated_active_queue.dict(), f, indent=4)
@@ -157,15 +156,14 @@ class SendingMQTTClient:
         status `delivered` or `sending-skipped`; this function is
         blocking and should be called in a thread or subprocess"""
 
-        DateString = str
         filename_for_datestring: Callable[
-            [DateString], str
+            [str], str
         ] = lambda date_string: os.path.join(
             QUEUE_ARCHIVE_DIR, f"delivered-mqtt-messages-{date_string}.json"
         )
 
         known_message_ids: list[int] = []
-        messages_to_be_archived: dict[DateString, list[custom_types.MQTTMessage]] = {}
+        messages_to_be_archived: dict[str, list[custom_types.MQTTMessage]] = {}
         archived_message_ids: list[int] = []
 
         while True:
@@ -313,7 +311,7 @@ class SendingMQTTClient:
                 [
                     m
                     for m in active_queue.messages
-                    if map.header.status in ["sent", "resent"]
+                    if m.header.status in ["sent", "resent"]
                 ]
             )
 
@@ -335,8 +333,6 @@ class SendingMQTTClient:
             SendingMQTTClient._dump_active_queue(
                 active_queue, known_message_ids=known_message_ids
             )
-
-            SendingMQTTClient._archive_delivered_messages()
 
             # -----------------------------------------------------------------
 

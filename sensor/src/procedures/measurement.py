@@ -166,6 +166,7 @@ class MeasurementProcedure:
             )
             self.logger.info(f"new measurement: {current_sensor_data}")
             utils.SendingMQTTClient.enqueue_message(
+                self.config,
                 message_body=custom_types.MQTTMeasurementMessageBody(
                     timestamp=time.time(),
                     value=current_sensor_data,

@@ -58,13 +58,14 @@ class Logger:
         self._write_log_line("WARNING", message)
         if config is not None:
             SendingMQTTClient.enqueue_message(
+                config,
                 message_body=custom_types.MQTTStatusMessageBody(
                     severity="warning",
                     subject=message,
                     details="",
                     revision=config.revision,
                     timestamp=time.time(),
-                )
+                ),
             )
 
     def error(self, message: str, config: Optional[custom_types.Config] = None) -> None:
@@ -74,6 +75,7 @@ class Logger:
         self._write_log_line("ERROR", message)
         if config is not None:
             SendingMQTTClient.enqueue_message(
+                config,
                 message_body=custom_types.MQTTStatusMessageBody(
                     severity="error",
                     subject=message,
@@ -96,6 +98,7 @@ class Logger:
         )
         if config is not None:
             SendingMQTTClient.enqueue_message(
+                config,
                 message_body=custom_types.MQTTStatusMessageBody(
                     severity="error",
                     subject=exception_name,

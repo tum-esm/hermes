@@ -67,4 +67,3 @@ class SystemCheckProcedure:
         self.hardware_interface.check_errors()
         if self.config.active_components.mqtt_data_sending:
             utils.SendingMQTTClient.check_errors()
-            utils.SendingMQTTClient.log_statistics()
