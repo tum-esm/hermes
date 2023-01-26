@@ -14,8 +14,8 @@ MAX_PUMP_RPS = 70
 
 
 @pytest.mark.integration
-def test_config() -> None:
-    """checks whether the used config.json makes sense:
+def test_local_config() -> None:
+    """checks whether the local config/config.json makes sense:
 
     * are all required litres per minute within the pumps capable range?
     * is no valve occupied by two things (air inlets, calibration gases)?
