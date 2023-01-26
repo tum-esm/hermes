@@ -167,35 +167,23 @@ class SendingMQTTClient:
         # ---------------------------------------------------------------------
         # DUMP ARCHIVE MESSAGES
 
-        # TODO
-
-        for m in messages:
-            date_string = datetime.datetime.fromtimestamp(
-                m.body.timestamp, tz=pytz.timezone("UTC")
-            ).strftime("%Y-%m-%d")
-            if date_string not in modified_lists:
-                try:
-                    with open(filename_for_datestring(date_string), "r") as f:
-                        modified_lists[
-                            date_string
-                        ] = custom_types.ArchivedMQTTMessageQueue(
-                            messages=json.load(f)
-                        ).messages
-                except FileNotFoundError:
-                    modified_lists[date_string] = []
-            modified_lists[date_string].append(m)
-
-        for date_string in modified_lists.keys():
-            dict_list = [
-                m.dict()
-                for m in sorted(
-                    modified_lists[date_string], key=lambda m: m.body.timestamp
+        for date_string, messages in messages_to_be_archived.items():
+            archive_file_path = filename_for_datestring(date_string)
+            if not os.path.exists(archive_file_path):
+                current_archive_queue = custom_types.ArchivedMQTTMessageQueue(
+                    messages=[]
                 )
-            ]
-            with open(filename_for_datestring(date_string), "w") as f:
-                json.dump(dict_list, f, indent=4)
+            else:
+                with open(archive_file_path, "r") as f:
+                    current_archive_queue = custom_types.ArchivedMQTTMessageQueue(
+                        messages=json.load(f)
+                    )
 
-                # ---------------------------------------------------------------------
+            current_archive_queue.messages += messages
+            with open(archive_file_path, "w") as f:
+                json.dump(current_archive_queue.messages, f, indent=4)
+
+        # ---------------------------------------------------------------------
         # DUMP REMAINING ACTIVE MESSAGES
 
         active_queue.messages = list(
