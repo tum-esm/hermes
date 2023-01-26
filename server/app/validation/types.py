@@ -31,7 +31,14 @@ Key = pydantic.constr(strict=True, regex=constants.Pattern.KEY.value)
 # TODO Validate the values more thoroughly for min and max limits/lengths
 # number of JSON fields or nesting depth could be interesting as well
 # Or, check the actual size of the JSON / length of the JSON string
-Value = bool | int | float | str | dict | None
+Value = (
+    None
+    | pydantic.StrictBool
+    | pydantic.StrictInt
+    | pydantic.StrictFloat
+    | pydantic.StrictStr
+    | dict
+)
 Json = dict[Key, Value]
 
 # TODO what are the real min/max values here? How do we handle overflow?
@@ -44,12 +51,15 @@ Timestamp = pydantic.confloat(ge=0, lt=constants.Limit.MAXINT4)
 # Validators
 ########################################################################################
 
+'''
+# Was used to parse query parameters that expect a comma-separated list of strings
 
 def _split_string(string: str) -> list[str]:
     """Convert a comma-separated string to a list of strings."""
     # split(",") returns [""] if string is empty, and we don't want that
     return string.split(",") if string else []
 
+'''
 
 ########################################################################################
 # Attrs validators
