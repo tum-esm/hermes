@@ -8,4 +8,4 @@ from .mqtt_sending import SendingMQTTClient
 
 from . import gpio, math, serial_interfaces
 
-from .run_shell_command import run_shell_command
+from .functions import run_shell_command, get_hostname
