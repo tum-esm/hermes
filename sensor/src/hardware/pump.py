@@ -1,7 +1,7 @@
 import multiprocessing
 import queue
 import time
-from typing import Literal, Optional
+from typing import Literal
 import gpiozero
 import gpiozero.pins.pigpio
 from src import utils, custom_types
@@ -17,6 +17,9 @@ class PumpInterface:
         self.logger, self.config = utils.Logger("pump"), config
         self.logger.info("Starting initialization")
 
+        # ---------------------------------------------------------------------
+        # INITIALIZING THE PUMP CONTROL PIN
+
         # pin factory required for hardware PWM
         self.pin_factory = utils.gpio.get_pin_factory()
 
@@ -28,6 +31,9 @@ class PumpInterface:
             initial_value=0,
             pin_factory=self.pin_factory,
         )
+
+        # ---------------------------------------------------------------------
+        # LOGGING ACTUAL PUMP CYCLES
 
         # queues to communicate with rps monitoring process
         self.rps_measurement_queue: queue.Queue[float] = queue.Queue()
@@ -41,7 +47,9 @@ class PumpInterface:
         )
         self.speed_pin.when_activated = lambda: self.rps_measurement_queue.put(1)
 
-        # starting rps monitoring process
+        # ---------------------------------------------------------------------
+        # PUMP RPS MONITORING IN A THREAD
+
         self.rps_monitoring_process = multiprocessing.Process(
             target=PumpInterface.monitor_rps,
             args=(
@@ -51,7 +59,10 @@ class PumpInterface:
                 self.rps_monitoring_exceptions,
             ),
         )
-        self.rps_monitoring_process.start()
+        if self.config.active_components.pump_speed_monitoring:
+            self.rps_monitoring_process.start()
+
+        # ---------------------------------------------------------------------
 
         self.logger.info("Finished initialization")
 
