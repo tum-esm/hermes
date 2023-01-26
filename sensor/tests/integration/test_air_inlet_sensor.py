@@ -14,3 +14,4 @@ def test_air_inlet_sensor(log_files: None) -> None:
     temperature, humidity = sensor.get_current_values()
     assert temperature is not None
     assert humidity is not None
+    sensor.teardown()

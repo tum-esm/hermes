@@ -13,3 +13,4 @@ def test_mainboard_sensor(log_files: None) -> None:
     config = utils.ConfigInterface.read()
     sensor = hardware.MainboardSensorInterface(config)
     sensor.get_system_data()
+    sensor.teardown()

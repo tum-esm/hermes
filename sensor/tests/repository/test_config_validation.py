@@ -40,13 +40,11 @@ def test_config_validation() -> None:
     Config(**VALID_CONFIG)
 
     # testing the merge_dicts function
-    Config(
-        **merge_dicts(deepcopy(VALID_CONFIG), {"general": {"station_name": "fghj-a"}})
-    )
+    Config(**merge_dicts(deepcopy(VALID_CONFIG), {"revision": 72}))
 
     for modification in [
         {"version": "0.2.0"},
-        {"general": {"station_name", 30}},
+        {"general": 30},
         {
             "measurement": {
                 "air_inlets": [

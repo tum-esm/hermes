@@ -16,9 +16,9 @@ def test_pump_cycle(log_files: None) -> None:
 
     for rps in range(10, 71, 10):
         print(f"setting rps to {rps}")
-        pump.set_desired_pump_rps(rps)
+        pump.set_desired_pump_speed(unit="rps", value=rps)
         time.sleep(8)
 
-    pump.set_desired_pump_rps(0)
+    pump.set_desired_pump_speed(unit="rps", value=0)
     pump.check_errors()
     pump.teardown()
