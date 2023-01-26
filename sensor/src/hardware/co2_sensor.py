@@ -4,6 +4,8 @@ from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
 
+from src.utils.constants import Constants
+
 number_regex = r"\d+(\.\d+)?"
 startup_regex = (
     f"GMP343 - Version STD {number_regex}\\r\\n"
@@ -235,3 +237,6 @@ class CO2SensorInterface:
         """ends all hardware/system connections"""
         self.power_pin.off()
         self.pin_factory.close()
+
+        # I don't know why this is needed sometimes, just to make sure
+        utils.run_shell_command(f"pigs w {Constants.CO2Sensor.power_pin_out} 0")

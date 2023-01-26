@@ -5,6 +5,8 @@ import gpiozero
 import gpiozero.pins.pigpio
 import re
 
+from src.utils.constants import Constants
+
 number_regex = r"\d+(\.\d+)?"
 measurement_pattern = re.compile(
     f"^0R1,Dn={number_regex}D,Dm={number_regex}D,Dx={number_regex}D,"
@@ -125,3 +127,6 @@ class WindSensorInterface:
         """ends all hardware/system connections"""
         self.power_pin.off()
         self.pin_factory.close()
+
+        # I don't know why this is needed sometimes, just to make sure
+        utils.run_shell_command(f"pigs w {Constants.WindSensor.power_pin_out} 0")

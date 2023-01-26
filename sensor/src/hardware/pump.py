@@ -98,6 +98,8 @@ class PumpInterface:
         self.set_desired_pump_speed(unit="rps", value=0)
         self.rps_monitoring_process.terminate()
         self.pin_factory.close()
+
+        # I don't know why this is needed sometimes, just to make sure
         utils.run_shell_command(f"pigs w {Constants.Pump.control_pin_out} 0")
 
     @staticmethod

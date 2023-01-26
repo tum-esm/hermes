@@ -1,7 +1,7 @@
 # TODO: https://github.com/tum-esm/insert-name-here/issues/34
 
 import time
-from typing import Literal, Optional
+from typing import Optional
 from src import custom_types, utils, hardware
 
 

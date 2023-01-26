@@ -1,10 +1,8 @@
 import json
 import os
 import time
-from typing import Literal, Optional
+from typing import Optional
 from src import utils, custom_types
-import re
-from pydantic import BaseModel, validator
 
 dirname = os.path.dirname
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
