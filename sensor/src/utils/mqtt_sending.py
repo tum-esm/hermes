@@ -98,9 +98,26 @@ class SendingMQTTClient:
         return active_queue
 
     @staticmethod
-    def _dump_active_queue(active_queue: custom_types.ActiveMQTTMessageQueue) -> None:
-        with open(ACTIVE_QUEUE_FILE, "w") as f:
-            json.dump(active_queue.dict(), f, indent=4)
+    def _dump_active_queue(
+        updated_active_queue: custom_types.ArchivedMQTTMessageQueue,
+        known_message_ids: Optional[list[int]] = None,
+    ) -> None:
+        if known_message_ids is None:
+            with open(ACTIVE_QUEUE_FILE, "w") as f:
+                json.dump(updated_active_queue.dict(), f, indent=4)
+        else:
+            with lock:
+                # add messages that have been added since calling
+                # "_load_active_queue" at the beginning of the loop
+                racing_messages = list(
+                    filter(
+                        lambda m: m.header.identifier not in known_message_ids,
+                        SendingMQTTClient._load_active_queue().messages,
+                    )
+                )
+                updated_active_queue.messages += racing_messages
+                with open(ACTIVE_QUEUE_FILE, "w") as f:
+                    json.dump(updated_active_queue.dict(), f, indent=4)
 
     @staticmethod
     def _archive_messages() -> None:
@@ -245,23 +262,11 @@ class SendingMQTTClient:
                     current_send_count += 1
 
             # -----------------------------------------------------------------
-            # SAVE NEW ACTIVE QUEUE FILE
+            # SAVE NEW ACTIVE QUEUE FILE AND TRIGGER MESSAGE ARCHIVING
 
-            # TODO: move this into a function(updated_queue_messages, known_message_ids)
-            with lock:
-                # add messages that have been added since calling
-                # "_load_active_queue" at the beginning of the loop
-                racing_messages = list(
-                    filter(
-                        lambda m: m.header.identifier not in known_message_ids,
-                        SendingMQTTClient._load_active_queue().messages,
-                    )
-                )
-                active_queue.messages += racing_messages
-                SendingMQTTClient._dump_active_queue(active_queue)
-
-            # -----------------------------------------------------------------
-            # TRIGGER MESSAGE ARCHIVING
+            SendingMQTTClient._dump_active_queue(
+                active_queue, known_message_ids=known_message_ids
+            )
 
             SendingMQTTClient._archive_delivered_messages()
 
