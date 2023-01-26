@@ -61,13 +61,15 @@ class SendingMQTTClient:
                 SendingMQTTClient.sending_loop_process is not None
             ), "sending loop process has not been initialized"
 
-        # TODO: if no message sending, add status of `sending-skipped`
-
         with lock:
             active_queue = SendingMQTTClient._load_active_queue()
             new_header = custom_types.MQTTMessageHeader(
                 identifier=active_queue.max_identifier + 1,
-                status="pending",
+                status=(
+                    "pending"
+                    if config.active_components.mqtt_data_sending
+                    else "sending-skipped"
+                ),
                 delivery_timestamp=None,
                 mqtt_topic=None,
             )
@@ -85,6 +87,9 @@ class SendingMQTTClient:
             active_queue.messages.append(new_message)
             active_queue.max_identifier += 1
             SendingMQTTClient._dump_active_queue(active_queue)
+
+        if not config.active_components.mqtt_data_sending:
+            SendingMQTTClient._archive_messages()
 
     @staticmethod
     def _load_active_queue() -> custom_types.ActiveMQTTMessageQueue:

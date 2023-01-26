@@ -1,4 +1,4 @@
-from typing import Any, Literal, Optional, Union
+from typing import Literal, Optional, Union
 from pydantic import BaseModel, validator
 
 from .validators import validate_int, validate_str, validate_float
@@ -46,7 +46,7 @@ class MQTTMessageHeader(BaseModel):
 
     identifier: int
     mqtt_topic: Optional[str]
-    status: Literal["pending", "sent", "delivered"]
+    status: Literal["pending", "sent", "delivered", "sending-skipped"]
     delivery_timestamp: Optional[float]
 
     # validators
@@ -57,7 +57,7 @@ class MQTTMessageHeader(BaseModel):
         validate_str(nullable=True),
     )
     _val_status = validator("status", pre=True, allow_reuse=True)(
-        validate_str(allowed=["pending", "sent", "delivered"]),
+        validate_str(allowed=["pending", "sent", "delivered", "sending-skipped"]),
     )
     _val_delivery_timestamp = validator(
         "delivery_timestamp", pre=True, allow_reuse=True
