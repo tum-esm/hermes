@@ -83,20 +83,27 @@ class PumpInterface:
     def check_errors(self) -> None:
         """checks whether the pump behaves incorrectly - Possibly
         raises the  PumpInterface.DeviceFailure exception"""
-        try:
-            raise PumpInterface.DeviceFailure(
-                self.rps_monitoring_exceptions.get_nowait()
-            )
-        except queue.Empty:
-            assert (
-                self.rps_monitoring_process.is_alive()
-            ), "rps monitoring process has stopped without an exception"
-            self.logger.info("pump doesn't report any errors")
+        if self.config.active_components.pump_speed_monitoring:
+            if self.rps_monitoring_process.is_alive():
+                self.logger.info("pump doesn't report any errors")
+            else:
+                try:
+                    raise PumpInterface.DeviceFailure(
+                        self.rps_monitoring_exceptions.get_nowait()
+                    )
+                except queue.Empty:
+                    raise PumpInterface.DeviceFailure(
+                        "rps monitoring process has stopped without an exception"
+                    )
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
         self.set_desired_pump_speed(unit="rps", value=0)
-        self.rps_monitoring_process.terminate()
+        if (
+            self.rps_monitoring_process is not None
+        ) and self.rps_monitoring_process.is_alive():
+            self.rps_monitoring_process.terminate()
+
         self.pin_factory.close()
 
         # I don't know why this is needed sometimes, just to make sure
