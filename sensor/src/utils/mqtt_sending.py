@@ -206,7 +206,11 @@ class SendingMQTTClient:
 
                 current_archive_queue.messages += messages
                 with open(archive_file_path, "w") as f:
-                    json.dump(current_archive_queue.messages, f, indent=4)
+                    json.dump(
+                        [m.dict() for m in current_archive_queue.messages],
+                        f,
+                        indent=4,
+                    )
 
             # -----------------------------------------------------------------
             # DUMP REMAINING ACTIVE MESSAGES

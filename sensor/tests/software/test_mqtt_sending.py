@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import os
 import time
 import pytest
 from os.path import dirname, abspath, join
@@ -31,6 +32,13 @@ MESSAGE_ARCHIVE_FILE = join(
 
 @pytest.mark.ci
 def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
+
+    utils.SendingMQTTClient.init_archiving_loop_process()
+
+    if not os.path.exists(ACTIVE_MESSAGES_FILE):
+        with open(ACTIVE_MESSAGES_FILE, "w") as f:
+            json.dump({"max_identifier": 0, "messages": []}, f)
+
     utils.SendingMQTTClient.check_errors()
     with open(ACTIVE_MESSAGES_FILE, "r") as f:
         active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
@@ -47,7 +55,7 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
         value=custom_types.CO2SensorData(raw=0.0, compensated=0.0, filtered=0.0),
         revision=config.revision,
     )
-    utils.SendingMQTTClient.enqueue_message(dummy_measurement_message)
+    utils.SendingMQTTClient.enqueue_message(config, dummy_measurement_message)
 
     # assert dummy message to be in active queue
     with open(ACTIVE_MESSAGES_FILE, "r") as f:
@@ -55,7 +63,7 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
     assert active_mqtt_message_queue.max_identifier == 1
     assert len(active_mqtt_message_queue.messages) == 1
     assert active_mqtt_message_queue.messages[0].header.identifier == 1
-    assert active_mqtt_message_queue.messages[0].header.status == "pending"
+    assert active_mqtt_message_queue.messages[0].header.status == "sending-skipped"
     assert active_mqtt_message_queue.messages[0].body.revision == config.revision
     assert (
         deepdiff.DeepDiff(
@@ -89,7 +97,7 @@ def test_mqtt_sending(mqtt_sending_loop: None, log_files: None) -> None:
         ).messages
     assert len(archived_mqtt_messages) == 1
     assert archived_mqtt_messages[0].header.identifier == 1
-    assert archived_mqtt_messages[0].header.status == "delivered"
+    assert archived_mqtt_messages[0].header.status == "sending-skipped"
     assert (
         deepdiff.DeepDiff(
             archived_mqtt_messages[0].body.dict(),

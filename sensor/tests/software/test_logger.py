@@ -20,6 +20,13 @@ from src import utils, custom_types
 
 @pytest.mark.ci
 def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
+
+    utils.SendingMQTTClient.init_archiving_loop_process()
+
+    if not os.path.exists(ACTIVE_MESSAGES_FILE):
+        with open(ACTIVE_MESSAGES_FILE, "w") as f:
+            json.dump({"max_identifier": 0, "messages": []}, f)
+
     with open(CONFIG_TEMPLATE_PATH) as f:
         config = custom_types.Config(**json.load(f))
         config.revision = 17
@@ -66,7 +73,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
         [
             (
                 m.header.identifier == 1
-                and m.header.status == "pending"
+                and m.header.status == "sending-skipped"
                 and m.header.mqtt_topic is None
                 and m.variant == "status"
                 and m.body.severity == "warning"
@@ -79,7 +86,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
         [
             (
                 m.header.identifier == 2
-                and m.header.status == "pending"
+                and m.header.status == "sending-skipped"
                 and m.header.mqtt_topic is None
                 and m.variant == "status"
                 and m.body.severity == "error"
@@ -92,7 +99,7 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
         [
             (
                 m.header.identifier == 3
-                and m.header.status == "pending"
+                and m.header.status == "sending-skipped"
                 and m.header.mqtt_topic is None
                 and m.variant == "status"
                 and m.body.severity == "error"
@@ -125,8 +132,8 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
         [
             (
                 m.header.identifier == 1
-                and m.header.status == "delivered"
-                and m.header.mqtt_topic == expected_message_topic
+                and m.header.status == "sending-skipped"
+                and m.header.mqtt_topic is None
                 and m.variant == "status"
                 and m.body.severity == "warning"
                 and m.body.subject == "some message c"
@@ -138,8 +145,8 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
         [
             (
                 m.header.identifier == 2
-                and m.header.status == "delivered"
-                and m.header.mqtt_topic == expected_message_topic
+                and m.header.status == "sending-skipped"
+                and m.header.mqtt_topic is None
                 and m.variant == "status"
                 and m.body.severity == "error"
                 and m.body.subject == "some message d"
@@ -151,8 +158,8 @@ def test_logger(mqtt_sending_loop: None, log_files: None) -> None:
         [
             (
                 m.header.identifier == 3
-                and m.header.status == "delivered"
-                and m.header.mqtt_topic == expected_message_topic
+                and m.header.status == "sending-skipped"
+                and m.header.mqtt_topic is None
                 and m.variant == "status"
                 and m.body.severity == "error"
                 and m.body.subject == "ZeroDivisionError"
