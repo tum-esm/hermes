@@ -4,15 +4,20 @@ from utils import run_shell_command, IP_LOGGER_DIR, AUTOMATION_DIR, AUTOMATION_T
 
 
 # =============================================================================
+# CHECK FOR ROOT ACCESS (REQUIRED BY APT)
+
+assert run_shell_command("whoami") == "root", "please run this script as root user"
+
+# =============================================================================
 # EXTEND BASHRC FILE
 
 with open("/boot/midcost-init-files/system/.bashrc", "r") as f:
     new_bashrc_lines = [l for l in f.read().split("\n") if (not l.startswith("#"))]
-with open("~/.bashrc", "r") as f:
+with open("/home/pi/.bashrc", "r") as f:
     current_bashrc_content = f.read()
 for l in new_bashrc_lines:
     if l not in current_bashrc_content:
-        with open("~/.bashrc", "a") as f:
+        with open("/home/pi/.bashrc", "a") as f:
             f.write(f"\n\n{l}\n")
 
 # =============================================================================
@@ -21,11 +26,35 @@ for l in new_bashrc_lines:
 print("Installing General Apt Packages")
 run_shell_command("apt update")
 run_shell_command(
-    "apt install software-properties-common make gcc vim git build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget pigpio arduino exa -y"
+    "apt install -y "
+    + "software-properties-common "
+    + "make "
+    + "gcc "
+    + "vim "
+    + "git "
+    + "build-essential "
+    + "zlib1g-dev "
+    + "libncurses5-dev "
+    + "libgdbm-dev "
+    + "libnss3-dev "
+    + "libssl-dev "
+    + "libreadline-dev "
+    + "libffi-dev "
+    + "libsqlite3-dev "
+    + "wget "
+    + "pigpio "
+    + "arduino "
+    + "exa "
 )
 
 print("Installing Python3.9 via Apt")
-run_shell_command("apt python3.9-full python3-venv python3-wheel python3-setuptools -y")
+run_shell_command(
+    "apt install -y "
+    + "python3.9-full "
+    + "python3-venv "
+    + "python3-wheel "
+    + "python3-setuptools "
+)
 
 print("Installing Poetry")
 run_shell_command("curl -sSL https://install.python-poetry.org | python3 -")
@@ -43,7 +72,17 @@ run_shell_command("apt install code -y")
 
 print("Installing VS Code Extensions")
 run_shell_command(
-    "code --install-extension whatwewant.open-terminal --install-extension ms-python.python --install-extension VisualStudioExptTeam.vscodeintellicode --install-extension donjayamanne.python-environment-manager --install-extension bungcip.better-toml --install-extension yzhang.markdown-all-in-one --install-extension  christian-kohler.path-intellisense --install-extension ms-vscode.vscode-serial-monitor --install-extension Gruntfuggly.todo-tree --install-extension AnchovyStudios.zip-extract-all"
+    "code "
+    + "--install-extension whatwewant.open-terminal "
+    + "--install-extension ms-python.python "
+    + "--install-extension VisualStudioExptTeam.vscodeintellicode "
+    + "--install-extension donjayamanne.python-environment-manager "
+    + "--install-extension bungcip.better-toml "
+    + "--install-extension yzhang.markdown-all-in-one "
+    + "--install-extension christian-kohler.path-intellisense "
+    + "--install-extension ms-vscode.vscode-serial-monitor "
+    + "--install-extension Gruntfuggly.todo-tree "
+    + "--install-extension AnchovyStudios.zip-extract-all"
 )
 
 # =============================================================================
