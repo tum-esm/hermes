@@ -20,23 +20,9 @@ jobs:
             run:
                 working-directory: sensor
         steps:
-            # check-out repo and set-up python
+            # check-out repo
             - name: Check out repository
               uses: actions/checkout@v3
-            - name: Set up Python 3.9.16
-              id: setup-python
-              uses: actions/setup-python@v3
-              with:
-                  python-version: 3.9.16
-
-            # install & configure poetry
-            - name: Install Poetry
-              uses: snok/install-poetry@v1
-              with:
-                  version: 1.2.1
-                  virtualenvs-create: true
-                  virtualenvs-in-project: true
-                  installer-parallel: true
 
             # load cached venv if cache exists
             - name: Load cached venv
@@ -44,12 +30,25 @@ jobs:
               uses: actions/cache@v3
               with:
                   path: sensor/.venv
-                  key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('sensor/poetry.lock') }}
+                  key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('sensor/poetry.lock') }}
 
-            # install dependencies if cache does not exist
+            # generate venv if not in cache
+            - name: Set up Python 3.9.16
+              if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+              uses: actions/setup-python@v3
+              with:
+                  python-version: 3.9.16
+            - name: Install Poetry
+              if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+              uses: snok/install-poetry@v1
+              with:
+                  version: 1.3.2
+                  virtualenvs-create: true
+                  virtualenvs-in-project: true
+                  installer-parallel: true
             - name: Install dependencies
               if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-              run: poetry install --with dev
+              run: poetry install
 
             # run test suite
             - name: Run static type analysis
