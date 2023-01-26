@@ -13,7 +13,7 @@ from .valves import ValveInterface
 from .wind_sensor import WindSensorInterface
 
 # global lock over all software versions
-hardware_lock = filelock.FileLock("~/insert-name-here-hardware.lock", timeout=5)
+hardware_lock = filelock.FileLock("/home/pi/insert-name-here-hardware.lock", timeout=5)
 
 
 class HardwareInterface:

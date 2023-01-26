@@ -107,8 +107,18 @@ class SendingMQTTClient:
     @staticmethod
     def _load_active_queue() -> custom_types.ActiveMQTTMessageQueue:
         with active_queue_lock:
-            with open(ACTIVE_QUEUE_FILE, "r") as f:
-                active_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
+            # generate an empty queue file if the file does not exist
+            if os.path.isfile(ACTIVE_QUEUE_FILE):
+                with open(ACTIVE_QUEUE_FILE, "r") as f:
+                    active_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
+            else:
+                active_queue = custom_types.ActiveMQTTMessageQueue(
+                    max_identifier=0,
+                    messages=[],
+                )
+                with open(ACTIVE_QUEUE_FILE, "w") as f:
+                    json.dump(active_queue.dict(), f, indent=4)
+
         return active_queue
 
     @staticmethod
@@ -125,16 +135,6 @@ class SendingMQTTClient:
         """
 
         with active_queue_lock:
-
-            # generate an empty queue file if the file does not exist
-            if not os.path.isfile(ACTIVE_QUEUE_FILE):
-                SendingMQTTClient._dump_active_queue(
-                    custom_types.ActiveMQTTMessageQueue(
-                        max_identifier=0,
-                        messages=[],
-                    )
-                )
-
             if known_message_ids is None:
                 with open(ACTIVE_QUEUE_FILE, "w") as f:
                     json.dump(updated_active_queue.dict(), f, indent=4)
