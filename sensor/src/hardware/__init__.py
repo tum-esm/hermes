@@ -1,4 +1,5 @@
 import time
+import filelock
 from src import custom_types, utils
 
 from .air_inlet_sensor import AirInletSensorInterface
@@ -11,11 +12,19 @@ from .usb_ports import USBPortInterface
 from .valves import ValveInterface
 from .wind_sensor import WindSensorInterface
 
+# global lock over all software versions
+hardware_lock = filelock.FileLock("~/insert-name-here-hardware.lock", timeout=5)
+
 
 class HardwareInterface:
+    class HardwareOccupiedException(Exception):
+        """raise when trying to use the hardware but it
+        is used by another process"""
+
     def __init__(self, config: custom_types.Config) -> None:
         self.config = config
         self.logger = utils.Logger("hardware-interface")
+        self.acquire_hardare_lock()
 
         # measurement sensors
         self.air_inlet_sensor = AirInletSensorInterface()
@@ -59,10 +68,14 @@ class HardwareInterface:
         self.mainboard_sensor.teardown()
         self.ups.teardown()
 
+        # release lock
+        hardware_lock.release()
+
     def reinitialize(self, config: custom_types.Config) -> None:
         """reinitialize after an unsuccessful update"""
         self.config = config
         self.logger.info("running hardware reinitialization")
+        self.acquire_hardare_lock()
 
         # measurement sensors
         self.air_inlet_sensor = AirInletSensorInterface()
@@ -78,6 +91,15 @@ class HardwareInterface:
         self.mainboard_sensor = MainboardSensorInterface(config)
         self.ups = UPSInterface(config)
 
+    def acquire_hardare_lock(self) -> None:
+        """make sure that there is only one initialized hardware connection"""
+        try:
+            hardware_lock.acquire()
+        except filelock.Timeout:
+            raise HardwareInterface.HardwareOccupiedException(
+                "hardware occupied by another process"
+            )
+
     def perform_hard_reset(self) -> None:
         """teardown and reinitialize all hardware interfaces,
         toggle the power of all USB ports inbetween"""
@@ -86,7 +108,7 @@ class HardwareInterface:
 
         self.teardown()
         time.sleep(1)
-        self.usb_ports.toggle_usb_power()
+        self.usb_ports.toggle_usb_power(delay=10)
         time.sleep(1)
         self.reinitialize(self.config)
 
