@@ -1,6 +1,6 @@
 import os
 import time
-from src import custom_types, utils, hardware, procedures
+from src import utils, hardware, procedures
 
 
 def run() -> None:
@@ -29,44 +29,48 @@ def run() -> None:
         logger.exception(e)
         return
 
-    # TODO: init configuration-procedure instance
-
-    utils.SendingMQTTClient.init_sending_loop_process()
-
     try:
         config = utils.ConfigInterface.read()
     except Exception as e:
         logger.error("could not load local config.json")
         logger.exception(e)
-        # TODO: fetch newest config from pinned topic messages
-        #       and perform configuration procedure
+
+    # message archiving is always running, sending is optional
+    if config.active_components.mqtt_data_sending:
+        utils.SendingMQTTClient.init_sending_loop_process()
+    utils.SendingMQTTClient.init_archiving_loop_process()
 
     # a single hardware interface that is only used by one procedure at a time
+    # incremental backoff times on exceptions (15s, 1m, 5m, 20m)
     hardware_interface = hardware.HardwareInterface(config)
-
-    # logging system statistics and reporting hardware/system errors
-    system_check_prodecure = procedures.SystemCheckProcedure(config, hardware_interface)
-
-    # updating the configuration/the software version on request
-    configuration_prodecure = procedures.ConfigurationProcedure(config)
-
-    # using the two reference gas bottles to calibrate the CO2 sensor
-    calibration_prodecure = procedures.CalibrationProcedure(config, hardware_interface)
-
-    # doing regular measurements
-    measurement_prodecure = procedures.MeasurementProcedure(config, hardware_interface)
-
     backoff_time_bucket_index = 0
-    backoff_time_buckets = [15, 60, 300, 1200]  # 15s, 1m, 5m, 20m
+    backoff_time_buckets = [15, 60, 300, 1200]
+
+    # system_check:   logging system statistics and reporting hardware/system errors
+    # configuration:  updating the configuration/the software version on request
+    # calibration:    using the two reference gas bottles to calibrate the CO2 sensor
+    # measurements:   using the two reference gas bottles to calibrate the CO2 sensor
+
+    system_check_prodecure = procedures.SystemCheckProcedure(config, hardware_interface)
+    configuration_prodecure = procedures.ConfigurationProcedure(config)
+    calibration_prodecure = procedures.CalibrationProcedure(config, hardware_interface)
+    measurement_prodecure = procedures.MeasurementProcedure(config, hardware_interface)
 
     while True:
         try:
             logger.info("starting mainloop iteration")
 
+            # -----------------------------------------------------------------
+            # SYSTEM CHECKS
+
             logger.info("running system checks")
             system_check_prodecure.run()
 
+            # -----------------------------------------------------------------
+            # CONFIGURATION
+
             logger.info("checking for new config messages")
+            # TODO: get pinned config if revision is different
             new_config_message = mqtt_receiver.get_config_message()
             if new_config_message is not None:
                 # disconnect all hardware components to test new config
@@ -78,25 +82,41 @@ def run() -> None:
                 # reinit if update is unsuccessful
                 hardware_interface.reinitialize(config)
 
-            if calibration_prodecure.is_due():
-                logger.info("running calibration procedure")
-                calibration_prodecure.run()
+            # TODO: what if the upgrade to the new pinned revision fails?
+            # -> wait at least 20 minutes until trying to upgrade to the
+            # same revision again?
+
+            # -----------------------------------------------------------------
+            # CALIBRATION
+
+            if config.active_components.calibration_procedures:
+                if calibration_prodecure.is_due():
+                    logger.info("running calibration procedure")
+                    calibration_prodecure.run()
+                else:
+                    logger.info("calibration procedure is not due")
             else:
-                logger.info("calibration procedure is not due")
+                logger.info("skipping calibration procedure due to config")
+
+            # -----------------------------------------------------------------
+            # MEASUREMENTS
 
             # if messages are empty, run regular measurements
             logger.info("running measurements")
             measurement_prodecure.run()
+
+            # -----------------------------------------------------------------
 
             logger.info("finished mainloop iteration")
             backoff_time_bucket_index = 0
 
         except Exception as e:
             logger.exception(e, config=config)
-
             hardware_interface.perform_hard_reset()
 
-            # wait for an increasing amount of time
+            # -----------------------------------------------------------------
+            # INCREMENTAL BACKOFF TIMES
+
             current_backoff_time = backoff_time_buckets[backoff_time_bucket_index]
             logger.error(f"waiting for {current_backoff_time} seconds", config=config)
             time.sleep(current_backoff_time)

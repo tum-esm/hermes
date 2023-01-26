@@ -1,7 +1,6 @@
 import dotenv
 import os
 import filelock
-
 from src import main
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))

@@ -3,8 +3,8 @@ import json
 import os
 import time
 from typing import Union
-from src import utils, hardware, custom_types
 import filelock
+from src import utils, hardware, custom_types
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 DST_FILE_PATH = os.path.join(PROJECT_DIR, "logs", "headless-wind-sensor-data.log")
