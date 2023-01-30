@@ -1,5 +1,3 @@
-# TODO: https://github.com/tum-esm/insert-name-here/issues/34
-
 import time
 from typing import Optional
 from src import custom_types, utils, hardware
@@ -58,25 +56,13 @@ class MeasurementProcedure:
 
         self.active_air_inlet = new_air_inlet
 
-    def _get_current_wind_data(self) -> custom_types.WindSensorData:
-        """
-        * fetches the latest wind sensor data
-        * raises TimeoutError after 15 seconds without a response
-        """
-        start_time = time.time()
-
-        while True:
-            wind_data = (
-                self.hardware_interface.wind_sensor.get_current_wind_measurement()
-            )
-            if wind_data is not None:
-                return wind_data
-            self.logger.debug("no current wind data, waiting 2 seconds")
-            time.sleep(2)
-            if time.time() - start_time > 15:
-                raise TimeoutError(
-                    "wind sensor did not send any wind data for 15 seconds"
-                )
+    def _get_current_wind_data(self) -> Optional[custom_types.WindSensorData]:
+        """fetches the latest wind sensor data and returns None if the
+        wind sensor doesn't respond with any data"""
+        wind_data = self.hardware_interface.wind_sensor.get_current_wind_measurement()
+        if wind_data is None:
+            self.logger.warning("no current wind data, waiting 2 seconds")
+        return wind_data
 
     def _update_input_valve(self) -> None:
         """
@@ -89,19 +75,26 @@ class MeasurementProcedure:
         wind_data = self._get_current_wind_data()
 
         # determine new valve
-        new_air_inlet = min(
-            self.config.measurement.air_inlets,
-            key=lambda x: utils.distance_between_angles(
-                x.direction, wind_data.direction_avg
-            ),
-        )
+        if wind_data is not None:
+            avg_dir = wind_data.direction_avg
+            new_air_inlet = min(
+                self.config.measurement.air_inlets,
+                key=lambda x: utils.distance_between_angles(x.direction, avg_dir),
+            )
+        else:
+            new_air_inlet = list(
+                filter(
+                    lambda x: x.valve_number == 1,
+                    self.config.measurement.air_inlets,
+                )
+            )[0]
 
         # perform switch
         if self.active_air_inlet is None:
             self.logger.info(f"enabeling air inlet {new_air_inlet.dict()}")
             self._switch_to_air_inlet(new_air_inlet)
         else:
-            if wind_data.speed_avg < 0.2:
+            if (wind_data is not None) and (wind_data.speed_avg < 0.2):
                 self.logger.debug(f"wind speed very low ({wind_data.speed_avg} m/s)")
                 self.logger.info(f"staying at air inlet {self.active_air_inlet.dict()}")
             else:

@@ -58,6 +58,11 @@ def test_local_config() -> None:
         unique_valve_numbers
     ), "multiple things use the same valve number"
 
+    # check whether valve 1 is connected to an air inlet
+    assert 1 in [
+        ai.valve_number for ai in config.measurement.air_inlets
+    ], "valve 1 has to be connected to an air inlet"
+
     # check air inlet directions
     air_inlet_directions = [ai.direction for ai in config.measurement.air_inlets]
     unique_air_inlet_directions = list(set(air_inlet_directions))
