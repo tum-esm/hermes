@@ -33,6 +33,7 @@ from .sensor_answers import (
     MainboardSensorData,
     SystemData,
     WindSensorData,
+    AirSensorData,
     WindSensorStatus,
     HeatedEnclosureData,
     RawHeatedEnclosureData,

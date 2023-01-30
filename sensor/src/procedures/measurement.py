@@ -116,7 +116,23 @@ class MeasurementProcedure:
                 "could not read humidity value from SHT21", config=self.config
             )
         # TODO: move warning into SHT21 interface
-        # TODO: send SHT21 values via mqtt
+        # TODO: fetch chamber temperature from CO2 sensor
+
+        utils.SendingMQTTClient.enqueue_message(
+            self.config,
+            custom_types.MQTTDataMessageBody(
+                revision=self.config.revision,
+                timestamp=round(time.time(), 2),
+                value=custom_types.MQTTAirData(
+                    variant="air",
+                    data=custom_types.AirSensorData(
+                        inlet_temperature=temperature,
+                        inlet_humidity=humidity,
+                        chamber_temperature=None,
+                    ),
+                ),
+            ),
+        )
 
     def run(self) -> None:
         """

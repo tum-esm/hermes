@@ -7,8 +7,8 @@ from .validators import validate_str, validate_float
 
 
 class AirSensorData(BaseModel):
-    inlet_temperature: float
-    humidity: float
+    inlet_temperature: Optional[float]
+    inlet_humidity: Optional[float]
     chamber_temperature: Optional[float]
 
 
