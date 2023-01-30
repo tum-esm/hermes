@@ -7,7 +7,8 @@ LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
 
 
 def expect_log_lines(
-    required_lines: list[str] = [], forbidden_lines: list[str] = []
+    required_lines: list[str] = [],
+    forbidden_lines: list[str] = [],
 ) -> None:
     with open(LOG_FILE, "r") as f:
         file_content = f.read()
@@ -20,7 +21,9 @@ def expect_log_lines(
 
 
 def wait_for_condition(
-    is_successful: Callable[[], bool], timeout_message: str, timeout_seconds: float = 5
+    is_successful: Callable[[], bool],
+    timeout_message: str,
+    timeout_seconds: float = 5,
 ) -> None:
     start_time = time.time()
     while True:

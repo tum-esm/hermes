@@ -1,23 +1,32 @@
+import json
+import time
 import os
 import sys
-import time
 
-dir = os.path.dirname
-PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
+dirname = os.path.dirname
+PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 sys.path.append(PROJECT_DIR)
 
 from src import utils, hardware
 
-
-config = hardware.ConfigInterface.read()
-wind_sensor = hardware.WindSensorInterface(
-    config, logger=utils.Logger(config, origin="co2-sensor", print_to_console=True)
-)
+config = utils.ConfigInterface.read()
+wind_sensor = hardware.WindSensorInterface(config)
 
 for i in range(30):
-    print("update")
-    current_values = wind_sensor.get_current_values()
-    print(current_values)
+    current_measurement = wind_sensor.get_current_wind_measurement()
+    print("current_measurement: ", end="")
+    if current_measurement is not None:
+        print(json.dumps(current_measurement.dict(), indent=4))
+    else:
+        print("null")
+
+    current_device_status = wind_sensor.get_current_device_status()
+    print("current_device_status: ", end="")
+    if current_device_status is not None:
+        print(json.dumps(current_device_status.dict(), indent=4))
+    else:
+        print("null")
+
     time.sleep(2)
 
 print("tearing down interface")
