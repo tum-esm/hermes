@@ -170,9 +170,9 @@ class MeasurementProcedure:
             self.logger.info(f"new measurement: {current_sensor_data}")
             utils.SendingMQTTClient.enqueue_message(
                 self.config,
-                message_body=custom_types.MQTTMeasurementMessageBody(
+                message_body=custom_types.MQTTDataMessageBody(
                     timestamp=time.time(),
-                    value=current_sensor_data,
+                    value=custom_types.MQTTCO2Data(variant="co2", data=current_sensor_data),
                     revision=self.config.revision,
                 ),
             )

@@ -96,7 +96,7 @@ class SendingMQTTClient:
                     variant="status", header=new_header, body=message_body
                 )
             else:
-                new_message = custom_types.MQTTMeasurementMessage(
+                new_message = custom_types.MQTTDataMessage(
                     variant="measurement", header=new_header, body=message_body
                 )
 

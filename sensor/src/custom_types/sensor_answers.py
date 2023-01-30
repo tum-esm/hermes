@@ -1,16 +1,15 @@
 from typing import Literal, Optional
 from pydantic import BaseModel, validator
-from pydantic import BaseModel, validator
-from .validators import (
-    validate_int,
-    validate_str,
-    validate_float,
-    validate_bool,
-    validate_list,
-)
+from .validators import validate_str, validate_float
 
 # validation is only necessary for external sources
 # internal source will be covered by mypy
+
+
+class AirSensorData(BaseModel):
+    inlet_temperature: float
+    humidity: float
+    chamber_temperature: Optional[float]
 
 
 class CO2SensorData(BaseModel):

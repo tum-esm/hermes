@@ -2,7 +2,16 @@ from typing import Literal, Optional, Union
 from pydantic import BaseModel, validator
 
 from .validators import validate_int, validate_str, validate_float
-from .sensor_answers import CO2SensorData
+from .sensor_answers import (
+    CO2SensorData,
+    AirSensorData,
+    MainboardSensorData,
+    WindSensorData,
+    HeatedEnclosureData,
+)
+
+# -----------------------------------------------------------------------------
+# MQTT Config (read from env variables)
 
 
 class MQTTConfig(BaseModel):
@@ -41,32 +50,8 @@ class MQTTConfig(BaseModel):
         extra = "forbid"
 
 
-class MQTTMessageHeader(BaseModel):
-    """meta data for managing message queue"""
-
-    identifier: int
-    mqtt_topic: Optional[str]
-    status: Literal["pending", "sent", "delivered", "sending-skipped"]
-    delivery_timestamp: Optional[float]
-
-    # validators
-    _val_identifier = validator("identifier", pre=True, allow_reuse=True)(
-        validate_int(minimum=0),
-    )
-    _val_mqtt_topic = validator("mqtt_topic", pre=True, allow_reuse=True)(
-        validate_str(nullable=True),
-    )
-    _val_status = validator("status", pre=True, allow_reuse=True)(
-        validate_str(allowed=["pending", "sent", "delivered", "sending-skipped"]),
-    )
-    _val_delivery_timestamp = validator(
-        "delivery_timestamp", pre=True, allow_reuse=True
-    )(
-        validate_float(minimum=1_640_991_600, maximum=2_147_483_648, nullable=True),
-    )
-
-    class Config:
-        extra = "forbid"
+# -----------------------------------------------------------------------------
+# MQTT Status Message
 
 
 class MQTTStatusMessageBody(BaseModel):
@@ -99,12 +84,47 @@ class MQTTStatusMessageBody(BaseModel):
         extra = "forbid"
 
 
-class MQTTMeasurementMessageBody(BaseModel):
+# -----------------------------------------------------------------------------
+# MQTT Data Message
+
+
+class MQTTCO2Data(BaseModel):
+    variant: Literal["co2"]
+    data: CO2SensorData
+
+
+class MQTTAirData(BaseModel):
+    variant: Literal["air"]
+    data: AirSensorData
+
+
+class MQTTMainboardData(BaseModel):
+    variant: Literal["mainboard"]
+    data: MainboardSensorData
+
+
+class MQTTWindData(BaseModel):
+    variant: Literal["wind"]
+    data: WindSensorData
+
+
+class MQTTEnclosureData(BaseModel):
+    variant: Literal["enclosure"]
+    data: HeatedEnclosureData
+
+
+class MQTTDataMessageBody(BaseModel):
     """message body which is sent to server"""
 
     revision: int
     timestamp: float
-    value: CO2SensorData
+    value: Union[
+        MQTTCO2Data,
+        MQTTAirData,
+        MQTTMainboardData,
+        MQTTWindData,
+        MQTTEnclosureData,
+    ]
 
     # validators
     _val_revision = validator("revision", pre=True, allow_reuse=True)(
@@ -112,6 +132,38 @@ class MQTTMeasurementMessageBody(BaseModel):
     )
     _val_timestamp = validator("timestamp", pre=True, allow_reuse=True)(
         validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
+# -----------------------------------------------------------------------------
+# MQTT Message Parts: Header + different bodies
+
+
+class MQTTMessageHeader(BaseModel):
+    """meta data for managing message queue"""
+
+    identifier: int
+    mqtt_topic: Optional[str]
+    status: Literal["pending", "sent", "delivered", "sending-skipped"]
+    delivery_timestamp: Optional[float]
+
+    # validators
+    _val_identifier = validator("identifier", pre=True, allow_reuse=True)(
+        validate_int(minimum=0),
+    )
+    _val_mqtt_topic = validator("mqtt_topic", pre=True, allow_reuse=True)(
+        validate_str(nullable=True),
+    )
+    _val_status = validator("status", pre=True, allow_reuse=True)(
+        validate_str(allowed=["pending", "sent", "delivered", "sending-skipped"]),
+    )
+    _val_delivery_timestamp = validator(
+        "delivery_timestamp", pre=True, allow_reuse=True
+    )(
+        validate_float(minimum=1_640_991_600, maximum=2_147_483_648, nullable=True),
     )
 
     class Config:
@@ -126,17 +178,24 @@ class MQTTStatusMessage(BaseModel):
     body: MQTTStatusMessageBody
 
 
-class MQTTMeasurementMessage(BaseModel):
+class MQTTDataMessage(BaseModel):
     """element in local message queue"""
 
-    variant: Literal["measurement"]
+    variant: Literal["data"]
     header: MQTTMessageHeader
-    body: MQTTMeasurementMessageBody
+    body: MQTTDataMessageBody
+
+
+MQTTMessageBody = Union[MQTTStatusMessageBody, MQTTDataMessageBody]
+MQTTMessage = Union[MQTTStatusMessage, MQTTDataMessage]
+
+# -----------------------------------------------------------------------------
+# MQTT Message Queues
 
 
 class ActiveMQTTMessageQueue(BaseModel):
     max_identifier: int
-    messages: list[Union[MQTTStatusMessage, MQTTMeasurementMessage]]
+    messages: list[MQTTMessage]
 
     # validators
     _val_max_identifier = validator("max_identifier", pre=True, allow_reuse=True)(
@@ -148,34 +207,7 @@ class ActiveMQTTMessageQueue(BaseModel):
 
 
 class ArchivedMQTTMessageQueue(BaseModel):
-    messages: list[Union[MQTTStatusMessage, MQTTMeasurementMessage]]
+    messages: list[MQTTMessage]
 
     class Config:
         extra = "forbid"
-
-
-MQTTMessageBody = Union[MQTTStatusMessageBody, MQTTMeasurementMessageBody]
-MQTTMessage = Union[MQTTStatusMessage, MQTTMeasurementMessage]
-
-
-class MQTTConfigurationRequestConfig(BaseModel):
-    version: str
-
-    # validators
-    _val_version = validator("version", pre=True, allow_reuse=True)(
-        validate_str(min_len=5),
-    )
-
-
-class MQTTConfigurationRequest(BaseModel):
-    """A message sent by the server requesting a station to
-    update its configuration. Extra items in this mode are
-    allowed for future additions."""
-
-    revision: int
-    configuration: MQTTConfigurationRequestConfig
-
-    # validators
-    _val_revision = validator("revision", pre=True, allow_reuse=True)(
-        validate_int(minimum=0),
-    )
