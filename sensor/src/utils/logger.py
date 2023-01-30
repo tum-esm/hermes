@@ -47,6 +47,10 @@ class Logger:
     ) -> None:
         self.origin: str = origin
         self.print_to_console = print_to_console
+    
+    def horizontal_line(self, fill_char: Literal["-", "=", ".", "_"] = "=") -> None:
+        """writes a debug log line, used for verbose output"""
+        self._write_log_line("INFO", fill_char*46)
 
     def debug(self, message: str) -> None:
         """writes a debug log line, used for verbose output"""

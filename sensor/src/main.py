@@ -22,6 +22,7 @@ def run() -> None:
     4. run measurement procedure
     """
     logger = utils.Logger(origin="main")
+    logger.horizontal_line()
     logger.info(f"starting mainloop with process ID {os.getpid()}")
 
     try:
