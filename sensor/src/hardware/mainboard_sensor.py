@@ -4,7 +4,7 @@ import bme280
 import os
 from src import utils, custom_types
 
-MAINBOARD_SENSOR_I2C_ADDRESS = 0x76
+MAINBOARD_SENSOR_I2C_ADDRESS = 0x77
 
 
 class MainboardSensorInterface:
