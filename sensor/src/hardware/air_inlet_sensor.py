@@ -3,12 +3,12 @@
 
 import time
 from typing import Optional
-from src import utils
+from src import custom_types, utils
 
 
 class AirInletSensorInterface:
-    def __init__(self) -> None:
-        self.logger = utils.Logger(origin="air-inlet-sensor")
+    def __init__(self, config: custom_types.Config) -> None:
+        self.logger, self.config = utils.Logger(origin="air-inlet-sensor"), config
         self.logger.info("Starting initialization")
         self.i2c_interface = utils.serial_interfaces.SerialI2CInterface(
             address=0x40, device=1
@@ -34,6 +34,7 @@ class AirInletSensorInterface:
             t = -46.82 + ((t * 175.72) / 65536)  # T = 46.82 + (175.72 * ST/2^16 )
             return round(t, 1)
         else:
+            self.logger.warning("could not read humidity value", config=self.config)
             return None
 
     def _read_humidity(self) -> Optional[float]:
@@ -48,6 +49,7 @@ class AirInletSensorInterface:
                 rh = 100
             return round(rh, 1)
         else:
+            self.logger.warning("could not read temperature value", config=self.config)
             return None
 
     def _check_crc(self, data: bytes, length: int) -> bool:

@@ -27,7 +27,7 @@ class HardwareInterface:
         self.acquire_hardare_lock()
 
         # measurement sensors
-        self.air_inlet_sensor = AirInletSensorInterface()
+        self.air_inlet_sensor = AirInletSensorInterface(config)
         self.co2_sensor = CO2SensorInterface(config)
         self.wind_sensor = WindSensorInterface(config)
 
@@ -78,7 +78,7 @@ class HardwareInterface:
         self.acquire_hardare_lock()
 
         # measurement sensors
-        self.air_inlet_sensor = AirInletSensorInterface()
+        self.air_inlet_sensor = AirInletSensorInterface(config)
         self.co2_sensor = CO2SensorInterface(config)
         self.wind_sensor = WindSensorInterface(config)
 

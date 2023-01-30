@@ -107,15 +107,12 @@ class MeasurementProcedure:
             humidity,
         ) = self.hardware_interface.air_inlet_sensor.get_current_values()
         mainboard_data = self.hardware_interface.mainboard_sensor.get_system_data()
+        
         self.hardware_interface.co2_sensor.set_calibration_values(
             humidity=humidity,
             pressure=mainboard_data.enclosure_pressure,
         )
-        if humidity is None:
-            self.logger.warning(
-                "could not read humidity value from SHT21", config=self.config
-            )
-        # TODO: move warning into SHT21 interface
+
         # TODO: fetch chamber temperature from CO2 sensor
 
         utils.SendingMQTTClient.enqueue_message(
