@@ -171,7 +171,7 @@ class MeasurementProcedure:
             utils.SendingMQTTClient.enqueue_message(
                 self.config,
                 message_body=custom_types.MQTTDataMessageBody(
-                    timestamp=time.time(),
+                    timestamp=round(time.time(), 2),
                     value=custom_types.MQTTCO2Data(variant="co2", data=current_sensor_data),
                     revision=self.config.revision,
                 ),

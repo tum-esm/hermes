@@ -3,7 +3,7 @@ import sys
 import time
 import traceback
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Literal, Optional
 
 from src import custom_types
 
@@ -57,16 +57,7 @@ class Logger:
         """
         self._write_log_line("WARNING", message)
         if config is not None:
-            SendingMQTTClient.enqueue_message(
-                config,
-                message_body=custom_types.MQTTStatusMessageBody(
-                    severity="warning",
-                    subject=f"{self.origin} - {message}",
-                    details="",
-                    revision=config.revision,
-                    timestamp=time.time(),
-                ),
-            )
+            self._write_mqtt_message(config, "warning", message)
 
     def error(self, message: str, config: Optional[custom_types.Config] = None) -> None:
         """writes an error log line, sends the message via
@@ -74,16 +65,7 @@ class Logger:
         """
         self._write_log_line("ERROR", message)
         if config is not None:
-            SendingMQTTClient.enqueue_message(
-                config,
-                message_body=custom_types.MQTTStatusMessageBody(
-                    severity="error",
-                    subject=f"{self.origin} - {message}",
-                    details="",
-                    timestamp=time.time(),
-                    revision=config.revision,
-                ),
-            )
+            self._write_mqtt_message(config, "error", message)
 
     def exception(
         self, e: Exception, config: Optional[custom_types.Config] = None
@@ -97,15 +79,11 @@ class Logger:
             "EXCEPTION", f"{exception_name} occured: {exception_traceback}"
         )
         if config is not None:
-            SendingMQTTClient.enqueue_message(
+            self._write_mqtt_message(
                 config,
-                message_body=custom_types.MQTTStatusMessageBody(
-                    severity="error",
-                    subject=f"{self.origin} - {exception_name}",
-                    details=exception_traceback,
-                    timestamp=time.time(),
-                    revision=config.revision,
-                ),
+                "error",
+                exception_name,
+                details=exception_traceback,
             )
 
     def _write_log_line(self, level: str, message: str) -> None:
@@ -131,6 +109,24 @@ class Logger:
             # Archive lines older than 60 minutes, every 10 minutes
             if (now - Logger.last_archive_time).total_seconds() > 600:
                 self._archive()
+
+    def _write_mqtt_message(
+        self,
+        config: custom_types.Config,
+        level: Literal["warning", "error"],
+        subject: str,
+        details: str = "",
+    ) -> None:
+        SendingMQTTClient.enqueue_message(
+            config,
+            message_body=custom_types.MQTTStatusMessageBody(
+                severity=level,
+                subject=f"{self.origin} - {subject}",
+                details=details,
+                timestamp=round(time.time(), 2),
+                revision=config.revision,
+            ),
+        )
 
     def _archive(self) -> None:
         """moves old log lines in "logs/current-logs.log" into an
