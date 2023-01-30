@@ -1,5 +1,7 @@
 import os
+import signal
 import time
+from typing import Any
 from src import utils, hardware, procedures
 
 
@@ -45,6 +47,15 @@ def run() -> None:
     hardware_interface = hardware.HardwareInterface(config)
     backoff_time_bucket_index = 0
     backoff_time_buckets = [15, 60, 300, 1200]
+
+    def graceful_teardown(*args: Any) -> None:
+        logger.info("starting graceful shutdown")
+        hardware_interface.teardown()
+        logger.info("finished graceful shutdown")
+        exit(0)
+
+    signal.signal(signal.SIGINT, graceful_teardown)
+    signal.signal(signal.SIGTERM, graceful_teardown)
 
     # system_check:   logging system statistics and reporting hardware/system errors
     # configuration:  updating the configuration/the software version on request
