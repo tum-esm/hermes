@@ -18,6 +18,13 @@ LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
 # manually. Doesn't really make a performance difference
 
 
+def pad_str_right(text: str, min_width: int, fill_char: Literal["0", " "] = " ") -> str:
+    if len(text) >= min_width:
+        return text
+    else:
+        return text + (fill_char * (min_width - len(text)))
+
+
 def log_line_has_date(log_line: str) -> bool:
     """returns true when a give log line (string) starts
     with a valid date. This is not true for exception
@@ -97,8 +104,10 @@ class Logger:
             utc_offset = round(utc_offset)
 
         log_string = (
-            f"{now} UTC{'' if utc_offset < 0 else '+'}{utc_offset} "
-            + f"- {self.origin} - {level} - {message}\n"
+            f"{str(now)[:-3]} UTC{'' if utc_offset < 0 else '+'}{utc_offset} "
+            + f"- {pad_str_right(self.origin, min_width=23)} "
+            + f"- {pad_str_right(level, min_width=13)} "
+            + f"- {message}\n"
         )
         if self.print_to_console:
             print(log_string, end="")

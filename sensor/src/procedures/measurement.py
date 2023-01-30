@@ -25,13 +25,6 @@ class MeasurementProcedure:
         self.active_air_inlet: Optional[custom_types.MeasurementAirInletConfig] = None
         self.last_measurement_time: float = 0
 
-        # set up pump to run continuously
-        self.hardware_interface.pump.set_desired_pump_speed(
-            unit="litres_per_minute",
-            value=self.config.measurement.pumped_litres_per_minute,
-        )
-        time.sleep(1)
-
     def _switch_to_air_inlet(
         self, new_air_inlet: custom_types.MeasurementAirInletConfig
     ) -> None:
@@ -137,6 +130,13 @@ class MeasurementProcedure:
         the measurements will be sent to the MQTT client right
         during the collection (2 minutes)
         """
+        # set up pump to run continuously
+        self.hardware_interface.pump.set_desired_pump_speed(
+            unit="litres_per_minute",
+            value=self.config.measurement.pumped_litres_per_minute,
+        )
+        time.sleep(0.5)
+
         start_time = time.time()
 
         # possibly switches valve every two minutes
@@ -172,7 +172,9 @@ class MeasurementProcedure:
                 self.config,
                 message_body=custom_types.MQTTDataMessageBody(
                     timestamp=round(time.time(), 2),
-                    value=custom_types.MQTTCO2Data(variant="co2", data=current_sensor_data),
+                    value=custom_types.MQTTCO2Data(
+                        variant="co2", data=current_sensor_data
+                    ),
                     revision=self.config.revision,
                 ),
             )
