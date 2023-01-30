@@ -1,6 +1,9 @@
 from src import utils, custom_types
-from src.utils import Constants
 import gpiozero
+
+UPS_READY_PIN_IN = 5
+UPS_BATTERY_MODE_PIN_IN = 10
+UPS_ALARM_PIN_IN = 7
 
 
 class UPSInterface:
@@ -13,8 +16,8 @@ class UPSInterface:
 
         # pin goes high if the system is powered by the UPS battery
         mode_input = gpiozero.DigitalInputDevice(
-            Constants.UPS.battery_mode_pin_in,
-            bounce_time=300,
+            UPS_BATTERY_MODE_PIN_IN,
+            bounce_time=0.3,
             pin_factory=self.pin_factory,
         )
         mode_input.when_activated = lambda: self.logger.warning(
@@ -26,7 +29,7 @@ class UPSInterface:
 
         # pin goes high if the battery has any error or has been disconected
         alarm_input = gpiozero.DigitalInputDevice(
-            Constants.UPS.alarm_pin_in, bounce_time=300, pin_factory=self.pin_factory
+            UPS_ALARM_PIN_IN, bounce_time=0.3, pin_factory=self.pin_factory
         )
         alarm_input.when_activated = lambda: self.logger.warning(
             "battery error detected", config=self.config
@@ -42,7 +45,7 @@ class UPSInterface:
 
         # pin goes high if the battery is empty or fully charged (two thresholds like 10% and 90%)
         ready_input = gpiozero.DigitalInputDevice(
-            Constants.UPS.ready_pin_in, bounce_time=2000, pin_factory=self.pin_factory
+            UPS_READY_PIN_IN, bounce_time=0.3, pin_factory=self.pin_factory
         )
         ready_input.when_activated = _on_battery_is_ready
 

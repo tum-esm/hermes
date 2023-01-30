@@ -5,8 +5,6 @@ import gpiozero
 import gpiozero.pins.pigpio
 import re
 
-from src.utils.constants import Constants
-
 number_regex = r"\d+(\.\d+)?"
 measurement_pattern = re.compile(
     f"^0R1,Dn={number_regex}D,Dm={number_regex}D,Dx={number_regex}D,"
@@ -16,6 +14,10 @@ device_status_pattern = re.compile(
     f"^0R5,Th={number_regex}C,Vh={number_regex}N,"
     + f"Vs={number_regex}V,Vr={number_regex}V,Id=tumesmmw\\d+$"
 )
+
+
+WIND_SENSOR_POWER_PIN_OUT = 21
+WIND_SENSOR_SERIAL_PORT = "/dev/ttySC1"
 
 
 class WindSensorInterface:
@@ -30,13 +32,14 @@ class WindSensorInterface:
         # power pin to power up/down wind sensor
         self.pin_factory = utils.get_gpio_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
-            pin=utils.Constants.WindSensor.power_pin_out, pin_factory=self.pin_factory
+            pin=WIND_SENSOR_POWER_PIN_OUT,
+            pin_factory=self.pin_factory,
         )
         self.power_pin.on()
 
         # serial connection to receive data from wind sensor
         self.rs232_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
-            port=utils.Constants.WindSensor.serial_port,
+            port=WIND_SENSOR_SERIAL_PORT,
             baudrate=19200,
             encoding="cp1252",
             line_endling="\r\n",
@@ -129,4 +132,4 @@ class WindSensorInterface:
         self.pin_factory.close()
 
         # I don't know why this is needed sometimes, just to make sure
-        utils.run_shell_command(f"pigs w {Constants.WindSensor.power_pin_out} 0")
+        utils.run_shell_command(f"pigs w {WIND_SENSOR_POWER_PIN_OUT} 0")

@@ -5,7 +5,10 @@ from typing import Literal
 import gpiozero
 import gpiozero.pins.pigpio
 from src import utils, custom_types
-from src.utils import Constants
+
+PUMP_CONTROL_PIN_OUT = 19
+PUMP_CONTROL_PIN_FREQUENCY = 10000
+PUMP_SPEED_PIN_IN = 16
 
 
 class PumpInterface:
@@ -25,8 +28,8 @@ class PumpInterface:
 
         # pins for setting desired pump speed
         self.control_pin = gpiozero.PWMOutputDevice(
-            pin=Constants.Pump.control_pin_out,
-            frequency=Constants.Pump.frequency,
+            pin=PUMP_CONTROL_PIN_OUT,
+            frequency=PUMP_CONTROL_PIN_FREQUENCY,
             active_high=True,
             initial_value=0,
             pin_factory=self.pin_factory,
@@ -42,7 +45,7 @@ class PumpInterface:
 
         # pins for measuring actual pump speed
         self.speed_pin = gpiozero.DigitalInputDevice(
-            pin=Constants.Pump.speed_pin_in,
+            pin=PUMP_SPEED_PIN_IN,
             pin_factory=self.pin_factory,
         )
         self.speed_pin.when_activated = lambda: self.rps_measurement_queue.put(1)
@@ -107,7 +110,7 @@ class PumpInterface:
         self.pin_factory.close()
 
         # I don't know why this is needed sometimes, just to make sure
-        utils.run_shell_command(f"pigs w {Constants.Pump.control_pin_out} 0")
+        utils.run_shell_command(f"pigs w {PUMP_CONTROL_PIN_OUT} 0")
 
     @staticmethod
     def monitor_rps(

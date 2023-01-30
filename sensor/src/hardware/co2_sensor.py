@@ -4,8 +4,6 @@ from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
 
-from src.utils.constants import Constants
-
 number_regex = r"\d+(\.\d+)?"
 startup_regex = (
     f"GMP343 - Version STD {number_regex}\\r\\n"
@@ -16,6 +14,10 @@ measurement_regex = (
     + f"Comp\\.\\s*{number_regex} ppm; "
     + f"Filt\\.\\s*{number_regex} ppm"
 )
+
+
+CO2_SENSOR_POWER_PIN_OUT = 20
+CO2_SENSOR_SERIAL_PORT = "/dev/ttySC0"
 
 
 class CO2SensorInterface:
@@ -29,12 +31,12 @@ class CO2SensorInterface:
         # power pin to power up/down wind sensor
         self.pin_factory = utils.get_gpio_pin_factory()
         self.power_pin = gpiozero.OutputDevice(
-            pin=utils.Constants.CO2Sensor.power_pin_out, pin_factory=self.pin_factory
+            pin=CO2_SENSOR_POWER_PIN_OUT, pin_factory=self.pin_factory
         )
 
         # serial connection to receive data from wind sensor
         self.rs232_interface = utils.serial_interfaces.SerialCO2SensorInterface(
-            port=utils.Constants.CO2Sensor.serial_port
+            port=CO2_SENSOR_SERIAL_PORT
         )
 
         # turn the sensor off and on and set it to our default settings
@@ -72,7 +74,7 @@ class CO2SensorInterface:
             self.rs232_interface.wait_for_answer()
 
         # set default filters
-        # self.set_filter_setting()
+        self.set_filter_setting(average=6)
 
     def set_filter_setting(
         self,
@@ -239,4 +241,4 @@ class CO2SensorInterface:
         self.pin_factory.close()
 
         # I don't know why this is needed sometimes, just to make sure
-        utils.run_shell_command(f"pigs w {Constants.CO2Sensor.power_pin_out} 0")
+        utils.run_shell_command(f"pigs w {CO2_SENSOR_POWER_PIN_OUT} 0")

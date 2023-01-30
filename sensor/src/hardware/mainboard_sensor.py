@@ -1,8 +1,10 @@
-from typing import Any, Optional
+from typing import Optional
 import smbus2
 import bme280
 import os
 from src import utils, custom_types
+
+MAINBOARD_SENSOR_I2C_ADDRESS = 0x76
 
 
 class MainboardSensorInterface:
@@ -21,8 +23,7 @@ class MainboardSensorInterface:
     def init_sensor(self) -> None:
         try:
             self.compensation_params = bme280.load_calibration_params(
-                self.bus,
-                utils.Constants.MainboardSensor.i2c_address,
+                self.bus, MAINBOARD_SENSOR_I2C_ADDRESS
             )
         except OSError:
             self.logger.warning(
@@ -50,7 +51,7 @@ class MainboardSensorInterface:
             assert self.compensation_params is not None
             bme280_data = bme280.sample(
                 self.bus,
-                utils.Constants.MainboardSensor.i2c_address,
+                MAINBOARD_SENSOR_I2C_ADDRESS,
                 self.compensation_params,
             )
             output.mainboard_temperature = round(bme280_data.temperature, 1)

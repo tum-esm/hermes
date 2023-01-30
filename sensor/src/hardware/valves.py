@@ -1,7 +1,11 @@
 from typing import Literal
 from src import utils, custom_types
-from src.utils import Constants
 import gpiozero
+
+VALVE_PIN_1_OUT = 25
+VALVE_PIN_2_OUT = 24
+VALVE_PIN_3_OUT = 23
+VALVE_PIN_4_OUT = 22
 
 
 class ValveInterface:
@@ -13,25 +17,25 @@ class ValveInterface:
         self.pin_factory = utils.get_gpio_pin_factory()
         self.valves: dict[Literal[1, 2, 3, 4], gpiozero.OutputDevice] = {
             1: gpiozero.OutputDevice(
-                Constants.Valves.pin_1_out,
+                VALVE_PIN_1_OUT,
                 active_high=False,
                 initial_value=True,
                 pin_factory=self.pin_factory,
             ),
             2: gpiozero.OutputDevice(
-                Constants.Valves.pin_2_out,
+                VALVE_PIN_2_OUT,
                 active_high=True,
                 initial_value=False,
                 pin_factory=self.pin_factory,
             ),
             3: gpiozero.OutputDevice(
-                Constants.Valves.pin_3_out,
+                VALVE_PIN_3_OUT,
                 active_high=True,
                 initial_value=False,
                 pin_factory=self.pin_factory,
             ),
             4: gpiozero.OutputDevice(
-                Constants.Valves.pin_4_out,
+                VALVE_PIN_4_OUT,
                 active_high=True,
                 initial_value=False,
                 pin_factory=self.pin_factory,
@@ -56,3 +60,7 @@ class ValveInterface:
         """ends all hardware/system connections"""
         self.set_active_input(1)
         self.pin_factory.close()
+
+        # I don't know why this is needed sometimes, just to make sur
+        for pin in [VALVE_PIN_1_OUT, VALVE_PIN_2_OUT, VALVE_PIN_3_OUT, VALVE_PIN_4_OUT]:
+            utils.run_shell_command(f"pigs w {pin} 0")
