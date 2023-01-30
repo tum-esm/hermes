@@ -97,7 +97,7 @@ class SendingMQTTClient:
                 )
             else:
                 new_message = custom_types.MQTTDataMessage(
-                    variant="measurement", header=new_header, body=message_body
+                    variant="data", header=new_header, body=message_body
                 )
 
             active_queue.messages.append(new_message)
