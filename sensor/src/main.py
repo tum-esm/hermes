@@ -49,7 +49,7 @@ def run() -> None:
     # system_check:   logging system statistics and reporting hardware/system errors
     # configuration:  updating the configuration/the software version on request
     # calibration:    using the two reference gas bottles to calibrate the CO2 sensor
-    # measurements:   using the two reference gas bottles to calibrate the CO2 sensor
+    # measurements:   do regular measurements for x minutes
 
     system_check_prodecure = procedures.SystemCheckProcedure(config, hardware_interface)
     configuration_prodecure = procedures.ConfigurationProcedure(config)
@@ -76,15 +76,12 @@ def run() -> None:
                 # disconnect all hardware components to test new config
                 hardware_interface.teardown()
 
+                # stopping this script inside the procedure if successful
                 logger.info("running configuration procedure")
                 configuration_prodecure.run(new_config_message)
 
                 # reinit if update is unsuccessful
                 hardware_interface.reinitialize(config)
-
-            # TODO: what if the upgrade to the new pinned revision fails?
-            # -> wait at least 20 minutes until trying to upgrade to the
-            # same revision again?
 
             # -----------------------------------------------------------------
             # CALIBRATION

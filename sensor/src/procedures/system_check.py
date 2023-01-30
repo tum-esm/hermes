@@ -24,6 +24,7 @@ class SystemCheckProcedure:
             f"enclosure humidity = {system_data.enclosure_humidity} % rH, "
             + f"enclosure pressure = {system_data.enclosure_pressure} hPa"
         )
+        # TODO: send out mainboard sensor data via mqtt
 
         # interact with heated enclosure
         if self.config.active_components.heated_enclosure_communication:

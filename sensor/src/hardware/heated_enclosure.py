@@ -146,6 +146,10 @@ class HeatedEnclosureInterface:
         when the enclosure has not send any data in two minutes; logs a
         warning when the enclosure temperature exceeds 55°C
         """
+        if not self.config.active_components.heated_enclosure_communication:
+            self.logger.debug("skipping system checks on heated enclosure")
+            return
+
         self._update_data()
 
         if self.measurement is None:

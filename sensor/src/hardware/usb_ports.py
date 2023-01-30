@@ -18,9 +18,9 @@ class USBPortInterface:
         logger.info("performing power toggle")
 
         logger.debug("toggling USB hub 1")
-        utils.run_shell_command(f"sudo uhubctl -a cycle -p 1 -d {delay}")
+        utils.run_shell_command(f"sudo uhubctl -a cycle -l 1 -d {delay}")
 
         logger.debug("toggling USB hub 2")
-        utils.run_shell_command(f"sudo uhubctl -a cycle -p 1 -d {delay}")
+        utils.run_shell_command(f"sudo uhubctl -a cycle -l 2 -d {delay}")
 
         logger.debug("power toggle successful")

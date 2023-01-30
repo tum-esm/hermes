@@ -116,12 +116,21 @@ class MeasurementProcedure:
         1. fetches the latest temperature and pressure data at air inlet
         2. sends these values to the CO2 sensor
         """
-        _, humidity = self.hardware_interface.air_inlet_sensor.get_current_values()
-        self.hardware_interface.co2_sensor.set_calibration_values(humidity=humidity)
+        (
+            temperature,
+            humidity,
+        ) = self.hardware_interface.air_inlet_sensor.get_current_values()
+        mainboard_data = self.hardware_interface.mainboard_sensor.get_system_data()
+        self.hardware_interface.co2_sensor.set_calibration_values(
+            humidity=humidity,
+            pressure=mainboard_data.enclosure_pressure,
+        )
         if humidity is None:
             self.logger.warning(
                 "could not read humidity value from SHT21", config=self.config
             )
+        # TODO: move warning into SHT21 interface
+        # TODO: send SHT21 values via mqtt
 
     def run(self) -> None:
         """
@@ -140,6 +149,7 @@ class MeasurementProcedure:
         # possibly switches valve every two minutes
         self._update_input_valve()
         self._update_input_air_calibration()
+        # TODO: send temperature data via mqtt
 
         # do regular measurements for about 2 minutes
         while True:
