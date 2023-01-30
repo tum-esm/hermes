@@ -1,3 +1,4 @@
+import time
 import psutil
 from src import hardware, custom_types, utils
 
@@ -24,7 +25,6 @@ class SystemCheckProcedure:
             f"enclosure humidity = {system_data.enclosure_humidity} % rH, "
             + f"enclosure pressure = {system_data.enclosure_pressure} hPa"
         )
-        # TODO: send out mainboard sensor data via mqtt
 
         # interact with heated enclosure
         if self.config.active_components.heated_enclosure_communication:
@@ -63,6 +63,25 @@ class SystemCheckProcedure:
             self.logger.warning(
                 f"CPU usage is very high ({cpu_usage_percent} %)", config=self.config
             )
+
+        utils.SendingMQTTClient.enqueue_message(
+            self.config,
+            custom_types.MQTTDataMessageBody(
+                revision=self.config.revision,
+                timestamp=round(time.time(), 2),
+                value=custom_types.MQTTSystemData(
+                    variant="system",
+                    data=custom_types.SystemData(
+                        mainboard_temperature=system_data.mainboard_temperature,
+                        cpu_temperature=system_data.cpu_temperature,
+                        enclosure_humidity=system_data.enclosure_humidity,
+                        enclosure_pressure=system_data.enclosure_pressure,
+                        disk_usage=disk_usage.percent / 100,
+                        cpu_usage=cpu_usage_percent / 100,
+                    ),
+                ),
+            ),
+        )
 
         # check for errors
         self.hardware_interface.check_errors()

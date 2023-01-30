@@ -3,21 +3,21 @@ from . import validators
 from .config import Config, MeasurementAirInletConfig
 
 from .mqtt_sending import (
-    # some
+    # config and queue files
     MQTTConfig,
     ActiveMQTTMessageQueue,
     ArchivedMQTTMessageQueue,
-    # sfd
+    # data types
     MQTTCO2Data,
     MQTTAirData,
-    MQTTMainboardData,
+    MQTTSystemData,
     MQTTWindData,
     MQTTEnclosureData,
-    # some
+    # different message bodies
     MQTTStatusMessageBody,
     MQTTDataMessageBody,
     MQTTMessageBody,
-    # some
+    # message structure
     MQTTMessageHeader,
     MQTTStatusMessage,
     MQTTDataMessage,
@@ -31,6 +31,7 @@ from .mqtt_receiving import (
 from .sensor_answers import (
     CO2SensorData,
     MainboardSensorData,
+    SystemData,
     WindSensorData,
     WindSensorStatus,
     HeatedEnclosureData,

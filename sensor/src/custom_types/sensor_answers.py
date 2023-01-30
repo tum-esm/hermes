@@ -27,6 +27,17 @@ class MainboardSensorData(BaseModel):
     enclosure_pressure: Optional[float]
 
 
+class SystemData(BaseModel):
+    """fractional values from 0 to 1"""
+
+    mainboard_temperature: Optional[float]
+    cpu_temperature: Optional[float]
+    enclosure_humidity: Optional[float]
+    enclosure_pressure: Optional[float]
+    disk_usage: float
+    cpu_usage: float
+
+
 class WindSensorData(BaseModel):
     direction_min: float
     direction_avg: float

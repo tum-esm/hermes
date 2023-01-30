@@ -6,6 +6,7 @@ from .sensor_answers import (
     CO2SensorData,
     AirSensorData,
     MainboardSensorData,
+    SystemData,
     WindSensorData,
     HeatedEnclosureData,
 )
@@ -98,9 +99,9 @@ class MQTTAirData(BaseModel):
     data: AirSensorData
 
 
-class MQTTMainboardData(BaseModel):
-    variant: Literal["mainboard"]
-    data: MainboardSensorData
+class MQTTSystemData(BaseModel):
+    variant: Literal["system"]
+    data: SystemData
 
 
 class MQTTWindData(BaseModel):
@@ -121,7 +122,7 @@ class MQTTDataMessageBody(BaseModel):
     value: Union[
         MQTTCO2Data,
         MQTTAirData,
-        MQTTMainboardData,
+        MQTTSystemData,
         MQTTWindData,
         MQTTEnclosureData,
     ]
