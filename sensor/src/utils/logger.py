@@ -61,7 +61,7 @@ class Logger:
                 config,
                 message_body=custom_types.MQTTStatusMessageBody(
                     severity="warning",
-                    subject=message,
+                    subject=f"{self.origin} - {message}",
                     details="",
                     revision=config.revision,
                     timestamp=time.time(),
@@ -78,7 +78,7 @@ class Logger:
                 config,
                 message_body=custom_types.MQTTStatusMessageBody(
                     severity="error",
-                    subject=message,
+                    subject=f"{self.origin} - {message}",
                     details="",
                     timestamp=time.time(),
                     revision=config.revision,
@@ -101,7 +101,7 @@ class Logger:
                 config,
                 message_body=custom_types.MQTTStatusMessageBody(
                     severity="error",
-                    subject=exception_name,
+                    subject=f"{self.origin} - {exception_name}",
                     details=exception_traceback,
                     timestamp=time.time(),
                     revision=config.revision,
