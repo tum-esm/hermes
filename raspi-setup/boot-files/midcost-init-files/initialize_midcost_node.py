@@ -46,6 +46,7 @@ run_shell_command(
     + "arduino "
     + "exa "
     + "uhubctl "
+    + "screen "
 )
 
 print("Installing Python3.9 via Apt")

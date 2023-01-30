@@ -82,6 +82,7 @@ def run() -> None:
 
             logger.info("checking for new config messages")
             # TODO: get pinned config if revision is different
+            # TODO: do not try an upgrade to a specific revision twice
             new_config_message = mqtt_receiver.get_config_message()
             if new_config_message is not None:
                 # disconnect all hardware components to test new config
