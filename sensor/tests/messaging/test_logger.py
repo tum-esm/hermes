@@ -54,19 +54,20 @@ def _test_logger(sending_enabled: bool) -> None:
         config.revision = 17
         config.active_components.mqtt_data_sending = sending_enabled
 
+    active_mqtt_queue = utils.ActiveMQTTQueue()
+
     generated_log_lines = [
-        "pytests - DEBUG - some message a",
-        "pytests - INFO - some message b",
-        "pytests - WARNING - some message c",
-        "pytests - ERROR - some message d",
-        "pytests - EXCEPTION - ZeroDivisionError occured",
+        "pytests                 - DEBUG         - some message a",
+        "pytests                 - INFO          - some message b",
+        "pytests                 - WARNING       - some message c",
+        "pytests                 - ERROR         - some message d",
+        "pytests                 - EXCEPTION     - ZeroDivisionError occured",
     ]
 
     expect_log_lines(forbidden_lines=generated_log_lines)
-    with open(ACTIVE_MESSAGES_FILE, "r") as f:
-        active_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
-    assert active_message_queue.max_identifier == 0
-    assert len(active_message_queue.messages) == 0
+    assert len(active_mqtt_queue.get_rows_by_status("pending")) == 0
+    assert len(active_mqtt_queue.get_rows_by_status("in-progress")) == 0
+    assert len(active_mqtt_queue.get_rows_by_status("done")) == 0
 
     TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
     MESSAGE_ARCHIVE_FILE = join(
@@ -75,6 +76,18 @@ def _test_logger(sending_enabled: bool) -> None:
         "archive",
         f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
     )
+    EXPECTED_MQTT_TOPIC = (
+        (
+            os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"]
+            + "statuses/"
+            + utils.get_hostname()
+        )
+        if sending_enabled
+        else None
+    )
+
+    # -------------------------------------------------------------------------
+    # check whether logs lines were written correctly
 
     logger = utils.Logger(origin="pytests")
     logger.debug("some message a")
@@ -88,142 +101,67 @@ def _test_logger(sending_enabled: bool) -> None:
 
     expect_log_lines(required_lines=generated_log_lines)
 
-    with open(ACTIVE_MESSAGES_FILE, "r") as f:
-        active_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
-    print(
-        f"active_message_queue.messages = {json.dumps([m.dict() for m in active_message_queue.messages], indent=4)}"
-    )
-    assert active_message_queue.max_identifier == 3
-    assert len(active_message_queue.messages) == 3
-    assert any(
-        [
-            (
-                m.header.identifier == 1
-                and (
-                    m.header.status
-                    == ("pending" if sending_enabled else "sending-skipped")
-                )
-                and m.header.mqtt_topic is None
-                and m.variant == "status"
-                and m.body.severity == "warning"
-                and m.body.subject == "some message c"
-            )
-            for m in active_message_queue.messages
-        ]
-    )
-    assert any(
-        [
-            (
-                m.header.identifier == 2
-                and (
-                    m.header.status
-                    == ("pending" if sending_enabled else "sending-skipped")
-                )
-                and m.header.mqtt_topic is None
-                and m.variant == "status"
-                and m.body.severity == "error"
-                and m.body.subject == "some message d"
-            )
-            for m in active_message_queue.messages
-        ]
-    )
-    assert any(
-        [
-            (
-                m.header.identifier == 3
-                and (
-                    m.header.status
-                    == ("pending" if sending_enabled else "sending-skipped")
-                )
-                and m.header.mqtt_topic is None
-                and m.variant == "status"
-                and m.body.severity == "error"
-                and m.body.subject == "ZeroDivisionError"
-            )
-            for m in active_message_queue.messages
-        ]
-    )
+    # -------------------------------------------------------------------------
+    # check whether all records are correctly inserted in sending queue
+
+    active_status_messages = [
+        custom_types.MQTTStatusMessage(**m.content.dict())
+        for m in active_mqtt_queue.get_rows_by_status(
+            "pending" if sending_enabled else "done"
+        )
+    ]
+    active_status_messages.sort(key=lambda m: m.body.timestamp)
+    assert len(active_status_messages) == 3
+    assert all([m.variant == "status" for m in active_status_messages])
+
+    assert active_status_messages[0].header.mqtt_topic == None
+    assert active_status_messages[0].body.severity == "warning"
+    assert active_status_messages[0].body.subject == "pytests - some message c"
+
+    assert active_status_messages[1].header.mqtt_topic == None
+    assert active_status_messages[1].body.severity == "error"
+    assert active_status_messages[1].body.subject == "pytests - some message d"
+
+    assert active_status_messages[2].header.mqtt_topic == None
+    assert active_status_messages[2].body.severity == "error"
+    assert active_status_messages[2].body.subject == "pytests - ZeroDivisionError"
+
+    # -------------------------------------------------------------------------
+    # wait until sendin queue is empty
 
     def empty_pending_queue() -> bool:
-        with open(ACTIVE_MESSAGES_FILE, "r") as f:
-            active_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
-        return (active_message_queue.max_identifier == 3) and (
-            len(active_message_queue.messages) == 0
-        )
+        return (
+            len(active_mqtt_queue.get_rows_by_status("pending"))
+            + len(active_mqtt_queue.get_rows_by_status("in-progress"))
+            + len(active_mqtt_queue.get_rows_by_status("done"))
+        ) == 0
 
     wait_for_condition(
         empty_pending_queue,
-        timeout_message="log messages were not sent over MQTT",
-        timeout_seconds=15,
+        timeout_seconds=12,
+        timeout_message="active queue is not empty after 12 second timeout",
     )
 
-    expected_message_topic = (
-        os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"]
-        + "statuses/"
-        + utils.get_hostname()
-    )
+    # -------------------------------------------------------------------------
+    # check whether archive contains correct messages
+
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
-        message_archive = custom_types.ArchivedMQTTMessageQueue(messages=json.load(f))
-    print(
-        f"message_archive.messages = {json.dumps([m.dict() for m in message_archive.messages], indent=4)}"
-    )
-    assert len(message_archive.messages) == 3
-    assert any(
-        [
-            (
-                m.header.identifier == 1
-                and (
-                    m.header.status
-                    == ("delivered" if sending_enabled else "sending-skipped")
-                )
-                and (
-                    m.header.mqtt_topic
-                    == (expected_message_topic if sending_enabled else None)
-                )
-                and m.variant == "status"
-                and m.body.severity == "warning"
-                and m.body.subject == "some message c"
-            )
-            for m in message_archive.messages
+        archived_data_messages = [
+            custom_types.MQTTStatusMessage(**m)
+            for m in [json.loads(m) for m in f.read().split("\n") if len(m) > 0]
         ]
-    )
-    assert any(
-        [
-            (
-                m.header.identifier == 2
-                and (
-                    m.header.status
-                    == ("delivered" if sending_enabled else "sending-skipped")
-                )
-                and (
-                    m.header.mqtt_topic
-                    == (expected_message_topic if sending_enabled else None)
-                )
-                and m.variant == "status"
-                and m.body.severity == "error"
-                and m.body.subject == "some message d"
-            )
-            for m in message_archive.messages
-        ]
-    )
-    assert any(
-        [
-            (
-                m.header.identifier == 3
-                and (
-                    m.header.status
-                    == ("delivered" if sending_enabled else "sending-skipped")
-                )
-                and (
-                    m.header.mqtt_topic
-                    == (expected_message_topic if sending_enabled else None)
-                )
-                and m.variant == "status"
-                and m.body.severity == "error"
-                and m.body.subject == "ZeroDivisionError"
-            )
-            for m in message_archive.messages
-        ]
-    )
+    archived_data_messages.sort(key=lambda m: m.body.timestamp)
+    assert len(archived_data_messages) == 3
+    assert archived_data_messages[0].header.mqtt_topic == EXPECTED_MQTT_TOPIC
+    assert archived_data_messages[0].body.severity == "warning"
+    assert archived_data_messages[0].body.subject == "pytests - some message c"
+
+    assert archived_data_messages[1].header.mqtt_topic == EXPECTED_MQTT_TOPIC
+    assert archived_data_messages[1].body.severity == "error"
+    assert archived_data_messages[1].body.subject == "pytests - some message d"
+
+    assert archived_data_messages[2].header.mqtt_topic == EXPECTED_MQTT_TOPIC
+    assert archived_data_messages[2].body.severity == "error"
+    assert archived_data_messages[2].body.subject == "pytests - ZeroDivisionError"
 
     utils.SendingMQTTClient.check_errors()

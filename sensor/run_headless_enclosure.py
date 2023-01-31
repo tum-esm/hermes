@@ -25,7 +25,7 @@ if __name__ == "__main__":
             config = utils.ConfigInterface.read()
             heated_enclosure = hardware.HeatedEnclosureInterface(config)
             mainboard_sensor = hardware.MainboardSensorInterface(config)
-            air_inlet_sensor = hardware.AirInletSensorInterface()
+            air_inlet_sensor = hardware.AirInletSensorInterface(config)
 
             print("sleeping 10 seconds to wait for data")
             time.sleep(10)

@@ -1,5 +1,8 @@
 set -o errexit
 
+echo "Removing old mypy cache"
+rm -rf .mypy_cache 
+
 echo "Checking run_automation.py"
 mypy run_automation.py
 
