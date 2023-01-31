@@ -2,7 +2,7 @@ import json
 import sqlite3
 import os
 from os.path import dirname
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 from src import custom_types
 
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
@@ -43,14 +43,14 @@ class ActiveMQTTQueue:
             VALUES (
                 'pending',
                 '{json.dumps(message.dict())}'
-            )
+            );
             """
         )
 
     def get_rows_by_status(
         self,
         status: Literal["pending", "in-progress", "done"],
-        limit: int = 100,
+        limit: Optional[int] = None,
     ) -> list[custom_types.SQLMQTTRecord]:
         """Used for:
         * "Which rows have to be sent out?"
@@ -61,7 +61,7 @@ class ActiveMQTTQueue:
             f"""
             SELECT content FROM QUEUE
             WHERE status = '{status}'
-            LIMIT {limit}
+            {'' if limit is None else ('LIMIT ' + str(limit))};
             """
         )
         return [
@@ -87,10 +87,10 @@ class ActiveMQTTQueue:
             f"""
             UPDATE QUEUE
             SET status = '{new_status}'
-            WHERE ({row_conditions})
+            WHERE ({row_conditions});
             """
         )
 
     def remove_archive_messages(self) -> None:
         """delete all rows with status 'done'"""
-        self.__read_sql(f"DELETE FROM QUEUE WHERE status = 'done'")
+        self.__read_sql(f"DELETE FROM QUEUE WHERE status = 'done';")

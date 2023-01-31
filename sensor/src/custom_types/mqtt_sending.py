@@ -163,7 +163,7 @@ class MQTTStatusMessage(BaseModel):
 
     variant: Literal["status"]
     header: MQTTMessageHeader
-    message_body: MQTTStatusMessageBody
+    body: MQTTStatusMessageBody
 
     # validators
     _val_variant = validator("variant", pre=True, allow_reuse=True)(
@@ -179,7 +179,7 @@ class MQTTDataMessage(BaseModel):
 
     variant: Literal["data"]
     header: MQTTMessageHeader
-    message_body: MQTTDataMessageBody
+    body: MQTTDataMessageBody
 
     # validators
     _val_variant = validator("variant", pre=True, allow_reuse=True)(

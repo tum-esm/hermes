@@ -93,93 +93,29 @@ class SendingMQTTClient:
         self.active_mqtt_queue.add_row(new_message)
 
     @staticmethod
-    def _load_active_queue() -> custom_types.ActiveMQTTMessageQueue:
-        with active_queue_lock:
-            # generate an empty queue file if the file does not exist
-            if os.path.isfile(ACTIVE_QUEUE_FILE):
-                with open(ACTIVE_QUEUE_FILE, "r") as f:
-                    active_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
-            else:
-                active_queue = custom_types.ActiveMQTTMessageQueue(
-                    max_identifier=0,
-                    messages=[],
-                )
-                with open(ACTIVE_QUEUE_FILE, "w") as f:
-                    json.dump(active_queue.dict(), f, indent=4)
-
-        return active_queue
-
-    @staticmethod
-    def _dump_active_queue(
-        updated_active_queue: custom_types.ActiveMQTTMessageQueue,
-        known_message_ids: Optional[list[int]] = None,
-    ) -> None:
-        """save an active queue to the active queue json file;
-
-        use the `known_message_ids` parameter to mark which messages
-        have been present at the time of active queue loading -> by
-        this messages can be added from one thread while another one
-        is processing an active queue loaded before the additions
-        """
-
-        with active_queue_lock:
-            if known_message_ids is None:
-                with open(ACTIVE_QUEUE_FILE, "w") as f:
-                    json.dump(updated_active_queue.dict(), f, indent=4)
-            else:
-                # add messages that have been added since calling
-                # "_load_active_queue" at the beginning of the loop
-                racing_messages = [
-                    m
-                    for m in SendingMQTTClient._load_active_queue().messages
-                    if (m.header.identifier not in known_message_ids)
-                ]
-                updated_active_queue.messages += racing_messages
-                with open(ACTIVE_QUEUE_FILE, "w") as f:
-                    json.dump(updated_active_queue.dict(), f, indent=4)
-
-    @staticmethod
     def archiving_loop() -> None:
         """archive all message in the active queue that have the
         status `delivered` or `sending-skipped`; this function is
         blocking and should be called in a thread or subprocess"""
 
-        filename_for_datestring: Callable[
-            [str], str
-        ] = lambda date_string: os.path.join(
-            QUEUE_ARCHIVE_DIR, f"delivered-mqtt-messages-{date_string}.json"
-        )
-
-        known_message_ids: list[int] = []
         messages_to_be_archived: dict[str, list[custom_types.MQTTMessage]] = {}
-        archived_message_ids: list[int] = []
+        active_mqtt_queue = ActiveMQTTQueue()
 
         while True:
-
-            # -----------------------------------------------------------------
-            # LOAD CURRENT ACTIVE QUEUE
-
-            active_queue = SendingMQTTClient._load_active_queue()
-            known_message_ids = [m.header.identifier for m in active_queue.messages]
-            messages_to_be_archived = {}
-            archived_message_ids = []
-
-            # -----------------------------------------------------------------
             # DETERMINE MESSAGES TO BE ARCHIVED
+            records_to_be_archived = active_mqtt_queue.get_rows_by_status("done")
 
-            for m in active_queue.messages:
-                if m.header.status in ["delivered", "sending-skipped"]:
-                    archived_message_ids.append(m.header.identifier)
-                    date_string = datetime.datetime.fromtimestamp(
-                        m.body.timestamp, tz=pytz.timezone("UTC")
-                    ).strftime("%Y-%m-%d")
-                    if date_string not in messages_to_be_archived.keys():
-                        messages_to_be_archived[date_string] = []
-                    messages_to_be_archived[date_string].append(m)
+            # SPLIT RECORDS BY DATE
+            messages_to_be_archived = {}
+            for record in records_to_be_archived:
+                date_string = datetime.datetime.fromtimestamp(
+                    record.content.body.timestamp, tz=pytz.timezone("UTC")
+                ).strftime("%Y-%m-%d")
+                if date_string not in messages_to_be_archived.keys():
+                    messages_to_be_archived[date_string] = []
+                messages_to_be_archived[date_string].append(m)
 
-            # -----------------------------------------------------------------
             # DUMP ARCHIVE MESSAGES
-
             for date_string, messages in messages_to_be_archived.items():
                 with open(
                     os.path.join(
@@ -189,22 +125,10 @@ class SendingMQTTClient:
                     "a",
                 ) as f:
                     for m in messages:
-                        f.write(json.dump(m.dict()) + ",\n")
+                        f.write(json.dump(m.dict()) + "\n")
 
-            # -----------------------------------------------------------------
             # DUMP REMAINING ACTIVE MESSAGES
-
-            active_queue.messages = list(
-                filter(
-                    lambda m: m.header.identifier not in archived_message_ids,
-                    active_queue.messages,
-                )
-            )
-            SendingMQTTClient._dump_active_queue(
-                active_queue, known_message_ids=known_message_ids
-            )
-
-            # -----------------------------------------------------------------
+            active_mqtt_queue.remove_archive_messages()
 
             time.sleep(5)
 
