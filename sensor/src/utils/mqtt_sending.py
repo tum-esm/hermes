@@ -18,10 +18,8 @@ ACTIVE_QUEUE_FILE = os.path.join(PROJECT_DIR, "data", "incomplete-mqtt-messages.
 ACTIVE_QUEUE_LOCK = os.path.join(PROJECT_DIR, "data", "incomplete-mqtt-messages.lock")
 
 QUEUE_ARCHIVE_DIR = os.path.join(PROJECT_DIR, "data", "archive")
-QUEUE_ARCHIVE_LOCK = os.path.join(PROJECT_DIR, "data", "archive.lock")
 
 active_queue_lock = filelock.FileLock(ACTIVE_QUEUE_LOCK, timeout=10)
-archive_lock = filelock.FileLock(QUEUE_ARCHIVE_LOCK, timeout=30)
 
 
 class SendingMQTTClient:
@@ -193,24 +191,15 @@ class SendingMQTTClient:
             # DUMP ARCHIVE MESSAGES
 
             for date_string, messages in messages_to_be_archived.items():
-                archive_file_path = filename_for_datestring(date_string)
-                if not os.path.exists(archive_file_path):
-                    current_archive_queue = custom_types.ArchivedMQTTMessageQueue(
-                        messages=[]
-                    )
-                else:
-                    with open(archive_file_path, "r") as f:
-                        current_archive_queue = custom_types.ArchivedMQTTMessageQueue(
-                            messages=json.load(f)
-                        )
-
-                current_archive_queue.messages += messages
-                with open(archive_file_path, "w") as f:
-                    json.dump(
-                        [m.dict() for m in current_archive_queue.messages],
-                        f,
-                        indent=4,
-                    )
+                with open(
+                    os.path.join(
+                        QUEUE_ARCHIVE_DIR,
+                        f"delivered-mqtt-messages-{date_string}.json",
+                    ),
+                    "a",
+                ) as f:
+                    for m in messages:
+                        f.write(json.dump(m.dict()) + ",\n")
 
             # -----------------------------------------------------------------
             # DUMP REMAINING ACTIVE MESSAGES
