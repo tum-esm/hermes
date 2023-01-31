@@ -171,6 +171,7 @@ class SendingMQTTClient:
             sent_record_count = 0
             resent_record_count = 0
             delivered_record_count = 0
+            record_ids_to_be_archived: list[int] = []
 
             # -----------------------------------------------------------------
             # CHECK DELIVERY STATUS OF SENT MESSAGES
@@ -183,12 +184,16 @@ class SendingMQTTClient:
                     if current_records[record.internal_id].is_published():
                         delivered_record_count += 1
                         del current_records[record.internal_id]
+                        record_ids_to_be_archived.append(record.internal_id)
 
                 # resending is required, when current_messages are
                 # lost due to restarting the program
                 else:
                     _publish_record(record)
                     resent_record_count += 1
+
+            # mark successful messages in active queue
+            active_mqtt_queue.update_row_status_by_id(record_ids_to_be_archived, "done")
 
             # -----------------------------------------------------------------
             # SEND PENDING MESSAGES

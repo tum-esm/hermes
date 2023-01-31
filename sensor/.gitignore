@@ -1,4 +1,5 @@
 config.json
+*.db
 *.tmp.db
 *.tmp.log
 *.tmp.json
