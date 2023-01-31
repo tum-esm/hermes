@@ -23,7 +23,7 @@ class MeasurementProcedure:
 
         # state variables
         self.active_air_inlet: Optional[custom_types.MeasurementAirInletConfig] = None
-        self.last_measurement_time: float = 0
+        self.last_iteration_start_time: float = 0
         self.sending_mqtt_client = utils.SendingMQTTClient()
 
     def _switch_to_air_inlet(
@@ -146,6 +146,9 @@ class MeasurementProcedure:
         the measurements will be sent to the MQTT client right
         during the collection (2 minutes)
         """
+        self.logger.info(f"starting measurement interval")
+        loop_start_time = time.time()
+
         # set up pump to run continuously
         self.hardware_interface.pump.set_desired_pump_speed(
             unit="litres_per_minute",
@@ -153,37 +156,18 @@ class MeasurementProcedure:
         )
         time.sleep(0.5)
 
-        start_time = time.time()
-
         # possibly switches valve every two minutes
         self._update_input_valve()
         self._update_input_air_calibration()
-        # TODO: send temperature data via mqtt
 
         # do regular measurements for about 2 minutes
         while True:
-            now = time.time()
-            if (
-                now - start_time
-                > self.config.measurement.timing.seconds_per_measurement_interval
-            ):
-                break
-
-            time_since_last_measurement = now - self.last_measurement_time
-            if (
-                time_since_last_measurement
-                < self.config.measurement.timing.seconds_per_measurement
-            ):
-                time.sleep(
-                    self.config.measurement.timing.seconds_per_measurement
-                    - time_since_last_measurement
-                )
-            self.last_measurement_time = now
+            self.last_iteration_start_time = time.time()
 
             current_sensor_data = (
                 self.hardware_interface.co2_sensor.get_current_concentration()
             )
-            self.logger.info(f"new measurement: {current_sensor_data}")
+            self.logger.debug(f"new measurement")
             self.sending_mqtt_client.enqueue_message(
                 self.config,
                 message_body=custom_types.MQTTDataMessageBody(
@@ -194,3 +178,22 @@ class MeasurementProcedure:
                     revision=self.config.revision,
                 ),
             )
+
+            iteration_end_time = time.time()
+
+            if (
+                iteration_end_time - loop_start_time
+            ) >= self.config.measurement.timing.seconds_per_measurement_interval:
+                break
+
+            elapsed_time = iteration_end_time - self.last_iteration_start_time
+            remaining_sleep_seconds = (
+                self.config.measurement.timing.seconds_per_measurement - elapsed_time
+            )
+            if remaining_sleep_seconds > 0:
+                self.logger.debug(
+                    f"sleeping {round(remaining_sleep_seconds, 3)} seconds"
+                )
+                time.sleep(remaining_sleep_seconds)
+
+        self.logger.info(f"finished measurement interval")
