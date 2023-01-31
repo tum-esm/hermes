@@ -1,7 +1,7 @@
 from typing import Literal, Optional, Union
 from pydantic import BaseModel, validator
 
-from .validators import validate_int, validate_str, validate_float
+from .validators import validate_bool, validate_int, validate_str, validate_float
 from .sensor_answers import (
     CO2SensorData,
     AirSensorData,
@@ -140,31 +140,18 @@ class MQTTDataMessageBody(BaseModel):
 
 
 # -----------------------------------------------------------------------------
-# MQTT Message Parts: Header + different bodies
+# MQTT Message Types: Status + Data
 
 
 class MQTTMessageHeader(BaseModel):
-    """meta data for managing message queue"""
-
-    identifier: int
     mqtt_topic: Optional[str]
-    status: Literal["pending", "sent", "delivered", "sending-skipped"]
-    delivery_timestamp: Optional[float]
+    sending_skipped: bool
 
-    # validators
-    _val_identifier = validator("identifier", pre=True, allow_reuse=True)(
-        validate_int(minimum=0),
-    )
     _val_mqtt_topic = validator("mqtt_topic", pre=True, allow_reuse=True)(
         validate_str(nullable=True),
     )
-    _val_status = validator("status", pre=True, allow_reuse=True)(
-        validate_str(allowed=["pending", "sent", "delivered", "sending-skipped"]),
-    )
-    _val_delivery_timestamp = validator(
-        "delivery_timestamp", pre=True, allow_reuse=True
-    )(
-        validate_float(minimum=1_640_991_600, maximum=2_147_483_648, nullable=True),
+    _val_sending_skipped = validator("sending_skipped", pre=True, allow_reuse=True)(
+        validate_bool(),
     )
 
     class Config:
@@ -176,7 +163,15 @@ class MQTTStatusMessage(BaseModel):
 
     variant: Literal["status"]
     header: MQTTMessageHeader
-    body: MQTTStatusMessageBody
+    message_body: MQTTStatusMessageBody
+
+    # validators
+    _val_variant = validator("variant", pre=True, allow_reuse=True)(
+        validate_str(allowed=["status"]),
+    )
+
+    class Config:
+        extra = "forbid"
 
 
 class MQTTDataMessage(BaseModel):
@@ -184,31 +179,35 @@ class MQTTDataMessage(BaseModel):
 
     variant: Literal["data"]
     header: MQTTMessageHeader
-    body: MQTTDataMessageBody
-
-
-MQTTMessageBody = Union[MQTTStatusMessageBody, MQTTDataMessageBody]
-MQTTMessage = Union[MQTTStatusMessage, MQTTDataMessage]
-
-# -----------------------------------------------------------------------------
-# MQTT Message Queues
-
-
-class ActiveMQTTMessageQueue(BaseModel):
-    max_identifier: int
-    messages: list[MQTTMessage]
+    message_body: MQTTDataMessageBody
 
     # validators
-    _val_max_identifier = validator("max_identifier", pre=True, allow_reuse=True)(
-        validate_int(minimum=0),
+    _val_variant = validator("variant", pre=True, allow_reuse=True)(
+        validate_str(allowed=["data"]),
     )
 
     class Config:
         extra = "forbid"
 
 
-class ArchivedMQTTMessageQueue(BaseModel):
-    messages: list[MQTTMessage]
+MQTTMessageBody = Union[MQTTStatusMessageBody, MQTTDataMessageBody]
+MQTTMessage = Union[MQTTStatusMessage, MQTTDataMessage]
+
+# -----------------------------------------------------------------------------
+# SQL
+
+
+class SQLMQTTRecord(BaseModel):
+    internal_id: int
+    status: Literal["pending", "in-progress", "done"]
+    content: MQTTMessage
+
+    _val_internal_id = validator("internal_id", pre=True, allow_reuse=True)(
+        validate_int(),
+    )
+    _val_status = validator("status", pre=True, allow_reuse=True)(
+        validate_str(allowed=["pending", "in-progress", "done"]),
+    )
 
     class Config:
         extra = "forbid"

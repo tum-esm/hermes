@@ -5,8 +5,7 @@ from .config import Config, MeasurementAirInletConfig
 from .mqtt_sending import (
     # config and queue files
     MQTTConfig,
-    ActiveMQTTMessageQueue,
-    ArchivedMQTTMessageQueue,
+    SQLMQTTRecord,
     # data types
     MQTTCO2Data,
     MQTTAirData,
