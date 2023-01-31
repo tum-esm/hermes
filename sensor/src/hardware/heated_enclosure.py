@@ -31,7 +31,7 @@ class HeatedEnclosureInterface:
         # CONNECTION TO ENCLOSURE ARDUINO (OPTIONAL)
 
         if self.config.active_components.heated_enclosure_communication:
-            HeatedEnclosureInterface.get_arduino_address()
+            self.arduino_address = HeatedEnclosureInterface.get_arduino_address()
 
             # flash firmware onto arduino
             self.logger.debug("Compiling firmware of arduino")

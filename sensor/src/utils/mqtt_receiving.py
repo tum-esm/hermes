@@ -30,13 +30,10 @@ class ReceivingMQTTClient:
         mqtt_client = MQTTConnection.get_client()
         mqtt_config = MQTTConnection.get_config()
         mqtt_client.on_message = on_message
-        config_topic = f"{mqtt_config.mqtt_base_topic}/configuration/{mqtt_config.station_identifier}"
+        config_topic = f"{mqtt_config.mqtt_base_topic}configuration/{mqtt_config.station_identifier}"
 
         logger.info(f"subscribing to topic {config_topic}")
-        mqtt_client.subscribe(
-            f"{mqtt_config.mqtt_base_topic}/configuration/"
-            + f"{mqtt_config.station_identifier}"
-        )
+        mqtt_client.subscribe(config_topic)
 
     def get_messages(self) -> list[Any]:
         global mqtt_message_queue
