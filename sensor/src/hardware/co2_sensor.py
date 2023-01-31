@@ -176,9 +176,16 @@ class CO2SensorInterface:
 
     def get_current_concentration(self) -> custom_types.CO2SensorData:
         """get the current concentration value from the CO2 probe"""
-        self.rs232_interface.flush_receiver_stream()
-        self.rs232_interface.send_command("send")
-        answer = self.rs232_interface.wait_for_answer(expected_regex=measurement_regex)
+        answer: str
+        try:
+            self.rs232_interface.flush_receiver_stream()
+            self.rs232_interface.send_command("send")
+            answer = self.rs232_interface.wait_for_answer(expected_regex=measurement_regex)
+        except TimeoutError:
+            self.rs232_interface.flush_receiver_stream()
+            self.rs232_interface.send_command("send")
+            answer = self.rs232_interface.wait_for_answer(expected_regex=measurement_regex)
+
         for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">", "\r\n"]:
             answer = answer.replace(s, "")
         raw_value_string, comp_value_string, filt_value_string = answer.split(";")

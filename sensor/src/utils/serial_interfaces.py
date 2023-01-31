@@ -43,7 +43,7 @@ class SerialCO2SensorInterface:
 
             if (time.time() - start_time) > timeout:
                 raise TimeoutError(
-                    "sensor did not answer as expected: expected_regex "
+                    "CO2 sensor did not answer as expected: expected_regex "
                     + f"= {repr(expected_regex)}, answer = {repr(answer)}"
                 )
             else:
