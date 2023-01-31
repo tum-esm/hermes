@@ -194,7 +194,9 @@ class SendingMQTTClient:
             # SEND PENDING MESSAGES
 
             MAX_SEND_COUNT = 100
-            OPEN_SENDING_SLOTS = len(sent_records) - delivered_record_count
+            OPEN_SENDING_SLOTS = MAX_SEND_COUNT - (
+                len(sent_records) - delivered_record_count
+            )
             if OPEN_SENDING_SLOTS <= 0:
                 logger.debug(
                     f"sending queue is full ({MAX_SEND_COUNT} "

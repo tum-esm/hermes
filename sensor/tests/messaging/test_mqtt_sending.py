@@ -70,7 +70,7 @@ def _test_messaging(sending_enabled: bool) -> None:
         config.active_components.mqtt_data_sending = sending_enabled
 
     # enqueue dummy message
-    dummy_data_message = custom_types.MQTTDataMessageBody(
+    dummy_data_message_body = custom_types.MQTTDataMessageBody(
         revision=config.revision,
         timestamp=datetime.now().timestamp(),
         value=custom_types.MQTTCO2Data(
@@ -82,7 +82,7 @@ def _test_messaging(sending_enabled: bool) -> None:
             ),
         ),
     )
-    sending_mqtt_client.enqueue_message(config, dummy_data_message)
+    sending_mqtt_client.enqueue_message(config, dummy_data_message_body)
 
     # assert dummy message to be in active queue
     records = active_mqtt_queue.get_rows_by_status(
@@ -90,47 +90,36 @@ def _test_messaging(sending_enabled: bool) -> None:
     )
     assert len(records) == 1
     record = records[0]
-
     differences = deepdiff.DeepDiff(
         record.content.body.dict(),
-        dummy_data_message.dict(),
+        dummy_data_message_body.dict(),
     )
     print(f"differences = {differences}")
     assert differences == {}
 
-    return
-
     def empty_active_queue() -> bool:
-        with open(ACTIVE_MESSAGES_FILE, "r") as f:
-            active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(
-                **json.load(f)
-            )
         return (
-            len(active_mqtt_message_queue.messages) == 0
-            and active_mqtt_message_queue.max_identifier == 1
-        )
+            len(active_mqtt_queue.get_rows_by_status("pending"))
+            + len(active_mqtt_queue.get_rows_by_status("in-progress"))
+            + len(active_mqtt_queue.get_rows_by_status("done"))
+        ) == 0
 
     # assert active queue to be empty
     wait_for_condition(
         is_successful=empty_active_queue,
-        timeout_seconds=20,
-        timeout_message="active queue is not empty after 20 second timeout",
+        timeout_seconds=12,
+        timeout_message="active queue is not empty after 12 second timeout",
     )
 
     # assert dummy message to be in archive
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
-        archived_mqtt_messages = custom_types.ArchivedMQTTMessageQueue(
-            messages=json.load(f)
-        ).messages
+        archived_mqtt_messages = [json.loads(m) for m in f.read().split("\n")[:-1]]
     assert len(archived_mqtt_messages) == 1
-    assert archived_mqtt_messages[0].header.identifier == 1
-    assert archived_mqtt_messages[0].header.status == (
-        "delivered" if sending_enabled else "sending-skipped"
-    )
+    stored_data_message = custom_types.MQTTDataMessage(**archived_mqtt_messages[0])
     assert (
         deepdiff.DeepDiff(
-            archived_mqtt_messages[0].body.dict(),
-            dummy_measurement_message.dict(),
+            stored_data_message.body.dict(),
+            dummy_data_message_body.dict(),
         )
         == {}
     )

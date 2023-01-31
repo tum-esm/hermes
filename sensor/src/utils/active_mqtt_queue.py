@@ -23,17 +23,13 @@ class ActiveMQTTQueue:
         )
 
     def __read_sql(self, sql_statement: str) -> list[Any]:
-        cursor = self.connection.cursor()
-        cursor.execute(sql_statement)
-        results = list(cursor.fetchall())
-        cursor.close()
+        with self.connection:
+            results = list(self.connection.execute(sql_statement).fetchall())
         return results
 
     def __write_sql(self, sql_statement: str) -> None:
-        cursor = self.connection.cursor()
-        cursor.execute(sql_statement)
-        self.connection.commit()
-        cursor.close()
+        with self.connection:
+            self.connection.execute(sql_statement)
 
     def add_row(
         self,
@@ -88,7 +84,12 @@ class ActiveMQTTQueue:
         * "Message has been `sent`"
         * "Message has been `delivered`"
         """
-        row_conditions = " OR ".join([f"(internal_id = {n})" for n in internal_ids])
+        if len(internal_ids) == 0:
+            return
+        if len(internal_ids) == 1:
+            row_conditions = f"internal_id = {internal_ids[0]}"
+        else:
+            row_conditions = " OR ".join([f"(internal_id = {n})" for n in internal_ids])
         self.__write_sql(
             f"""
             UPDATE QUEUE
