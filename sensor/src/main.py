@@ -30,22 +30,34 @@ def run() -> None:
     except Exception as e:
         logger.error("could not start mqtt receiver")
         logger.exception(e)
-        return
+        raise e
 
     try:
         config = utils.ConfigInterface.read()
     except Exception as e:
         logger.error("could not load local config.json")
         logger.exception(e)
+        raise e
 
     # message archiving is always running, sending is optional
-    if config.active_components.mqtt_data_sending:
-        utils.SendingMQTTClient.init_sending_loop_process()
-    utils.SendingMQTTClient.init_archiving_loop_process()
+    try:
+        if config.active_components.mqtt_data_sending:
+            utils.SendingMQTTClient.init_sending_loop_process()
+        utils.SendingMQTTClient.init_archiving_loop_process()
+    except Exception as e:
+        logger.error("could not start mqtt sending/archiving loop")
+        logger.exception(e)
+        raise e
 
     # a single hardware interface that is only used by one procedure at a time
     # incremental backoff times on exceptions (15s, 1m, 5m, 20m)
-    hardware_interface = hardware.HardwareInterface(config)
+    try:
+        hardware_interface = hardware.HardwareInterface(config)
+    except Exception as e:
+        logger.error("could not initialize hardware interfaces")
+        logger.exception(e)
+        raise e
+
     backoff_time_bucket_index = 0
     backoff_time_buckets = [15, 60, 300, 1200]
 
@@ -63,10 +75,21 @@ def run() -> None:
     # calibration:    using the two reference gas bottles to calibrate the CO2 sensor
     # measurements:   do regular measurements for x minutes
 
-    system_check_prodecure = procedures.SystemCheckProcedure(config, hardware_interface)
-    configuration_prodecure = procedures.ConfigurationProcedure(config)
-    calibration_prodecure = procedures.CalibrationProcedure(config, hardware_interface)
-    measurement_prodecure = procedures.MeasurementProcedure(config, hardware_interface)
+    try:
+        system_check_prodecure = procedures.SystemCheckProcedure(
+            config, hardware_interface
+        )
+        configuration_prodecure = procedures.ConfigurationProcedure(config)
+        calibration_prodecure = procedures.CalibrationProcedure(
+            config, hardware_interface
+        )
+        measurement_prodecure = procedures.MeasurementProcedure(
+            config, hardware_interface
+        )
+    except Exception as e:
+        logger.error("could not initialize procedures")
+        logger.exception(e)
+        raise e
 
     while True:
         try:
