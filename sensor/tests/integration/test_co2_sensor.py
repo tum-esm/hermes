@@ -17,4 +17,5 @@ def test_co2_sensor(log_files: None) -> None:
     sensor.get_current_concentration()
     sensor.get_device_info()
 
+    sensor.check_errors()
     sensor.teardown()

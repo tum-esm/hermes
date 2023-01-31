@@ -74,6 +74,8 @@ class MeasurementProcedure:
                 self.config.measurement.air_inlets,
                 key=lambda x: utils.distance_between_angles(x.direction, avg_dir),
             )
+            # TODO: send out wind data via MQTT
+
         else:
             new_air_inlet = list(
                 filter(

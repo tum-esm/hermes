@@ -64,6 +64,8 @@ class SystemCheckProcedure:
                 f"CPU usage is very high ({cpu_usage_percent} %)", config=self.config
             )
 
+        # TODO: add memory usage to printouts and mqtt
+
         utils.SendingMQTTClient.enqueue_message(
             self.config,
             custom_types.MQTTDataMessageBody(

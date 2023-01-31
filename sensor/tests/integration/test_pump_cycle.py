@@ -14,11 +14,10 @@ def test_pump_cycle(log_files: None) -> None:
     config = utils.ConfigInterface.read()
     pump = hardware.PumpInterface(config)
 
-    for rps in [20, 40, 60]:
+    for rps in [20, 40, 60, 0]:
         print(f"setting rps to {rps}")
         pump.set_desired_pump_speed(unit="rps", value=rps)
         time.sleep(3)
 
-    pump.set_desired_pump_speed(unit="rps", value=0)
     pump.check_errors()
     pump.teardown()
