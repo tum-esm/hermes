@@ -14,12 +14,7 @@ from .mqtt_connection import MQTTConnection
 from .active_mqtt_queue import ActiveMQTTQueue
 
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
-ACTIVE_QUEUE_FILE = os.path.join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
-ACTIVE_QUEUE_LOCK = os.path.join(PROJECT_DIR, "data", "incomplete-mqtt-messages.lock")
-
 QUEUE_ARCHIVE_DIR = os.path.join(PROJECT_DIR, "data", "archive")
-
-active_queue_lock = filelock.FileLock(ACTIVE_QUEUE_LOCK, timeout=10)
 
 
 class SendingMQTTClient:
@@ -91,7 +86,10 @@ class SendingMQTTClient:
                 variant="data", header=new_header, body=message_body
             )
 
-        self.active_mqtt_queue.add_row(new_message)
+        self.active_mqtt_queue.add_row(
+            new_message,
+            status="pending" if config.active_components.mqtt_data_sending else "done",
+        )
 
     @staticmethod
     def archiving_loop() -> None:

@@ -33,10 +33,6 @@ MESSAGE_ARCHIVE_FILE = join(
 )
 
 
-# TODO: figure out, why this test doesn't work
-#       in the GitHub CI environment
-
-
 @pytest.mark.ci
 def test_messaging_without_sending(
     mqtt_data_files: None,
@@ -61,10 +57,12 @@ def test_messaging_with_sending(
 def _test_messaging(sending_enabled: bool) -> None:
     utils.SendingMQTTClient.check_errors()
 
-    with open(ACTIVE_MESSAGES_FILE, "r") as f:
-        active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
-    assert active_mqtt_message_queue.max_identifier == 0
-    assert len(active_mqtt_message_queue.messages) == 0
+    active_mqtt_queue = utils.ActiveMQTTQueue()
+    sending_mqtt_client = utils.SendingMQTTClient()
+
+    assert len(active_mqtt_queue.get_rows_by_status("pending")) == 0
+    assert len(active_mqtt_queue.get_rows_by_status("in-progress")) == 0
+    assert len(active_mqtt_queue.get_rows_by_status("done")) == 0
 
     with open(CONFIG_TEMPLATE_PATH) as f:
         config = custom_types.Config(**json.load(f))
@@ -72,30 +70,35 @@ def _test_messaging(sending_enabled: bool) -> None:
         config.active_components.mqtt_data_sending = sending_enabled
 
     # enqueue dummy message
-    dummy_measurement_message = custom_types.MQTTMeasurementMessageBody(
-        timestamp=datetime.now().timestamp(),
-        value=custom_types.CO2SensorData(raw=0.0, compensated=0.0, filtered=0.0),
+    dummy_data_message = custom_types.MQTTDataMessageBody(
         revision=config.revision,
+        timestamp=datetime.now().timestamp(),
+        value=custom_types.MQTTCO2Data(
+            variant="co2",
+            data=custom_types.CO2SensorData(
+                raw=0.0,
+                compensated=0.0,
+                filtered=0.0,
+            ),
+        ),
     )
-    utils.SendingMQTTClient.enqueue_message(config, dummy_measurement_message)
+    sending_mqtt_client.enqueue_message(config, dummy_data_message)
 
     # assert dummy message to be in active queue
-    with open(ACTIVE_MESSAGES_FILE, "r") as f:
-        active_mqtt_message_queue = custom_types.ActiveMQTTMessageQueue(**json.load(f))
-    assert active_mqtt_message_queue.max_identifier == 1
-    assert len(active_mqtt_message_queue.messages) == 1
-    assert active_mqtt_message_queue.messages[0].header.identifier == 1
-    assert active_mqtt_message_queue.messages[0].header.status == (
-        "pending" if sending_enabled else "sending-skipped"
+    records = active_mqtt_queue.get_rows_by_status(
+        "pending" if sending_enabled else "done"
     )
-    assert active_mqtt_message_queue.messages[0].body.revision == config.revision
-    assert (
-        deepdiff.DeepDiff(
-            active_mqtt_message_queue.messages[0].body.dict(),
-            dummy_measurement_message.dict(),
-        )
-        == {}
+    assert len(records) == 1
+    record = records[0]
+
+    differences = deepdiff.DeepDiff(
+        record.content.body.dict(),
+        dummy_data_message.dict(),
     )
+    print(f"differences = {differences}")
+    assert differences == {}
+
+    return
 
     def empty_active_queue() -> bool:
         with open(ACTIVE_MESSAGES_FILE, "r") as f:

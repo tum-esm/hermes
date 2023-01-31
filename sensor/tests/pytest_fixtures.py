@@ -32,7 +32,7 @@ def _save_file(
 def _restore_file(original_path: str, temporary_path: str) -> None:
     tmp_content = None
     if isfile(original_path):
-        with open(original_path, "r") as f:
+        with open(original_path, "rb") as f:
             tmp_content = f.read()
         os.remove(original_path)
 
@@ -42,7 +42,7 @@ def _restore_file(original_path: str, temporary_path: str) -> None:
         pass
 
     if tmp_content is not None:
-        with open(temporary_path, "w") as f:
+        with open(temporary_path, "wb") as f:
             f.write(tmp_content)
 
 
@@ -65,10 +65,8 @@ def mqtt_client_environment() -> Generator[None, None, None]:
 def mqtt_data_files() -> Any:
     """start and stop the background sending loop of the SendingMQTTClient"""
 
-    ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
-    TMP_ACTIVE_MESSAGES_FILE = join(
-        PROJECT_DIR, "data", "incomplete-mqtt-messages.tmp.json"
-    )
+    ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "active-mqtt-messages.db")
+    TMP_ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "active-mqtt-messages.tmp.db")
 
     TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
     MESSAGE_ARCHIVE_FILE = join(
@@ -86,10 +84,6 @@ def mqtt_data_files() -> Any:
 
     _save_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE, None)
     _save_file(MESSAGE_ARCHIVE_FILE, TMP_MESSAGE_ARCHIVE_FILE, None)
-
-    if not os.path.exists(ACTIVE_MESSAGES_FILE):
-        with open(ACTIVE_MESSAGES_FILE, "w") as f:
-            json.dump({"max_identifier": 0, "messages": []}, f, indent=4)
 
     yield
 

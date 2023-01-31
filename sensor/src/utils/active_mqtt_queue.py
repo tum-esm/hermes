@@ -25,7 +25,7 @@ class ActiveMQTTQueue:
     def __read_sql(self, sql_statement: str) -> list[Any]:
         cursor = self.connection.cursor()
         cursor.execute(sql_statement)
-        results = cursor.fetchall()
+        results = list(cursor.fetchall())
         cursor.close()
         return results
 
@@ -35,13 +35,17 @@ class ActiveMQTTQueue:
         self.connection.commit()
         cursor.close()
 
-    def add_row(self, message: custom_types.MQTTMessage) -> None:
+    def add_row(
+        self,
+        message: custom_types.MQTTMessage,
+        status: Literal["pending", "done"],
+    ) -> None:
         """add a new pending message to the active queue"""
         self.__write_sql(
             f"""
             INSERT INTO QUEUE (status, content)
             VALUES (
-                'pending',
+                '{status}',
                 '{json.dumps(message.dict())}'
             );
             """
@@ -59,7 +63,7 @@ class ActiveMQTTQueue:
         """
         records = self.__read_sql(
             f"""
-            SELECT content FROM QUEUE
+            SELECT internal_id, status, content FROM QUEUE
             WHERE status = '{status}'
             {'' if limit is None else ('LIMIT ' + str(limit))};
             """
@@ -69,7 +73,7 @@ class ActiveMQTTQueue:
                 **{
                     "internal_id": r[0],
                     "status": r[1],
-                    "message": json.loads(r[2]),
+                    "content": json.loads(r[2]),
                 }
             )
             for r in records

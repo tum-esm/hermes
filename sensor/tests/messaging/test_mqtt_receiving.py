@@ -11,7 +11,7 @@ PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
 sys.path.append(PROJECT_DIR)
 
-from src import utils, hardware
+from src import utils
 
 
 @pytest.mark.ci
@@ -27,7 +27,7 @@ def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
 
     expect_log_lines(
         forbidden_lines=[
-            f"mqtt-receiving-client - INFO - subscribing to topic {config_topic}",
+            f"mqtt-receiving-client   - INFO          - subscribing to topic {config_topic}",
         ]
     )
 
@@ -37,7 +37,7 @@ def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
 
     expect_log_lines(
         required_lines=[
-            f"mqtt-receiving-client - INFO - subscribing to topic {config_topic}",
+            f"mqtt-receiving-client   - INFO          - subscribing to topic {config_topic}",
         ]
     )
 
@@ -51,7 +51,7 @@ def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
 
     expect_log_lines(
         required_lines=[
-            f"mqtt-receiving-loop - DEBUG - received message: ",
+            f"mqtt-receiving-loop     - DEBUG         - received message: ",
         ]
     )
 
