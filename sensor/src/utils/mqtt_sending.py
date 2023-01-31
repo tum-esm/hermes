@@ -164,6 +164,7 @@ class SendingMQTTClient:
                 qos=1,
             )
             current_records[record.internal_id] = message_info
+            record.status = "in-progress"
 
         # -----------------------------------------------------------------
 
@@ -171,7 +172,7 @@ class SendingMQTTClient:
             sent_record_count = 0
             resent_record_count = 0
             delivered_record_count = 0
-            record_ids_to_be_archived: list[int] = []
+            records_to_be_archived: list[custom_types.SQLMQTTRecord] = []
 
             # -----------------------------------------------------------------
             # CHECK DELIVERY STATUS OF SENT MESSAGES
@@ -184,7 +185,8 @@ class SendingMQTTClient:
                     if current_records[record.internal_id].is_published():
                         delivered_record_count += 1
                         del current_records[record.internal_id]
-                        record_ids_to_be_archived.append(record.internal_id)
+                        record.status = "done"
+                        records_to_be_archived.append(record)
 
                 # resending is required, when current_messages are
                 # lost due to restarting the program
@@ -193,7 +195,7 @@ class SendingMQTTClient:
                     resent_record_count += 1
 
             # mark successful messages in active queue
-            active_mqtt_queue.update_row_status_by_id(record_ids_to_be_archived, "done")
+            active_mqtt_queue.update_records(records_to_be_archived)
 
             # -----------------------------------------------------------------
             # SEND PENDING MESSAGES
@@ -216,10 +218,7 @@ class SendingMQTTClient:
                 for record in records_to_be_sent:
                     _publish_record(record)
                     sent_record_count += 1
-                active_mqtt_queue.update_row_status_by_id(
-                    internal_ids=[r.internal_id for r in records_to_be_sent],
-                    new_status="in-progress",
-                )
+                active_mqtt_queue.update_records(records_to_be_sent)
 
             # -----------------------------------------------------------------
 

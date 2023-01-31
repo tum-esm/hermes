@@ -75,28 +75,26 @@ class ActiveMQTTQueue:
             for r in records
         ]
 
-    def update_row_status_by_id(
-        self,
-        internal_ids: list[int],
-        new_status: Literal["pending", "in-progress", "done"],
-    ) -> None:
-        """Used for:
+    def update_records(self, records: list[custom_types.SQLMQTTRecord]) -> None:
+        """Records distinguished by `interal_id`. Used for:
         * "Message has been `sent`"
         * "Message has been `delivered`"
         """
-        if len(internal_ids) == 0:
+        if len(records) == 0:
             return
-        if len(internal_ids) == 1:
-            row_conditions = f"internal_id = {internal_ids[0]}"
-        else:
-            row_conditions = " OR ".join([f"(internal_id = {n})" for n in internal_ids])
-        self.__write_sql(
-            f"""
-            UPDATE QUEUE
-            SET status = '{new_status}'
-            WHERE ({row_conditions});
-            """
-        )
+
+        sql_statements: list[str] = []
+        for record in records:
+            sql_statements.append(
+                f"""
+                    UPDATE QUEUE SET
+                        status = '{record.status}',
+                        content = '{json.dumps(record.content.dict())}'
+                    WHERE internal_id = {record.internal_id};
+                """
+            )
+
+        self.__write_sql("\n".join(sql_statements))
 
     def remove_archive_messages(self) -> None:
         """delete all rows with status 'done'"""
