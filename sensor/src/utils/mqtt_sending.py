@@ -9,9 +9,9 @@ import pytz
 import multiprocessing
 import multiprocessing.synchronize
 import filelock
-
 from src import custom_types
 from .mqtt_connection import MQTTConnection
+from .active_mqtt_queue import ActiveMQTTQueue
 
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 ACTIVE_QUEUE_FILE = os.path.join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
@@ -25,6 +25,10 @@ active_queue_lock = filelock.FileLock(ACTIVE_QUEUE_LOCK, timeout=10)
 class SendingMQTTClient:
     sending_loop_process: Optional[multiprocessing.Process] = None
     archiving_loop_process: Optional[multiprocessing.Process] = None
+
+    def __init__(self, config: custom_types.Config) -> None:
+        self.config = config
+        self.active_mqtt_queue = ActiveMQTTQueue()
 
     @staticmethod
     def init_sending_loop_process() -> None:
@@ -62,12 +66,8 @@ class SendingMQTTClient:
             SendingMQTTClient.archiving_loop_process.terminate()
             SendingMQTTClient.archiving_loop_process = None
 
-    @staticmethod
-    def enqueue_message(
-        config: custom_types.Config,
-        message_body: custom_types.MQTTMessageBody,
-    ) -> None:
-        if config.active_components.mqtt_data_sending:
+    def enqueue_message(self, message_body: custom_types.MQTTMessageBody) -> None:
+        if self.config.active_components.mqtt_data_sending:
             assert (
                 SendingMQTTClient.sending_loop_process is not None
             ), "sending loop process has not been initialized"
@@ -75,32 +75,22 @@ class SendingMQTTClient:
             SendingMQTTClient.archiving_loop_process is not None
         ), "archiving loop process has not been initialized"
 
-        with active_queue_lock:
-            active_queue = SendingMQTTClient._load_active_queue()
-            new_header = custom_types.MQTTMessageHeader(
-                identifier=active_queue.max_identifier + 1,
-                status=(
-                    "pending"
-                    if config.active_components.mqtt_data_sending
-                    else "sending-skipped"
-                ),
-                delivery_timestamp=None,
-                mqtt_topic=None,
+        new_header = custom_types.MQTTMessageHeader(
+            mqtt_topic=None,
+            sending_skipped=(not self.config.active_components.mqtt_data_sending),
+        )
+        new_message: custom_types.MQTTMessage
+
+        if isinstance(message_body, custom_types.MQTTStatusMessageBody):
+            new_message = custom_types.MQTTStatusMessage(
+                variant="status", header=new_header, body=message_body
             )
-            new_message: custom_types.MQTTMessage
+        else:
+            new_message = custom_types.MQTTDataMessage(
+                variant="data", header=new_header, body=message_body
+            )
 
-            if isinstance(message_body, custom_types.MQTTStatusMessageBody):
-                new_message = custom_types.MQTTStatusMessage(
-                    variant="status", header=new_header, body=message_body
-                )
-            else:
-                new_message = custom_types.MQTTDataMessage(
-                    variant="data", header=new_header, body=message_body
-                )
-
-            active_queue.messages.append(new_message)
-            active_queue.max_identifier += 1
-            SendingMQTTClient._dump_active_queue(active_queue)
+        self.active_mqtt_queue.add_row(new_message)
 
     @staticmethod
     def _load_active_queue() -> custom_types.ActiveMQTTMessageQueue:
