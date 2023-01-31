@@ -144,103 +144,81 @@ class SendingMQTTClient:
 
         mqtt_client = MQTTConnection.get_client()
         mqtt_config = MQTTConnection.get_config()
+        active_mqtt_queue = ActiveMQTTQueue()
 
         # this queue is necessary because paho-mqtt does not support
         # a function that answers the question "has this message id
         # been delivered successfully?"
-        current_messages: dict[int, paho.mqtt.client.MQTTMessageInfo] = {}
+        current_records: dict[int, paho.mqtt.client.MQTTMessageInfo] = {}
 
         # -----------------------------------------------------------------
 
-        def _publish_mqtt_message(message: custom_types.MQTTMessage) -> None:
-            if message.variant == "status":
-                topic = f"{mqtt_config.mqtt_base_topic}statuses/{mqtt_config.station_identifier}"
-            else:
-                topic = f"{mqtt_config.mqtt_base_topic}measurements/{mqtt_config.station_identifier}"
-            message.header.mqtt_topic = topic
+        def _publish_record(record: custom_types.SQLMQTTRecord) -> None:
+            record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
+            record.content.header.mqtt_topic += (
+                "statuses/" if record.content.variant == "status" else "measurements/"
+            )
+            record.content.header.mqtt_topic += mqtt_config.station_identifier
             message_info = mqtt_client.publish(
-                topic=message.header.mqtt_topic,
-                payload=json.dumps([message.body.dict()]),
+                topic=record.content.header.mqtt_topic,
+                payload=json.dumps([record.content.body.dict()]),
                 qos=1,
             )
-            message.header.status = "sent"
-            current_messages[message.header.identifier] = message_info
+            current_records[record.internal_id] = message_info
 
         # -----------------------------------------------------------------
 
         while True:
-            active_queue = SendingMQTTClient._load_active_queue()
-            known_message_ids = [m.header.identifier for m in active_queue.messages]
-
-            processed_message_ids: dict[
-                Literal["sent", "resent", "delivered"],
-                list[int],
-            ] = {
-                "sent": [],
-                "resent": [],
-                "delivered": [],
-            }
+            sent_record_count = 0
+            resent_record_count = 0
+            delivered_record_count = 0
 
             # -----------------------------------------------------------------
             # CHECK DELIVERY STATUS OF SENT MESSAGES
 
-            for message in active_queue.messages:
-                if message.header.status == "sent":
-                    # normal behavior
-                    if message.header.identifier in current_messages:
-                        if current_messages[message.header.identifier].is_published():
-                            message.header.status = "delivered"
-                            message.header.delivery_timestamp = time.time()
-                            processed_message_ids["delivered"].append(
-                                message.header.identifier
-                            )
-                            del current_messages[message.header.identifier]
+            sent_records = active_mqtt_queue.get_rows_by_status("in-progress")
 
-                    # resending is required, when current_messages are
-                    # lost due to restarting the program
-                    else:
-                        _publish_mqtt_message(message)
-                        processed_message_ids["resent"].append(
-                            message.header.identifier
-                        )
+            for record in sent_records:
+                # normal behavior
+                if record.internal_id in current_records.keys():
+                    if current_records[record.internal_id].is_published():
+                        delivered_record_count += 1
+                        del current_records[record.internal_id]
+
+                # resending is required, when current_messages are
+                # lost due to restarting the program
+                else:
+                    _publish_record(record)
+                    resent_record_count += 1
 
             # -----------------------------------------------------------------
             # SEND PENDING MESSAGES
 
             MAX_SEND_COUNT = 100
-            current_send_count = len(
-                [
-                    m
-                    for m in active_queue.messages
-                    if m.header.status in ["sent", "resent"]
-                ]
-            )
+            OPEN_SENDING_SLOTS = len(sent_records) - delivered_record_count
+            if OPEN_SENDING_SLOTS <= 0:
+                logger.debug(
+                    f"sending queue is full ({MAX_SEND_COUNT} "
+                    + "items not processed by broker yet)"
+                )
+            else:
+                logger.debug(f"sending queue has {OPEN_SENDING_SLOTS} more slot(s)")
 
-            for message in active_queue.messages:
-                if current_send_count >= MAX_SEND_COUNT:
-                    logger.info(
-                        "max. send count of 100 reached, waiting for "
-                        + "message deliveries until sending new ones."
-                    )
-                    continue
-                if message.header.status == "pending":
-                    _publish_mqtt_message(message)
-                    processed_message_ids["sent"].append(message.header.identifier)
-                    current_send_count += 1
-
-            # -----------------------------------------------------------------
-            # SAVE NEW ACTIVE QUEUE FILE AND TRIGGER MESSAGE ARCHIVING
-
-            SendingMQTTClient._dump_active_queue(
-                active_queue, known_message_ids=known_message_ids
-            )
+                records_to_be_sent = active_mqtt_queue.get_rows_by_status(
+                    "pending", limit=OPEN_SENDING_SLOTS
+                )
+                for record in records_to_be_sent:
+                    _publish_record(record)
+                    sent_record_count += 1
+                active_mqtt_queue.update_row_status_by_id(
+                    internal_ids=[r.internal_id for r in records_to_be_sent],
+                    new_status="in-progress",
+                )
 
             # -----------------------------------------------------------------
 
             logger.info(
-                f"{len(processed_message_ids['sent'])}/"
-                + f"{len(processed_message_ids['resent'])}/"
-                + f"{len(processed_message_ids['delivered'])} "
+                f"{sent_record_count}/{resent_record_count}/{delivered_record_count} "
                 + "messages have been sent/resent/delivered"
             )
 
