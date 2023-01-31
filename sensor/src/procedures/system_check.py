@@ -13,6 +13,7 @@ class SystemCheckProcedure:
     ) -> None:
         self.logger, self.config = utils.Logger(origin="system-check-procedure"), config
         self.hardware_interface = hardware_interface
+        self.sending_mqtt_client = utils.SendingMQTTClient()
 
     def run(self) -> None:
         # evaluate system ambient conditions
@@ -66,7 +67,7 @@ class SystemCheckProcedure:
 
         # TODO: add memory usage to printouts and mqtt
 
-        utils.SendingMQTTClient.enqueue_message(
+        self.sending_mqtt_client.enqueue_message(
             self.config,
             custom_types.MQTTDataMessageBody(
                 revision=self.config.revision,

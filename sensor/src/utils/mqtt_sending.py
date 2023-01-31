@@ -26,8 +26,7 @@ class SendingMQTTClient:
     sending_loop_process: Optional[multiprocessing.Process] = None
     archiving_loop_process: Optional[multiprocessing.Process] = None
 
-    def __init__(self, config: custom_types.Config) -> None:
-        self.config = config
+    def __init__(self) -> None:
         self.active_mqtt_queue = ActiveMQTTQueue()
 
     @staticmethod
@@ -66,8 +65,10 @@ class SendingMQTTClient:
             SendingMQTTClient.archiving_loop_process.terminate()
             SendingMQTTClient.archiving_loop_process = None
 
-    def enqueue_message(self, message_body: custom_types.MQTTMessageBody) -> None:
-        if self.config.active_components.mqtt_data_sending:
+    def enqueue_message(
+        self, config: custom_types.Config, message_body: custom_types.MQTTMessageBody
+    ) -> None:
+        if config.active_components.mqtt_data_sending:
             assert (
                 SendingMQTTClient.sending_loop_process is not None
             ), "sending loop process has not been initialized"
@@ -77,7 +78,7 @@ class SendingMQTTClient:
 
         new_header = custom_types.MQTTMessageHeader(
             mqtt_topic=None,
-            sending_skipped=(not self.config.active_components.mqtt_data_sending),
+            sending_skipped=(not config.active_components.mqtt_data_sending),
         )
         new_message: custom_types.MQTTMessage
 
@@ -113,7 +114,7 @@ class SendingMQTTClient:
                 ).strftime("%Y-%m-%d")
                 if date_string not in messages_to_be_archived.keys():
                     messages_to_be_archived[date_string] = []
-                messages_to_be_archived[date_string].append(m)
+                messages_to_be_archived[date_string].append(record.content)
 
             # DUMP ARCHIVE MESSAGES
             for date_string, messages in messages_to_be_archived.items():
@@ -125,7 +126,7 @@ class SendingMQTTClient:
                     "a",
                 ) as f:
                     for m in messages:
-                        f.write(json.dump(m.dict()) + "\n")
+                        f.write(json.dumps(m.dict()) + "\n")
 
             # DUMP REMAINING ACTIVE MESSAGES
             active_mqtt_queue.remove_archive_messages()

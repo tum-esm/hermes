@@ -47,10 +47,11 @@ class Logger:
     ) -> None:
         self.origin: str = origin
         self.print_to_console = print_to_console
-    
+        self.sending_mqtt_client = SendingMQTTClient()
+
     def horizontal_line(self, fill_char: Literal["-", "=", ".", "_"] = "=") -> None:
         """writes a debug log line, used for verbose output"""
-        self._write_log_line("INFO", fill_char*46)
+        self._write_log_line("INFO", fill_char * 46)
 
     def debug(self, message: str) -> None:
         """writes a debug log line, used for verbose output"""
@@ -130,7 +131,7 @@ class Logger:
         subject: str,
         details: str = "",
     ) -> None:
-        SendingMQTTClient.enqueue_message(
+        self.sending_mqtt_client.enqueue_message(
             config,
             message_body=custom_types.MQTTStatusMessageBody(
                 severity=level,

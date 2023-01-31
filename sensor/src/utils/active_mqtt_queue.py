@@ -66,9 +66,11 @@ class ActiveMQTTQueue:
         )
         return [
             custom_types.SQLMQTTRecord(
-                internal_id=r[0],
-                status=r[1],
-                message=json.loads(r[2]),
+                **{
+                    "internal_id": r[0],
+                    "status": r[1],
+                    "message": json.loads(r[2]),
+                }
             )
             for r in records
         ]
