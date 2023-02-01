@@ -1,6 +1,6 @@
 import time
 
 
-def timestamp() -> float:
+def timestamp():
     """Return current UTC time as unixtime float."""
     return time.time()

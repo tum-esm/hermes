@@ -25,7 +25,7 @@ async def read_status(request):
             "environment": settings.ENVIRONMENT,
             "commit_sha": settings.COMMIT_SHA,
             "branch_name": settings.BRANCH_NAME,
-            "start_time": settings.START_TIME,
+            "start_timestamp": settings.START_TIMESTAMP,
         },
     )
 

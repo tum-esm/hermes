@@ -41,7 +41,7 @@ async def test_reading_status(http_client):
         "environment",
         "commit_sha",
         "branch_name",
-        "start_time",
+        "start_timestamp",
     }
 
 
@@ -83,8 +83,11 @@ async def test_creating_user_with_duplicate(http_client, cleanup):
 @pytest.mark.anyio
 async def test_creating_sensors(http_client, cleanup):
     """Test creating a sensor."""
+    # TODO create user
+    # TODO create network
     response = await http_client.post(
         url="/sensors",
+        # TODO add missing network identifier
         json={"sensor_name": "rattata", "configuration": {}},
     )
     assert returns(response, 201)
@@ -113,6 +116,8 @@ async def test_creating_sensors_with_duplicate(http_client, cleanup):
 @pytest.mark.anyio
 async def test_updating_sensors(http_client, cleanup):
     """Test updating a sensor."""
+    # TODO create user
+    # TODO create network
     response = await http_client.post(
         url="/sensors",
         json={"sensor_name": "rattata", "configuration": {}},
@@ -120,6 +125,7 @@ async def test_updating_sensors(http_client, cleanup):
     assert returns(response, 201)
     response = await http_client.put(
         url="/sensors/rattata",
+        # TODO add missing network identifier
         json={"sensor_name": "rattata", "configuration": {"int": 7}},
     )
     assert returns(response, 204)
@@ -197,6 +203,18 @@ async def test_reading_measurements(http_client, cleanup):
 ########################################################################################
 # Route: POST /authentication
 ########################################################################################
+
+
+@pytest.mark.anyio
+async def test_creating_session(http_client, cleanup):
+    """Test authenticating an existing user with a valid password."""
+    pass
+
+
+@pytest.mark.anyio
+async def test_creating_session_with_invalid_password(http_client, cleanup):
+    """Test authenticating an existing user with an invalid password."""
+    pass
 
 
 @pytest.mark.anyio

@@ -10,7 +10,7 @@ COMMIT_SHA = os.environ["COMMIT_SHA"]
 # Git branch name
 BRANCH_NAME = os.environ["BRANCH_NAME"]
 # Timestamp of server startup
-START_TIME = utils.timestamp()
+START_TIMESTAMP = utils.timestamp()
 
 # PostgreSQL connection details
 POSTGRESQL_URL = os.environ["POSTGRESQL_URL"]
