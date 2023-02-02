@@ -1,7 +1,7 @@
 import subprocess
 from typing import Optional
 import pigpio
-from gpiozero.pins.pigpio import PiGPIOFactory
+import gpiozero.pins.pigpio
 
 
 pigpio.exceptions = False
@@ -41,10 +41,10 @@ def distance_between_angles(angle_1: float, angle_2: float) -> float:
         return min(angle_2 - angle_1, 360 + angle_1 - angle_2)
 
 
-def get_gpio_pin_factory() -> PiGPIOFactory:
+def get_gpio_pin_factory() -> gpiozero.pins.pigpio.PiGPIOFactory:
     """return a PiGPIO pin factory (necessary for hardware PWM for pump)"""
     try:
-        pin_factory = PiGPIOFactory(host="127.0.0.1")
+        pin_factory = gpiozero.pins.pigpio.PiGPIOFactory(host="127.0.0.1")
         assert pin_factory.connection is not None
         assert pin_factory.connection.connected
     except:

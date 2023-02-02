@@ -4,15 +4,15 @@ from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
 
-number_regex = r"\d+(\.\d+)?"
-startup_regex = (
-    f"GMP343 - Version STD {number_regex}\\r\\n"
+NUMBER_REGEX = r"\d+(\.\d+)?"
+STARTUP_REGEX = (
+    f"GMP343 - Version STD {NUMBER_REGEX}\\r\\n"
     + f"Copyright: Vaisala Oyj \\d{{4}} - \\d{{4}}"
 )
-measurement_regex = (
-    f"Raw\\s*{number_regex} ppm; "
-    + f"Comp\\.\\s*{number_regex} ppm; "
-    + f"Filt\\.\\s*{number_regex} ppm"
+MEASUREMENT_REGEX = (
+    f"Raw\\s*{NUMBER_REGEX} ppm; "
+    + f"Comp\\.\\s*{NUMBER_REGEX} ppm; "
+    + f"Filt\\.\\s*{NUMBER_REGEX} ppm"
 )
 
 
@@ -57,7 +57,7 @@ class CO2SensorInterface:
         self.logger.debug("powering up sensor")
         self.rs232_interface.flush_receiver_stream()
         self.power_pin.on()
-        self.rs232_interface.wait_for_answer(expected_regex=startup_regex)
+        self.rs232_interface.wait_for_answer(expected_regex=STARTUP_REGEX)
 
         self.logger.debug("sending default settings")
         for default_setting in [
@@ -176,15 +176,16 @@ class CO2SensorInterface:
 
     def get_current_concentration(self) -> custom_types.CO2SensorData:
         """get the current concentration value from the CO2 probe"""
-        answer: str
-        try:
-            self.rs232_interface.flush_receiver_stream()
-            self.rs232_interface.send_command("send")
-            answer = self.rs232_interface.wait_for_answer(expected_regex=measurement_regex)
-        except TimeoutError:
-            self.rs232_interface.flush_receiver_stream()
-            self.rs232_interface.send_command("send")
-            answer = self.rs232_interface.wait_for_answer(expected_regex=measurement_regex)
+        self.rs232_interface.flush_receiver_stream()
+
+        request_time = time.time()
+        self.rs232_interface.send_command("send")
+        answer = self.rs232_interface.wait_for_answer(
+            expected_regex=MEASUREMENT_REGEX, timeout=30
+        )
+        answer_delay = round(time.time() - request_time, 3)
+        if answer_delay > 6:
+            self.logger.debug(f"sensor took a long time to answer ({answer_delay}s)")
 
         for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">", "\r\n"]:
             answer = answer.replace(s, "")
@@ -244,7 +245,6 @@ class CO2SensorInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
-        self.power_pin.off()
         self.pin_factory.close()
 
         # I don't know why this is needed sometimes, just to make sure
