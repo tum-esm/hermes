@@ -1,4 +1,4 @@
-# Tentacruel
+# Hermes - Driving The ACROPOLIS Network
 
 Here, a management software for autonomous sensor networks is created.
 
