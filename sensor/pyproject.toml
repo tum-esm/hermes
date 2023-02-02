@@ -28,6 +28,10 @@ types-psutil = "^5.9.5.4"
 types-paho-mqtt = "^1.6.0.1"
 types-pytz = "^2022.6.0.1"
 types-filelock = "^3.2.7"
+matplotlib = "^3.6.3"
+
+
+[tool.poetry.group.deb.dependencies]
 
 [build-system]
 requires = ["poetry-core"]
