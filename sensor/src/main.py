@@ -50,7 +50,6 @@ def run() -> None:
         raise e
 
     # a single hardware interface that is only used by one procedure at a time
-    # incremental backoff times on exceptions (15s, 1m, 5m, 20m)
     try:
         hardware_interface = hardware.HardwareInterface(config)
     except Exception as e:
@@ -58,9 +57,11 @@ def run() -> None:
         logger.exception(e)
         raise e
 
+    # incremental backoff times on exceptions (15s, 1m, 5m, 20m)
     backoff_time_bucket_index = 0
     backoff_time_buckets = [15, 60, 300, 1200]
 
+    # tear down hardware on program termination
     def graceful_teardown(*args: Any) -> None:
         logger.info("starting graceful shutdown")
         hardware_interface.teardown()
@@ -144,16 +145,24 @@ def run() -> None:
             backoff_time_bucket_index = 0
 
         except Exception as e:
+            logger.error("exception in mainloop")
             logger.exception(e, config=config)
-            hardware_interface.perform_hard_reset()
+            try:
+                hardware_interface.perform_hard_reset()
 
-            # -----------------------------------------------------------------
-            # INCREMENTAL BACKOFF TIMES
+                # -----------------------------------------------------------------
+                # INCREMENTAL BACKOFF TIMES
 
-            current_backoff_time = backoff_time_buckets[backoff_time_bucket_index]
-            logger.error(f"waiting for {current_backoff_time} seconds", config=config)
-            time.sleep(current_backoff_time)
-            backoff_time_bucket_index = min(
-                backoff_time_bucket_index + 1,
-                len(backoff_time_buckets) - 1,
-            )
+                current_backoff_time = backoff_time_buckets[backoff_time_bucket_index]
+                logger.error(
+                    f"waiting for {current_backoff_time} seconds", config=config
+                )
+                time.sleep(current_backoff_time)
+                backoff_time_bucket_index = min(
+                    backoff_time_bucket_index + 1,
+                    len(backoff_time_buckets) - 1,
+                )
+            except Exception as e:
+                logger.error("exception in repairing routine")
+                logger.exception(e, config=config)
+                raise e
