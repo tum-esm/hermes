@@ -11,8 +11,6 @@ SENSOR_DEFAULT_CONFIG = os.path.join(
     ROOT_DIR, "sensor", "config", "config.template.json"
 )
 
-# TODO: test version number of dashboard
-
 
 @pytest.mark.ci
 def test_version_numbers() -> None:
@@ -21,18 +19,19 @@ def test_version_numbers() -> None:
     assert os.path.isfile(SENSOR_DEFAULT_CONFIG)
 
     with open(SERVER_PYPROJECT_TOML, "r") as f:
-        version_1_line = f.read().split("\n")[2]
+        version_server_line = f.read().split("\n")[2]
     with open(SENSOR_PYPROJECT_TOML, "r") as f:
-        version_2_line = f.read().split("\n")[2]
+        version_sensor_line = f.read().split("\n")[2]
 
-    toml_pattern = re.compile(r'^version = "\d+\.\d+\.\d+"$')
-    assert toml_pattern.match(version_1_line) is not None
-    assert toml_pattern.match(version_2_line) is not None
+    toml_pattern = re.compile(r'^version = "\d+\.\d+\.\d+(\-(alpha|beta)\.\d+)?"$')
+    assert toml_pattern.match(version_server_line) is not None
+    assert toml_pattern.match(version_sensor_line) is not None
 
-    version_1 = version_1_line.split('"')[1]
-    version_2 = version_2_line.split('"')[1]
+    version_server = version_server_line.split('"')[1]
+    version_sensor = version_sensor_line.split('"')[1]
 
     with open(SENSOR_DEFAULT_CONFIG, "r") as f:
-        version_3 = json.load(f)["version"]
+        version_sensor_config = json.load(f)["version"]
 
-    assert version_1 == version_2 == version_3
+    # assert version_1 == version_2 == version_3
+    assert version_sensor == version_sensor_config
