@@ -61,14 +61,14 @@ class CO2SensorInterface:
 
         self.logger.debug("sending default settings")
         for default_setting in [
-            "echo off",
-            "range 1",
+            "echo off",  # do not output received strings
+            "range 1",  # measuring from 0 to 1000 ppm
             'form "Raw " CO2RAWUC " ppm; Comp." CO2RAW " ppm; Filt. " CO2 " ppm"',
-            "tc on",
-            "lc on",
-            "rhc off",
-            "pc off",
-            "oc off",
+            "tc on",  # temperature compensation
+            "lc off",  # line correction
+            "rhc off",  # relative humidity compensation
+            "pc off",  # pressure compensation
+            "oc off",  # oxygen compensation
         ]:
             self.rs232_interface.send_command(default_setting)
             self.rs232_interface.wait_for_answer()
@@ -112,11 +112,11 @@ class CO2SensorInterface:
         self.rs232_interface.wait_for_answer()
 
         self.logger.info(
-            f"Updating filter settings (average = {average}, smooth"
+            f"updating filter settings (average = {average}, smooth"
             + f" = {smooth}, median = {median}, linear = {linear})"
         )
 
-    def set_calibration_values(
+    def set_compensation_values(
         self,
         pressure: Optional[float] = None,
         humidity: Optional[float] = None,
@@ -124,12 +124,12 @@ class CO2SensorInterface:
     ) -> None:
         """
         update pressure, humidity, and oxygen values in sensor
-        for its internal calibration.
+        for its internal compensation.
 
-        if any of these value is None, then the calibration is
+        if any of these value is None, then the compensation is
         turned off, otherwise it is switched on automatically.
 
-        the internal temperature calibration is enabled by de-
+        the internal temperature compensation is enabled by de-
         fault and uses the built-in temperature sensor.
         """
 
@@ -170,7 +170,7 @@ class CO2SensorInterface:
             self.rs232_interface.wait_for_answer()
 
         self.logger.info(
-            f"updating calibration values (pressure = {pressure}, "
+            f"updating compensation values (pressure = {pressure}, "
             + f"humidity = {humidity}, oxygen = {oxygen})"
         )
 
@@ -185,7 +185,10 @@ class CO2SensorInterface:
         )
         answer_delay = round(time.time() - request_time, 3)
         if answer_delay > 6:
-            self.logger.debug(f"sensor took a long time to answer ({answer_delay}s)")
+            self.logger.warning(
+                f"sensor took a long time to answer ({answer_delay}s)",
+                config=self.config,
+            )
 
         for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">", "\r\n"]:
             answer = answer.replace(s, "")

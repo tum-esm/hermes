@@ -111,7 +111,7 @@ class MeasurementProcedure:
         ) = self.hardware_interface.air_inlet_sensor.get_current_values()
         mainboard_data = self.hardware_interface.mainboard_sensor.get_system_data()
 
-        self.hardware_interface.co2_sensor.set_calibration_values(
+        self.hardware_interface.co2_sensor.set_compensation_values(
             humidity=humidity,
             pressure=mainboard_data.enclosure_pressure,
         )
