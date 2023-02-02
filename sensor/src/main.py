@@ -26,40 +26,63 @@ def run() -> None:
     logger.info(f"starting mainloop with process ID {os.getpid()}")
 
     try:
-        mqtt_receiver = utils.ReceivingMQTTClient()
-    except Exception as e:
-        logger.error("could not start mqtt receiver")
-        logger.exception(e)
-        raise e
-
-    try:
         config = utils.ConfigInterface.read()
     except Exception as e:
         logger.error("could not load local config.json")
         logger.exception(e)
         raise e
 
-    # message archiving is always running, sending is optional
-    try:
-        if config.active_components.mqtt_data_sending:
-            utils.SendingMQTTClient.init_sending_loop_process()
-        utils.SendingMQTTClient.init_archiving_loop_process()
-    except Exception as e:
-        logger.error("could not start mqtt sending/archiving loop")
-        logger.exception(e)
-        raise e
-
-    # a single hardware interface that is only used by one procedure at a time
-    try:
-        hardware_interface = hardware.HardwareInterface(config)
-    except Exception as e:
-        logger.error("could not initialize hardware interfaces")
-        logger.exception(e)
-        raise e
-
     # incremental backoff times on exceptions (15s, 1m, 5m, 20m)
     backoff_time_bucket_index = 0
     backoff_time_buckets = [15, 60, 300, 1200]
+
+    # -------------------------------------------------------------------------
+    # initialize mqtt receiver, archiver, and sender (sending is optional)
+
+    try:
+        mqtt_receiver = utils.ReceivingMQTTClient()
+    except Exception as e:
+        logger.error("could not start mqtt receiver", config=config)
+        logger.exception(e, config=config)
+        raise e
+
+    try:
+        utils.SendingMQTTClient.init_archiving_loop_process()
+    except Exception as e:
+        logger.error("could not start mqtt archiving loop", config=config)
+        logger.exception(e, config=config)
+        raise e
+
+    if config.active_components.mqtt_data_sending:
+        try:
+            utils.SendingMQTTClient.init_sending_loop_process()
+        except Exception as e:
+            logger.error("could not start mqtt sending loop", config=config)
+            logger.exception(e, config=config)
+            raise e
+
+    # -------------------------------------------------------------------------
+    # initialize config procedure and check for new configurations
+    # before doing any hardware stuff
+
+    configuration_prodecure = procedures.ConfigurationProcedure(config)
+    logger.info("checking for new config messages")
+    new_config_message = mqtt_receiver.get_config_message()
+    if new_config_message is not None:
+        # stopping this script inside the procedure if successful
+        logger.info("running configuration procedure")
+        configuration_prodecure.run(new_config_message)
+
+    # -------------------------------------------------------------------------
+    # initialize a single hardware interface that is only used by one
+    # procedure at a time; tear down hardware on program termination
+
+    try:
+        hardware_interface = hardware.HardwareInterface(config)
+    except Exception as e:
+        logger.error("could not initialize hardware interface", config=config)
+        logger.exception(e, config=config)
+        raise e
 
     # tear down hardware on program termination
     def graceful_teardown(*args: Any) -> None:
@@ -71,8 +94,9 @@ def run() -> None:
     signal.signal(signal.SIGINT, graceful_teardown)
     signal.signal(signal.SIGTERM, graceful_teardown)
 
+    # -------------------------------------------------------------------------
+    # initialize procedures interacting with hardware
     # system_check:   logging system statistics and reporting hardware/system errors
-    # configuration:  updating the configuration/the software version on request
     # calibration:    using the two reference gas bottles to calibrate the CO2 sensor
     # measurements:   do regular measurements for x minutes
 
@@ -80,7 +104,6 @@ def run() -> None:
         system_check_prodecure = procedures.SystemCheckProcedure(
             config, hardware_interface
         )
-        configuration_prodecure = procedures.ConfigurationProcedure(config)
         calibration_prodecure = procedures.CalibrationProcedure(
             config, hardware_interface
         )
@@ -88,9 +111,12 @@ def run() -> None:
             config, hardware_interface
         )
     except Exception as e:
-        logger.error("could not initialize procedures")
-        logger.exception(e)
+        logger.error("could not initialize procedures", config=config)
+        logger.exception(e, config=config)
         raise e
+
+    # -------------------------------------------------------------------------
+    # infinite mainloop
 
     while True:
         try:
@@ -106,18 +132,14 @@ def run() -> None:
             # CONFIGURATION
 
             logger.info("checking for new config messages")
-            # TODO: get pinned config if revision is different
-            # TODO: do not try an upgrade to a specific revision twice
             new_config_message = mqtt_receiver.get_config_message()
             if new_config_message is not None:
-                # disconnect all hardware components to test new config
                 hardware_interface.teardown()
 
                 # stopping this script inside the procedure if successful
                 logger.info("running configuration procedure")
                 configuration_prodecure.run(new_config_message)
 
-                # reinit if update is unsuccessful
                 hardware_interface.reinitialize(config)
 
             # -----------------------------------------------------------------
@@ -144,25 +166,29 @@ def run() -> None:
             logger.info("finished mainloop iteration")
             backoff_time_bucket_index = 0
 
-        except Exception as e:
-            logger.error("exception in mainloop")
-            logger.exception(e, config=config)
+        except Exception as e1:
             try:
                 hardware_interface.perform_hard_reset()
-
-                # -----------------------------------------------------------------
-                # INCREMENTAL BACKOFF TIMES
-
-                current_backoff_time = backoff_time_buckets[backoff_time_bucket_index]
+            except Exception as e2:
                 logger.error(
-                    f"waiting for {current_backoff_time} seconds", config=config
+                    "exception in mainloop and during hard reset of hardware",
+                    config=config,
                 )
-                time.sleep(current_backoff_time)
-                backoff_time_bucket_index = min(
-                    backoff_time_bucket_index + 1,
-                    len(backoff_time_buckets) - 1,
-                )
-            except Exception as e:
-                logger.error("exception in repairing routine")
-                logger.exception(e, config=config)
-                raise e
+                logger.exception(e2, config=config)
+                raise e2
+
+            # send exception via MQTT
+            current_backoff_time = backoff_time_buckets[backoff_time_bucket_index]
+            logger.error(
+                f"exception in mainloop, hard reset successful,"
+                + f" waiting for {current_backoff_time} seconds",
+                config=config,
+            )
+            logger.exception(e1, config=config)
+
+            # wait until starting up again
+            time.sleep(current_backoff_time)
+            backoff_time_bucket_index = min(
+                backoff_time_bucket_index + 1,
+                len(backoff_time_buckets) - 1,
+            )
