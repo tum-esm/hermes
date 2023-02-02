@@ -14,26 +14,18 @@ class MQTTConnection:
     __client: Optional[paho.mqtt.client.Client] = None
 
     @staticmethod
-    def __init() -> None:
-        """v and
-        initializes the mqtt client. timeout_seconds is the amount
-        of time the mqtt connection process is allowed to take."""
-        MQTTConnection.__init_config()
-        MQTTConnection.__init_client()
-
-    @staticmethod
     def get_config() -> custom_types.MQTTConfig:
         """returns the mqtt config, runs init() on first call"""
-        if MQTTConnection.__config is None or MQTTConnection.__client is None:
-            MQTTConnection.__init()
+        if MQTTConnection.__config is None:
+            MQTTConnection.__init_config()
         assert MQTTConnection.__config is not None
         return MQTTConnection.__config
 
     @staticmethod
     def get_client() -> paho.mqtt.client.Client:
         """returns the mqtt client, runs init() on first call"""
-        if MQTTConnection.__config is None or MQTTConnection.__client is None:
-            MQTTConnection.__init()
+        if MQTTConnection.__client is None:
+            MQTTConnection.__init_client()
         assert MQTTConnection.__client is not None
         return MQTTConnection.__client
 

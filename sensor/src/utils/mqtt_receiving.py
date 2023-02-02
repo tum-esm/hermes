@@ -1,7 +1,9 @@
 import json
 import queue
+import ssl
 from typing import Any, Optional
 import paho.mqtt.client
+import paho.mqtt.subscribe
 from .logger import Logger
 from .mqtt_connection import MQTTConnection
 from src import custom_types
@@ -26,14 +28,55 @@ def on_message(
 
 class ReceivingMQTTClient:
     def __init__(self) -> None:
-        logger = Logger(origin="mqtt-receiving-client")
-        mqtt_client = MQTTConnection.get_client()
-        mqtt_config = MQTTConnection.get_config()
-        mqtt_client.on_message = on_message
-        config_topic = f"{mqtt_config.mqtt_base_topic}configuration/{mqtt_config.station_identifier}"
+        self.logger = Logger(origin="mqtt-receiving-client")
+        self.mqtt_config = MQTTConnection.get_config()
+        self.config_topic = (
+            f"{self.mqtt_config.mqtt_base_topic}configuration"
+            + f"/{self.mqtt_config.station_identifier}"
+        )
 
-        logger.info(f"subscribing to topic {config_topic}")
-        mqtt_client.subscribe(config_topic)
+        # subscribing to new messages on config topic
+        mqtt_client = MQTTConnection.get_client()
+        mqtt_client.on_message = on_message
+        self.logger.info(f"subscribing to topic {self.config_topic}")
+        mqtt_client.subscribe(self.config_topic)
+
+    def get_retained_config_message(
+        self,
+    ) -> Optional[custom_types.MQTTConfigurationRequest]:
+        """Only used on startup, otherwise too bandwidth intensive"""
+        retained_messages: list[
+            paho.mqtt.client.MQTTMessage
+        ] = paho.mqtt.subscribe.simple(
+            topic=self.config_topic,
+            client_id=self.mqtt_config.station_identifier,
+            tls=ssl.create_default_context(),
+            msg_count=10,
+            retained=True,
+            auth={
+                "username": MQTTConnection.__config.mqtt_username,
+                "password": MQTTConnection.__config.mqtt_password,
+            },
+            hostname=MQTTConnection.__config.mqtt_url,
+            port=int(MQTTConnection.__config.mqtt_port),
+        )
+
+        config_messages: list[custom_types.MQTTConfigurationRequest] = []
+        for msg in retained_messages:
+            try:
+                config_messages.append(
+                    custom_types.MQTTConfigurationRequest(
+                        **json.loads(msg.payload.decode())
+                    )
+                )
+            except:
+                pass
+
+        if len(config_messages) == 0:
+            self.logger.warning("did not find any retained valid config messages")
+            return None
+
+        return max(config_messages, key=lambda cm: cm.revision)
 
     def get_messages(self) -> list[Any]:
         global mqtt_message_queue
