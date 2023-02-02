@@ -48,21 +48,20 @@ class ReceivingMQTTClient:
         self,
     ) -> Optional[custom_types.MQTTConfigurationRequest]:
         """Only used on startup, otherwise too bandwidth intensive"""
-        retained_messages: list[
-            paho.mqtt.client.MQTTMessage
-        ] = paho.mqtt.subscribe.simple(
-            topic=self.config_topic,
+        retained_messages = paho.mqtt.subscribe.simple(
+            topics=self.config_topic,
             client_id=self.mqtt_config.station_identifier,
-            tls=ssl.create_default_context(),
             msg_count=10,
             retained=True,
             auth={
-                "username": MQTTConnection.__config.mqtt_username,
-                "password": MQTTConnection.__config.mqtt_password,
+                "username": self.mqtt_config.mqtt_username,
+                "password": self.mqtt_config.mqtt_password,
             },
-            hostname=MQTTConnection.__config.mqtt_url,
-            port=int(MQTTConnection.__config.mqtt_port),
+            hostname=self.mqtt_config.mqtt_url,
+            port=int(self.mqtt_config.mqtt_port),
         )
+        if not isinstance(retained_messages, list):
+            retained_messages = [retained_messages]
 
         config_messages: list[custom_types.MQTTConfigurationRequest] = []
         for msg in retained_messages:
