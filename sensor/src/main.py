@@ -42,15 +42,15 @@ def run() -> None:
     try:
         mqtt_receiver = utils.ReceivingMQTTClient()
     except Exception as e:
-        logger.error("could not start mqtt receiver", config=config)
-        logger.exception(e, config=config)
+        logger.error("could not start mqtt receiver")
+        logger.exception(e)
         raise e
 
     try:
         utils.SendingMQTTClient.init_archiving_loop_process()
     except Exception as e:
-        logger.error("could not start mqtt archiving loop", config=config)
-        logger.exception(e, config=config)
+        logger.error("could not start mqtt archiving loop")
+        logger.exception(e)
         raise e
 
     if config.active_components.mqtt_data_sending:

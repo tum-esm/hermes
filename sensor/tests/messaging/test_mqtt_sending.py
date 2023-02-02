@@ -24,7 +24,7 @@ sys.path.append(PROJECT_DIR)
 from src import utils, custom_types
 
 ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
-TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
+TEST_MESSAGE_DATE_STRING = datetime.utcnow().strftime("%Y-%m-%d")
 MESSAGE_ARCHIVE_FILE = join(
     PROJECT_DIR,
     "data",
@@ -73,7 +73,7 @@ def _test_messaging(sending_enabled: bool) -> None:
     # enqueue dummy message
     dummy_data_message_body = custom_types.MQTTDataMessageBody(
         revision=config.revision,
-        timestamp=datetime.now().timestamp(),
+        timestamp=datetime.utcnow().timestamp(),
         value=custom_types.MQTTCO2Data(
             variant="co2",
             data=custom_types.CO2SensorData(

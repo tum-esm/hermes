@@ -23,7 +23,7 @@ from src import custom_types, utils
 
 NAME = "hermes"
 REPOSITORY = f"tum-esm/{NAME}"
-ROOT_PATH = f"$HOME/Documents/{NAME}"
+ROOT_PATH = f"{os.environ['HOME']}/Documents/{NAME}"
 
 tarball_path: Callable[[str], str] = lambda version: f"{NAME}-{version}.tar.gz"
 tarball_content_path: Callable[[str], str] = lambda version: f"{NAME}-{version}"
@@ -50,10 +50,16 @@ def clear_path(path: str) -> bool:
 # TODO: do not try an upgrade to a specific revision twice
 
 
-def overwrite_file(src_path, dst_path) -> None:
-    if os.path.isfile(dst_path):
-        os.remove(dst_path)
-    os.rename(src_path, dst_path)
+def store_current_config() -> None:
+    if os.path.isfile(CURRENT_TMP_CONFIG_PATH):
+        os.remove(CURRENT_TMP_CONFIG_PATH)
+    os.rename(CURRENT_CONFIG_PATH, CURRENT_TMP_CONFIG_PATH)
+
+
+def restore_current_config() -> None:
+    if os.path.isfile(CURRENT_CONFIG_PATH):
+        os.remove(CURRENT_CONFIG_PATH)
+    os.rename(CURRENT_TMP_CONFIG_PATH, CURRENT_CONFIG_PATH)
 
 
 class ConfigurationProcedure:
@@ -67,42 +73,38 @@ class ConfigurationProcedure:
         new_revision = config_request.revision
         new_version = config_request.configuration.version
 
+        has_same_version = self.config.version == new_version
+        has_same_directory = PROJECT_DIR == code_path(new_version)
+
         self.logger.info(
             f"upgrading to new revision {new_revision} and version {new_version}"
         )
 
-        same_version_and_directory = (self.config.version == new_version) and (
-            PROJECT_DIR == code_path(new_version)
-        )
-        if same_version_and_directory:
-            overwrite_file(CURRENT_CONFIG_PATH, CURRENT_TMP_CONFIG_PATH)
-
-        if not same_version_and_directory:
-            self._download_code(new_version)
-            self._set_up_venv(new_version)
-            self._dump_new_config(config_request)
-
         try:
+            store_current_config()
+            if not (has_same_version and has_same_directory):
+                self._download_code(new_version)
+                self._set_up_venv(new_version)
+                self._dump_new_config(config_request)
             self._run_pytests(new_version)
+            self.logger.info(f"tests for revision {new_revision} successful")
+
+            self._update_cli_pointer(new_version)
+            self.logger.info(f"switched CLI pointer to revision {new_revision}")
+
+            exit(0)
         except Exception as e:
             self.logger.error(
-                f"exception during pytest upgrade to revision {new_revision}",
+                f"exception during upgrade to revision {new_revision}",
                 config=self.config,
             )
             self.logger.exception(e, config=self.config)
-            if same_version_and_directory:
-                overwrite_file(CURRENT_TMP_CONFIG_PATH, CURRENT_CONFIG_PATH)
-            self.logger.error(
+        finally:
+            self.logger.info(
                 f"continuing with current revision {self.config.revision} "
                 + "and version {self.config.version}"
             )
-            return
-
-        self.logger.info(f"tests for revision {new_revision} successful")
-        self._update_cli_pointer(new_version)
-        self.logger.info(f"switched CLI pointer to revision {new_revision}")
-
-        exit(0)
+            restore_current_config()
 
     def _download_code(self, version: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""
@@ -138,7 +140,7 @@ class ConfigurationProcedure:
             working_directory=code_path(version),
         )
         utils.run_shell_command(
-            f"souce .venv/bin/activate && poetry install",
+            f"source .venv/bin/activate && poetry install",
             working_directory=code_path(version),
         )
 
@@ -164,6 +166,11 @@ class ConfigurationProcedure:
                 f,
                 indent=4,
             )
+
+        shutil.copy(
+            f"{PROJECT_DIR}/config/.env",
+            f"{code_path(config_request.configuration.version)}/config/.env",
+        )
 
     def _run_pytests(self, version: str) -> None:
         """run pytests for the new version. The tests should only ensure that

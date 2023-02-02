@@ -13,15 +13,13 @@ class ActiveMQTTQueue:
     def __init__(self) -> None:
         self.connection = sqlite3.connect(ACTIVE_QUEUE_FILE, check_same_thread=True)
         self.__write_sql(
-            [
-                """
-                    CREATE TABLE IF NOT EXISTS QUEUE (
-                        internal_id INTEGER PRIMARY KEY,
-                        status text,
-                        content text
-                    );
-                """
-            ]
+            """
+                CREATE TABLE IF NOT EXISTS QUEUE (
+                    internal_id INTEGER PRIMARY KEY,
+                    status text,
+                    content text
+                );
+            """
         )
 
     def __read_sql(self, sql_statement: str) -> list[Any]:
@@ -29,10 +27,16 @@ class ActiveMQTTQueue:
             results = list(self.connection.execute(sql_statement).fetchall())
         return results
 
-    def __write_sql(self, sql_statements: list[str]) -> None:
+    def __write_sql(
+        self,
+        sql_statement: str,
+        parameters: Optional[list[tuple]] = None,  # type: ignore
+    ) -> None:
         with self.connection:
-            for statement in sql_statements:
-                self.connection.execute(statement)
+            if parameters is not None:
+                self.connection.executemany(sql_statement, parameters)
+            else:
+                self.connection.execute(sql_statement)
 
     def add_row(
         self,
@@ -41,15 +45,14 @@ class ActiveMQTTQueue:
     ) -> None:
         """add a new pending message to the active queue"""
         self.__write_sql(
-            [
-                f"""
-                    INSERT INTO QUEUE (status, content)
-                    VALUES (
-                        '{status}',
-                        '{json.dumps(message.dict())}'
-                    );
-                """
-            ]
+            f"""
+                INSERT INTO QUEUE (status, content)
+                VALUES (
+                    ?,
+                    ?
+                );
+            """,
+            parameters=[(status, json.dumps(message.dict()))],
         )
 
     def get_rows_by_status(
@@ -88,18 +91,22 @@ class ActiveMQTTQueue:
         if len(records) == 0:
             return
 
-        sql_statements: list[str] = []
-        for record in records:
-            sql_statements.append(
-                f"""
+        self.__write_sql(
+            f"""
                     UPDATE QUEUE SET
-                        status = '{record.status}',
-                        content = '{json.dumps(record.content.dict())}'
-                    WHERE internal_id = {record.internal_id};
-                """
-            )
-
-        self.__write_sql(sql_statements)
+                        status = ?,
+                        content = ?
+                    WHERE internal_id = ?;
+                """,
+            parameters=[
+                (
+                    r.status,
+                    json.dumps(r.content.dict()),
+                    r.internal_id,
+                )
+                for r in records
+            ],
+        )
 
     def remove_archive_messages(self) -> None:
         """delete all rows with status 'done'"""

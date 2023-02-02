@@ -1,3 +1,4 @@
+import os
 import subprocess
 from typing import Optional
 import pigpio
@@ -14,6 +15,7 @@ def run_shell_command(command: str, working_directory: Optional[str] = None) -> 
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         cwd=working_directory,
+        env=os.environ.copy(),
     )
     stdout = p.stdout.decode("utf-8", errors="replace")
     stderr = p.stderr.decode("utf-8", errors="replace")

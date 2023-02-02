@@ -68,7 +68,7 @@ def mqtt_data_files() -> Any:
     ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "active-mqtt-messages.db")
     TMP_ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "active-mqtt-messages.tmp.db")
 
-    TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
+    TEST_MESSAGE_DATE_STRING = datetime.utcnow().strftime("%Y-%m-%d")
     MESSAGE_ARCHIVE_FILE = join(
         PROJECT_DIR,
         "data",

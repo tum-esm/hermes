@@ -70,7 +70,7 @@ def _test_logger(sending_enabled: bool) -> None:
     assert len(active_mqtt_queue.get_rows_by_status("in-progress")) == 0
     assert len(active_mqtt_queue.get_rows_by_status("done")) == 0
 
-    TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
+    TEST_MESSAGE_DATE_STRING = datetime.utcnow().strftime("%Y-%m-%d")
     MESSAGE_ARCHIVE_FILE = join(
         PROJECT_DIR,
         "data",
