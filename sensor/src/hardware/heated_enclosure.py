@@ -27,18 +27,27 @@ class HeatedEnclosureInterface:
             utils.serial_interfaces.SerialOneDirectionalInterface
         ] = None
 
+        self.initializing_time = time.time()
+
         # ---------------------------------------------------------------------
         # CONNECTION TO ENCLOSURE ARDUINO (OPTIONAL)
 
         if self.config.active_components.heated_enclosure_communication:
-            self.arduino_address = HeatedEnclosureInterface.get_arduino_address()
 
             # flash firmware onto arduino
-            self.logger.debug("Compiling firmware of arduino")
-            HeatedEnclosureInterface.compile_firmware(config)
-            self.logger.debug("Uploading firmware of arduino")
-            HeatedEnclosureInterface.upload_firmware(self.arduino_address)
-            self.logger.debug("Arduino firmware is now up to date")
+            try:
+                self.logger.debug("finding arduino port")
+                self.arduino_address = HeatedEnclosureInterface.get_arduino_address()
+
+                self.logger.debug("Compiling firmware of arduino")
+                HeatedEnclosureInterface.compile_firmware(config)
+
+                self.logger.debug("Uploading firmware of arduino")
+                HeatedEnclosureInterface.upload_firmware(self.arduino_address)
+
+                self.logger.debug("Arduino firmware is now up to date")
+            except Exception as e:
+                self.logger.exception(e, config=self.config)
 
             # open serial data connection to process arduino logs
             time.sleep(3)
@@ -153,38 +162,37 @@ class HeatedEnclosureInterface:
         self._update_data()
 
         if self.measurement is None:
-            self.logger.debug("waiting 10 seconds for data")
-            time.sleep(10)
+            self.logger.debug("waiting 5 seconds for data")
+            time.sleep(5)
 
         self._update_data()
 
         if self.measurement is None:
-            raise HeatedEnclosureInterface.DeviceFailure(
-                "heated enclosure doesn't send any data"
-            )
-
-        if self.measurement.measured is None:
-            self.logger.warning(
-                "enclosure temperature sensor not connected",
-                config=self.config,
-            )
+            self.logger.warning("heated enclosure doesn't send any data")
+            if (time.time() - self.initializing_time) > 3600 * 6:
+                raise HeatedEnclosureInterface.DeviceFailure(
+                    "no contact to arduino for 6 hours"
+                )
         else:
-            if self.measurement.measured > 55:
+            if self.measurement.measured is None:
                 self.logger.warning(
-                    "high temperatures inside heated enclosure: "
-                    + f"{self.measurement.measured} °C",
+                    "enclosure temperature sensor not connected",
                     config=self.config,
                 )
+            else:
+                if self.measurement.measured > 50:
+                    self.logger.warning(
+                        "high temperatures inside heated enclosure: "
+                        + f"{self.measurement.measured} °C",
+                        config=self.config,
+                    )
 
-        if time.time() - self.measurement.last_update_time > 120:
-            raise HeatedEnclosureInterface.DeviceFailure(
-                "last heated enclosure data is older than two minutes"
-            )
+            if time.time() - self.measurement.last_update_time > 120:
+                self.logger.warning(
+                    "last heated enclosure data is older than two minutes"
+                )
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
-        if self.serial_interface is None:
-            # happens when component is not active
-            return
-
-        self.serial_interface.close()
+        if self.serial_interface is not None:
+            self.serial_interface.close()
