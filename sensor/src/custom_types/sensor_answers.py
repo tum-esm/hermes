@@ -1,6 +1,7 @@
 from typing import Literal, Optional
 from pydantic import BaseModel, validator
 from .validators import validate_str, validate_float
+from .config import CalibrationGasConfig
 
 # validation is only necessary for external sources
 # internal source will be covered by mypy
@@ -16,6 +17,11 @@ class CO2SensorData(BaseModel):
     raw: float
     compensated: float
     filtered: float
+
+
+class CalibrationProcedureData(BaseModel):
+    gases: list[CalibrationGasConfig]
+    readings: list[list[CO2SensorData]]
 
 
 class MainboardSensorData(BaseModel):

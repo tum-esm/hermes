@@ -15,14 +15,15 @@ class CalibrationProcedure:
     ) -> None:
         self.logger, self.config = utils.Logger(origin="calibration-procedure"), config
         self.hardware_interface = hardware_interface
+        self.sending_mqtt_client = utils.SendingMQTTClient()
 
     def run(self) -> None:
         calibration_time = datetime.utcnow().timestamp()
 
         # randomize calibration gas order
-        calibration_gases = self.config.calibration.gases.copy()
-        reference_values: list[float] = []
-        random.shuffle(calibration_gases)
+        result = custom_types.CalibrationProcedureData(
+            gases=self.config.calibration.gases, readings=[]
+        )
 
         # save the currently active valve input for later
         previous_measurement_valve_input = self.hardware_interface.valves.active_input
@@ -33,7 +34,7 @@ class CalibrationProcedure:
             average=self.config.calibration.sampling.seconds_per_sample
         )
 
-        for gas in calibration_gases:
+        for gas in self.config.calibration.gases:
             self.hardware_interface.valves.set_active_input(gas.valve_number)
 
             # flush tube with calibration gas
@@ -48,24 +49,36 @@ class CalibrationProcedure:
                 unit="litres_per_minute",
                 value=self.config.calibration.sampling.pumped_litres_per_minute,
             )
-            sampling_data: list[custom_types.CO2SensorData] = []
+            gas_readings: list[custom_types.CO2SensorData] = []
             for _ in range(self.config.calibration.sampling.sample_count):
-                sampling_data.append(
+                start_time = time.time()
+                gas_readings.append(
                     self.hardware_interface.co2_sensor.get_current_concentration()
                 )
-                # TODO: is this how  the average filter works or do we need time.sleep() as well
-            reference_values.append(
-                sum([d.raw for d in sampling_data]) / len(sampling_data)
-            )
+                elapsed_time = time.time() - start_time
+                remaining_loop_time = (
+                    self.config.calibration.sampling.seconds_per_sample - elapsed_time
+                )
+                if remaining_loop_time > 0:
+                    time.sleep(remaining_loop_time)
+
+            result.readings.append(gas_readings)
 
         # start the calibration sampling, reset CO2 sensor to default filters
         self.hardware_interface.co2_sensor.stop_calibration_sampling()
         self.hardware_interface.co2_sensor.set_filter_setting()
 
-        # send correction values to sensor
-        # TODO: send LCI data to CO2 sensor
-
-        # TODO: after all gases, check with the last gas again?
+        # send calibration result via mqtt
+        self.sending_mqtt_client.enqueue_message(
+            self.config,
+            custom_types.MQTTDataMessageBody(
+                revision=self.config.revision,
+                timestamp=round(time.time(), 2),
+                value=custom_types.MQTTCalibrationData(
+                    variant="calibration", data=result
+                ),
+            ),
+        )
 
         # clean up tube again
         self.hardware_interface.valves.set_active_input(

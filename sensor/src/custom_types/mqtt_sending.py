@@ -5,7 +5,7 @@ from .validators import validate_bool, validate_int, validate_str, validate_floa
 from .sensor_answers import (
     CO2SensorData,
     AirSensorData,
-    MainboardSensorData,
+    CalibrationProcedureData,
     SystemData,
     WindSensorData,
     HeatedEnclosureData,
@@ -92,6 +92,11 @@ class MQTTStatusMessageBody(BaseModel):
 class MQTTCO2Data(BaseModel):
     variant: Literal["co2"]
     data: CO2SensorData
+
+
+class MQTTCalibrationData(BaseModel):
+    variant: Literal["calibration"]
+    data: CalibrationProcedureData
 
 
 class MQTTAirData(BaseModel):

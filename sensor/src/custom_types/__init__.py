@@ -8,6 +8,7 @@ from .mqtt_sending import (
     SQLMQTTRecord,
     # data types
     MQTTCO2Data,
+    MQTTCalibrationData,
     MQTTAirData,
     MQTTSystemData,
     MQTTWindData,
@@ -29,6 +30,7 @@ from .mqtt_receiving import (
 
 from .sensor_answers import (
     CO2SensorData,
+    CalibrationProcedureData,
     MainboardSensorData,
     SystemData,
     WindSensorData,
