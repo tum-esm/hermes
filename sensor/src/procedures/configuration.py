@@ -18,11 +18,10 @@ if version upgrade
 import json
 import os
 import shutil
-import sys
 from typing import Callable
 from src import custom_types, utils
 
-NAME = "insert-name-here"
+NAME = "hermes"
 REPOSITORY = f"tum-esm/{NAME}"
 ROOT_PATH = f"$HOME/Documents/{NAME}"
 
@@ -30,6 +29,11 @@ tarball_path: Callable[[str], str] = lambda version: f"{NAME}-{version}.tar.gz"
 tarball_content_path: Callable[[str], str] = lambda version: f"{NAME}-{version}"
 code_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}"
 venv_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}/.venv"
+
+dirname = os.path.dirname
+PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
+CURRENT_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.json")
+CURRENT_TMP_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.tmp.json")
 
 
 def clear_path(path: str) -> bool:
@@ -46,6 +50,12 @@ def clear_path(path: str) -> bool:
 # TODO: do not try an upgrade to a specific revision twice
 
 
+def overwrite_file(src_path, dst_path) -> None:
+    if os.path.isfile(dst_path):
+        os.remove(dst_path)
+    os.rename(src_path, dst_path)
+
+
 class ConfigurationProcedure:
     """runs when a config change has been requested"""
 
@@ -53,24 +63,46 @@ class ConfigurationProcedure:
         self.logger = utils.Logger(origin="configuration-procedure")
         self.config = config
 
-    def run(self, mqtt_request: custom_types.MQTTConfigurationRequest) -> None:
-        version = mqtt_request.configuration.version
+    def run(self, config_request: custom_types.MQTTConfigurationRequest) -> None:
+        new_revision = config_request.revision
+        new_version = config_request.configuration.version
 
-        # TODO: treat new version differently as same version
+        self.logger.info(
+            f"upgrading to new revision {new_revision} and version {new_version}"
+        )
 
-        self._download_code(version)
-        self._set_up_venv(version)
-        self._dump_new_config(mqtt_request)
+        same_version_and_directory = (self.config.version == new_version) and (
+            PROJECT_DIR == code_path(new_version)
+        )
+        if same_version_and_directory:
+            overwrite_file(CURRENT_CONFIG_PATH, CURRENT_TMP_CONFIG_PATH)
+
+        if not same_version_and_directory:
+            self._download_code(new_version)
+            self._set_up_venv(new_version)
+            self._dump_new_config(config_request)
 
         try:
-            self._run_pytests(version)
-            # TODO: emit test success message
-            self._update_cli_pointer(version)
-            # TODO: emit pointer update success message
-            sys.exit()
+            self._run_pytests(new_version)
         except Exception as e:
-            # TODO: emit error message
-            pass
+            self.logger.error(
+                f"exception during pytest upgrade to revision {new_revision}",
+                config=self.config,
+            )
+            self.logger.exception(e, config=self.config)
+            if same_version_and_directory:
+                overwrite_file(CURRENT_TMP_CONFIG_PATH, CURRENT_CONFIG_PATH)
+            self.logger.error(
+                f"continuing with current revision {self.config.revision} "
+                + "and version {self.config.version}"
+            )
+            return
+
+        self.logger.info(f"tests for revision {new_revision} successful")
+        self._update_cli_pointer(new_version)
+        self.logger.info(f"switched CLI pointer to revision {new_revision}")
+
+        exit(0)
 
     def _download_code(self, version: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""
@@ -97,40 +129,48 @@ class ConfigurationProcedure:
 
     def _set_up_venv(self, version: str) -> None:
         """set up a virtual python3.9 environment inside the version subdirectory"""
-        if clear_path(venv_path(version)):
-            self.logger.info("removed old virtual environment")
+        self.logger.info(f"setting up Python for version {version}")
 
-        # create virtual environment
-        utils.run_shell_command(f"python3.9 -m venv {venv_path(version)}")
-
-        # install dependencies
-        utils.run_shell_command(f"poetry install", working_directory=code_path(version))
+        if os.path.isdir(venv_path(version)):
+            shutil.rmtree(venv_path(version))
+        utils.run_shell_command(
+            f"python3.9 -m venv .venv",
+            working_directory=code_path(version),
+        )
+        utils.run_shell_command(
+            f"souce .venv/bin/activate && poetry install",
+            working_directory=code_path(version),
+        )
 
     def _dump_new_config(
-        self, mqtt_request: custom_types.MQTTConfigurationRequest
+        self,
+        config_request: custom_types.MQTTConfigurationRequest,
     ) -> None:
         """write new config config to json file"""
 
+        self.logger.info(
+            f"dumping config for version {config_request.configuration.version}"
+        )
+
         with open(
-            f"{code_path(mqtt_request.configuration.version)}/config/config.json",
+            f"{code_path(config_request.configuration.version)}/config/config.json",
             "w",
         ) as f:
             json.dump(
                 {
-                    "revision": mqtt_request.revision,
-                    **mqtt_request.configuration.dict(),
+                    "revision": config_request.revision,
+                    **config_request.configuration.dict(),
                 },
                 f,
                 indent=4,
             )
 
     def _run_pytests(self, version: str) -> None:
-        """run all pytests for the new version. The pytest tests should
-        ensure that everything is running. If the new version's code doesn't
-        run properly, there should be more pytests."""
-
+        """run pytests for the new version. The tests should only ensure that
+        the new software starts up and is able to perform new confi requests"""
+        self.logger.info(f"running pytests for version {version}")
         utils.run_shell_command(
-            f"{venv_path(version)}/bin/python -m pytest tests/",
+            f'.venv/bin/python -m pytest -m "configuration_procedure" tests/',
             working_directory=code_path(version),
         )
 
