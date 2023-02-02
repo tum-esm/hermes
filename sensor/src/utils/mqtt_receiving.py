@@ -8,7 +8,9 @@ from .logger import Logger
 from .mqtt_connection import MQTTConnection
 from src import custom_types
 
-mqtt_message_queue: queue.Queue[dict] = queue.Queue(maxsize=1024)  # type:ignore
+mqtt_config_message_queue: queue.Queue[
+    custom_types.MQTTConfigurationRequest
+] = queue.Queue()
 
 
 def on_message(
@@ -16,12 +18,13 @@ def on_message(
     userdata: Any,
     msg: paho.mqtt.client.MQTTMessage,
 ) -> None:
-    global mqtt_message_queue
+    global mqtt_config_message_queue
     logger = Logger(origin="mqtt-receiving-loop")
     logger.debug(f"received message: {msg}")
     try:
-        payload = json.loads(msg.payload.decode())
-        mqtt_message_queue.put(payload)
+        mqtt_config_message_queue.put(
+            custom_types.MQTTConfigurationRequest(**json.loads(msg.payload.decode()))
+        )
     except json.JSONDecodeError:
         logger.warning(f"could not decode message payload on message: {msg}")
 
@@ -78,29 +81,18 @@ class ReceivingMQTTClient:
 
         return max(config_messages, key=lambda cm: cm.revision)
 
-    def get_messages(self) -> list[Any]:
-        global mqtt_message_queue
+    def get_config_message(self) -> Optional[custom_types.MQTTConfigurationRequest]:
+        global mqtt_config_message_queue
 
-        new_messages = []
+        new_config_messages: list[custom_types.MQTTConfigurationRequest] = []
         while True:
             try:
-                new_messages.append(mqtt_message_queue.get(block=False))
+                new_config_messages.append(mqtt_config_message_queue.get(block=False))
             except queue.Empty:
                 break
 
-        return new_messages
-
-    def get_config_message(self) -> Optional[custom_types.MQTTConfigurationRequest]:
-        global mqtt_message_queue
-
-        new_config_messages: list[custom_types.MQTTConfigurationRequest] = []
-        for m in self.get_messages():
-            try:
-                new_config_messages.append(custom_types.MQTTConfigurationRequest(**m))
-            except:
-                pass
-
-        if len(new_config_messages) > 0:
-            return max(new_config_messages, key=lambda m: m.revision)
-        else:
+        if len(new_config_messages) == 0:
+            self.logger.warning("did not find any retained valid config messages")
             return None
+
+        return max(new_config_messages, key=lambda cm: cm.revision)
