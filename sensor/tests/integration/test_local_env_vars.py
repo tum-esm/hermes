@@ -9,6 +9,7 @@ sys.path.append(PROJECT_DIR)
 from src import custom_types, utils
 
 
+@pytest.mark.config_update
 @pytest.mark.integration
 def test_lcoal_env_vars() -> None:
     """checks whether the local config/.env can be loaded"""

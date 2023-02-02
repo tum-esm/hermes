@@ -235,7 +235,7 @@ class HeatedEnclosureConfig(BaseModel):
 class Config(BaseModel):
     """The config.json for each sensor"""
 
-    version: Literal["0.1.0"]
+    version: Literal["1.0.0-alpha.2"]
     revision: int
     active_components: ActiveComponentsConfig
     hardware: HardwareConfig
@@ -245,7 +245,7 @@ class Config(BaseModel):
 
     # validators
     _val_version = validator("version", pre=True, allow_reuse=True)(
-        validate_str(allowed=["0.1.0"]),
+        validate_str(allowed=["1.0.0-alpha.2"]),
     )
     _val_revision = validator("revision", pre=True, allow_reuse=True)(
         validate_int(minimum=0, maximum=2_147_483_648),

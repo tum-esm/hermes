@@ -13,6 +13,7 @@ from src.custom_types import Config
 MAX_PUMP_RPS = 70
 
 
+@pytest.mark.config_update
 @pytest.mark.integration
 def test_local_config() -> None:
     """checks whether the local config/config.json makes sense:

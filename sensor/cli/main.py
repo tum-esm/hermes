@@ -21,4 +21,4 @@ cli.add_command(commands.is_running, name="is-running")
 
 
 if __name__ == "__main__":
-    cli.main(prog_name="insert-name-here-cli")
+    cli.main(prog_name="hermes-cli")

@@ -170,7 +170,7 @@ class ConfigurationProcedure:
         the new software starts up and is able to perform new confi requests"""
         self.logger.info(f"running pytests for version {version}")
         utils.run_shell_command(
-            f'.venv/bin/python -m pytest -m "configuration_procedure" tests/',
+            f'.venv/bin/python -m pytest -m "config_update" tests/',
             working_directory=code_path(version),
         )
 

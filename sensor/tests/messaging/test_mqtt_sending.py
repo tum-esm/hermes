@@ -33,6 +33,7 @@ MESSAGE_ARCHIVE_FILE = join(
 )
 
 
+@pytest.mark.config_update
 @pytest.mark.ci
 def test_messaging_without_sending(
     mqtt_data_files: None,

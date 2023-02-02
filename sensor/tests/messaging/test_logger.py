@@ -25,6 +25,7 @@ from src import utils, custom_types
 # TODO: make the message queue assertions prettier
 
 
+@pytest.mark.config_update
 @pytest.mark.ci
 def test_logger_without_sending(
     mqtt_data_files: None,

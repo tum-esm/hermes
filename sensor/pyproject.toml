@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sensor"
-version = "0.1.0"
+version = "1.0.0-alpha.2"
 description = ""
 authors = ["Moritz Makowski <moritz.makowski@tum.de>"]
 readme = "README.md"
@@ -41,6 +41,7 @@ build-backend = "poetry.core.masonry.api"
 markers = [
     "ci: can be run in GitHub CI",
     "integration: can only be run on a configured system",
+    "config_update: required to pass when updating the config"
 ]
 
 [tool.mypy]

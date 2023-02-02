@@ -15,6 +15,7 @@ sys.path.append(PROJECT_DIR)
 from src import custom_types, utils
 
 
+@pytest.mark.config_update
 @pytest.mark.ci
 def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
     mqtt_client = utils.mqtt_connection.MQTTConnection.get_client()
