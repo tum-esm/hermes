@@ -27,6 +27,7 @@ class CO2SensorInterface:
     def __init__(self, config: custom_types.Config) -> None:
         self.logger, self.config = utils.Logger(origin="co2-sensor"), config
         self.logger.info("Starting initialization")
+        self.last_powerup_time: float = time.time()
 
         # power pin to power up/down wind sensor
         self.pin_factory = utils.get_gpio_pin_factory()
@@ -57,6 +58,7 @@ class CO2SensorInterface:
         self.logger.debug("powering up sensor")
         self.rs232_interface.flush_receiver_stream()
         self.power_pin.on()
+        self.last_powerup_time = time.time()
         self.rs232_interface.wait_for_answer(expected_regex=STARTUP_REGEX)
 
         self.logger.debug("sending default settings")

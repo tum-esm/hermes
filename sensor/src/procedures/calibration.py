@@ -102,9 +102,13 @@ class CalibrationProcedure:
         state = utils.StateInterface.read()
         current_utc_timestamp = datetime.utcnow().timestamp()
 
-        # TODO: skip calibration when sensor has had power for
-        # less than 30 minutes -> a full warming up is required
-        # for maximum accuracy
+        # skip calibration when sensor has had power for less than 30
+        # minutes (a full warming up is required for maximum accuracy)
+        seconds_since_last_co2_sensor_boot = (
+            time.time() - self.hardware_interface.co2_sensor.last_powerup_time
+        )
+        if seconds_since_last_co2_sensor_boot < 1800:
+            return False
 
         # if last calibration time is unknown, calibrate now
         # should only happen when the state.json is not copied
