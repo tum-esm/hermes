@@ -24,6 +24,8 @@ class MQTTConnection:
     @staticmethod
     def get_client() -> paho.mqtt.client.Client:
         """returns the mqtt client, runs init() on first call"""
+        if MQTTConnection.__config is None:
+            MQTTConnection.__init_config()
         if MQTTConnection.__client is None:
             MQTTConnection.__init_client()
         assert MQTTConnection.__client is not None

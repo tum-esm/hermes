@@ -44,42 +44,6 @@ class ReceivingMQTTClient:
         self.logger.info(f"subscribing to topic {self.config_topic}")
         mqtt_client.subscribe(self.config_topic)
 
-    def get_retained_config_message(
-        self,
-    ) -> Optional[custom_types.MQTTConfigurationRequest]:
-        """Only used on startup, otherwise too bandwidth intensive"""
-        retained_messages = paho.mqtt.subscribe.simple(
-            topics=self.config_topic,
-            client_id=self.mqtt_config.station_identifier,
-            msg_count=10,
-            retained=True,
-            auth={
-                "username": self.mqtt_config.mqtt_username,
-                "password": self.mqtt_config.mqtt_password,
-            },
-            hostname=self.mqtt_config.mqtt_url,
-            port=int(self.mqtt_config.mqtt_port),
-        )
-        if not isinstance(retained_messages, list):
-            retained_messages = [retained_messages]
-
-        config_messages: list[custom_types.MQTTConfigurationRequest] = []
-        for msg in retained_messages:
-            try:
-                config_messages.append(
-                    custom_types.MQTTConfigurationRequest(
-                        **json.loads(msg.payload.decode())
-                    )
-                )
-            except:
-                pass
-
-        if len(config_messages) == 0:
-            self.logger.warning("did not find any retained valid config messages")
-            return None
-
-        return max(config_messages, key=lambda cm: cm.revision)
-
     def get_config_message(self) -> Optional[custom_types.MQTTConfigurationRequest]:
         global mqtt_config_message_queue
 

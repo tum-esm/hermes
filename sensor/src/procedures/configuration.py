@@ -43,6 +43,9 @@ def clear_path(path: str) -> bool:
     return False
 
 
+# TODO: do not try an upgrade to a specific revision twice
+
+
 class ConfigurationProcedure:
     """runs when a config change has been requested"""
 
