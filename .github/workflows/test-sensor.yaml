@@ -57,10 +57,10 @@ jobs:
                   bash scripts/testing/check_static_types.sh
             - name: Run ci-pytests
               env:
-                  INSERT_NAME_HERE_MQTT_URL: ${{ secrets.INSERT_NAME_HERE_MQTT_URL }}
-                  INSERT_NAME_HERE_MQTT_PORT: ${{ secrets.INSERT_NAME_HERE_MQTT_PORT }}
-                  INSERT_NAME_HERE_MQTT_USERNAME: ${{ secrets.INSERT_NAME_HERE_MQTT_USERNAME }}
-                  INSERT_NAME_HERE_MQTT_PASSWORD: ${{ secrets.INSERT_NAME_HERE_MQTT_PASSWORD }}
+                  HERMES_MQTT_URL: ${{ secrets.HERMES_MQTT_URL }}
+                  HERMES_MQTT_PORT: ${{ secrets.HERMES_MQTT_PORT }}
+                  HERMES_MQTT_USERNAME: ${{ secrets.HERMES_MQTT_USERNAME }}
+                  HERMES_MQTT_PASSWORD: ${{ secrets.HERMES_MQTT_PASSWORD }}
               run: |
                   source .venv/bin/activate
                   pytest -m "ci" --cov=src --cov=cli tests/
