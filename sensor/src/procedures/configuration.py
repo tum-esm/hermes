@@ -86,13 +86,16 @@ class ConfigurationProcedure:
                 self._download_code(new_version)
                 self._set_up_venv(new_version)
                 self._dump_new_config(config_request)
+
             self._run_pytests(new_version)
             self.logger.info(f"tests for revision {new_revision} successful")
 
             self._update_cli_pointer(new_version)
             self.logger.info(f"switched CLI pointer to revision {new_revision}")
 
+            restore_current_config()
             exit(0)
+
         except Exception as e:
             self.logger.error(
                 f"exception during upgrade to revision {new_revision}",
@@ -100,11 +103,12 @@ class ConfigurationProcedure:
             )
             self.logger.exception(e, config=self.config)
         finally:
-            self.logger.info(
-                f"continuing with current revision {self.config.revision} "
-                + "and version {self.config.version}"
-            )
             restore_current_config()
+
+        self.logger.info(
+            f"continuing with current revision {self.config.revision} "
+            + f"and version {self.config.version}"
+        )
 
     def _download_code(self, version: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""

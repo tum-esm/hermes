@@ -10,6 +10,9 @@ class MQTTConfigurationRequestConfig(BaseModel):
         validate_str(min_len=5),
     )
 
+    class Config:
+        extra = "allow"
+
 
 class MQTTConfigurationRequest(BaseModel):
     """A message sent by the server requesting a station to
