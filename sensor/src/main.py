@@ -40,26 +40,11 @@ def run() -> None:
     # initialize mqtt receiver, archiver, and sender (sending is optional)
 
     try:
-        mqtt_receiver = utils.ReceivingMQTTClient()
+        procedures.MessagingAgent.init(config)
     except Exception as e:
-        logger.error("could not start mqtt receiver")
+        logger.error("could not start messaging agent")
         logger.exception(e)
         raise e
-
-    try:
-        utils.SendingMQTTClient.init_archiving_loop_process()
-    except Exception as e:
-        logger.error("could not start mqtt archiving loop")
-        logger.exception(e)
-        raise e
-
-    if config.active_components.mqtt_data_sending:
-        try:
-            utils.SendingMQTTClient.init_sending_loop_process()
-        except Exception as e:
-            logger.error("could not start mqtt sending loop", config=config)
-            logger.exception(e, config=config)
-            raise e
 
     utils.SendingMQTTClient.check_errors()
 
@@ -69,9 +54,10 @@ def run() -> None:
 
     configuration_prodecure = procedures.ConfigurationProcedure(config)
     logger.info("checking for new config messages")
-    new_config_message = mqtt_receiver.get_config_message()
+    new_config_message = procedures.MessagingAgent.get_config_message()
+    logger.warning("initial config message not received")
     if new_config_message is not None:
-        # stopping this script inside the procedure if successful
+        # exiting inside the procedure if successful
         logger.info("running configuration procedure")
         configuration_prodecure.run(new_config_message)
 
@@ -134,7 +120,7 @@ def run() -> None:
             # CONFIGURATION
 
             logger.info("checking for new config messages")
-            new_config_message = mqtt_receiver.get_config_message()
+            new_config_message = procedures.MessagingAgent.get_config_message()
             if new_config_message is not None:
                 hardware_interface.teardown()
 

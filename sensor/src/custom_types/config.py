@@ -11,7 +11,7 @@ from .validators import (
 
 class ActiveComponentsConfig(BaseModel):
     calibration_procedures: bool
-    mqtt_data_sending: bool
+    mqtt_communication: bool
     heated_enclosure_communication: bool
     pump_speed_monitoring: bool
 

@@ -73,6 +73,10 @@ class ConfigurationProcedure:
         new_revision = config_request.revision
         new_version = config_request.configuration.version
 
+        if self.config.revision == new_revision:
+            self.logger("received config is already active")
+            return
+
         has_same_version = self.config.version == new_version
         has_same_directory = PROJECT_DIR == code_path(new_version)
 

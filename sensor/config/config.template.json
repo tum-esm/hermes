@@ -3,7 +3,7 @@
     "revision": 0,
     "active_components": {
         "calibration_procedures": false,
-        "mqtt_data_sending": true,
+        "mqtt_communication": true,
         "heated_enclosure_communication": false,
         "pump_speed_monitoring": false
     },

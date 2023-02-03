@@ -20,7 +20,7 @@ mqtt_config_message_queue: queue.Queue[
 ] = queue.Queue()
 
 
-def on_config_message(
+def __on_config_message(
     client: paho.mqtt.client.Client,
     userdata: Any,
     msg: paho.mqtt.client.MQTTMessage,
@@ -60,13 +60,14 @@ class MessagingAgent:
         # mqtt broker, receives config messages and send out
         # messages from the active queue db
         if MessagingAgent.communication_loop_process is None:
-            new_process = multiprocessing.Process(
-                target=MessagingAgent.communication_loop,
-                args=(config,),
-                daemon=True,
-            )
-            new_process.start()
-            MessagingAgent.communication_loop_process = new_process
+            if config.active_components.mqtt_communication:
+                new_process = multiprocessing.Process(
+                    target=MessagingAgent.communication_loop,
+                    args=(config,),
+                    daemon=True,
+                )
+                new_process.start()
+                MessagingAgent.communication_loop_process = new_process
 
     @staticmethod
     def archiving_process() -> None:
@@ -144,7 +145,7 @@ class MessagingAgent:
             f"{mqtt_config.mqtt_base_topic}configurations"
             + f"/{mqtt_config.station_identifier}"
         )
-        mqtt_client.on_message = on_config_message
+        mqtt_client.on_message = __on_config_message
         logger.info(f"subscribing to topic {config_topic}")
         mqtt_client.subscribe(config_topic, qos=1)
 
