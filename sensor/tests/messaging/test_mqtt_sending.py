@@ -16,7 +16,7 @@ from ..pytest_fixtures import (
 from ..pytest_utils import wait_for_condition
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
-CONFIG_TEMPLATE_PATH = join(PROJECT_DIR, "config", "config.template.json")
+CONFIG_PATH = join(PROJECT_DIR, "config", "config.json")
 sys.path.append(PROJECT_DIR)
 
 from src import utils, custom_types
@@ -49,7 +49,7 @@ def _test_messaging(mqtt_communication_enabled: bool) -> None:
     assert len(active_mqtt_queue.get_rows_by_status("in-progress")) == 0
     assert len(active_mqtt_queue.get_rows_by_status("done")) == 0
 
-    with open(CONFIG_TEMPLATE_PATH) as f:
+    with open(CONFIG_PATH) as f:
         config = custom_types.Config(**json.load(f))
         config.active_components.mqtt_communication = mqtt_communication_enabled
 
