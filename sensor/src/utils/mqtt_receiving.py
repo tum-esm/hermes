@@ -41,7 +41,7 @@ class ReceivingMQTTClient:
         mqtt_client = MQTTConnection.get_client()
         mqtt_client.on_message = on_message
         self.logger.info(f"subscribing to topic {self.config_topic}")
-        mqtt_client.subscribe(self.config_topic)
+        mqtt_client.subscribe(self.config_topic, qos=1)
 
     def get_config_message(self) -> Optional[custom_types.MQTTConfigurationRequest]:
         global mqtt_config_message_queue

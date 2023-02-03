@@ -61,6 +61,8 @@ def run() -> None:
             logger.exception(e, config=config)
             raise e
 
+    utils.SendingMQTTClient.check_errors()
+
     # -------------------------------------------------------------------------
     # initialize config procedure and check for new configurations
     # before doing any hardware stuff

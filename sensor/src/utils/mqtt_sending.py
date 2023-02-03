@@ -162,6 +162,7 @@ class SendingMQTTClient:
                 "log-messages/" if record.content.variant == "logs" else "measurements/"
             )
             record.content.header.mqtt_topic += mqtt_config.station_identifier
+            assert mqtt_client.is_connected(), "mqtt client is not connected anymore"
             message_info = mqtt_client.publish(
                 topic=record.content.header.mqtt_topic,
                 payload=json.dumps(
@@ -183,6 +184,8 @@ class SendingMQTTClient:
             records_to_be_archived: list[custom_types.SQLMQTTRecord] = []
 
             try:
+
+                assert mqtt_client.is_connected(), "mqtt client is not connected"
 
                 # -----------------------------------------------------------------
                 # CHECK DELIVERY STATUS OF SENT MESSAGES
@@ -232,14 +235,18 @@ class SendingMQTTClient:
 
                 # -----------------------------------------------------------------
 
-                logger.info(
-                    f"{sent_record_count}/{resent_record_count}/{delivered_record_count} "
-                    + "messages have been sent/resent/delivered"
-                )
+                if (
+                    sent_record_count + resent_record_count + delivered_record_count
+                ) > 0:
+                    logger.info(
+                        f"{sent_record_count}/{resent_record_count}/{delivered_record_count} "
+                        + "messages have been sent/resent/delivered"
+                    )
 
                 time.sleep(5)
 
             except Exception as e:
+                logger.error("sending loop has stopped")
                 logger.exception(e)
                 raise e
 
