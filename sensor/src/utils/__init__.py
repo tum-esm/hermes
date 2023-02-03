@@ -3,8 +3,7 @@ from .config_interface import ConfigInterface
 from .state_interface import StateInterface
 
 from .active_mqtt_queue import ActiveMQTTQueue
-from .mqtt_receiving import ReceivingMQTTClient
-from .mqtt_sending import SendingMQTTClient
+from .mqtt_connection import MQTTConnection
 
 from . import serial_interfaces
 

@@ -1,7 +1,8 @@
 import datetime
 import json
+import queue
 import time
-from typing import Optional
+from typing import Any, Optional
 import paho.mqtt.client
 import os
 from os.path import dirname
@@ -12,6 +13,27 @@ from src import custom_types, utils
 
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 QUEUE_ARCHIVE_DIR = os.path.join(PROJECT_DIR, "data", "archive")
+
+
+mqtt_config_message_queue: queue.Queue[
+    custom_types.MQTTConfigurationRequest
+] = queue.Queue()
+
+
+def on_config_message(
+    client: paho.mqtt.client.Client,
+    userdata: Any,
+    msg: paho.mqtt.client.MQTTMessage,
+) -> None:
+    global mqtt_config_message_queue
+    logger = utils.Logger(origin="mqtt-subscription")
+    logger.debug(f"received message: {msg}")
+    try:
+        mqtt_config_message_queue.put(
+            custom_types.MQTTConfigurationRequest(**json.loads(msg.payload.decode()))
+        )
+    except json.JSONDecodeError:
+        logger.warning(f"could not decode message payload on message: {msg}")
 
 
 class MessagingAgent:
@@ -106,16 +128,26 @@ class MessagingAgent:
         logger = utils.Logger(origin="mqtt-sending-loop")
         logger.info("starting loop")
 
+        mqtt_connection = utils.MQTTConnection()
+
         try:
-            mqtt_client = utils.MQTTConnection.get_client()
-            mqtt_config = utils.MQTTConnection.get_config()
+            mqtt_connection = utils.MQTTConnection()
+            mqtt_config = mqtt_connection.config
+            mqtt_client = mqtt_connection.client
             active_mqtt_queue = utils.ActiveMQTTQueue()
         except Exception as e:
             logger.exception(e)
             raise e
 
-        # TODO: subscribe to config topic
-        # TODO: process received config messages
+        # subscribing to new messages on config topic
+        config_topic = (
+            f"{mqtt_config.mqtt_base_topic}configurations"
+            + f"/{mqtt_config.station_identifier}"
+        )
+        mqtt_client.on_message = on_config_message
+        logger.info(f"subscribing to topic {config_topic}")
+        mqtt_client.subscribe(config_topic, qos=1)
+
         # TODO: add method to "get new config messages"
         # TODO: fetch initial config messages
 
