@@ -6,8 +6,8 @@ import pytest
 from ..pytest_utils import expect_log_lines, wait_for_condition
 from ..pytest_fixtures import (
     mqtt_client_environment,
-    mqtt_sending_loop,
-    mqtt_archiving_loop,
+    messaging_agent_with_sending,
+    messaging_agent_without_sending,
     mqtt_data_files,
     log_files,
     sample_config,
@@ -22,38 +22,21 @@ sys.path.append(PROJECT_DIR)
 
 from src import utils, custom_types
 
-# TODO: make the message queue assertions prettier
-
 
 @pytest.mark.config_update
 @pytest.mark.ci
-def test_logger_without_sending(
-    mqtt_data_files: None,
-    mqtt_archiving_loop: None,
-    log_files: None,
-    sample_config: None,
-) -> None:
-    _test_logger(sending_enabled=False)
+def test_logger_without_sending(messaging_agent_without_sending: None) -> None:
+    _test_logger(mqtt_communication_enabled=False)
 
 
 @pytest.mark.ci
-def test_logger_with_sending(
-    mqtt_data_files: None,
-    mqtt_archiving_loop: None,
-    mqtt_sending_loop: None,
-    log_files: None,
-    sample_config: None,
-) -> None:
-    _test_logger(sending_enabled=True)
+def test_logger_with_sending(messaging_agent_with_sending: None) -> None:
+    _test_logger(mqtt_communication_enabled=True)
 
 
-def _test_logger(sending_enabled: bool) -> None:
-    utils.SendingMQTTClient.check_errors()
-
-    with open(CONFIG_PATH) as f:
-        config = custom_types.Config(**json.load(f))
-        config.revision = 17
-        config.active_components.mqtt_data_sending = sending_enabled
+def _test_logger(mqtt_communication_enabled: bool) -> None:
+    config = utils.ConfigInterface.read()
+    config.active_components.mqtt_communication = mqtt_communication_enabled
 
     active_mqtt_queue = utils.ActiveMQTTQueue()
 
@@ -83,7 +66,7 @@ def _test_logger(sending_enabled: bool) -> None:
             + "log-messages/"
             + os.environ["HERMES_MQTT_IDENTIFIER"]
         )
-        if sending_enabled
+        if mqtt_communication_enabled
         else None
     )
 
@@ -108,7 +91,7 @@ def _test_logger(sending_enabled: bool) -> None:
     active_logs_messages = [
         custom_types.MQTTLogMessage(**m.content.dict())
         for m in active_mqtt_queue.get_rows_by_status(
-            "pending" if sending_enabled else "done"
+            "pending" if mqtt_communication_enabled else "done"
         )
     ]
     active_logs_messages.sort(key=lambda m: m.body.timestamp)
@@ -164,5 +147,3 @@ def _test_logger(sending_enabled: bool) -> None:
     assert archived_log_messages[2].header.mqtt_topic == EXPECTED_MQTT_TOPIC
     assert archived_log_messages[2].body.severity == "error"
     assert archived_log_messages[2].body.subject == "pytests - ZeroDivisionError"
-
-    utils.SendingMQTTClient.check_errors()

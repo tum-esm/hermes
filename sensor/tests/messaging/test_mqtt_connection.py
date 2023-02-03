@@ -1,6 +1,6 @@
 import os
 import pytest
-from ..pytest_fixtures import mqtt_client_environment, log_files
+from ..pytest_fixtures import mqtt_client_environment, log_files, mqtt_data_files
 from ..pytest_utils import wait_for_condition
 from os.path import dirname, abspath
 import sys
@@ -13,7 +13,7 @@ from src import utils
 
 @pytest.mark.config_update
 @pytest.mark.ci
-def test_mqtt_connection(mqtt_client_environment: None, log_files: None) -> None:
+def test_mqtt_connection(mqtt_client_environment: None) -> None:
     mqtt_connection = utils.MQTTConnection()
     mqtt_config = mqtt_connection.config
     mqtt_client = mqtt_connection.client

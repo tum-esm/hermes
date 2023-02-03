@@ -21,22 +21,6 @@ mqtt_config_message_queue: queue.Queue[
 ] = queue.Queue()
 
 
-def __on_config_message(
-    client: paho.mqtt.client.Client,
-    userdata: Any,
-    msg: paho.mqtt.client.MQTTMessage,
-) -> None:
-    global mqtt_config_message_queue
-    logger = utils.Logger(origin="message-communication")
-    logger.debug(f"received message: {msg}")
-    try:
-        mqtt_config_message_queue.put(
-            custom_types.MQTTConfigurationRequest(**json.loads(msg.payload.decode()))
-        )
-    except json.JSONDecodeError:
-        logger.warning(f"could not decode message payload on message: {msg}")
-
-
 class MessagingAgent:
     communication_loop_process: Optional[multiprocessing.Process] = None
     archiving_loop_process: Optional[multiprocessing.Process] = None
@@ -51,7 +35,6 @@ class MessagingAgent:
         if MessagingAgent.archiving_loop_process is None:
             new_process = multiprocessing.Process(
                 target=MessagingAgent.archiving_loop,
-                args=(config,),
                 daemon=True,
             )
             new_process.start()
@@ -64,7 +47,6 @@ class MessagingAgent:
             if config.active_components.mqtt_communication:
                 new_process = multiprocessing.Process(
                     target=MessagingAgent.communication_loop,
-                    args=(config,),
                     daemon=True,
                 )
                 new_process.start()
@@ -144,18 +126,6 @@ class MessagingAgent:
         logger = utils.Logger(origin="message-communication")
         logger.info("starting loop")
 
-        mqtt_connection = utils.MQTTConnection()
-
-        # tear down connection on program termination
-        def graceful_teardown(*args: Any) -> None:
-            logger.info("starting graceful shutdown")
-            mqtt_connection.teardown()
-            logger.info("finished graceful shutdown")
-            exit(0)
-
-        signal.signal(signal.SIGINT, graceful_teardown)
-        signal.signal(signal.SIGTERM, graceful_teardown)
-
         try:
             mqtt_connection = utils.MQTTConnection()
             mqtt_config = mqtt_connection.config
@@ -166,14 +136,38 @@ class MessagingAgent:
             mqtt_connection.teardown()
             raise e
 
-        # subscribing to new messages on config topic
-        config_topic = (
-            f"{mqtt_config.mqtt_base_topic}configurations"
-            + f"/{mqtt_config.station_identifier}"
-        )
-        mqtt_client.on_message = __on_config_message
-        logger.info(f"subscribing to topic {config_topic}")
-        mqtt_client.subscribe(config_topic, qos=1)
+        logger.info("established connection to mqtt client and active mqtt queue")
+
+        # tear down connection on program termination
+        def graceful_teardown(*args: Any) -> None:
+            logger.info("starting graceful shutdown")
+            mqtt_connection.teardown()
+            logger.info("finished graceful shutdown")
+            exit(0)
+
+        try:
+            signal.signal(signal.SIGINT, graceful_teardown)
+            signal.signal(signal.SIGTERM, graceful_teardown)
+        except Exception as e:
+            logger.exception(e)
+            mqtt_connection.teardown()
+            raise e
+
+        logger.info("established graceful teardown hook")
+
+        try:
+            config_topic = (
+                f"{mqtt_config.mqtt_base_topic}configurations"
+                + f"/{mqtt_config.station_identifier}"
+            )
+            mqtt_client.on_message = MessagingAgent.__on_config_message
+            mqtt_client.subscribe(config_topic, qos=1)
+        except Exception as e:
+            logger.exception(e)
+            mqtt_connection.teardown()
+            raise e
+
+        logger.info(f"subscribed to topic {config_topic}")
 
         # TODO: fetch initial config messages
 
@@ -242,17 +236,19 @@ class MessagingAgent:
                 # SEND PENDING MESSAGES
 
                 MAX_SEND_COUNT = 100
-                OPEN_SENDING_SLOTS = MAX_SEND_COUNT - (
-                    len(sent_records) - delivered_record_count
+                OPEN_SENDING_SLOTS = max(
+                    MAX_SEND_COUNT - (len(sent_records) - delivered_record_count), 0
                 )
-                if OPEN_SENDING_SLOTS <= 0:
+                if OPEN_SENDING_SLOTS == 0:
                     logger.debug(
                         f"sending queue is full ({MAX_SEND_COUNT} "
                         + "items not processed by broker yet)"
                     )
-                else:
-                    logger.debug(f"sending queue has {OPEN_SENDING_SLOTS} more slot(s)")
 
+                records_to_be_sent = active_mqtt_queue.get_rows_by_status(
+                    "pending", limit=OPEN_SENDING_SLOTS
+                )
+                if len(records_to_be_sent) > 0:
                     records_to_be_sent = active_mqtt_queue.get_rows_by_status(
                         "pending", limit=OPEN_SENDING_SLOTS
                     )
@@ -263,12 +259,15 @@ class MessagingAgent:
 
                 # -----------------------------------------------------------------
 
-                if (
-                    sent_record_count + resent_record_count + delivered_record_count
-                ) > 0:
+                if any(
+                    [sent_record_count, resent_record_count, delivered_record_count]
+                ):
                     logger.info(
                         f"{sent_record_count}/{resent_record_count}/{delivered_record_count} "
                         + "messages have been sent/resent/delivered"
+                    )
+                    logger.debug(
+                        f"sending queue has {OPEN_SENDING_SLOTS -  len(records_to_be_sent)} more slot(s)"
                     )
 
                 time.sleep(3)
@@ -308,3 +307,21 @@ class MessagingAgent:
             assert (
                 MessagingAgent.archiving_loop_process.is_alive()
             ), "archiving loop process is not running"
+
+    @staticmethod
+    def __on_config_message(
+        client: paho.mqtt.client.Client,
+        userdata: Any,
+        msg: paho.mqtt.client.MQTTMessage,
+    ) -> None:
+        global mqtt_config_message_queue
+        logger = utils.Logger(origin="message-communication")
+        logger.debug(f"received message: {msg}")
+        try:
+            mqtt_config_message_queue.put(
+                custom_types.MQTTConfigurationRequest(
+                    **json.loads(msg.payload.decode())
+                )
+            )
+        except json.JSONDecodeError:
+            logger.warning(f"could not decode message payload on message: {msg}")

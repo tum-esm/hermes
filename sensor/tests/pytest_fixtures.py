@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 import os
 import random
 import time
@@ -10,7 +11,7 @@ from os.path import dirname, abspath, join, isfile
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
-from src import utils, procedures
+from src import custom_types, utils, procedures
 
 
 def _save_file(
@@ -47,7 +48,45 @@ def _restore_file(original_path: str, temporary_path: str) -> None:
 
 
 @pytest.fixture
-def mqtt_client_environment() -> Generator[None, None, None]:
+def sample_config() -> Any:
+    """use the config template as a temporary config file"""
+    CONFIG_FILE = join(PROJECT_DIR, "config", "config.json")
+    TMP_CONFIG_FILE = join(PROJECT_DIR, "config", "config.tmp.json")
+
+    with open(join(PROJECT_DIR, "config", "config.template.json")) as f:
+        sample_config = custom_types.Config(**json.load(f))
+        sample_config.revision = 17
+
+    _save_file(
+        CONFIG_FILE,
+        TMP_CONFIG_FILE,
+        json.dumps(sample_config.dict(), indent=4),
+    )
+
+    yield sample_config
+
+    _restore_file(CONFIG_FILE, TMP_CONFIG_FILE)
+
+
+@pytest.fixture
+def log_files() -> Any:
+    """
+    1. store actual log files in a temporary location
+    2. set up a new, empty log file just for the test
+    3. restore the original log file after the test
+    """
+    LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
+    TMP_LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.tmp.log")
+
+    _save_file(LOG_FILE, TMP_LOG_FILE, "")
+
+    yield
+
+    _restore_file(LOG_FILE, TMP_LOG_FILE)
+
+
+@pytest.fixture
+def mqtt_client_environment() -> Any:
     """load the environment variables from config/.env.testing
     and generate a dummy base-topic path"""
 
@@ -94,56 +133,42 @@ def mqtt_data_files() -> Any:
 
 
 @pytest.fixture
-def messaging_agent_with_sending(mqtt_client_environment: None) -> Any:
+def messaging_agent_with_sending(
+    log_files: None,
+    mqtt_client_environment: None,
+    mqtt_data_files: None,
+    sample_config: None,
+) -> Any:
     """start and stop the background processing of messages"""
 
     config = utils.ConfigInterface.read()
     config.active_components.mqtt_communication = True
 
     procedures.MessagingAgent.init(config)
+    procedures.MessagingAgent.check_errors()
+
     yield
+
+    procedures.MessagingAgent.check_errors()
     procedures.MessagingAgent.deinit()
 
 
 @pytest.fixture
-def messaging_agent_without_sending(mqtt_client_environment: None) -> Any:
+def messaging_agent_without_sending(
+    log_files: None,
+    mqtt_client_environment: None,
+    mqtt_data_files: None,
+    sample_config: None,
+) -> Any:
     """start and stop the background processing of messages"""
 
     config = utils.ConfigInterface.read()
     config.active_components.mqtt_communication = False
 
     procedures.MessagingAgent.init(config)
+    procedures.MessagingAgent.check_errors()
+
     yield
+
+    procedures.MessagingAgent.check_errors()
     procedures.MessagingAgent.deinit()
-
-
-@pytest.fixture
-def log_files() -> Any:
-    """
-    1. store actual log files in a temporary location
-    2. set up a new, empty log file just for the test
-    3. restore the original log file after the test
-    """
-    LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
-    TMP_LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.tmp.log")
-
-    _save_file(LOG_FILE, TMP_LOG_FILE, "")
-
-    yield
-
-    _restore_file(LOG_FILE, TMP_LOG_FILE)
-
-
-@pytest.fixture
-def sample_config() -> Any:
-    """use the config template as a temporary config file"""
-    CONFIG_FILE = join(PROJECT_DIR, "config", "config.json")
-    TMP_CONFIG_FILE = join(PROJECT_DIR, "config", "config.tmp.json")
-
-    with open(join(PROJECT_DIR, "config", "config.template.json")) as f:
-        sample_config = f.read()
-    _save_file(CONFIG_FILE, TMP_CONFIG_FILE, sample_config)
-
-    yield
-
-    _restore_file(CONFIG_FILE, TMP_CONFIG_FILE)
