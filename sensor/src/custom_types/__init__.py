@@ -14,12 +14,12 @@ from .mqtt_sending import (
     MQTTWindData,
     MQTTEnclosureData,
     # different message bodies
-    MQTTStatusMessageBody,
+    MQTTLogMessageBody,
     MQTTDataMessageBody,
     MQTTMessageBody,
     # message structure
     MQTTMessageHeader,
-    MQTTStatusMessage,
+    MQTTLogMessage,
     MQTTDataMessage,
     MQTTMessage,
 )

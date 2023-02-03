@@ -132,7 +132,7 @@ class Logger:
     ) -> None:
         self.sending_mqtt_client.enqueue_message(
             config,
-            message_body=custom_types.MQTTStatusMessageBody(
+            message_body=custom_types.MQTTLogMessageBody(
                 severity=level,
                 subject=f"{self.origin} - {subject}",
                 details=details,

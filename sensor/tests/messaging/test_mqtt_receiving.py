@@ -22,7 +22,7 @@ def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
     mqtt_config = utils.mqtt_connection.MQTTConnection.get_config()
 
     config_topic = (
-        f"{mqtt_config.mqtt_base_topic}configuration/{mqtt_config.station_identifier}"
+        f"{mqtt_config.mqtt_base_topic}configurations/{mqtt_config.station_identifier}"
     )
     message = custom_types.MQTTConfigurationRequest(
         revision=1, configuration={"version": "0.1.0", "other_params": 30}

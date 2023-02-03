@@ -55,7 +55,7 @@ class MQTTConfig(BaseModel):
 # MQTT Status Message
 
 
-class MQTTStatusMessageBody(BaseModel):
+class MQTTLogMessageBody(BaseModel):
     """message body which is sent to server"""
 
     severity: Literal["info", "warning", "error"]
@@ -163,16 +163,16 @@ class MQTTMessageHeader(BaseModel):
         extra = "forbid"
 
 
-class MQTTStatusMessage(BaseModel):
+class MQTTLogMessage(BaseModel):
     """element in local message queue"""
 
-    variant: Literal["status"]
+    variant: Literal["logs"]
     header: MQTTMessageHeader
-    body: MQTTStatusMessageBody
+    body: MQTTLogMessageBody
 
     # validators
     _val_variant = validator("variant", pre=True, allow_reuse=True)(
-        validate_str(allowed=["status"]),
+        validate_str(allowed=["logs"]),
     )
 
     class Config:
@@ -195,8 +195,8 @@ class MQTTDataMessage(BaseModel):
         extra = "forbid"
 
 
-MQTTMessageBody = Union[MQTTStatusMessageBody, MQTTDataMessageBody]
-MQTTMessage = Union[MQTTStatusMessage, MQTTDataMessage]
+MQTTMessageBody = Union[MQTTLogMessageBody, MQTTDataMessageBody]
+MQTTMessage = Union[MQTTLogMessage, MQTTDataMessage]
 
 # -----------------------------------------------------------------------------
 # SQL

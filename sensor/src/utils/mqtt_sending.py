@@ -76,9 +76,9 @@ class SendingMQTTClient:
         )
         new_message: custom_types.MQTTMessage
 
-        if isinstance(message_body, custom_types.MQTTStatusMessageBody):
-            new_message = custom_types.MQTTStatusMessage(
-                variant="status", header=new_header, body=message_body
+        if isinstance(message_body, custom_types.MQTTLogMessageBody):
+            new_message = custom_types.MQTTLogMessage(
+                variant="logs", header=new_header, body=message_body
             )
         else:
             new_message = custom_types.MQTTDataMessage(
@@ -154,7 +154,7 @@ class SendingMQTTClient:
         def _publish_record(record: custom_types.SQLMQTTRecord) -> None:
             record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
             record.content.header.mqtt_topic += (
-                "statuses/" if record.content.variant == "status" else "measurements/"
+                "log-messages/" if record.content.variant == "logs" else "measurements/"
             )
             record.content.header.mqtt_topic += mqtt_config.station_identifier
             message_info = mqtt_client.publish(

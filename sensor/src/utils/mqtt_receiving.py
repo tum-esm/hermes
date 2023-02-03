@@ -33,7 +33,7 @@ class ReceivingMQTTClient:
         self.logger = Logger(origin="mqtt-receiving-client")
         self.mqtt_config = MQTTConnection.get_config()
         self.config_topic = (
-            f"{self.mqtt_config.mqtt_base_topic}configuration"
+            f"{self.mqtt_config.mqtt_base_topic}configurations"
             + f"/{self.mqtt_config.station_identifier}"
         )
 

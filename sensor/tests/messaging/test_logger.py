@@ -78,7 +78,11 @@ def _test_logger(sending_enabled: bool) -> None:
         f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
     )
     EXPECTED_MQTT_TOPIC = (
-        (os.environ["HERMES_MQTT_BASE_TOPIC"] + "statuses/" + utils.get_hostname())
+        (
+            os.environ["HERMES_MQTT_BASE_TOPIC"]
+            + "log-messages/"
+            + os.environ["HERMES_MQTT_IDENTIFIER"]
+        )
         if sending_enabled
         else None
     )
@@ -101,27 +105,27 @@ def _test_logger(sending_enabled: bool) -> None:
     # -------------------------------------------------------------------------
     # check whether all records are correctly inserted in sending queue
 
-    active_status_messages = [
-        custom_types.MQTTStatusMessage(**m.content.dict())
+    active_logs_messages = [
+        custom_types.MQTTLogMessage(**m.content.dict())
         for m in active_mqtt_queue.get_rows_by_status(
             "pending" if sending_enabled else "done"
         )
     ]
-    active_status_messages.sort(key=lambda m: m.body.timestamp)
-    assert len(active_status_messages) == 3
-    assert all([m.variant == "status" for m in active_status_messages])
+    active_logs_messages.sort(key=lambda m: m.body.timestamp)
+    assert len(active_logs_messages) == 3
+    assert all([m.variant == "logs" for m in active_logs_messages])
 
-    assert active_status_messages[0].header.mqtt_topic == None
-    assert active_status_messages[0].body.severity == "warning"
-    assert active_status_messages[0].body.subject == "pytests - some message c"
+    assert active_logs_messages[0].header.mqtt_topic == None
+    assert active_logs_messages[0].body.severity == "warning"
+    assert active_logs_messages[0].body.subject == "pytests - some message c"
 
-    assert active_status_messages[1].header.mqtt_topic == None
-    assert active_status_messages[1].body.severity == "error"
-    assert active_status_messages[1].body.subject == "pytests - some message d"
+    assert active_logs_messages[1].header.mqtt_topic == None
+    assert active_logs_messages[1].body.severity == "error"
+    assert active_logs_messages[1].body.subject == "pytests - some message d"
 
-    assert active_status_messages[2].header.mqtt_topic == None
-    assert active_status_messages[2].body.severity == "error"
-    assert active_status_messages[2].body.subject == "pytests - ZeroDivisionError"
+    assert active_logs_messages[2].header.mqtt_topic == None
+    assert active_logs_messages[2].body.severity == "error"
+    assert active_logs_messages[2].body.subject == "pytests - ZeroDivisionError"
 
     # -------------------------------------------------------------------------
     # wait until sendin queue is empty
@@ -143,22 +147,22 @@ def _test_logger(sending_enabled: bool) -> None:
     # check whether archive contains correct messages
 
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
-        archived_data_messages = [
-            custom_types.MQTTStatusMessage(**m)
+        archived_log_messages = [
+            custom_types.MQTTLogMessage(**m)
             for m in [json.loads(m) for m in f.read().split("\n") if len(m) > 0]
         ]
-    archived_data_messages.sort(key=lambda m: m.body.timestamp)
-    assert len(archived_data_messages) == 3
-    assert archived_data_messages[0].header.mqtt_topic == EXPECTED_MQTT_TOPIC
-    assert archived_data_messages[0].body.severity == "warning"
-    assert archived_data_messages[0].body.subject == "pytests - some message c"
+    archived_log_messages.sort(key=lambda m: m.body.timestamp)
+    assert len(archived_log_messages) == 3
+    assert archived_log_messages[0].header.mqtt_topic == EXPECTED_MQTT_TOPIC
+    assert archived_log_messages[0].body.severity == "warning"
+    assert archived_log_messages[0].body.subject == "pytests - some message c"
 
-    assert archived_data_messages[1].header.mqtt_topic == EXPECTED_MQTT_TOPIC
-    assert archived_data_messages[1].body.severity == "error"
-    assert archived_data_messages[1].body.subject == "pytests - some message d"
+    assert archived_log_messages[1].header.mqtt_topic == EXPECTED_MQTT_TOPIC
+    assert archived_log_messages[1].body.severity == "error"
+    assert archived_log_messages[1].body.subject == "pytests - some message d"
 
-    assert archived_data_messages[2].header.mqtt_topic == EXPECTED_MQTT_TOPIC
-    assert archived_data_messages[2].body.severity == "error"
-    assert archived_data_messages[2].body.subject == "pytests - ZeroDivisionError"
+    assert archived_log_messages[2].header.mqtt_topic == EXPECTED_MQTT_TOPIC
+    assert archived_log_messages[2].body.severity == "error"
+    assert archived_log_messages[2].body.subject == "pytests - ZeroDivisionError"
 
     utils.SendingMQTTClient.check_errors()
