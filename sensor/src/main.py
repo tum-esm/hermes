@@ -46,7 +46,7 @@ def run() -> None:
         logger.exception(e)
         raise e
 
-    utils.SendingMQTTClient.check_errors()
+    procedures.MessagingAgent.check_errors()
 
     # -------------------------------------------------------------------------
     # initialize config procedure and check for new configurations

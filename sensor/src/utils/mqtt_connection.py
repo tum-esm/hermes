@@ -18,11 +18,9 @@ class MQTTConnection:
             mqtt_base_topic=os.environ.get("HERMES_MQTT_BASE_TOPIC"),
         )
 
-        self.client = paho.mqtt.client.Client(
-            client_id=MQTTConnection.__config.station_identifier
-        )
+        self.client = paho.mqtt.client.Client(client_id=self.config.station_identifier)
         self.client.username_pw_set(
-            MQTTConnection.__config.mqtt_username, MQTTConnection.__config.mqtt_password
+            self.config.mqtt_username, self.config.mqtt_password
         )
         self.client.tls_set(
             certfile=None,
@@ -31,8 +29,8 @@ class MQTTConnection:
             tls_version=ssl.PROTOCOL_TLS_CLIENT,
         )
         self.client.connect(
-            MQTTConnection.__config.mqtt_url,
-            port=int(MQTTConnection.__config.mqtt_port),
+            self.config.mqtt_url,
+            port=int(self.config.mqtt_port),
             keepalive=60,
         )
         self.client.loop_start()
@@ -43,7 +41,7 @@ class MQTTConnection:
                 break
             if (time.time() - start_time) > 5:
                 raise TimeoutError(
-                    f"mqtt client is not connected (using params {MQTTConnection.__config})"
+                    f"mqtt client is not connected (using params {self.config})"
                 )
             time.sleep(0.1)
 

@@ -70,7 +70,7 @@ class MessagingAgent:
                 MessagingAgent.communication_loop_process = new_process
 
     @staticmethod
-    def archiving_process() -> None:
+    def archiving_loop() -> None:
         """archive all message in the active queue that have the
         status `delivered` or `sending-skipped`; this function is
         blocking and should be called in a thread or subprocess"""

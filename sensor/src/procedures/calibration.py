@@ -14,7 +14,7 @@ class CalibrationProcedure:
     ) -> None:
         self.logger, self.config = utils.Logger(origin="calibration-procedure"), config
         self.hardware_interface = hardware_interface
-        self.sending_mqtt_client = utils.SendingMQTTClient()
+        self.active_mqtt_queue = utils.ActiveMQTTQueue()
 
     def run(self) -> None:
         calibration_time = datetime.utcnow().timestamp()
@@ -68,7 +68,7 @@ class CalibrationProcedure:
         self.hardware_interface.co2_sensor.set_filter_setting()
 
         # send calibration result via mqtt
-        self.sending_mqtt_client.enqueue_message(
+        self.active_mqtt_queue.enqueue_message(
             self.config,
             custom_types.MQTTDataMessageBody(
                 revision=self.config.revision,

@@ -119,7 +119,7 @@ class ActiveMQTTQueue:
     ) -> None:
         new_header = custom_types.MQTTMessageHeader(
             mqtt_topic=None,
-            sending_skipped=(not config.active_components.mqtt_data_sending),
+            sending_skipped=(not config.active_components.mqtt_communication),
         )
         new_message: custom_types.MQTTMessage
 
@@ -132,7 +132,7 @@ class ActiveMQTTQueue:
                 variant="data", header=new_header, body=message_body
             )
 
-        if config.active_components.mqtt_data_sending:
+        if config.active_components.mqtt_communication:
             self.__add_row(new_message, status="pending")
         else:
             self.__add_row(new_message, status="done")

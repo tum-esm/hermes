@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import Literal, Optional
 
 from src import custom_types
-from .mqtt_sending import SendingMQTTClient
+from .active_mqtt_queue import ActiveMQTTQueue
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOGS_ARCHIVE_DIR = join(PROJECT_DIR, "logs", "archive")
@@ -46,7 +46,7 @@ class Logger:
     ) -> None:
         self.origin: str = origin
         self.print_to_console = print_to_console
-        self.sending_mqtt_client = SendingMQTTClient()
+        self.active_mqtt_queue = ActiveMQTTQueue()
 
     def horizontal_line(self, fill_char: Literal["-", "=", ".", "_"] = "=") -> None:
         """writes a debug log line, used for verbose output"""
@@ -130,7 +130,7 @@ class Logger:
         subject: str,
         details: str = "",
     ) -> None:
-        self.sending_mqtt_client.enqueue_message(
+        self.active_mqtt_queue.enqueue_message(
             config,
             message_body=custom_types.MQTTLogMessageBody(
                 severity=level,

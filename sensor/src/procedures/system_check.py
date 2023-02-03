@@ -1,6 +1,7 @@
 import time
 import psutil
 from src import hardware, custom_types, utils
+from .messaging_agent import MessagingAgent
 
 
 class SystemCheckProcedure:
@@ -13,7 +14,7 @@ class SystemCheckProcedure:
     ) -> None:
         self.logger, self.config = utils.Logger(origin="system-check-procedure"), config
         self.hardware_interface = hardware_interface
-        self.sending_mqtt_client = utils.SendingMQTTClient()
+        self.active_mqtt_queue = utils.ActiveMQTTQueue()
 
     def run(self) -> None:
         # evaluate system ambient conditions
@@ -67,7 +68,7 @@ class SystemCheckProcedure:
 
         # TODO: add memory usage to printouts and mqtt
 
-        self.sending_mqtt_client.enqueue_message(
+        self.active_mqtt_queue.enqueue_message(
             self.config,
             custom_types.MQTTDataMessageBody(
                 revision=self.config.revision,
@@ -88,5 +89,5 @@ class SystemCheckProcedure:
 
         # check for errors
         self.hardware_interface.check_errors()
-        if self.config.active_components.mqtt_data_sending:
-            utils.SendingMQTTClient.check_errors()
+        if self.config.active_components.mqtt_communication:
+            MessagingAgent.check_errors()

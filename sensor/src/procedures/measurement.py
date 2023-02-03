@@ -24,7 +24,7 @@ class MeasurementProcedure:
         # state variables
         self.active_air_inlet: Optional[custom_types.MeasurementAirInletConfig] = None
         self.last_iteration_start_time: float = 0
-        self.sending_mqtt_client = utils.SendingMQTTClient()
+        self.active_mqtt_queue = utils.ActiveMQTTQueue()
 
     def _switch_to_air_inlet(
         self, new_air_inlet: custom_types.MeasurementAirInletConfig
@@ -118,7 +118,7 @@ class MeasurementProcedure:
 
         # TODO: fetch chamber temperature from CO2 sensor
 
-        self.sending_mqtt_client.enqueue_message(
+        self.active_mqtt_queue.enqueue_message(
             self.config,
             custom_types.MQTTDataMessageBody(
                 revision=self.config.revision,
@@ -168,7 +168,7 @@ class MeasurementProcedure:
                 self.hardware_interface.co2_sensor.get_current_concentration()
             )
             self.logger.debug(f"new measurement")
-            self.sending_mqtt_client.enqueue_message(
+            self.active_mqtt_queue.enqueue_message(
                 self.config,
                 message_body=custom_types.MQTTDataMessageBody(
                     timestamp=round(time.time(), 2),
