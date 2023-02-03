@@ -10,7 +10,7 @@ from os.path import dirname, abspath, join, isfile
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
-from src import utils
+from src import utils, procedures
 
 
 def _save_file(
@@ -53,7 +53,7 @@ def mqtt_client_environment() -> Generator[None, None, None]:
 
     dotenv.load_dotenv(join(PROJECT_DIR, "config", ".env"))
     dotenv.load_dotenv(join(PROJECT_DIR, "config", ".env.testing"))
-    
+
     timestamp = round(time.time())
     os.environ["HERMES_MQTT_IDENTIFIER"] = "".join(
         random.choices([chr(a) for a in range(ord("a"), ord("z") + 1)], k=20)
@@ -61,8 +61,6 @@ def mqtt_client_environment() -> Generator[None, None, None]:
     os.environ["HERMES_MQTT_BASE_TOPIC"] = f"development/test-{timestamp}/"
 
     yield
-
-    utils.mqtt_connection.MQTTConnection.deinit()
 
 
 @pytest.fixture
@@ -96,25 +94,14 @@ def mqtt_data_files() -> Any:
 
 
 @pytest.fixture
-def mqtt_sending_loop(mqtt_client_environment: None) -> Any:
+def active_messaging_agent(mqtt_client_environment: None) -> Any:
     """start and stop the background sending loop of the SendingMQTTClient"""
 
-    utils.SendingMQTTClient.init_sending_loop_process()
+    procedures.MessagingAgent.init()
 
     yield
 
-    utils.SendingMQTTClient.deinit_sending_loop_process()
-
-
-@pytest.fixture
-def mqtt_archiving_loop(mqtt_client_environment: None) -> Any:
-    """start and stop the background sending loop of the SendingMQTTClient"""
-
-    utils.SendingMQTTClient.init_archiving_loop_process()
-
-    yield
-
-    utils.SendingMQTTClient.deinit_archiving_loop_process()
+    procedures.MessagingAgent.deinit()
 
 
 @pytest.fixture

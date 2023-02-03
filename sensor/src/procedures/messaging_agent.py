@@ -1,6 +1,7 @@
 import datetime
 import json
 import queue
+import signal
 import time
 from typing import Any, Optional
 import paho.mqtt.client
@@ -70,6 +71,20 @@ class MessagingAgent:
                 MessagingAgent.communication_loop_process = new_process
 
     @staticmethod
+    def deinit() -> None:
+        """stop the archiving loop and the communication loop"""
+
+        if MessagingAgent.archiving_loop_process is not None:
+            MessagingAgent.archiving_loop_process.terminate()
+            MessagingAgent.archiving_loop_process.join()
+            MessagingAgent.archiving_loop_process = None
+
+        if MessagingAgent.communication_loop_process is not None:
+            MessagingAgent.communication_loop_process.terminate()
+            MessagingAgent.communication_loop_process.join()
+            MessagingAgent.communication_loop_process = None
+
+    @staticmethod
     def archiving_loop() -> None:
         """archive all message in the active queue that have the
         status `delivered` or `sending-skipped`; this function is
@@ -131,6 +146,16 @@ class MessagingAgent:
 
         mqtt_connection = utils.MQTTConnection()
 
+        # tear down connection on program termination
+        def graceful_teardown(*args: Any) -> None:
+            logger.info("starting graceful shutdown")
+            mqtt_connection.teardown()
+            logger.info("finished graceful shutdown")
+            exit(0)
+
+        signal.signal(signal.SIGINT, graceful_teardown)
+        signal.signal(signal.SIGTERM, graceful_teardown)
+
         try:
             mqtt_connection = utils.MQTTConnection()
             mqtt_config = mqtt_connection.config
@@ -138,6 +163,7 @@ class MessagingAgent:
             active_mqtt_queue = utils.ActiveMQTTQueue()
         except Exception as e:
             logger.exception(e)
+            mqtt_connection.teardown()
             raise e
 
         # subscribing to new messages on config topic
@@ -250,6 +276,7 @@ class MessagingAgent:
             except Exception as e:
                 logger.error("sending loop has stopped")
                 logger.exception(e)
+                mqtt_connection.teardown()
                 raise e
 
     @staticmethod
