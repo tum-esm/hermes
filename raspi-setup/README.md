@@ -25,10 +25,10 @@ The `boot-files/` should contain the following files:
         📁 baserow-ip-logger/
             📄 config.json
 
-        📁 insert-name-here/
+        📁 hermes/
             📄 .env
             📄 config.json
-            📄 insert-name-here-cli.template.sh
+            📄 hermes-cli.template.sh
 
         📁 ssh/
             📄 authorized_keys

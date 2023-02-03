@@ -154,14 +154,14 @@ shutil.copyfile(
 )
 
 # =============================================================================
-# INSTALL INSERT-NAME-HERE
+# INSTALL HERMES
 
 assert not os.path.isdir(AUTOMATION_DIR)
 TMP_AUTOMATION_DIR = "/tmp/automation-dir"
 
 # download a specific tag via SSH
 run_shell_command(
-    "git clone git@github.com:tum-esm/insert-name-here.git " + f"{TMP_AUTOMATION_DIR}"
+    "git clone git@github.com:tum-esm/hermes.git " + f"{TMP_AUTOMATION_DIR}"
 )
 run_shell_command(
     f"git checkout {AUTOMATION_TAG}",
@@ -179,21 +179,21 @@ run_shell_command(
 
 # copy config files
 shutil.copyfile(
-    "/boot/midcost-init-files/insert-name-here/config.json",
+    "/boot/midcost-init-files/hermes/config.json",
     f"{AUTOMATION_DIR}/{AUTOMATION_TAG}/config/config.json",
 )
 shutil.copyfile(
-    "/boot/midcost-init-files/insert-name-here/.env",
+    "/boot/midcost-init-files/hermes/.env",
     f"{AUTOMATION_DIR}/{AUTOMATION_TAG}/config/.env",
 )
 
 # make CLI point to release version
 with open(
-    "/boot/midcost-init-files/insert-name-here/insert-name-here-cli.template.sh"
+    "/boot/midcost-init-files/hermes/hermes-cli.template.sh"
 ) as f:
     cli_file_content = f.read()
 cli_file_content = cli_file_content.replace("%VERSION%", AUTOMATION_TAG)
-with open("/home/pi/insert-name-here/insert-name-here-cli.sh", "w") as f:
+with open("/home/pi/hermes/hermes-cli.sh", "w") as f:
     f.write(cli_file_content)
 
 # =============================================================================

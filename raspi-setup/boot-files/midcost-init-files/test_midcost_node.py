@@ -9,7 +9,7 @@ run_shell_command(
 )
 
 # =============================================================================
-# TEST INSERT-NAME-HERE
+# TEST HERMES
 
 run_shell_command(
     '.venv/bn/python -m pytest -m "integration"',

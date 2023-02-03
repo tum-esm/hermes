@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "raspberry-setup"
-version = "0.1.0"
+name = "hermes-raspi-setup"
+version = "0.1.0-alpha.5"
 description = ""
 authors = ["Moritz Makowski <moritz.makowski@tum.de>"]
 readme = "README.md"

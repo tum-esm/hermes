@@ -4,8 +4,8 @@ from typing import Optional
 
 ENV = os.environ.copy()
 ENV["PATH"] = "/home/pi/bin:/home/pi/.local/bin:" + ENV["PATH"]
-AUTOMATION_TAG = "1.0.0-beta.1"
-AUTOMATION_DIR = "/home/pi/Documents/insert-name-here"
+AUTOMATION_TAG = "0.1.0-beta.1"
+AUTOMATION_DIR = "/home/pi/Documents/hermes"
 IP_LOGGER_DIR = "/home/pi/Documents/baserow-ip-logger"
 
 
