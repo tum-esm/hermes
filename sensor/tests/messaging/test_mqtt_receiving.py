@@ -3,8 +3,7 @@ import time
 import pytest
 from os.path import dirname, abspath, join
 import sys
-import os
-
+import deepdiff
 from ..pytest_fixtures import (
     mqtt_client_environment,
     mqtt_data_files,
@@ -41,12 +40,12 @@ def test_mqtt_receiving(
         f"{mqtt_config.mqtt_base_topic}configurations/{mqtt_config.station_identifier}"
     )
     print(f"config_topic = {config_topic}")
-    message = custom_types.MQTTConfigurationRequest(
+    sent_config_message = custom_types.MQTTConfigurationRequest(
         revision=1, configuration={"version": "0.1.0", "other_params": 30}
-    ).dict()
+    )
     message_info = mqtt_client.publish(
         topic=config_topic,
-        payload=json.dumps(message),
+        payload=json.dumps(sent_config_message.dict()),
         qos=1,
         retain=True,
     )
@@ -67,12 +66,23 @@ def test_mqtt_receiving(
         config.active_components.mqtt_communication = True
     procedures.MessagingAgent.init(config)
 
-    time.sleep(3)
+    time.sleep(5)
 
     expect_log_lines(
         required_lines=[
             f"message-communication   - INFO          - subscribed to topic {config_topic}",
+            f"message-communication   - INFO          - received message on config topic: ",
+            f"message-communication   - DEBUG         - put config message into the message queue",
         ]
     )
 
-    # TODO: expect retained config to be received
+    # expect retained config message to be received
+    received_config_message = procedures.MessagingAgent.get_config_message()
+    assert received_config_message is not None
+
+    differences = deepdiff.DeepDiff(
+        received_config_message.dict(),
+        sent_config_message.dict(),
+    )
+    print(f"differences = {differences}")
+    assert differences == {}

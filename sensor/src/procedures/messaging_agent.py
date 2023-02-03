@@ -3,7 +3,7 @@ import json
 import queue
 import signal
 import time
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 import paho.mqtt.client
 import os
 from os.path import dirname
@@ -16,14 +16,12 @@ PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 QUEUE_ARCHIVE_DIR = os.path.join(PROJECT_DIR, "data", "archive")
 
 
-mqtt_config_message_queue: queue.Queue[
-    custom_types.MQTTConfigurationRequest
-] = queue.Queue()
-
-
 class MessagingAgent:
     communication_loop_process: Optional[multiprocessing.Process] = None
     archiving_loop_process: Optional[multiprocessing.Process] = None
+    config_request_queue: queue.Queue[
+        custom_types.MQTTConfigurationRequest
+    ] = multiprocessing.Queue()
 
     @staticmethod
     def init(config: custom_types.Config) -> None:
@@ -47,6 +45,7 @@ class MessagingAgent:
             if config.active_components.mqtt_communication:
                 new_process = multiprocessing.Process(
                     target=MessagingAgent.communication_loop,
+                    args=(MessagingAgent.config_request_queue,),
                     daemon=True,
                 )
                 new_process.start()
@@ -118,11 +117,12 @@ class MessagingAgent:
             time.sleep(3)
 
     @staticmethod
-    def communication_loop() -> None:
+    def communication_loop(
+        config_request_queue: queue.Queue[custom_types.MQTTConfigurationRequest],
+    ) -> None:
         """takes messages from the queue file and processes them;
         this function is blocking and should be called in a thread
         os subprocess"""
-
         logger = utils.Logger(origin="message-communication")
         logger.info("starting loop")
 
@@ -160,7 +160,9 @@ class MessagingAgent:
                 f"{mqtt_config.mqtt_base_topic}configurations"
                 + f"/{mqtt_config.station_identifier}"
             )
-            mqtt_client.on_message = MessagingAgent.__on_config_message
+            mqtt_client.on_message = MessagingAgent.__on_config_message(
+                config_request_queue
+            )
             mqtt_client.subscribe(config_topic, qos=1)
         except Exception as e:
             logger.exception(e)
@@ -280,12 +282,14 @@ class MessagingAgent:
 
     @staticmethod
     def get_config_message() -> Optional[custom_types.MQTTConfigurationRequest]:
-        global mqtt_config_message_queue
-
         new_config_messages: list[custom_types.MQTTConfigurationRequest] = []
         while True:
             try:
-                new_config_messages.append(mqtt_config_message_queue.get(block=False))
+                print("x")
+                new_config_messages.append(
+                    MessagingAgent.config_request_queue.get_nowait()
+                )
+                print("y")
             except queue.Empty:
                 break
 
@@ -310,18 +314,24 @@ class MessagingAgent:
 
     @staticmethod
     def __on_config_message(
-        client: paho.mqtt.client.Client,
-        userdata: Any,
-        msg: paho.mqtt.client.MQTTMessage,
-    ) -> None:
-        global mqtt_config_message_queue
+        config_request_queue: queue.Queue[custom_types.MQTTConfigurationRequest],
+    ) -> Callable[[paho.mqtt.client.Client, Any, paho.mqtt.client.MQTTMessage], None]:
         logger = utils.Logger(origin="message-communication")
-        logger.debug(f"received message: {msg}")
-        try:
-            mqtt_config_message_queue.put(
-                custom_types.MQTTConfigurationRequest(
-                    **json.loads(msg.payload.decode())
+
+        def _f(
+            client: paho.mqtt.client.Client,
+            userdata: Any,
+            msg: paho.mqtt.client.MQTTMessage,
+        ) -> None:
+            logger.info(f"received message on config topic: {msg.payload.decode()}")
+            try:
+                config_request_queue.put(
+                    custom_types.MQTTConfigurationRequest(
+                        **json.loads(msg.payload.decode())
+                    )
                 )
-            )
-        except json.JSONDecodeError:
-            logger.warning(f"could not decode message payload on message: {msg}")
+                logger.debug(f"put config message into the message queue")
+            except json.JSONDecodeError:
+                logger.warning(f"could not decode message payload on message: {msg}")
+
+        return _f
