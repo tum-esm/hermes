@@ -8,12 +8,12 @@ from src import custom_types, utils, procedures
 
 config_request = custom_types.MQTTConfigurationRequest(
     **{
-        "revision": 2,
+        "revision": 1,
         "configuration": {
-            "version": "1.0.0-alpha.3",
+            "version": "0.1.0-alpha.3",
             "active_components": {
                 "calibration_procedures": False,
-                "mqtt_data_sending": False,
+                "mqtt_data_sending": True,
                 "heated_enclosure_communication": False,
                 "pump_speed_monitoring": False,
             },

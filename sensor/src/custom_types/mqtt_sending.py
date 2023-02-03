@@ -126,6 +126,7 @@ class MQTTDataMessageBody(BaseModel):
     timestamp: float
     value: Union[
         MQTTCO2Data,
+        MQTTCalibrationData,
         MQTTAirData,
         MQTTSystemData,
         MQTTWindData,
