@@ -29,7 +29,7 @@ def test_messaging_loops_with_sending(
     procedures.MessagingAgent.init(config)
     procedures.MessagingAgent.check_errors()
 
-    time.sleep(8)
+    time.sleep(4)
 
     procedures.MessagingAgent.check_errors()
     procedures.MessagingAgent.deinit()
@@ -49,7 +49,7 @@ def test_messaging_loops_without_sending(
     procedures.MessagingAgent.init(config)
     procedures.MessagingAgent.check_errors()
 
-    time.sleep(8)
+    time.sleep(4)
 
     procedures.MessagingAgent.check_errors()
     procedures.MessagingAgent.deinit()

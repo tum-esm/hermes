@@ -1,7 +1,5 @@
 from datetime import datetime
 import json
-import os
-import time
 import pytest
 from os.path import dirname, abspath, join
 import sys
@@ -10,12 +8,12 @@ import deepdiff
 from ..pytest_fixtures import (
     mqtt_client_environment,
     mqtt_data_files,
-    mqtt_archiving_loop,
-    mqtt_sending_loop,
+    messaging_agent_with_sending,
+    messaging_agent_without_sending,
     log_files,
     sample_config,
 )
-from ..pytest_utils import expect_log_lines, wait_for_condition
+from ..pytest_utils import wait_for_condition
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 CONFIG_TEMPLATE_PATH = join(PROJECT_DIR, "config", "config.template.json")
@@ -35,31 +33,17 @@ MESSAGE_ARCHIVE_FILE = join(
 
 @pytest.mark.config_update
 @pytest.mark.ci
-def test_messaging_without_sending(
-    mqtt_data_files: None,
-    mqtt_archiving_loop: None,
-    log_files: None,
-    sample_config: None,
-) -> None:
-    _test_messaging(sending_enabled=False)
+def test_messaging_without_sending(messaging_agent_without_sending: None) -> None:
+    _test_messaging(mqtt_communication_enabled=False)
 
 
 @pytest.mark.ci
-def test_messaging_with_sending(
-    mqtt_data_files: None,
-    mqtt_archiving_loop: None,
-    mqtt_sending_loop: None,
-    log_files: None,
-    sample_config: None,
-) -> None:
-    _test_messaging(sending_enabled=True)
+def test_messaging_with_sending(messaging_agent_with_sending: None) -> None:
+    _test_messaging(mqtt_communication_enabled=True)
 
 
-def _test_messaging(sending_enabled: bool) -> None:
-    utils.SendingMQTTClient.check_errors()
-
+def _test_messaging(mqtt_communication_enabled: bool) -> None:
     active_mqtt_queue = utils.ActiveMQTTQueue()
-    sending_mqtt_client = utils.SendingMQTTClient()
 
     assert len(active_mqtt_queue.get_rows_by_status("pending")) == 0
     assert len(active_mqtt_queue.get_rows_by_status("in-progress")) == 0
@@ -67,8 +51,7 @@ def _test_messaging(sending_enabled: bool) -> None:
 
     with open(CONFIG_TEMPLATE_PATH) as f:
         config = custom_types.Config(**json.load(f))
-        config.revision = 17
-        config.active_components.mqtt_data_sending = sending_enabled
+        config.active_components.mqtt_communication = mqtt_communication_enabled
 
     # enqueue dummy message
     dummy_data_message_body = custom_types.MQTTDataMessageBody(
@@ -83,11 +66,11 @@ def _test_messaging(sending_enabled: bool) -> None:
             ),
         ),
     )
-    sending_mqtt_client.enqueue_message(config, dummy_data_message_body)
+    active_mqtt_queue.enqueue_message(config, dummy_data_message_body)
 
     # assert dummy message to be in active queue
     records = active_mqtt_queue.get_rows_by_status(
-        "pending" if sending_enabled else "done"
+        "pending" if mqtt_communication_enabled else "done"
     )
     assert len(records) == 1
     record = records[0]
@@ -124,6 +107,3 @@ def _test_messaging(sending_enabled: bool) -> None:
         )
         == {}
     )
-
-    # assert that sending loop is still functioning correctly
-    utils.SendingMQTTClient.check_errors()
