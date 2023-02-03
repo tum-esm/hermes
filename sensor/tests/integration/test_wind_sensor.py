@@ -1,5 +1,4 @@
 import pytest
-from ..pytest_fixtures import log_files
 from ..pytest_utils import wait_for_condition
 from src import utils, hardware
 

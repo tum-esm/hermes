@@ -31,4 +31,4 @@ def wait_for_condition(
             break
         if (time.time() - start_time) > timeout_seconds:
             raise TimeoutError(timeout_message)
-        time.sleep(0.1)
+        time.sleep(0.25)

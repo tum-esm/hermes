@@ -25,7 +25,10 @@ def _save_file(
     except FileNotFoundError:
         pass
 
-    if test_content is not None:
+    if test_content is None:
+        if isfile(original_path):
+            os.remove(original_path)
+    else:
         with open(original_path, "w") as f:
             f.write(test_content)
 
@@ -47,7 +50,7 @@ def _restore_file(original_path: str, temporary_path: str) -> None:
             f.write(tmp_content)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def sample_config() -> Any:
     """use the config template as a temporary config file"""
     CONFIG_FILE = join(PROJECT_DIR, "config", "config.json")
@@ -68,7 +71,7 @@ def sample_config() -> Any:
     _restore_file(CONFIG_FILE, TMP_CONFIG_FILE)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def log_files() -> Any:
     """
     1. store actual log files in a temporary location
@@ -84,8 +87,29 @@ def log_files() -> Any:
 
     _restore_file(LOG_FILE, TMP_LOG_FILE)
 
+    with open(TMP_LOG_FILE) as f:
+        logs_after_test = f.read()
+    print("*** LOGS AFTER TEST:")
+    print(logs_after_test, end="")
+    print("***")
 
-@pytest.fixture
+
+"""
+@pytest.fixture(scope="function")
+def empty_active_mqtt_queue() -> Any:
+    start and stop the background processing of messages
+
+    active_mqtt_queue = utils.ActiveMQTTQueue()
+    active_mqtt_queue.remove_messages_by_status("pending")
+    active_mqtt_queue.remove_messages_by_status("in-progress")
+    active_mqtt_queue.remove_messages_by_status("done")
+
+    yield
+
+"""
+
+
+@pytest.fixture(scope="function")
 def mqtt_client_environment() -> Any:
     """load the environment variables from config/.env.testing
     and generate a dummy base-topic path"""
@@ -102,7 +126,7 @@ def mqtt_client_environment() -> Any:
     yield
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def mqtt_data_files() -> Any:
     """start and stop the background sending loop of the SendingMQTTClient"""
 
@@ -132,7 +156,7 @@ def mqtt_data_files() -> Any:
     _restore_file(MESSAGE_ARCHIVE_FILE, TMP_MESSAGE_ARCHIVE_FILE)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def messaging_agent_with_sending(
     log_files: None,
     mqtt_client_environment: None,
@@ -153,7 +177,7 @@ def messaging_agent_with_sending(
     procedures.MessagingAgent.deinit()
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def messaging_agent_without_sending(
     log_files: None,
     mqtt_client_environment: None,

@@ -4,14 +4,6 @@ import os
 import pytest
 
 from ..pytest_utils import expect_log_lines, wait_for_condition
-from ..pytest_fixtures import (
-    mqtt_client_environment,
-    messaging_agent_with_sending,
-    messaging_agent_without_sending,
-    mqtt_data_files,
-    log_files,
-    sample_config,
-)
 from os.path import dirname, abspath, join
 import sys
 

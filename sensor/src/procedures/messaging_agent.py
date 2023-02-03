@@ -80,6 +80,19 @@ class MessagingAgent:
             logger.exception(e)
             raise e
 
+        def graceful_teardown(*args: Any) -> None:
+            logger.info("shutting down")
+            exit(0)
+
+        try:
+            signal.signal(signal.SIGINT, graceful_teardown)
+            signal.signal(signal.SIGTERM, graceful_teardown)
+        except Exception as e:
+            logger.exception(e)
+            raise e
+
+        logger.info("established graceful teardown hook")
+
         # maps date_strings to lists of messages to be archived
         # for a particular data: 1. gather messages, 2. archive
         # all messages date per date
@@ -88,6 +101,7 @@ class MessagingAgent:
         while True:
             # DETERMINE MESSAGES TO BE ARCHIVED
             records_to_be_archived = active_mqtt_queue.get_rows_by_status("done")
+            logger.info(f"found {len(records_to_be_archived)} record(s) to be archived")
 
             # SPLIT RECORDS BY DATE
             messages_to_be_archived = {}
@@ -112,7 +126,7 @@ class MessagingAgent:
                         f.write(json.dumps(m.dict()) + "\n")
 
             # DUMP REMAINING ACTIVE MESSAGES
-            active_mqtt_queue.remove_archive_messages()
+            active_mqtt_queue.remove_messages_by_status("done")
 
             time.sleep(3)
 

@@ -4,12 +4,6 @@ import pytest
 from os.path import dirname, abspath, join
 import sys
 import deepdiff
-from ..pytest_fixtures import (
-    mqtt_client_environment,
-    mqtt_data_files,
-    log_files,
-    sample_config,
-)
 from ..pytest_utils import expect_log_lines, wait_for_condition
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
@@ -19,9 +13,12 @@ sys.path.append(PROJECT_DIR)
 
 from src import custom_types, utils, procedures
 
+# this test has to run last because it fucks up something to mqtt tests afterwards won't work ...
+
 
 @pytest.mark.config_update
 @pytest.mark.ci
+@pytest.mark.last
 def test_mqtt_receiving(
     mqtt_client_environment: None,
     mqtt_data_files: None,

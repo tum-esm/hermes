@@ -108,9 +108,12 @@ class ActiveMQTTQueue:
             ],
         )
 
-    def remove_archive_messages(self) -> None:
+    def remove_messages_by_status(
+        self,
+        status: Literal["pending", "in-progress", "done"],
+    ) -> None:
         """delete all rows with status 'done'"""
-        self.__write_sql("DELETE FROM QUEUE WHERE status = 'done';")
+        self.__write_sql(f"DELETE FROM QUEUE WHERE status = '{status}';")
 
     def enqueue_message(
         self,

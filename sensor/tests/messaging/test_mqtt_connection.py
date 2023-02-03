@@ -1,6 +1,5 @@
 import os
 import pytest
-from ..pytest_fixtures import mqtt_client_environment, log_files, mqtt_data_files
 from ..pytest_utils import wait_for_condition
 from os.path import dirname, abspath
 import sys

@@ -1,25 +1,17 @@
 from datetime import datetime
 import json
+from typing import Literal
 import pytest
 from os.path import dirname, abspath, join
 import sys
 import deepdiff
-
-from ..pytest_fixtures import (
-    mqtt_client_environment,
-    mqtt_data_files,
-    messaging_agent_with_sending,
-    messaging_agent_without_sending,
-    log_files,
-    sample_config,
-)
 from ..pytest_utils import wait_for_condition
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 CONFIG_PATH = join(PROJECT_DIR, "config", "config.json")
 sys.path.append(PROJECT_DIR)
 
-from src import utils, custom_types
+from src import utils, custom_types, procedures
 
 ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
 TEST_MESSAGE_DATE_STRING = datetime.utcnow().strftime("%Y-%m-%d")
@@ -83,9 +75,9 @@ def _test_messaging(mqtt_communication_enabled: bool) -> None:
 
     def empty_active_queue() -> bool:
         return (
-            len(active_mqtt_queue.get_rows_by_status("pending"))
-            + len(active_mqtt_queue.get_rows_by_status("in-progress"))
-            + len(active_mqtt_queue.get_rows_by_status("done"))
+            len(active_mqtt_queue.get_rows_by_status["pending"])
+            + len(active_mqtt_queue.get_rows_by_status["in-progress"])
+            + len(active_mqtt_queue.get_rows_by_status["done"])
         ) == 0
 
     # assert active queue to be empty

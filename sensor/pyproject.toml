@@ -32,6 +32,7 @@ matplotlib = "^3.6.3"
 notebook = "^6.5.2"
 pendulum = "^2.1.2"
 asyncpg = "^0.27.0"
+pytest-ordering = "^0.6"
 
 
 [tool.poetry.group.deb.dependencies]
@@ -45,7 +46,8 @@ build-backend = "poetry.core.masonry.api"
 markers = [
     "ci: can be run in GitHub CI",
     "integration: can only be run on a configured system",
-    "config_update: required to pass when updating the config"
+    "config_update: required to pass when updating the config",
+    "last: provided by the `pytest-ordering` library"
 ]
 
 [tool.mypy]

@@ -3,7 +3,6 @@ import sys
 import time
 from typing import Literal
 import pytest
-from ..pytest_fixtures import log_files
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
