@@ -75,9 +75,9 @@ def _test_messaging(mqtt_communication_enabled: bool) -> None:
 
     def empty_active_queue() -> bool:
         return (
-            len(active_mqtt_queue.get_rows_by_status["pending"])
-            + len(active_mqtt_queue.get_rows_by_status["in-progress"])
-            + len(active_mqtt_queue.get_rows_by_status["done"])
+            len(active_mqtt_queue.get_rows_by_status("pending"))
+            + len(active_mqtt_queue.get_rows_by_status("in-progress"))
+            + len(active_mqtt_queue.get_rows_by_status("done"))
         ) == 0
 
     # assert active queue to be empty
