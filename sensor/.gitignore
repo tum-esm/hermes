@@ -9,6 +9,7 @@ sensor/logs/
 sensor/data/
 !.gitkeep
 .env.testing
+.env.development
 data/**/*.json
 heated_enclosure.ino.*
 config.h

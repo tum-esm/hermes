@@ -1,6 +1,6 @@
 {
     "version": "0.1.0-alpha.5",
-    "revision": 1,
+    "revision": 0,
     "active_components": {
         "calibration_procedures": false,
         "mqtt_data_sending": false,
