@@ -8,7 +8,7 @@ from src import custom_types
 class MQTTConnection:
     """provides the mqtt config and client"""
 
-    def init(self) -> None:
+    def __init__(self) -> None:
         self.config = custom_types.MQTTConfig(
             station_identifier=os.environ.get("HERMES_MQTT_IDENTIFIER"),
             mqtt_url=os.environ.get("HERMES_MQTT_URL"),

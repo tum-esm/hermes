@@ -1,5 +1,4 @@
 import os
-
 import pytest
 from ..pytest_fixtures import mqtt_client_environment, log_files
 from ..pytest_utils import wait_for_condition
@@ -14,18 +13,22 @@ from src import utils
 
 @pytest.mark.config_update
 @pytest.mark.ci
-def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
-    mqtt_client = utils.mqtt_connection.MQTTConnection.get_client()
-    mqtt_config = utils.mqtt_connection.MQTTConnection.get_config()
+def test_mqtt_connection(mqtt_client_environment: None, log_files: None) -> None:
+    mqtt_connection = utils.MQTTConnection()
+    mqtt_config = mqtt_connection.config
+    mqtt_client = mqtt_connection.client
 
-    # testing whether config variables have been loaded correctly
+    # testing setup
     assert mqtt_config.station_identifier == os.environ["HERMES_MQTT_IDENTIFIER"]
     assert mqtt_config.mqtt_base_topic == os.environ["HERMES_MQTT_BASE_TOPIC"]
+    assert mqtt_client.is_connected(), "mqtt client is not connected"
 
-    # test connection and message sending
-    assert mqtt_client.is_connected()
+    # test message sending
     message_info = mqtt_client.publish(topic="some", payload="hello", qos=1)
     wait_for_condition(
         is_successful=lambda: message_info.is_published(),
         timeout_message=f"message if mid {message_info.mid} could not be published",
     )
+
+    mqtt_connection.teardown()
+    assert not mqtt_client.is_connected(), "mqtt client is still connected"

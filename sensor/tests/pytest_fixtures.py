@@ -94,13 +94,26 @@ def mqtt_data_files() -> Any:
 
 
 @pytest.fixture
-def active_messaging_agent(mqtt_client_environment: None) -> Any:
-    """start and stop the background sending loop of the SendingMQTTClient"""
+def messaging_agent_with_sending(mqtt_client_environment: None) -> Any:
+    """start and stop the background processing of messages"""
 
-    procedures.MessagingAgent.init()
+    config = utils.ConfigInterface.read()
+    config.active_components.mqtt_communication = True
 
+    procedures.MessagingAgent.init(config)
     yield
+    procedures.MessagingAgent.deinit()
 
+
+@pytest.fixture
+def messaging_agent_without_sending(mqtt_client_environment: None) -> Any:
+    """start and stop the background processing of messages"""
+
+    config = utils.ConfigInterface.read()
+    config.active_components.mqtt_communication = False
+
+    procedures.MessagingAgent.init(config)
+    yield
     procedures.MessagingAgent.deinit()
 
 
