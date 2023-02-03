@@ -38,7 +38,7 @@ class ActiveMQTTQueue:
             else:
                 self.connection.execute(sql_statement)
 
-    def add_row(
+    def __add_row(
         self,
         message: custom_types.MQTTMessage,
         status: Literal["pending", "done"],
@@ -110,4 +110,29 @@ class ActiveMQTTQueue:
 
     def remove_archive_messages(self) -> None:
         """delete all rows with status 'done'"""
-        self.__read_sql(f"DELETE FROM QUEUE WHERE status = 'done';")
+        self.__write_sql("DELETE FROM QUEUE WHERE status = 'done';")
+
+    def enqueue_message(
+        self,
+        config: custom_types.Config,
+        message_body: custom_types.MQTTMessageBody,
+    ) -> None:
+        new_header = custom_types.MQTTMessageHeader(
+            mqtt_topic=None,
+            sending_skipped=(not config.active_components.mqtt_data_sending),
+        )
+        new_message: custom_types.MQTTMessage
+
+        if isinstance(message_body, custom_types.MQTTLogMessageBody):
+            new_message = custom_types.MQTTLogMessage(
+                variant="logs", header=new_header, body=message_body
+            )
+        else:
+            new_message = custom_types.MQTTDataMessage(
+                variant="data", header=new_header, body=message_body
+            )
+
+        if config.active_components.mqtt_data_sending:
+            self.__add_row(new_message, status="pending")
+        else:
+            self.__add_row(new_message, status="done")
