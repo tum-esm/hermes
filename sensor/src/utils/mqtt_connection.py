@@ -4,7 +4,6 @@ from typing import Optional
 import paho.mqtt.client
 import ssl
 from src import custom_types
-from .functions import get_hostname
 
 
 class MQTTConnection:
@@ -43,7 +42,7 @@ class MQTTConnection:
     def __init_config() -> None:
         """loads the mqtt config from environment variables"""
         MQTTConnection.__config = custom_types.MQTTConfig(
-            station_identifier=get_hostname(),
+            station_identifier=os.environ.get("INSERT_NAME_HERE_MQTT_IDENTIFIER"),
             mqtt_url=os.environ.get("INSERT_NAME_HERE_MQTT_URL"),
             mqtt_port=os.environ.get("INSERT_NAME_HERE_MQTT_PORT"),
             mqtt_username=os.environ.get("INSERT_NAME_HERE_MQTT_USERNAME"),

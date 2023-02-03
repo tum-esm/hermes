@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from typing import Literal, Optional
 
 from src import custom_types
-
 from .mqtt_sending import SendingMQTTClient
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))

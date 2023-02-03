@@ -3,7 +3,7 @@ import sqlite3
 import os
 from os.path import dirname
 from typing import Any, Literal, Optional
-from src import custom_types, utils
+from src import custom_types
 
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 ACTIVE_QUEUE_FILE = os.path.join(PROJECT_DIR, "data", "active-mqtt-messages.db")

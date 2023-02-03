@@ -1,6 +1,5 @@
 import json
 import queue
-import ssl
 from typing import Any, Optional
 import paho.mqtt.client
 import paho.mqtt.subscribe

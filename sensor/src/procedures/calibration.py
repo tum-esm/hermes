@@ -1,6 +1,5 @@
 from datetime import datetime
 import math
-import random
 import time
 from src import custom_types, utils, hardware
 

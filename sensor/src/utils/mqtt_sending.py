@@ -1,14 +1,13 @@
 import datetime
 import json
 import time
-from typing import Callable, Literal, Optional
+from typing import Optional
 import paho.mqtt.client
 import os
 from os.path import dirname
 import pytz
 import multiprocessing
 import multiprocessing.synchronize
-import filelock
 from src import custom_types
 from .mqtt_connection import MQTTConnection
 from .active_mqtt_queue import ActiveMQTTQueue
