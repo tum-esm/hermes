@@ -38,13 +38,13 @@ class MQTTConfig(BaseModel):
         validate_str(is_numeric=True),
     )
     _val_mqtt_username = validator("mqtt_username", pre=True, allow_reuse=True)(
-        validate_str(min_len=8, max_len=256),
+        validate_str(min_len=4, max_len=256),
     )
     _val_mqtt_password = validator("mqtt_password", pre=True, allow_reuse=True)(
-        validate_str(min_len=8, max_len=256),
+        validate_str(min_len=4, max_len=256),
     )
     _val_mqtt_base_topic = validator("mqtt_base_topic", pre=True, allow_reuse=True)(
-        validate_str(min_len=1, max_len=256, regex=r"^([a-z0-9_-]+\/)*$"),
+        validate_str(max_len=256, regex=r"^([a-z0-9_-]+\/)*$"),
     )
 
     class Config:

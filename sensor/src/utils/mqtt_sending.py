@@ -26,6 +26,7 @@ class SendingMQTTClient:
     @staticmethod
     def init_sending_loop_process() -> None:
         """start the sending of messages in the active queue in a subprocess"""
+
         if SendingMQTTClient.sending_loop_process is None:
             new_process = multiprocessing.Process(
                 target=SendingMQTTClient.sending_loop,
@@ -140,9 +141,13 @@ class SendingMQTTClient:
         logger = utils.Logger(origin="mqtt-sending-loop")
         logger.info("starting loop")
 
-        mqtt_client = MQTTConnection.get_client()
-        mqtt_config = MQTTConnection.get_config()
-        active_mqtt_queue = ActiveMQTTQueue()
+        try:
+            mqtt_client = MQTTConnection.get_client()
+            mqtt_config = MQTTConnection.get_config()
+            active_mqtt_queue = ActiveMQTTQueue()
+        except Exception as e:
+            logger.exception(e)
+            raise e
 
         # this queue is necessary because paho-mqtt does not support
         # a function that answers the question "has this message id
@@ -159,7 +164,11 @@ class SendingMQTTClient:
             record.content.header.mqtt_topic += mqtt_config.station_identifier
             message_info = mqtt_client.publish(
                 topic=record.content.header.mqtt_topic,
-                payload=json.dumps([record.content.body.dict()]),
+                payload=json.dumps(
+                    {"log_messages": [record.content.body.dict()]}
+                    if record.content.variant == "logs"
+                    else {"measurements": [record.content.body.dict()]}
+                ),
                 qos=1,
             )
             current_records[record.internal_id] = message_info
@@ -173,60 +182,66 @@ class SendingMQTTClient:
             delivered_record_count = 0
             records_to_be_archived: list[custom_types.SQLMQTTRecord] = []
 
-            # -----------------------------------------------------------------
-            # CHECK DELIVERY STATUS OF SENT MESSAGES
+            try:
 
-            sent_records = active_mqtt_queue.get_rows_by_status("in-progress")
+                # -----------------------------------------------------------------
+                # CHECK DELIVERY STATUS OF SENT MESSAGES
 
-            for record in sent_records:
-                # normal behavior
-                if record.internal_id in current_records.keys():
-                    if current_records[record.internal_id].is_published():
-                        delivered_record_count += 1
-                        del current_records[record.internal_id]
-                        record.status = "done"
-                        records_to_be_archived.append(record)
+                sent_records = active_mqtt_queue.get_rows_by_status("in-progress")
 
-                # resending is required, when current_messages are
-                # lost due to restarting the program
+                for record in sent_records:
+                    # normal behavior
+                    if record.internal_id in current_records.keys():
+                        if current_records[record.internal_id].is_published():
+                            delivered_record_count += 1
+                            del current_records[record.internal_id]
+                            record.status = "done"
+                            records_to_be_archived.append(record)
+
+                    # resending is required, when current_messages are
+                    # lost due to restarting the program
+                    else:
+                        _publish_record(record)
+                        resent_record_count += 1
+
+                # mark successful messages in active queue
+                active_mqtt_queue.update_records(records_to_be_archived)
+
+                # -----------------------------------------------------------------
+                # SEND PENDING MESSAGES
+
+                MAX_SEND_COUNT = 100
+                OPEN_SENDING_SLOTS = MAX_SEND_COUNT - (
+                    len(sent_records) - delivered_record_count
+                )
+                if OPEN_SENDING_SLOTS <= 0:
+                    logger.debug(
+                        f"sending queue is full ({MAX_SEND_COUNT} "
+                        + "items not processed by broker yet)"
+                    )
                 else:
-                    _publish_record(record)
-                    resent_record_count += 1
+                    logger.debug(f"sending queue has {OPEN_SENDING_SLOTS} more slot(s)")
 
-            # mark successful messages in active queue
-            active_mqtt_queue.update_records(records_to_be_archived)
+                    records_to_be_sent = active_mqtt_queue.get_rows_by_status(
+                        "pending", limit=OPEN_SENDING_SLOTS
+                    )
+                    for record in records_to_be_sent:
+                        _publish_record(record)
+                        sent_record_count += 1
+                    active_mqtt_queue.update_records(records_to_be_sent)
 
-            # -----------------------------------------------------------------
-            # SEND PENDING MESSAGES
+                # -----------------------------------------------------------------
 
-            MAX_SEND_COUNT = 100
-            OPEN_SENDING_SLOTS = MAX_SEND_COUNT - (
-                len(sent_records) - delivered_record_count
-            )
-            if OPEN_SENDING_SLOTS <= 0:
-                logger.debug(
-                    f"sending queue is full ({MAX_SEND_COUNT} "
-                    + "items not processed by broker yet)"
+                logger.info(
+                    f"{sent_record_count}/{resent_record_count}/{delivered_record_count} "
+                    + "messages have been sent/resent/delivered"
                 )
-            else:
-                logger.debug(f"sending queue has {OPEN_SENDING_SLOTS} more slot(s)")
 
-                records_to_be_sent = active_mqtt_queue.get_rows_by_status(
-                    "pending", limit=OPEN_SENDING_SLOTS
-                )
-                for record in records_to_be_sent:
-                    _publish_record(record)
-                    sent_record_count += 1
-                active_mqtt_queue.update_records(records_to_be_sent)
+                time.sleep(5)
 
-            # -----------------------------------------------------------------
-
-            logger.info(
-                f"{sent_record_count}/{resent_record_count}/{delivered_record_count} "
-                + "messages have been sent/resent/delivered"
-            )
-
-            time.sleep(5)
+            except Exception as e:
+                logger.exception(e)
+                raise e
 
     @staticmethod
     def check_errors() -> None:
