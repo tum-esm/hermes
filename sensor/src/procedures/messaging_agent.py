@@ -26,7 +26,7 @@ def on_config_message(
     msg: paho.mqtt.client.MQTTMessage,
 ) -> None:
     global mqtt_config_message_queue
-    logger = utils.Logger(origin="mqtt-subscription")
+    logger = utils.Logger(origin="message-communication")
     logger.debug(f"received message: {msg}")
     try:
         mqtt_config_message_queue.put(
@@ -74,7 +74,7 @@ class MessagingAgent:
         status `delivered` or `sending-skipped`; this function is
         blocking and should be called in a thread or subprocess"""
 
-        logger = utils.Logger(origin="mqtt-archiving-loop")
+        logger = utils.Logger(origin="message-archiving")
         logger.info("starting loop")
 
         try:
@@ -125,7 +125,7 @@ class MessagingAgent:
         this function is blocking and should be called in a thread
         os subprocess"""
 
-        logger = utils.Logger(origin="mqtt-sending-loop")
+        logger = utils.Logger(origin="message-communication")
         logger.info("starting loop")
 
         mqtt_connection = utils.MQTTConnection()
@@ -148,7 +148,6 @@ class MessagingAgent:
         logger.info(f"subscribing to topic {config_topic}")
         mqtt_client.subscribe(config_topic, qos=1)
 
-        # TODO: add method to "get new config messages"
         # TODO: fetch initial config messages
 
         # this queue is necessary because paho-mqtt does not support
@@ -251,6 +250,22 @@ class MessagingAgent:
                 logger.error("sending loop has stopped")
                 logger.exception(e)
                 raise e
+
+    @staticmethod
+    def get_config_message() -> Optional[custom_types.MQTTConfigurationRequest]:
+        global mqtt_config_message_queue
+
+        new_config_messages: list[custom_types.MQTTConfigurationRequest] = []
+        while True:
+            try:
+                new_config_messages.append(mqtt_config_message_queue.get(block=False))
+            except queue.Empty:
+                break
+
+        if len(new_config_messages) == 0:
+            return None
+
+        return max(new_config_messages, key=lambda cm: cm.revision)
 
     @staticmethod
     def check_errors() -> None:
