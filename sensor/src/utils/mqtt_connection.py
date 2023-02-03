@@ -1,47 +1,15 @@
 import os
 import time
-from typing import Optional
 import paho.mqtt.client
 import ssl
 from src import custom_types
 
 
 class MQTTConnection:
-    """provides an mqtt client"""
+    """provides the mqtt config and client"""
 
-    __config: Optional[custom_types.MQTTConfig] = None
-    __client: Optional[paho.mqtt.client.Client] = None
-
-    @staticmethod
-    def get_config() -> custom_types.MQTTConfig:
-        """returns the mqtt config, runs init() on first call"""
-        if MQTTConnection.__config is None:
-            MQTTConnection.__init_config()
-        assert MQTTConnection.__config is not None
-        return MQTTConnection.__config
-
-    @staticmethod
-    def get_client() -> paho.mqtt.client.Client:
-        """returns the mqtt client, runs init() on first call"""
-        if MQTTConnection.__config is None:
-            MQTTConnection.__init_config()
-        if MQTTConnection.__client is None:
-            MQTTConnection.__init_client()
-        assert MQTTConnection.__client is not None
-        return MQTTConnection.__client
-
-    @staticmethod
-    def deinit() -> None:
-        """disconnected the mqtt client and removes the internal class state"""
-        if MQTTConnection.__client is not None:
-            MQTTConnection.__client.disconnect()
-            MQTTConnection.__client = None
-        MQTTConnection.__config = None
-
-    @staticmethod
-    def __init_config() -> None:
-        """loads the mqtt config from environment variables"""
-        MQTTConnection.__config = custom_types.MQTTConfig(
+    def init(self) -> None:
+        self.config = custom_types.MQTTConfig(
             station_identifier=os.environ.get("HERMES_MQTT_IDENTIFIER"),
             mqtt_url=os.environ.get("HERMES_MQTT_URL"),
             mqtt_port=os.environ.get("HERMES_MQTT_PORT"),
@@ -50,34 +18,28 @@ class MQTTConnection:
             mqtt_base_topic=os.environ.get("HERMES_MQTT_BASE_TOPIC"),
         )
 
-    @staticmethod
-    def __init_client() -> None:
-        """initializes the mqtt client. timeout_seconds is the amount
-        of time the mqtt connection process is allowed to take."""
-        assert MQTTConnection.__config is not None
-
-        mqtt_client = paho.mqtt.client.Client(
+        self.client = paho.mqtt.client.Client(
             client_id=MQTTConnection.__config.station_identifier
         )
-        mqtt_client.username_pw_set(
+        self.client.username_pw_set(
             MQTTConnection.__config.mqtt_username, MQTTConnection.__config.mqtt_password
         )
-        mqtt_client.tls_set(
+        self.client.tls_set(
             certfile=None,
             keyfile=None,
             cert_reqs=ssl.CERT_REQUIRED,
             tls_version=ssl.PROTOCOL_TLS_CLIENT,
         )
-        mqtt_client.connect(
+        self.client.connect(
             MQTTConnection.__config.mqtt_url,
             port=int(MQTTConnection.__config.mqtt_port),
             keepalive=60,
         )
-        mqtt_client.loop_start()
+        self.client.loop_start()
 
         start_time = time.time()
         while True:
-            if mqtt_client.is_connected():
+            if self.client.is_connected():
                 break
             if (time.time() - start_time) > 5:
                 raise TimeoutError(
@@ -85,4 +47,7 @@ class MQTTConnection:
                 )
             time.sleep(0.1)
 
-        MQTTConnection.__client = mqtt_client
+    def teardown(self) -> None:
+        """disconnected the mqtt client"""
+        self.client.loop_stop(force=True)
+        self.client.disconnect()
