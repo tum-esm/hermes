@@ -15,10 +15,10 @@ def cli() -> None:
 
 
 cli.add_command(commands.enclosure, name="enclosure")
+cli.add_command(commands.info, name="info")
+cli.add_command(commands.is_running, name="is-running")
 cli.add_command(commands.start, name="start")
 cli.add_command(commands.stop, name="stop")
-cli.add_command(commands.is_running, name="is-running")
-
 
 if __name__ == "__main__":
     cli.main(prog_name="hermes-cli")
