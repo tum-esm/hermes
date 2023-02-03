@@ -19,8 +19,8 @@ def test_mqtt_receiving(mqtt_client_environment: None, log_files: None) -> None:
     mqtt_config = utils.mqtt_connection.MQTTConnection.get_config()
 
     # testing whether config variables have been loaded correctly
-    assert mqtt_config.station_identifier == utils.get_hostname()
-    assert mqtt_config.mqtt_base_topic == os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"]
+    assert mqtt_config.station_identifier == os.environ["HERMES_MQTT_IDENTIFIER"]
+    assert mqtt_config.mqtt_base_topic == os.environ["HERMES_MQTT_BASE_TOPIC"]
 
     # test connection and message sending
     assert mqtt_client.is_connected()

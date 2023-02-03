@@ -78,11 +78,7 @@ def _test_logger(sending_enabled: bool) -> None:
         f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
     )
     EXPECTED_MQTT_TOPIC = (
-        (
-            os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"]
-            + "statuses/"
-            + utils.get_hostname()
-        )
+        (os.environ["HERMES_MQTT_BASE_TOPIC"] + "statuses/" + utils.get_hostname())
         if sending_enabled
         else None
     )

@@ -1,6 +1,6 @@
 from datetime import datetime
-import json
 import os
+import random
 import time
 from typing import Any, Generator, Optional
 import pytest
@@ -10,7 +10,7 @@ from os.path import dirname, abspath, join, isfile
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 sys.path.append(PROJECT_DIR)
-from src import utils, hardware
+from src import utils
 
 
 def _save_file(
@@ -54,7 +54,10 @@ def mqtt_client_environment() -> Generator[None, None, None]:
     MQTT_ENV_VARS_PATH = join(PROJECT_DIR, "config", ".env.testing")
     dotenv.load_dotenv(MQTT_ENV_VARS_PATH)
     timestamp = round(time.time())
-    os.environ["INSERT_NAME_HERE_MQTT_BASE_TOPIC"] = f"development/test-{timestamp}/"
+    os.environ["HERMES_MQTT_IDENTIFIER"] = "".join(
+        random.choices([chr(a) for a in range(ord("a"), ord("z") + 1)], k=20)
+    )
+    os.environ["HERMES_MQTT_BASE_TOPIC"] = f"development/test-{timestamp}/"
 
     yield
 

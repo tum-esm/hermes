@@ -42,12 +42,12 @@ class MQTTConnection:
     def __init_config() -> None:
         """loads the mqtt config from environment variables"""
         MQTTConnection.__config = custom_types.MQTTConfig(
-            station_identifier=os.environ.get("INSERT_NAME_HERE_MQTT_IDENTIFIER"),
-            mqtt_url=os.environ.get("INSERT_NAME_HERE_MQTT_URL"),
-            mqtt_port=os.environ.get("INSERT_NAME_HERE_MQTT_PORT"),
-            mqtt_username=os.environ.get("INSERT_NAME_HERE_MQTT_USERNAME"),
-            mqtt_password=os.environ.get("INSERT_NAME_HERE_MQTT_PASSWORD"),
-            mqtt_base_topic=os.environ.get("INSERT_NAME_HERE_MQTT_BASE_TOPIC"),
+            station_identifier=os.environ.get("HERMES_MQTT_IDENTIFIER"),
+            mqtt_url=os.environ.get("HERMES_MQTT_URL"),
+            mqtt_port=os.environ.get("HERMES_MQTT_PORT"),
+            mqtt_username=os.environ.get("HERMES_MQTT_USERNAME"),
+            mqtt_password=os.environ.get("HERMES_MQTT_PASSWORD"),
+            mqtt_base_topic=os.environ.get("HERMES_MQTT_BASE_TOPIC"),
         )
 
     @staticmethod
