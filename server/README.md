@@ -155,7 +155,7 @@ httpx.get(
 
 **`GET /sensors/<sensor-identifier>/logs/aggregates`:**
 
-Read an aggregate of the sensor logs.
+Read an aggregate of sensor logs with `warning` and `error` severity.
 
 ```python
 httpx.get(
@@ -242,7 +242,7 @@ The payloads are JSON encoded and have the following structure:
   // the array structure allows to batch messages
   "log_messages": [
     {
-      "severity": "warning", // one of info, warning, error
+      "severity": "warning", // one of debug, info, warning, error
       "revision": 0,
       "timestamp": 0.0,
       "subject": "The CPU is burning",

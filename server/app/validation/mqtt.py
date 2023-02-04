@@ -19,7 +19,7 @@ class HeartbeatsMessage(types._BaseModel):
 
 
 class Log(types._BaseModel):
-    severity: typing.Literal["info", "warning", "error"]
+    severity: typing.Literal["debug", "info", "warning", "error"]
     revision: types.Revision
     timestamp: types.Timestamp
     # TODO Cut off the string at max length instead of rejecting it
