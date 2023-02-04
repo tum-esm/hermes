@@ -37,6 +37,7 @@ Value = (
     | pydantic.StrictInt
     | pydantic.StrictFloat
     | pydantic.StrictStr
+    | list
     | dict
 )
 Json = dict[Key, Value]
