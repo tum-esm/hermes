@@ -17,4 +17,5 @@ VALUES (
     {severity},
     {subject},
     {details}
-);
+)
+ON CONFLICT (sensor_identifier, creation_timestamp) DO NOTHING;

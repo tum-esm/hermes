@@ -13,4 +13,5 @@ VALUES (
     now(),
     {position_in_transmission},
     {measurement}
-);
+)
+ON CONFLICT (sensor_identifier, creation_timestamp) DO NOTHING;
