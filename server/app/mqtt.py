@@ -73,7 +73,7 @@ class Client(aiomqtt.Client):
                 try:
                     # Try to publish the configuration
                     await self.publish(
-                        topic=f"{sensor_identifier}/configuration",
+                        topic=f"configurations/{sensor_identifier}",
                         payload=_encode_payload(
                             {"revision": revision, "configuration": configuration}
                         ),
