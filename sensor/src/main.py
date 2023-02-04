@@ -46,7 +46,11 @@ def run() -> None:
         logger.exception(e)
         raise e
 
+    time.sleep(2)
+
     procedures.MessagingAgent.check_errors()
+
+    time.sleep(2)
 
     # -------------------------------------------------------------------------
     # initialize config procedure and check for new configurations
@@ -55,8 +59,9 @@ def run() -> None:
     configuration_prodecure = procedures.ConfigurationProcedure(config)
     logger.info("checking for new config messages")
     new_config_message = procedures.MessagingAgent.get_config_message()
-    logger.warning("initial config message not received")
-    if new_config_message is not None:
+    if new_config_message is None:
+        logger.warning("initial config message not received")
+    else:
         # exiting inside the procedure if successful
         logger.info("running configuration procedure")
         configuration_prodecure.run(new_config_message)

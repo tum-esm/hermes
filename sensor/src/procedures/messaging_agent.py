@@ -299,11 +299,9 @@ class MessagingAgent:
         new_config_messages: list[custom_types.MQTTConfigurationRequest] = []
         while True:
             try:
-                print("x")
                 new_config_messages.append(
                     MessagingAgent.config_request_queue.get_nowait()
                 )
-                print("y")
             except queue.Empty:
                 break
 

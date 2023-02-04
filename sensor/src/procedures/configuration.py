@@ -74,7 +74,7 @@ class ConfigurationProcedure:
         new_version = config_request.configuration.version
 
         if self.config.revision == new_revision:
-            self.logger.info("received config is already active")
+            self.logger.info("received config has the same revision")
             return
 
         has_same_version = self.config.version == new_version
