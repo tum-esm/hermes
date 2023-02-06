@@ -85,8 +85,9 @@ class ConfigurationProcedure:
         has_same_directory = PROJECT_DIR == code_path(new_version)
 
         self.logger.info(
-            f"upgrading to new revision {new_revision} and version {new_version} using the"
-            + f" new config: {json.dumps(config_request.configuration.dict(), indent=4)}"
+            message=f"upgrading to revision {new_revision}",
+            config=self.config,
+            details=f"new config = {json.dumps(config_request.configuration.dict(), indent=4)}",
         )
 
         try:
@@ -97,17 +98,23 @@ class ConfigurationProcedure:
                 self._dump_new_config(config_request)
 
             self._run_pytests(new_version)
-            self.logger.info(f"tests were successful")
+            self.logger.info(
+                f"upgrading to revision {new_revision}: tests were successful",
+                config=self.config,
+            )
 
             self._update_cli_pointer(new_version)
-            self.logger.info(f"switched CLI pointer successfully")
+            self.logger.info(
+                f"upgrading to revision {new_revision}: switched CLI pointer successfully",
+                config=self.config,
+            )
 
             restore_current_config()
             raise ConfigurationProcedure.ExitOnUpdateSuccess
 
         except Exception as e:
             self.logger.error(
-                f"exception during upgrade to revision {new_revision}",
+                f"upgrading to revision {new_revision}: exception during upgrade",
                 config=self.config,
             )
             self.logger.exception(e, config=self.config)

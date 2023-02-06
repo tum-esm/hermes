@@ -60,7 +60,7 @@ def run() -> None:
     logger.info("checking for new config messages")
     new_config_message = procedures.MessagingAgent.get_config_message()
     if new_config_message is None:
-        logger.warning("initial config message not received")
+        logger.warning("initial config message not received", config=config)
     else:
         # exiting inside the procedure if successful
         logger.info("running configuration procedure")
@@ -140,7 +140,7 @@ def run() -> None:
 
             if config.active_components.calibration_procedures:
                 if calibration_prodecure.is_due():
-                    logger.info("running calibration procedure")
+                    logger.info("running calibration procedure", config=config)
                     calibration_prodecure.run()
                 else:
                     logger.info("calibration procedure is not due")
@@ -160,7 +160,10 @@ def run() -> None:
             backoff_time_bucket_index = 0
 
         except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
-            logger.info("shutting down mainloop due to successful update")
+            logger.info(
+                "shutting down mainloop due to successful update",
+                config=config,
+            )
             exit(0)
 
         except Exception as e1:
