@@ -16,6 +16,7 @@ def run_shell_command(command: str, working_directory: Optional[str] = None) -> 
         stderr=subprocess.PIPE,
         cwd=working_directory,
         env=os.environ.copy(),
+        executable="/bin/bash",
     )
     stdout = p.stdout.decode("utf-8", errors="replace")
     stderr = p.stderr.decode("utf-8", errors="replace")

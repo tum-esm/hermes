@@ -145,13 +145,17 @@ class ConfigurationProcedure:
 
     def _set_up_venv(self, version: str) -> None:
         """set up a virtual python3.9 environment inside the version subdirectory"""
-        self.logger.info(f"setting up Python interpreter")
+        if os.path.isdir(venv_path(version)):
+            self.logger.info("venv already exists")
+            return
 
-        clear_path(venv_path(version))
+        self.logger.info(f"setting up new venv")
         utils.run_shell_command(
             f"python3.9 -m venv .venv",
             working_directory=code_path(version),
         )
+
+        self.logger.info(f"installing dependencies")
         utils.run_shell_command(
             f"source .venv/bin/activate && poetry install",
             working_directory=code_path(version),
