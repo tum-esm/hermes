@@ -110,9 +110,7 @@ class Logger:
             self._write_log_line("ERROR", f"{message}, details: {details}")
         if config is not None:
             self._write_mqtt_message(
-                config,
-                level="error",
-                subject=message,
+                config, level="error", subject=message, details=details
             )
 
     def exception(
@@ -167,6 +165,24 @@ class Logger:
         subject: str,
         details: str = "",
     ) -> None:
+        if len(subject) > 1024:
+            extension_message_subject = (
+                f" ... SUBJECT HAS BEEN CUT ({len(subject)} CHARS LONG)"
+            )
+            details = (
+                details[: (1024 - len(extension_message_subject))]
+                + extension_message_subject
+            )
+
+        if len(details) > 1024:
+            extension_message_details = (
+                f" ... DETAILS HAVE BEEN CUT ({len(details)} CHARS LONG)"
+            )
+            details = (
+                details[: (1024 - len(extension_message_details))]
+                + extension_message_details
+            )
+
         self.active_mqtt_queue.enqueue_message(
             config,
             message_body=custom_types.MQTTLogMessageBody(

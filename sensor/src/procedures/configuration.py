@@ -85,9 +85,10 @@ class ConfigurationProcedure:
         has_same_directory = PROJECT_DIR == code_path(new_version)
 
         self.logger.info(
-            message=f"upgrading to revision {new_revision}",
-            config=self.config,
-            details=f"new config = {json.dumps(config_request.configuration.dict(), indent=4)}",
+            message=f"upgrading to revision {new_revision}", config=self.config
+        )
+        self.logger.info(
+            message=f"using config {json.dumps(config_request.configuration.dict(), indent=4)}"
         )
 
         try:
