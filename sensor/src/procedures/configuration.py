@@ -47,9 +47,6 @@ def clear_path(path: str) -> bool:
     return False
 
 
-# TODO: do not try an upgrade to a specific revision twice
-
-
 def store_current_config() -> None:
     if os.path.isfile(CURRENT_TMP_CONFIG_PATH):
         os.remove(CURRENT_TMP_CONFIG_PATH)
@@ -57,6 +54,9 @@ def store_current_config() -> None:
 
 
 def restore_current_config() -> None:
+    assert os.path.isfile(
+        CURRENT_TMP_CONFIG_PATH
+    ), f"{CURRENT_TMP_CONFIG_PATH} does not exist"
     if os.path.isfile(CURRENT_CONFIG_PATH):
         os.remove(CURRENT_CONFIG_PATH)
     os.rename(CURRENT_TMP_CONFIG_PATH, CURRENT_CONFIG_PATH)
@@ -109,8 +109,13 @@ class ConfigurationProcedure:
                 config=self.config,
             )
 
-            restore_current_config()
+            if not has_same_directory:
+                restore_current_config()
+
             raise ConfigurationProcedure.ExitOnUpdateSuccess
+
+        except ConfigurationProcedure.ExitOnUpdateSuccess as e:
+            raise e
 
         except Exception as e:
             self.logger.error(
@@ -118,9 +123,8 @@ class ConfigurationProcedure:
                 config=self.config,
             )
             self.logger.exception(e, config=self.config)
-        finally:
-            restore_current_config()
 
+        restore_current_config()
         self.logger.info(
             f"continuing with current revision {self.config.revision} "
             + f"and version {self.config.version}"
