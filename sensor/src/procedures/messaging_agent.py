@@ -101,6 +101,7 @@ class MessagingAgent:
         while True:
             # DETERMINE MESSAGES TO BE ARCHIVED
             records_to_be_archived = active_mqtt_queue.get_rows_by_status("done")
+
             logger.info(f"found {len(records_to_be_archived)} record(s) to be archived")
 
             # SPLIT RECORDS BY DATE
