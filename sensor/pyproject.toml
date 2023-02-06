@@ -65,7 +65,9 @@ module = [
     "smbus2",
     "serial",
     "deepdiff",
-    "filelock"
+    "filelock",
+    "matplotlib",
+    "matplotlib.*",
 ]
 ignore_missing_imports = true
 

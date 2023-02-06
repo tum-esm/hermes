@@ -18,5 +18,8 @@ mypy run_pump_cycle.py
 echo "Checking cli/main.py"
 mypy cli/main.py
 
+echo "Checking scripts/"
+mypy scripts/
+
 echo "Checking pytest types"
 mypy tests/

@@ -19,7 +19,7 @@ for filename in os.listdir(MESSAGE_ARCHIVE):
             lines += f.read().split("\n")
 
 data_messages: list[custom_types.MQTTDataMessage] = []
-status_messages: list[custom_types.MQTTStatusMessage] = []
+log_messages: list[custom_types.MQTTLogMessage] = []
 
 decoding_errors = 0
 for line in lines:
@@ -28,7 +28,7 @@ for line in lines:
         if o["variant"] == "data":
             data_messages.append(custom_types.MQTTDataMessage(**o))
         elif o["variant"] == "status":
-            status_messages.append(custom_types.MQTTStatusMessage(**o))
+            log_messages.append(custom_types.MQTTLogMessage(**o))
         else:
             raise Exception
     except:
@@ -36,7 +36,7 @@ for line in lines:
 
 print(f"decoding_errors = {decoding_errors}")
 print(f"len(data_messages) = {len(data_messages)}")
-print(f"len(status_messages) = {len(status_messages)}")
+print(f"len(log_messages) = {len(log_messages)}")
 
 
 co2_data = [
