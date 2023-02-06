@@ -107,7 +107,7 @@ tests = ["pytest"]
 name = "asgi-lifespan"
 version = "2.0.0"
 description = "Programmatic startup/shutdown of ASGI apps."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2775,4 +2775,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "3.10.8"
-content-hash = "aac551005b554bfa6e2bfe17a83f16c084e4243cc83d3319a249f42fc551e387"
+content-hash = "2868cb56f73bd3dded26567618d218f1648be88ef6037fcba7616ece0564ec47"
