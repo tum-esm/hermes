@@ -25,8 +25,8 @@ NAME = "hermes"
 REPOSITORY = f"tum-esm/{NAME}"
 ROOT_PATH = f"{os.environ['HOME']}/Documents/{NAME}"
 
-tarball_path: Callable[[str], str] = lambda version: f"{NAME}-{version}.tar.gz"
-tarball_content_path: Callable[[str], str] = lambda version: f"{NAME}-{version}"
+tarball_name: Callable[[str], str] = lambda version: f"v{version}.tar.gz"
+tarball_content_name: Callable[[str], str] = lambda version: f"{NAME}-{version}"
 code_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}"
 venv_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}/.venv"
 
@@ -81,7 +81,8 @@ class ConfigurationProcedure:
         has_same_directory = PROJECT_DIR == code_path(new_version)
 
         self.logger.info(
-            f"upgrading to new revision {new_revision} and version {new_version}"
+            f"upgrading to new revision {new_revision} and version {new_version} using the"
+            + f" new config: {json.dumps(config_request.configuration.dict(), indent=4)}"
         )
 
         try:
@@ -92,10 +93,10 @@ class ConfigurationProcedure:
                 self._dump_new_config(config_request)
 
             self._run_pytests(new_version)
-            self.logger.info(f"tests for revision {new_revision} successful")
+            self.logger.info(f"tests were successful")
 
             self._update_cli_pointer(new_version)
-            self.logger.info(f"switched CLI pointer to revision {new_revision}")
+            self.logger.info(f"switched CLI pointer successfully")
 
             restore_current_config()
             exit(0)
@@ -116,33 +117,37 @@ class ConfigurationProcedure:
 
     def _download_code(self, version: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""
-        if clear_path(code_path(version)):
-            self.logger.info("removed old code")
+        if os.path.isdir(code_path(version)):
+            self.logger.info("code directory already exists")
+            return
 
         # download release using the github cli
+        self.logger.info("downloading code from GitHub")
         utils.run_shell_command(
-            f"gh release download --repo={REPOSITORY} --archive=tar.gz v{version}",
+            f"wget https://github.com/tum-esm/hermes/archive/refs/tags/{tarball_name(version)}"
         )
 
         # extract code archive
-        utils.run_shell_command(f"tar -xf {tarball_path(version)}")
+        self.logger.info("extracting tarball")
+        utils.run_shell_command(f"tar -xf {tarball_name(version)}")
 
         # move sensor subdirectory
+        self.logger.info("copying sensor code")
         shutil.move(
-            f"{tarball_content_path(version)}/sensor",
+            f"{tarball_content_name(version)}/sensor",
             code_path(version),
         )
 
         # remove download assets
-        os.remove(tarball_path(version))
-        shutil.rmtree(tarball_content_path(version))
+        self.logger.info("removing artifacts")
+        os.remove(tarball_name(version))
+        shutil.rmtree(tarball_content_name(version))
 
     def _set_up_venv(self, version: str) -> None:
         """set up a virtual python3.9 environment inside the version subdirectory"""
-        self.logger.info(f"setting up Python for version {version}")
+        self.logger.info(f"setting up Python interpreter")
 
-        if os.path.isdir(venv_path(version)):
-            shutil.rmtree(venv_path(version))
+        clear_path(venv_path(version))
         utils.run_shell_command(
             f"python3.9 -m venv .venv",
             working_directory=code_path(version),
@@ -158,10 +163,7 @@ class ConfigurationProcedure:
     ) -> None:
         """write new config config to json file"""
 
-        self.logger.info(
-            f"dumping config for version {config_request.configuration.version}"
-        )
-
+        self.logger.info("dumping config.json file")
         with open(
             f"{code_path(config_request.configuration.version)}/config/config.json",
             "w",
@@ -175,15 +177,16 @@ class ConfigurationProcedure:
                 indent=4,
             )
 
-        shutil.copy(
-            f"{PROJECT_DIR}/config/.env",
-            f"{code_path(config_request.configuration.version)}/config/.env",
-        )
+        self.logger.info("copying .env file")
+        src = f"{PROJECT_DIR}/config/.env"
+        dst = f"{code_path(config_request.configuration.version)}/config/.env"
+        if not os.path.isfile(dst):
+            shutil.copy(src, dst)
 
     def _run_pytests(self, version: str) -> None:
         """run pytests for the new version. The tests should only ensure that
         the new software starts up and is able to perform new confi requests"""
-        self.logger.info(f"running pytests for version {version}")
+        self.logger.info("running pytests")
         utils.run_shell_command(
             f'.venv/bin/python -m pytest -m "config_update" tests/',
             working_directory=code_path(version),

@@ -49,3 +49,17 @@ class MQTTConnection:
         """disconnected the mqtt client"""
         self.client.loop_stop(force=True)
         self.client.disconnect()
+
+    @staticmethod
+    def validate_config() -> None:
+        """checks whether the current environment contains all
+        variables required for running an MQTT client"""
+
+        custom_types.MQTTConfig(
+            station_identifier=os.environ.get("HERMES_MQTT_IDENTIFIER"),
+            mqtt_url=os.environ.get("HERMES_MQTT_URL"),
+            mqtt_port=os.environ.get("HERMES_MQTT_PORT"),
+            mqtt_username=os.environ.get("HERMES_MQTT_USERNAME"),
+            mqtt_password=os.environ.get("HERMES_MQTT_PASSWORD"),
+            mqtt_base_topic=os.environ.get("HERMES_MQTT_BASE_TOPIC"),
+        )

@@ -147,7 +147,6 @@ class MessagingAgent:
             active_mqtt_queue = utils.ActiveMQTTQueue()
         except Exception as e:
             logger.exception(e)
-            mqtt_connection.teardown()
             raise e
 
         logger.info("established connection to mqtt client and active mqtt queue")
