@@ -58,6 +58,18 @@ run_shell_command(
     + "python3-setuptools "
 )
 
+print("Installing GitHub CLI via Apt")
+run_shell_command(
+    """
+    type -p curl >/dev/null || sudo apt install curl -y
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && sudo apt update
+    && sudo apt install gh -y
+    """
+)
+
 print("Installing Poetry")
 run_shell_command("curl -sSL https://install.python-poetry.org | python3 -")
 
@@ -188,9 +200,7 @@ shutil.copyfile(
 )
 
 # make CLI point to release version
-with open(
-    "/boot/midcost-init-files/hermes/hermes-cli.template.sh"
-) as f:
+with open("/boot/midcost-init-files/hermes/hermes-cli.template.sh") as f:
     cli_file_content = f.read()
 cli_file_content = cli_file_content.replace("%VERSION%", AUTOMATION_TAG)
 with open("/home/pi/hermes/hermes-cli.sh", "w") as f:
