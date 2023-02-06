@@ -54,6 +54,10 @@ class HardwareInterface:
         """ends all hardware/system connections"""
         self.logger.info("running hardware teardown")
 
+        if not hardware_lock.is_locked:
+            self.logger.info("not tearing down due to disconnected hardware")
+            return
+
         # measurement sensors
         self.air_inlet_sensor.teardown()
         self.co2_sensor.teardown()

@@ -159,6 +159,10 @@ def run() -> None:
             logger.info("finished mainloop iteration")
             backoff_time_bucket_index = 0
 
+        except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
+            logger.info("shutting down mainloop due to successful update")
+            exit(0)
+
         except Exception as e1:
             try:
                 hardware_interface.perform_hard_reset()
