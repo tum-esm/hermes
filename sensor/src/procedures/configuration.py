@@ -17,6 +17,7 @@ if version upgrade
 
 import json
 import os
+import re
 import shutil
 from typing import Callable, Literal
 from src import custom_types, utils
@@ -72,6 +73,7 @@ class ConfigurationProcedure:
     def __init__(self, config: custom_types.Config) -> None:
         self.logger = utils.Logger(origin="configuration-procedure")
         self.config = config
+        self._remove_old_venvs()
 
     def run(self, config_request: custom_types.MQTTConfigurationRequest) -> None:
         new_revision = config_request.revision
@@ -239,3 +241,22 @@ class ConfigurationProcedure:
                 + f"{venv_path(version)}/bin/python "
                 + f"{code_path(version)}/cli/main.py $*"
             )
+
+    def _remove_old_venvs(self) -> None:
+        venvs_to_be_removed: list[str] = []
+        version_regex_pattern = re.compile(r"^\d+\.\d+\.\d+(-(alpha|beta)\.\d+)?$")
+        for old_version in os.listdir(ROOT_PATH):
+            venv_path = os.path.join(ROOT_PATH, old_version, ".venv")
+            if not os.path.isdir(venv_path):
+                continue
+            if not version_regex_pattern.match(old_version):
+                continue
+            if old_version == self.config.version:
+                continue
+            venvs_to_be_removed.append(venv_path)
+
+        for p in venvs_to_be_removed:
+            self.logger.info(f'removing old .venv at path "{p}"', config=self.config)
+            shutil.rmtree(p)
+
+        self.logger.info(f"successfully removed all old .venvs", config=self.config)
