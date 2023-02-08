@@ -4,7 +4,7 @@ from typing import Optional
 
 ENV = os.environ.copy()
 ENV["PATH"] = "/home/pi/bin:/home/pi/.local/bin:" + ENV["PATH"]
-AUTOMATION_TAG = "0.1.0-beta.1"
+AUTOMATION_VERSION = "0.1.0-alpha.11"
 AUTOMATION_DIR = "/home/pi/Documents/hermes"
 IP_LOGGER_DIR = "/home/pi/Documents/baserow-ip-logger"
 
@@ -21,15 +21,19 @@ def run_shell_command(
         stderr=subprocess.PIPE,
         cwd=working_directory,
         env=ENV,
+        executable="/bin/bash",
     )
-    stdout = p.stdout.decode("utf-8", errors="replace")
-    stderr = p.stderr.decode("utf-8", errors="replace")
+    stdout = p.stdout.decode("utf-8", errors="replace").strip()
+    stderr = p.stderr.decode("utf-8", errors="replace").strip()
     if check_exit_code:
         assert p.returncode == 0, (
             f"command '{command}' failed with exit code "
             + f"{p.returncode}: stderr = '{stderr}'"
         )
-    return stdout.strip()
+        return stdout
+    else:
+        # only used for SSH access test
+        return stdout + stderr
 
 
 def get_hostname() -> str:
