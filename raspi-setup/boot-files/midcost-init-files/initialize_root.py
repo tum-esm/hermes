@@ -1,3 +1,4 @@
+import shutil
 from utils import run_shell_command
 
 # =============================================================================
@@ -58,3 +59,13 @@ sshd_config_content = sshd_config_content.replace(
 with open("/etc/ssh/sshd_config", "w") as f:
     f.write(sshd_config_content)
 run_shell_command("service ssh restart")
+
+# =============================================================================
+# ADD WIRELESS SETTINGS
+
+# this could be done by putting the .conf file directly onto
+# /boot but did not work for me
+shutil.copyfile(
+    "/boot/midcost-init-files/system/wpa_supplicant.conf",
+    "/etc/wpa_supplicant/wpa_supplicant.conf",
+)

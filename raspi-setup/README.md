@@ -20,7 +20,6 @@ The `boot-files/` should contain the following files:
 ```
 📁 boot-files/
 
-    📄 wpa_supplicant.conf
     📄 config.txt
 
     📁 midcost-init-files/
@@ -43,6 +42,7 @@ The `boot-files/` should contain the following files:
             📄 config.txt
             📄 id_ed25519_esm_technical_user
             📄 id_ed25519_esm_technical_user.pub
+            📄 wpa_supplicant.conf
 
         📁 system/
             📄 .bashrc
