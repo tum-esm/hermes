@@ -5,6 +5,12 @@ from typing import Any
 from src import utils, hardware, procedures
 
 
+class ExitOnHardwareTeardownFail(Exception):
+    """raised when hardware.teardown() fails when called before the config
+    procedure should run. A fail in this location would mean that the sensor
+    is not able to upgrade until a reboot happens"""
+
+
 def run() -> None:
     """
     entry point of the mainloop running continuously on the sensor node
@@ -121,7 +127,11 @@ def run() -> None:
             logger.info("checking for new config messages")
             new_config_message = procedures.MessagingAgent.get_config_message()
             if new_config_message is not None:
-                hardware_interface.teardown()
+
+                try:
+                    hardware_interface.teardown()
+                except Exception as e:
+                    raise ExitOnHardwareTeardownFail
 
                 # stopping this script inside the procedure if successful
                 logger.info("running configuration procedure")
@@ -165,6 +175,14 @@ def run() -> None:
                 config=config,
             )
             exit(0)
+
+        except ExitOnHardwareTeardownFail:
+            logger.info(
+                "shutting down mainloop due to failed "
+                + "hardware.teardown() before config update",
+                config=config,
+            )
+            exit(-1)
 
         except Exception as e1:
             try:
