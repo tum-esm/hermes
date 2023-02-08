@@ -122,20 +122,21 @@ class Logger:
         exception_name = traceback.format_exception_only(exc_type, exc)[0].strip()
         exception_traceback = "\n".join(
             traceback.format_exception(exc_type, exc, exc_traceback)
-        )
+        ).strip()
         exception_details = "None"
         if isinstance(exc, CommandLineException) and (exc.details is not None):
-            exception_details = exc.details
+            exception_details = exc.details.strip()
 
         subject_string = exception_name
         details_string = (
             f"--- details: -----------------\n"
             + f"{exception_details}\n"
             + f"--- traceback: ---------------\n"
-            + f"{exception_traceback}"
+            + f"{exception_traceback}\n"
+            + f"------------------------------"
         )
 
-        self._write_log_line("EXCEPTION", f"{subject_string}\n{subject_string}")
+        self._write_log_line("EXCEPTION", f"{subject_string}\n{details_string}")
         if config is not None:
             self._write_mqtt_message(
                 config,

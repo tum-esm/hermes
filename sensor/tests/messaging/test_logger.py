@@ -39,7 +39,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         "pytests                 - INFO          - some message b",
         "pytests                 - WARNING       - some message c",
         "pytests                 - ERROR         - some message d",
-        "pytests                 - EXCEPTION     - ZeroDivisionError: division by zero, traceback:",
+        "pytests                 - EXCEPTION     - ZeroDivisionError: division by zero",
     ]
 
     expect_log_lines(forbidden_lines=generated_log_lines)
