@@ -173,7 +173,7 @@ shutil.rmtree(TMP_AUTOMATION_DIR)
 # install dependencies
 run_shell_command(f"python3.9 -m venv {AUTOMATION_DIR}/{AUTOMATION_TAG}/.venv")
 run_shell_command(
-    "source .venv/bin/activate && poetry install",
+    "source .venv/bin/activate && poetry install --with=dev",
     working_directory=f"{AUTOMATION_DIR}/{AUTOMATION_TAG}",
 )
 
