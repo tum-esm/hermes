@@ -113,16 +113,18 @@ class Logger:
                 config, level="error", subject=message, details=details
             )
 
-    def exception(
-        self, e: Exception, config: Optional[custom_types.Config] = None
-    ) -> None:
+    def exception(self, config: Optional[custom_types.Config] = None) -> None:
         """logs the traceback of an exception, sends the message via
         MQTT when config is passed (required for revision number)
         """
-        exception_name = type(e).__name__
-        exception_traceback = "\n".join(traceback.format_exception(*sys.exc_info()))
+        exc_type, exc, exc_traceback = sys.exc_info()
+        exception_name = traceback.format_exception_only(exc_type, exc)[0].strip()
+        exception_traceback = "\n".join(
+            traceback.format_exception(exc_type, exc, exc_traceback)
+        )
         self._write_log_line(
-            "EXCEPTION", f"{exception_name} occured: {exception_traceback}"
+            "EXCEPTION",
+            f"{exception_name}, traceback:\n{exception_traceback}",
         )
         if config is not None:
             self._write_mqtt_message(

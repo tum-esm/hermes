@@ -81,7 +81,7 @@ class MessagingAgent:
         try:
             active_mqtt_queue = utils.ActiveMQTTQueue()
         except Exception as e:
-            logger.exception(e)
+            logger.exception()
             raise e
 
         def graceful_teardown(*args: Any) -> None:
@@ -92,7 +92,7 @@ class MessagingAgent:
             signal.signal(signal.SIGINT, graceful_teardown)
             signal.signal(signal.SIGTERM, graceful_teardown)
         except Exception as e:
-            logger.exception(e)
+            logger.exception()
             raise e
 
         logger.info("established graceful teardown hook")
@@ -155,7 +155,7 @@ class MessagingAgent:
             mqtt_client = mqtt_connection.client
             active_mqtt_queue = utils.ActiveMQTTQueue()
         except Exception as e:
-            logger.exception(e)
+            logger.exception()
             raise e
 
         logger.info("established connection to mqtt client and active mqtt queue")
@@ -171,7 +171,7 @@ class MessagingAgent:
             signal.signal(signal.SIGINT, graceful_teardown)
             signal.signal(signal.SIGTERM, graceful_teardown)
         except Exception as e:
-            logger.exception(e)
+            logger.exception()
             mqtt_connection.teardown()
             raise e
 
@@ -187,7 +187,7 @@ class MessagingAgent:
             )
             mqtt_client.subscribe(config_topic, qos=1)
         except Exception as e:
-            logger.exception(e)
+            logger.exception()
             mqtt_connection.teardown()
             raise e
 
@@ -305,7 +305,7 @@ class MessagingAgent:
 
             except Exception as e:
                 logger.error("sending loop has stopped")
-                logger.exception(e)
+                logger.exception()
                 mqtt_connection.teardown()
                 raise e
 

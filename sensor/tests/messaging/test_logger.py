@@ -38,7 +38,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         "pytests                 - INFO          - some message b",
         "pytests                 - WARNING       - some message c",
         "pytests                 - ERROR         - some message d",
-        "pytests                 - EXCEPTION     - ZeroDivisionError occured",
+        "pytests                 - EXCEPTION     - ZeroDivisionError: division by zero, traceback:",
     ]
 
     expect_log_lines(forbidden_lines=generated_log_lines)
@@ -74,7 +74,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     try:
         30 / 0
     except Exception as e:
-        logger.exception(e, config=config)
+        logger.exception(config=config)
 
     expect_log_lines(required_lines=generated_log_lines)
 
@@ -101,7 +101,10 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
 
     assert active_logs_messages[2].header.mqtt_topic == None
     assert active_logs_messages[2].body.severity == "error"
-    assert active_logs_messages[2].body.subject == "pytests - ZeroDivisionError"
+    assert (
+        active_logs_messages[2].body.subject
+        == "pytests - ZeroDivisionError: division by zero"
+    )
 
     # -------------------------------------------------------------------------
     # wait until sendin queue is empty
@@ -139,4 +142,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
 
     assert archived_log_messages[2].header.mqtt_topic == EXPECTED_MQTT_TOPIC
     assert archived_log_messages[2].body.severity == "error"
-    assert archived_log_messages[2].body.subject == "pytests - ZeroDivisionError"
+    assert (
+        archived_log_messages[2].body.subject
+        == "pytests - ZeroDivisionError: division by zero"
+    )

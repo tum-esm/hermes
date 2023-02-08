@@ -133,7 +133,7 @@ class ConfigurationProcedure:
                 f"upgrading to revision {new_revision}: exception during upgrade",
                 config=self.config,
             )
-            self.logger.exception(e, config=self.config)
+            self.logger.exception(config=self.config)
 
         restore_current_config()
         self.logger.info(

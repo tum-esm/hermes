@@ -47,7 +47,7 @@ class HeatedEnclosureInterface:
 
                 self.logger.debug("Arduino firmware is now up to date")
             except Exception as e:
-                self.logger.exception(e, config=self.config)
+                self.logger.exception(config=self.config)
 
             # open serial data connection to process arduino logs
             time.sleep(3)

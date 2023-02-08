@@ -29,7 +29,7 @@ def run() -> None:
         config = utils.ConfigInterface.read()
     except Exception as e:
         logger.error("could not load local config.json")
-        logger.exception(e)
+        logger.exception()
         raise e
 
     # incremental backoff times on exceptions (15s, 1m, 5m, 20m)
@@ -43,7 +43,7 @@ def run() -> None:
         procedures.MessagingAgent.init(config)
     except Exception as e:
         logger.error("could not start messaging agent")
-        logger.exception(e)
+        logger.exception()
         raise e
 
     time.sleep(2)
@@ -74,7 +74,7 @@ def run() -> None:
         hardware_interface = hardware.HardwareInterface(config)
     except Exception as e:
         logger.error("could not initialize hardware interface", config=config)
-        logger.exception(e, config=config)
+        logger.exception(config=config)
         raise e
 
     # tear down hardware on program termination
@@ -105,7 +105,7 @@ def run() -> None:
         )
     except Exception as e:
         logger.error("could not initialize procedures", config=config)
-        logger.exception(e, config=config)
+        logger.exception(config=config)
         raise e
 
     # -------------------------------------------------------------------------
@@ -174,7 +174,7 @@ def run() -> None:
                     "exception in mainloop and during hard reset of hardware",
                     config=config,
                 )
-                logger.exception(e2, config=config)
+                logger.exception(config=config)
                 raise e2
 
             # send exception via MQTT
@@ -184,7 +184,7 @@ def run() -> None:
                 + f" waiting for {current_backoff_time} seconds",
                 config=config,
             )
-            logger.exception(e1, config=config)
+            logger.exception(config=config)
 
             # wait until starting up again
             time.sleep(current_backoff_time)
