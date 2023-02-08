@@ -9,7 +9,7 @@ sys.path.append(PROJECT_DIR)
 from src import utils, procedures
 
 
-@pytest.mark.config_update
+@pytest.mark.version_update
 @pytest.mark.ci
 def test_messaging_loops_with_sending(
     mqtt_client_environment: None,
@@ -29,7 +29,7 @@ def test_messaging_loops_with_sending(
     procedures.MessagingAgent.deinit()
 
 
-@pytest.mark.config_update
+@pytest.mark.version_update
 @pytest.mark.ci
 def test_messaging_loops_without_sending(
     mqtt_client_environment: None,

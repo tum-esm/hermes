@@ -6,10 +6,10 @@ import dotenv
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
 sys.path.append(PROJECT_DIR)
-from src import custom_types, utils
+from src import custom_types
 
 
-@pytest.mark.config_update
+@pytest.mark.version_update
 @pytest.mark.integration
 def test_local_env_vars() -> None:
     """checks whether the local config/.env can be loaded"""

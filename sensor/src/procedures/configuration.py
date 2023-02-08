@@ -18,7 +18,7 @@ if version upgrade
 import json
 import os
 import shutil
-from typing import Callable
+from typing import Callable, Literal
 from src import custom_types, utils
 
 NAME = "hermes"
@@ -98,7 +98,15 @@ class ConfigurationProcedure:
                 self._set_up_venv(new_version)
                 self._dump_new_config(config_request)
 
-            self._run_pytests(new_version)
+            self._run_pytests(
+                new_version,
+                scope=(
+                    "parameter-change"
+                    if (has_same_version and has_same_directory)
+                    else "version-change"
+                ),
+            )
+
             self.logger.info(
                 f"upgrading to revision {new_revision}: tests were successful",
                 config=self.config,
@@ -203,14 +211,25 @@ class ConfigurationProcedure:
         if not os.path.isfile(dst):
             shutil.copy(src, dst)
 
-    def _run_pytests(self, version: str) -> None:
+    def _run_pytests(
+        self,
+        version: str,
+        scope: Literal["version-change", "parameter-change"],
+    ) -> None:
         """run pytests for the new version. The tests should only ensure that
         the new software starts up and is able to perform new confi requests"""
-        self.logger.info("running pytests")
-        utils.run_shell_command(
-            f'.venv/bin/python -m pytest -m "config_update" tests/',
-            working_directory=code_path(version),
-        )
+        if scope == "parameter-change":
+            self.logger.debug(f"only validating config")
+            utils.run_shell_command(
+                f'.venv/bin/python -m pytest -m "parameter_update" tests/',
+                working_directory=code_path(version),
+            )
+        else:
+            self.logger.debug(f"running all upgrading pytests")
+            utils.run_shell_command(
+                f'.venv/bin/python -m pytest -m "version_update" tests/',
+                working_directory=code_path(version),
+            )
 
     def _update_cli_pointer(self, version: str) -> None:
         """make the file pointing to the used cli to the new version's cli"""

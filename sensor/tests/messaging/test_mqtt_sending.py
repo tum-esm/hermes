@@ -23,18 +23,19 @@ MESSAGE_ARCHIVE_FILE = join(
 )
 
 
-@pytest.mark.config_update
+@pytest.mark.version_update
 @pytest.mark.ci
-def test_messaging_without_sending(messaging_agent_without_sending: None) -> None:
-    _test_messaging(mqtt_communication_enabled=False)
+def test_message_sending_without_sending(messaging_agent_without_sending: None) -> None:
+    _test_message_sending(mqtt_communication_enabled=False)
 
 
+@pytest.mark.version_update
 @pytest.mark.ci
-def test_messaging_with_sending(messaging_agent_with_sending: None) -> None:
-    _test_messaging(mqtt_communication_enabled=True)
+def test_message_sending_with_sending(messaging_agent_with_sending: None) -> None:
+    _test_message_sending(mqtt_communication_enabled=True)
 
 
-def _test_messaging(mqtt_communication_enabled: bool) -> None:
+def _test_message_sending(mqtt_communication_enabled: bool) -> None:
     active_mqtt_queue = utils.ActiveMQTTQueue()
 
     assert len(active_mqtt_queue.get_rows_by_status("pending")) == 0

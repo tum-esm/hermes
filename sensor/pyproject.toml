@@ -49,7 +49,8 @@ build-backend = "poetry.core.masonry.api"
 markers = [
     "ci: can be run in GitHub CI",
     "integration: can only be run on a configured system",
-    "config_update: required to pass when updating the config",
+    "version_update: required to pass when updating the version",
+    "parameter_update: required to pass when updating the config only",
     "last: provided by the `pytest-ordering` library"
 ]
 

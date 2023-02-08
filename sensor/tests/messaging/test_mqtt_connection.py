@@ -10,7 +10,7 @@ sys.path.append(PROJECT_DIR)
 from src import utils
 
 
-@pytest.mark.config_update
+@pytest.mark.version_update
 @pytest.mark.ci
 def test_mqtt_connection(mqtt_client_environment: None) -> None:
     mqtt_connection = utils.MQTTConnection()
