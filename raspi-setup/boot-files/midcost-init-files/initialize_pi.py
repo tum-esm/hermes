@@ -102,7 +102,7 @@ for src, dst in [
 print(f"\tadding ssh key to agent")
 run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user")
 run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user.pub")
-run_shell_command("ssh-agent")
+run_shell_command('eval "$(ssh-agent)"')
 run_shell_command("ssh-add /home/pi/.ssh/id_ed25519_esm_technical_user")
 
 print(f"\ttesting access to github")
