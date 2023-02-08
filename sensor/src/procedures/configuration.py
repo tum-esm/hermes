@@ -34,7 +34,9 @@ venv_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}/.venv"
 dirname = os.path.dirname
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 CURRENT_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.json")
-CURRENT_TMP_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.tmp.json")
+CURRENT_TMP_CONFIG_PATH = os.path.join(
+    PROJECT_DIR, "config", "config.param-change-tmp.json"
+)
 
 
 def clear_path(path: str) -> bool:
@@ -94,11 +96,13 @@ class ConfigurationProcedure:
         )
 
         try:
-            store_current_config()
-            if not (has_same_version and has_same_directory):
+            if has_same_version and has_same_directory:
+                store_current_config()
+            else:
                 self._download_code(new_version)
                 self._set_up_venv(new_version)
-                self._dump_new_config(config_request)
+
+            self._dump_new_config(config_request)
 
             self._run_pytests(
                 new_version,
