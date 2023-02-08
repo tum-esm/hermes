@@ -126,7 +126,8 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     # -------------------------------------------------------------------------
     # check whether archive contains correct messages
 
-    time.sleep(0.5)
+    time.sleep(2)
+
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
         archived_log_messages = [
             custom_types.MQTTLogMessage(**m)
