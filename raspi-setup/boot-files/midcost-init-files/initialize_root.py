@@ -9,7 +9,7 @@ assert run_shell_command("whoami") == "root", "please run this script as ROOT us
 # =============================================================================
 # INSTALL SYSTEM PACKAGES
 
-print("Installing General Apt Packages")
+print("INSTALLING GENERAL PACKAGES WITH APT")
 run_shell_command("apt update")
 run_shell_command(
     "apt install -y "
@@ -35,7 +35,7 @@ run_shell_command(
     + "screen "
 )
 
-print("Installing Python3.9 via Apt")
+print("INSTALLING PYTHON3.9 WITH APT")
 run_shell_command(
     "apt install -y "
     + "python3.9-full "
@@ -44,13 +44,14 @@ run_shell_command(
     + "python3-setuptools "
 )
 
-print("Installing VS Code via Apt")
+print("INSTALLING VSCODE WITH APT")
 run_shell_command("apt install code -y")
 
 # =============================================================================
 # CONFIGURE THE SSH DAEMON
 
-print("Allow password access via SSH")
+print("ALLOWING SSH ACCESS WITH PASWORD")
+
 with open("/etc/ssh/sshd_config", "r") as f:
     sshd_config_content = f.read()
 sshd_config_content = sshd_config_content.replace(
@@ -61,7 +62,9 @@ with open("/etc/ssh/sshd_config", "w") as f:
 run_shell_command("service ssh restart")
 
 # =============================================================================
-# ADD WIRELESS SETTINGS
+# ADD WIFI SETTINGS
+
+print("ADDING WIFI SETTINGS")
 
 # this could be done by putting the .conf file directly onto
 # /boot but did not work for me
@@ -69,3 +72,7 @@ shutil.copyfile(
     "/boot/midcost-init-files/system/wpa_supplicant.conf",
     "/etc/wpa_supplicant/wpa_supplicant.conf",
 )
+
+# =============================================================================
+
+print("✨ DONE ✨")

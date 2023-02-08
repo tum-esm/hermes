@@ -17,6 +17,8 @@ assert run_shell_command("whoami") == "pi", "please run this script as the PI us
 # =============================================================================
 # EXTEND BASHRC FILE
 
+print("EXTENDING BASHRC FILE")
+
 with open("/boot/midcost-init-files/system/.bashrc", "r") as f:
     new_bashrc_lines = [l for l in f.read().split("\n") if (not l.startswith("#"))]
 with open("/home/pi/.bashrc", "r") as f:
@@ -29,15 +31,15 @@ for l in new_bashrc_lines:
 # =============================================================================
 # INSTALL POETRY AND ARDUINO CLI
 
-print("Installing Poetry")
+print("INSTALLING POETRY")
 run_shell_command("curl -sSL https://install.python-poetry.org | python3 -")
 
-print("Installing Arduino CLI")
+print("INSTALLING ARDUINO CLI")
 run_shell_command(
     "curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh"
 )
 
-print("Installing Arduino CLI Chipsets")
+print("INSTALLING ARDUINO CLI CHIPSETS")
 run_shell_command("arduino-cli core install arduino:avr")
 
 # =============================================================================
@@ -52,7 +54,8 @@ run_shell_command("git config --global pull.ff only")
 # =============================================================================
 # ADD VSCODE EXTENSIONS
 
-print("Installing VS Code Extensions")
+print("INSTALLING VSCODE EXTENSIONS")
+
 run_shell_command(
     "code "
     + "--install-extension whatwewant.open-terminal "
@@ -70,8 +73,9 @@ run_shell_command(
 # =============================================================================
 # SET UP SSH
 
-print("Setting up SSH")
+print("SETTING UP SSH")
 
+print(f"\tcopying files")
 if not os.path.isdir("/home/pi/.ssh"):
     os.mkdir("/home/pi/.ssh")
 for src, dst in [
@@ -95,11 +99,13 @@ for src, dst in [
     if not os.path.isfile(dst):
         shutil.copyfile(src, dst)
 
+print(f"\tadding ssh key to agent")
 run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user")
 run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user.pub")
 run_shell_command("ssh-agent")
 run_shell_command("ssh-add /home/pi/.ssh/id_ed25519_esm_technical_user")
 
+print(f"\ttesting access to github")
 github_ssh_response = run_shell_command(
     'ssh -o "StrictHostKeyChecking accept-new" -T git@github.com',
     check_exit_code=False,
@@ -117,7 +123,7 @@ print("SETTING UP BASEROW-IP-LOGGER")
 if os.path.isdir(IP_LOGGER_DIR):
     shutil.rmtree(IP_LOGGER_DIR)
 
-# install baserow-ip-logger
+print(f"\tcloning repository")
 run_shell_command(
     "git clone git@github.com:dostuffthatmatters/baserow-ip-logger.git " + IP_LOGGER_DIR
 )
@@ -141,8 +147,7 @@ shutil.copyfile(
 # INSTALL HERMES
 
 print("SETTING UP HERMES")
-
-assert not os.path.isdir(AUTOMATION_DIR)
+assert not os.path.isdir(AUTOMATION_DIR), f"{AUTOMATION_DIR} already exist"
 TMP_AUTOMATION_DIR = "/tmp/automation-dir"
 
 print(f"\tcloning into tmp dir {TMP_AUTOMATION_DIR}")
@@ -199,3 +204,7 @@ with open("/home/pi/Documents/hermes/hermes-cli.sh", "w") as f:
 
 print(f"ADDING CRONTAB")
 run_shell_command("crontab /boot/midcost-init-files/system/crontab")
+
+# =============================================================================
+
+print("✨ DONE ✨")
