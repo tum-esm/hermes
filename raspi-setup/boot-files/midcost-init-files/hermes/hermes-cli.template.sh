@@ -1,3 +1,3 @@
 set -o errexit
 
-/home/pi/hermes/%VERSION%/.venv/bin/python /home/pi/hermes/%VERSION%/cli/main.py $*
+/home/pi/Documents/hermes/%VERSION%/.venv/bin/python /home/pi/Documents/hermes/%VERSION%/cli/main.py $*
