@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hermes-raspi-setup"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.11"
 description = ""
 authors = ["Moritz Makowski <moritz.makowski@tum.de>"]
 readme = "README.md"
