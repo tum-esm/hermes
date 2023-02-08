@@ -3,15 +3,13 @@ import json
 import os
 import random
 import time
-from typing import Any, Generator, Optional
+from typing import Any, Optional
 import pytest
 import dotenv
-import sys
 from os.path import dirname, abspath, join, isfile
+from src import custom_types, utils, procedures
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
-sys.path.append(PROJECT_DIR)
-from src import custom_types, utils, procedures
 
 
 def _save_file(

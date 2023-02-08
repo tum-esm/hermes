@@ -1,13 +1,14 @@
 import json
 import os
-import sys
 import pytest
+import os
+from os.path import dirname
+import pytest
+import dotenv
+from src import custom_types
 
-dir = os.path.dirname
-PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
+PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.json")
-sys.path.append(PROJECT_DIR)
-from src.custom_types import Config
 
 
 MAX_PUMP_RPS = 70
@@ -24,7 +25,7 @@ def test_local_config() -> None:
     """
 
     with open(CONFIG_PATH, "r") as f:
-        config = Config(**json.load(f))
+        config = custom_types.Config(**json.load(f))
 
     # check allowed pump speed
     max_litres_per_minute = MAX_PUMP_RPS * config.hardware.pumped_litres_per_round * 60
@@ -80,3 +81,22 @@ def test_local_config() -> None:
     assert len(calibration_gas_concentrations) == len(
         unique_calibration_gas_concentrations
     ), "multiple calibration gases use the same concentration"
+
+
+@pytest.mark.version_update
+@pytest.mark.integration
+def test_local_env_vars() -> None:
+    """checks whether the local config/.env can be loaded"""
+
+    env_file_path = os.path.join(PROJECT_DIR, "config", ".env")
+    assert os.path.isfile(env_file_path), f"{env_file_path} is not a file"
+
+    dotenv.load_dotenv(env_file_path)
+    custom_types.MQTTConfig(
+        station_identifier=os.environ.get("HERMES_MQTT_IDENTIFIER"),
+        mqtt_url=os.environ.get("HERMES_MQTT_URL"),
+        mqtt_port=os.environ.get("HERMES_MQTT_PORT"),
+        mqtt_username=os.environ.get("HERMES_MQTT_USERNAME"),
+        mqtt_password=os.environ.get("HERMES_MQTT_PASSWORD"),
+        mqtt_base_topic=os.environ.get("HERMES_MQTT_BASE_TOPIC"),
+    )
