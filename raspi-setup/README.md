@@ -1,12 +1,18 @@
 All files in the `boot-files/` directory should be copied to a Raspberry Pi's `/boot/midcost-init-files/` directory. The setup script has to be run manually after initially connecting the Pi using the following command:
 
 ```bash
+# test network connection
+ping -c 3 www.google.com
+
 # initialize the node
-sudo python3 /boot/midcost-init-files/initialize-midcost-node.py
+sudo python3 /boot/midcost-init-files/initialize_root.py
+python3 /boot/midcost-init-files/initialize_pi.py
+
+# reboot
 sudo reboot
 
 # test the initial installation
-python3 /boot/midcost-init-files/test-midcost-node.py
+python3 /boot/midcost-init-files/run_node_tests.py
 ```
 
 The `boot-files/` should contain the following files:
@@ -19,8 +25,9 @@ The `boot-files/` should contain the following files:
 
     📁 midcost-init-files/
 
-        📄initialize_midcost_node.py
-        📄test_midcost_node.py
+        📄 initialize_root.py
+        📄 initialize_pi.py
+        📄 run_node_tests.py
 
         📁 baserow-ip-logger/
             📄 config.json
