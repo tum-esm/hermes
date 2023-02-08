@@ -1,5 +1,6 @@
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
+country=DE
 
 network={
         ssid="personas-phone"
@@ -9,15 +10,4 @@ network={
 network={
         ssid="personbs-phone"
         password="XXXXXX-XXXXXX"
-}
-
-network={
-        ssid="eduroam"
-        key_mgmt=WPA-EAP
-        eap=PEAP
-        identity="XXXXXXX@eduroam.mwn.de"
-        password="XXXXXX-XXXXXX-XXXXXX"
-        phase2="auth=MSCHAPV2"
-        ca_cert="/etc/ssl/certs/T-TeleSec_GlobalRoot_Class_2.pem"
-        subject_match="radius.lrz.de"
 }
