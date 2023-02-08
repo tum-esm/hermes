@@ -116,12 +116,6 @@ def run() -> None:
             logger.info("starting mainloop iteration")
 
             # -----------------------------------------------------------------
-            # SYSTEM CHECKS
-
-            logger.info("running system checks")
-            system_check_prodecure.run()
-
-            # -----------------------------------------------------------------
             # CONFIGURATION
 
             logger.info("checking for new config messages")
@@ -134,6 +128,12 @@ def run() -> None:
                 configuration_prodecure.run(new_config_message)
 
                 hardware_interface.reinitialize(config)
+
+            # -----------------------------------------------------------------
+            # SYSTEM CHECKS
+
+            logger.info("running system checks")
+            system_check_prodecure.run()
 
             # -----------------------------------------------------------------
             # CALIBRATION
