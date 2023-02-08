@@ -29,6 +29,7 @@ The `boot-files/` should contain the following files:
             📄 .env
             📄 config.json
             📄 hermes-cli.template.sh
+            📄 hostname_to_mqtt_id.json
 
         📁 ssh/
             📄 authorized_keys

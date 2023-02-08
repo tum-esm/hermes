@@ -1,9 +1,10 @@
 {
-    "version": "1.0.0-beta.1",
-    "revision": 1,
+    "version": "0.1.0-alpha.11",
+    "revision": 0,
+    "verbose_logging": false,
     "active_components": {
         "calibration_procedures": false,
-        "mqtt_data_sending": false,
+        "mqtt_communication": true,
         "heated_enclosure_communication": false,
         "pump_speed_monitoring": false
     },
@@ -14,7 +15,7 @@
     "measurement": {
         "timing": {
             "seconds_per_measurement_interval": 120,
-            "seconds_per_measurement": 6
+            "seconds_per_measurement": 10
         },
         "pumped_litres_per_minute": 4,
         "air_inlets": [
@@ -43,7 +44,7 @@
         }
     },
     "heated_enclosure": {
-        "target_temperature": 25,
+        "target_temperature": 40,
         "allowed_deviation": 3
     }
 }

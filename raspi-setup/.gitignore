@@ -3,4 +3,5 @@ id_ed25519_esm_technical_user.pub
 authorized_keys
 wpa_supplicant.conf
 **/baserow-ip-logger/config.json
-**/insert-name-here/.env
+**/hermes/.env
+**/hermes/hostname_to_mqtt_id.json

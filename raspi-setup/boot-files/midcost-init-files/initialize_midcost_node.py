@@ -1,7 +1,13 @@
+import json
 import shutil
 import os
-from utils import run_shell_command, IP_LOGGER_DIR, AUTOMATION_DIR, AUTOMATION_TAG
-
+from utils import (
+    run_shell_command,
+    IP_LOGGER_DIR,
+    AUTOMATION_DIR,
+    AUTOMATION_TAG,
+    get_hostname,
+)
 
 # =============================================================================
 # CHECK FOR ROOT ACCESS (REQUIRED BY APT)
@@ -177,15 +183,21 @@ run_shell_command(
     working_directory=f"{AUTOMATION_DIR}/{AUTOMATION_TAG}",
 )
 
-# copy config files
+# copy config.json
 shutil.copyfile(
     "/boot/midcost-init-files/hermes/config.json",
     f"{AUTOMATION_DIR}/{AUTOMATION_TAG}/config/config.json",
 )
-shutil.copyfile(
-    "/boot/midcost-init-files/hermes/.env",
-    f"{AUTOMATION_DIR}/{AUTOMATION_TAG}/config/.env",
-)
+
+# copy .env
+with open("/boot/midcost-init-files/hermes/hostname_to_mqtt_id.json") as f:
+    hostname_to_mqtt_identifier = json.load(f)
+hostname = get_hostname()
+mqtt_identifier: str = hostname_to_mqtt_identifier[hostname]
+with open("/boot/midcost-init-files/hermes/.env") as f:
+    env_file_content = f.read()
+with open(f"{AUTOMATION_DIR}/{AUTOMATION_TAG}/config/.env", "w") as f:
+    f.write(env_file_content.replace("%HERMES_MQTT_IDENTIFIER%", mqtt_identifier))
 
 # make CLI point to release version
 with open("/boot/midcost-init-files/hermes/hermes-cli.template.sh") as f:

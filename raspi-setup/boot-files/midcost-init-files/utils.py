@@ -31,3 +31,11 @@ def run_shell_command(
             + f"{p.returncode}: stderr = '{stderr}'"
         )
     return stdout.strip()
+
+
+def get_hostname() -> str:
+    raw_hostname = run_shell_command("hostname")
+    if "." in raw_hostname:
+        return raw_hostname.split(".")[0]
+    else:
+        return raw_hostname
