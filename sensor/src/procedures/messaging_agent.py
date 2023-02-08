@@ -209,13 +209,19 @@ class MessagingAgent:
             )
             record.content.header.mqtt_topic += mqtt_config.station_identifier
             assert mqtt_client.is_connected(), "mqtt client is not connected anymore"
+
+            payload: dict[str, list[Any]]
+            if record.content.variant == "logs":
+                message_body = record.content.body.dict()
+                if len(message_body["details"]) == 0:
+                    del message_body["details"]
+                payload = {"log_messages": [message_body]}
+            else:
+                payload = {"measurements": [record.content.body.dict()]}
+
             message_info = mqtt_client.publish(
                 topic=record.content.header.mqtt_topic,
-                payload=json.dumps(
-                    {"log_messages": [record.content.body.dict()]}
-                    if record.content.variant == "logs"
-                    else {"measurements": [record.content.body.dict()]}
-                ),
+                payload=json.dumps(payload),
                 qos=1,
             )
             current_records[record.internal_id] = message_info

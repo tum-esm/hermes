@@ -62,7 +62,7 @@ class MQTTLogMessageBody(BaseModel):
     revision: int
     timestamp: float
     subject: str
-    details: str
+    details: str = ""
 
     # validators
     _val_severity = validator("severity", pre=True, allow_reuse=True)(
