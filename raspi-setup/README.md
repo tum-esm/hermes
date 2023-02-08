@@ -13,6 +13,9 @@ sudo reboot
 
 # test the initial installation
 python3 /boot/midcost-init-files/run_node_tests.py
+
+# finish installation
+curl parrot.live
 ```
 
 The `boot-files/` should contain the following files:
