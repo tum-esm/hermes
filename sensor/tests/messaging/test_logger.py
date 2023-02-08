@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import os
+import time
 import pytest
 
 from ..pytest_utils import expect_log_lines, wait_for_condition
@@ -125,6 +126,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     # -------------------------------------------------------------------------
     # check whether archive contains correct messages
 
+    time.sleep(0.5)
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
         archived_log_messages = [
             custom_types.MQTTLogMessage(**m)
