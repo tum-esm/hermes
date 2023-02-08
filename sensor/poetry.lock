@@ -373,7 +373,7 @@ pycparser = "*"
 name = "click"
 version = "8.1.3"
 description = "Composable command line interface toolkit"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -2316,7 +2316,7 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtuale
 name = "pytest-ordering"
 version = "0.6"
 description = "pytest plugin to run your tests in a specific order"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -2982,4 +2982,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "2999655e34b3db06c37e87a0125c5e1b0ec4ada3dbdbe7afab684853058b2d8a"
+content-hash = "0cebf26f0f7c359f691abc90ef5bbd03b18acf69afcc56608b0a36c564a86110"
