@@ -1,6 +1,6 @@
 import json
-import shutil
 import os
+import shutil
 from utils import (
     run_shell_command,
     IP_LOGGER_DIR,
@@ -12,7 +12,7 @@ from utils import (
 # =============================================================================
 # CHECK FOR ROOT ACCESS (REQUIRED BY APT)
 
-assert run_shell_command("whoami") == "root", "please run this script as root user"
+assert run_shell_command("whoami") == "pi", "please run this script as the PI users"
 
 # =============================================================================
 # EXTEND BASHRC FILE
@@ -27,42 +27,7 @@ for l in new_bashrc_lines:
             f.write(f"\n\n{l}\n")
 
 # =============================================================================
-# INSTALL SYSTEM PACKAGES
-
-print("Installing General Apt Packages")
-run_shell_command("apt update")
-run_shell_command(
-    "apt install -y "
-    + "software-properties-common "
-    + "make "
-    + "gcc "
-    + "vim "
-    + "git "
-    + "build-essential "
-    + "zlib1g-dev "
-    + "libncurses5-dev "
-    + "libgdbm-dev "
-    + "libnss3-dev "
-    + "libssl-dev "
-    + "libreadline-dev "
-    + "libffi-dev "
-    + "libsqlite3-dev "
-    + "wget "
-    + "pigpio "
-    + "arduino "
-    + "exa "
-    + "uhubctl "
-    + "screen "
-)
-
-print("Installing Python3.9 via Apt")
-run_shell_command(
-    "apt install -y "
-    + "python3.9-full "
-    + "python3-venv "
-    + "python3-wheel "
-    + "python3-setuptools "
-)
+# INSTALL POETRY AND ARDUINO CLI
 
 print("Installing Poetry")
 run_shell_command("curl -sSL https://install.python-poetry.org | python3 -")
@@ -75,8 +40,17 @@ run_shell_command(
 print("Installing Arduino CLI Chipsets")
 run_shell_command("arduino-cli core install arduino:avr")
 
-print("Installing VS Code via Apt")
-run_shell_command("apt install code -y")
+# =============================================================================
+# ADD GLOBAL GIT SETTINGS
+
+run_shell_command('git config --global core.editor "vim"')
+run_shell_command('git config --global core.commentChar "$"')
+run_shell_command('git config --global user.name "ESM Technical User"')
+run_shell_command('git config --global user.email "esm-technical-user@protonmail.com"')
+run_shell_command("git config --global pull.ff only")
+
+# =============================================================================
+# ADD VSCODE EXTENSIONS
 
 print("Installing VS Code Extensions")
 run_shell_command(
@@ -118,18 +92,6 @@ for src, dst in [
     if not os.path.isfile(dst):
         shutil.copyfile(src, dst)
 
-# configure the SSH daemon
-print("Allow password access via SSH")
-with open("/etc/ssh/sshd_config", "r") as f:
-    sshd_config_content = f.read()
-sshd_config_content = sshd_config_content.replace(
-    "#PasswordAuthentication no", "PasswordAuthentication no"
-).replace("PasswordAuthentication no", "PasswordAuthentication yes")
-with open("/etc/ssh/sshd_config", "w") as f:
-    f.write(sshd_config_content)
-run_shell_command("service ssh restart")
-
-# test SSH keys with GitHub
 gihub_ssh_response = run_shell_command(
     'ssh -o "StrictHostKeyChecking accept-new" -T git@github.com',
     check_exit_code=False,

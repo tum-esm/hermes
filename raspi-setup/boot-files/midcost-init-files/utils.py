@@ -11,7 +11,7 @@ IP_LOGGER_DIR = "/home/pi/Documents/baserow-ip-logger"
 
 def run_shell_command(
     command: str,
-    working_directory: Optional[str] = None,
+    working_directory: Optional[str] = "/home/pi",
     check_exit_code: bool = True,
 ) -> str:
     p = subprocess.run(
@@ -21,7 +21,6 @@ def run_shell_command(
         stderr=subprocess.PIPE,
         cwd=working_directory,
         env=ENV,
-        working_directory="/home/pi",
     )
     stdout = p.stdout.decode("utf-8", errors="replace")
     stderr = p.stderr.decode("utf-8", errors="replace")
