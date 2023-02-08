@@ -7,6 +7,7 @@ from typing import Literal, Optional
 
 from src import custom_types
 from .active_mqtt_queue import ActiveMQTTQueue
+from .functions import CommandLineException
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOGS_ARCHIVE_DIR = join(PROJECT_DIR, "logs", "archive")
@@ -122,16 +123,25 @@ class Logger:
         exception_traceback = "\n".join(
             traceback.format_exception(exc_type, exc, exc_traceback)
         )
-        self._write_log_line(
-            "EXCEPTION",
-            f"{exception_name}, traceback:\n{exception_traceback}",
+        exception_details = "None"
+        if isinstance(exc, CommandLineException) and (exc.details is not None):
+            exception_details = exc.details
+
+        subject_string = exception_name
+        details_string = (
+            f"--- details: -----------------\n"
+            + f"{exception_details}\n"
+            + f"--- traceback: ---------------\n"
+            + f"{exception_traceback}"
         )
+
+        self._write_log_line("EXCEPTION", f"{subject_string}\n{subject_string}")
         if config is not None:
             self._write_mqtt_message(
                 config,
                 level="error",
-                subject=exception_name,
-                details=exception_traceback,
+                subject=subject_string,
+                details=details_string,
             )
 
     def _write_log_line(self, level: str, message: str) -> None:
