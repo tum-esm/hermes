@@ -2,21 +2,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "timescaledb";
 
 
--- Function to convert TIMESTAMPTZ into unix timestamp
-CREATE FUNCTION timestamptz_to_unixtime (tstz TIMESTAMPTZ) RETURNS DOUBLE PRECISION
-    LANGUAGE SQL
-    IMMUTABLE
-    RETURNS NULL ON NULL INPUT
-    RETURN extract(epoch from tstz at time zone 'utc')::DOUBLE PRECISION;
-
--- Function to convert unix timestamp into TIMESTAMPTZ
-CREATE FUNCTION unixtime_to_timestamptz (unixtime DOUBLE PRECISION) RETURNS TIMESTAMPTZ
-    LANGUAGE SQL
-    IMMUTABLE
-    RETURNS NULL ON NULL INPUT
-    RETURN ('epoch'::TIMESTAMPTZ + unixtime * '1 second'::INTERVAL);
-
-
 CREATE TABLE users (
     user_identifier UUID PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,

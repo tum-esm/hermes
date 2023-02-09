@@ -3,6 +3,7 @@ import typing
 
 import asyncpg
 import jinja2
+import pendulum
 
 import app.settings as settings
 
@@ -75,6 +76,13 @@ class Client:
             user=settings.POSTGRESQL_IDENTIFIER,
             password=settings.POSTGRESQL_PASSWORD,
             database=settings.POSTGRESQL_DATABASE,
+        )
+        # Automatically encode/decode TIMESTAMPTZ fields to/from unix timestamps
+        await self.connection.set_type_codec(
+            typename="timestamptz",
+            schema="pg_catalog",
+            encoder=lambda x: pendulum.from_timestamp(x).isoformat(),
+            decoder=lambda x: pendulum.parse(x).float_timestamp,
         )
         # Automatically encode/decode JSONB fields to/from str
         await self.connection.set_type_codec(

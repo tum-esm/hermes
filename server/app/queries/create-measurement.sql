@@ -9,7 +9,7 @@ INSERT INTO measurements (
 VALUES (
     {sensor_identifier},
     {revision},
-    unixtime_to_timestamptz({creation_timestamp}),
+    {creation_timestamp},
     now(),
     {position_in_transmission},
     {measurement}

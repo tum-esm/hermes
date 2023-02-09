@@ -2,10 +2,10 @@ SELECT
     sensor_identifier,
     severity,
     subject,
-    first(revision, creation_timestamp) as first_revision,
-    last(revision, creation_timestamp) as last_revision,
-    timestamptz_to_unixtime(min(creation_timestamp)) as first_creation_timestamp,
-    timestamptz_to_unixtime(max(creation_timestamp)) as last_creation_timestamp,
+    first(revision, creation_timestamp) as min_revision,
+    last(revision, creation_timestamp) as max_revision,
+    min(creation_timestamp) as min_creation_timestamp,
+    max(creation_timestamp) as max_creation_timestamp,
     count(*) as count
 FROM logs
 WHERE sensor_identifier = {sensor_identifier} AND severity = ANY(ARRAY['warning', 'error'])

@@ -13,6 +13,7 @@ asyncpg = "^0.27.0"
 pydantic = "^1.10.2"
 asyncio-mqtt = "^0.16.1"
 passlib = {extras = ["argon2"], version = "^1.7.4"}
+pendulum = "^2.1.2"
 
 [tool.poetry.group.dev]
 optional = true
@@ -27,7 +28,6 @@ ruff = "^0.0.124"
 pytest = "^7.2.0"
 pytest-cov = "^4.0.0"
 anyio = "^3.6.2"
-pendulum = "^2.1.2"
 asgi-lifespan = "^2.0.0"
 
 [tool.black]
