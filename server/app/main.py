@@ -55,9 +55,7 @@ async def create_user(request):
             )
             raise errors.ConflictError()
         except Exception as e:
-            logger.error(
-                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
-            )
+            logger.error(e, exc_info=True)
             raise errors.InternalServerError()
         try:
             # Create new session
@@ -71,9 +69,7 @@ async def create_user(request):
             )
             await database_client.execute(query, *arguments)
         except Exception as e:
-            logger.error(
-                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
-            )
+            logger.error(e, exc_info=True)
             raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
@@ -99,7 +95,7 @@ async def create_session(request):
         logger.warning(f"{request.method} {request.url.path} -- User not found")
         raise errors.NotFoundError()
     except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
+        logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     # Check if password hashes match
     if not auth.verify_password(request.body.password, password_hash):
@@ -118,7 +114,7 @@ async def create_session(request):
         )
         await database_client.execute(query, *arguments)
     except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
+        logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
@@ -155,9 +151,7 @@ async def create_sensor(request):
             logger.warning(f"{request.method} {request.url.path} -- Sensor exists")
             raise errors.ConflictError()
         except Exception as e:
-            logger.error(
-                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
-            )
+            logger.error(e, exc_info=True)
             raise errors.InternalServerError()
         try:
             # Create new configuration
@@ -172,9 +166,7 @@ async def create_sensor(request):
             result = await database_client.fetch(query, *arguments)
             revision = database.dictify(result)[0]["revision"]
         except Exception as e:
-            logger.error(
-                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
-            )
+            logger.error(e, exc_info=True)
             raise errors.InternalServerError()
     # Send MQTT message with configuration
     await mqtt_client.publish_configuration(
@@ -212,9 +204,7 @@ async def update_sensor(request):
             )
             result = await database_client.execute(query, *arguments)
         except Exception as e:
-            logger.error(
-                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
-            )
+            logger.error(e, exc_info=True)
             raise errors.InternalServerError()
         if result != "UPDATE 1":
             logger.warning(
@@ -234,9 +224,7 @@ async def update_sensor(request):
             result = await database_client.fetch(query, *arguments)
             revision = database.dictify(result)[0]["revision"]
         except Exception as e:
-            logger.error(
-                f"{request.method} {request.url.path} -- Unknown error: {repr(e)}"
-            )
+            logger.error(e, exc_info=True)
             raise errors.InternalServerError()
     # Send MQTT message with configuration
     await mqtt_client.publish_configuration(
@@ -286,7 +274,7 @@ async def read_measurements(request):
         )
         result = await database_client.fetch(query, *arguments)
     except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
+        logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
@@ -306,7 +294,7 @@ async def read_log_message_aggregates(request):
         )
         result = await database_client.fetch(query, *arguments)
     except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
+        logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(

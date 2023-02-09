@@ -66,7 +66,7 @@ async def authenticate(request, database_client):
         )
         result = await database_client.fetch(query, *arguments)
     except Exception as e:
-        logger.error(f"{request.method} {request.url.path} -- Unknown error: {repr(e)}")
+        logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     result = database.dictify(result)
     # If the result is empty the access token is invalid

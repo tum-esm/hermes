@@ -40,6 +40,7 @@ def build(
 
     TODO remove jinja2 templating
     TODO change named parameters so they're compatible with sqlfluff? (:param?)
+    TODO not only remove unused arguments, but fill missing ones with NULL
     """
     query = templates.get_template(template).render(**template_arguments)
     # Get the names of the query arguments in some fixed order

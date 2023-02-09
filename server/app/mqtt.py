@@ -158,7 +158,7 @@ class Client(aiomqtt.Client):
                     f" {sensor_identifier}"
                 )
             except Exception as e:
-                logger.error(f"[MQTT] Unknown error: {repr(e)}")
+                logger.error(e, exc_info=True)
 
     async def _process_logs_message(
         self, sensor_identifier: str, message: validation.LogsMessage
@@ -192,7 +192,7 @@ class Client(aiomqtt.Client):
                 f" {sensor_identifier}"
             )
         except Exception as e:
-            logger.error(f"[MQTT] Unknown error: {repr(e)}")
+            logger.error(e, exc_info=True)
 
     async def _process_measurements_message(
         self, sensor_identifier: str, message: validation.MeasurementsMessage
@@ -224,7 +224,7 @@ class Client(aiomqtt.Client):
                 f" {sensor_identifier}"
             )
         except Exception as e:
-            logger.error(f"[MQTT] Unknown error: {repr(e)}")
+            logger.error(e, exc_info=True)
 
     async def listen(self) -> None:
         """Listen to incoming sensor MQTT messages and process them."""
@@ -280,4 +280,4 @@ class Client(aiomqtt.Client):
                     # in the sensor status, even if it was invalid
                     logger.warning(f"[MQTT] Invalid message: {repr(e)}")
                 except Exception as e:
-                    logger.error(f"[MQTT] Unknown error: {repr(e)}")
+                    logger.error(e, exc_info=True)
