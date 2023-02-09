@@ -203,6 +203,9 @@ async def update_sensor(request):
                 },
             )
             result = await database_client.execute(query, *arguments)
+
+        # TODO catch asyncpg.UniqueViolationError
+
         except Exception as e:
             logger.error(e, exc_info=True)
             raise errors.InternalServerError()
@@ -314,9 +317,11 @@ async def stream_network(request):
       - last measurement timestamps
 
     TODO offer choice between different time periods -> adapt interval accordingly (or
-         better: let the frontend choose)
+         better: let the frontend choose from a list of predefined intervals)
     TODO switch to simple HTTP GET requests with polling if we're not pushing
          based on events
+    TODO use JSON array instead of nested lists, with naming of values
+         [{timestamp: 123, value1: 456, value2: 252}, ...] instead of [[123, 456], ...]
     """
 
     async def stream(request):
