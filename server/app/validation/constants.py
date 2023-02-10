@@ -4,7 +4,7 @@ import enum
 class Limit(int, enum.Enum):
     SMALL = 2**6  # 64
     MEDIUM = 2**8  # 256
-    LARGE = 2**10  # 1024
+    LARGE = 2**14  # 16384
     MAXINT4 = 2**31  # Maximum value signed 32-bit integer + 1
 
 

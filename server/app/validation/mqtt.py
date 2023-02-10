@@ -3,6 +3,7 @@ import typing
 import pydantic
 
 import app.validation.types as types
+import app.validtion.constants as constants
 
 
 class Heartbeat(types._BaseModel):
@@ -22,6 +23,18 @@ class Log(types._BaseModel):
     timestamp: types.Timestamp
     subject: pydantic.StrictStr
     details: pydantic.StrictStr | None = None
+
+    @pydantic.validator("subject")
+    def trim_subject(cls, v):
+        if len(v) >= constants.Limit.MEDIUM:
+            return v[: constants.Limit.MEDIUM - 1]
+        return v
+
+    @pydantic.validator("details")
+    def trim_details(cls, v):
+        if len(v) >= constants.Limit.LARGE:
+            return v[: constants.Limit.LARGE - 1]
+        return v
 
 
 class LogsMessage(types._BaseModel):
