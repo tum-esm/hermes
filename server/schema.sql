@@ -116,5 +116,5 @@ SELECT create_hypertable('logs', 'creation_timestamp');
 
 SELECT add_retention_policy(
     relation => 'logs',
-    drop_after => INTERVAL '120 days'
+    drop_after => INTERVAL '8 weeks'
 );

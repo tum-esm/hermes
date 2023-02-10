@@ -10,7 +10,6 @@ import app.validation.constants as constants
 
 class _BaseModel(pydantic.BaseModel):
     class Config:
-        max_anystr_length = constants.Limit.LARGE
         extra = pydantic.Extra.forbid
         frozen = True
 
@@ -21,7 +20,9 @@ class _BaseModel(pydantic.BaseModel):
 
 Name = pydantic.constr(strict=True, regex=constants.Pattern.NAME.value)
 Identifier = pydantic.constr(strict=True, regex=constants.Pattern.IDENTIFIER.value)
-Password = pydantic.constr(strict=True, min_length=8, max_length=constants.Limit.MEDIUM)
+Password = pydantic.constr(
+    strict=True, min_length=8, max_length=constants.Limit.MEDIUM - 1
+)
 
 # TODO Make strict when pydantic v2 is released (used for path and query parameters)
 Revision = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
