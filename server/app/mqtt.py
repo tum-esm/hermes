@@ -1,7 +1,6 @@
 import asyncio
 import json
 import ssl
-import typing
 
 import asyncio_mqtt as aiomqtt
 import asyncpg
@@ -29,7 +28,7 @@ task_references = set()
 class Client(aiomqtt.Client):
     """MQTT client with some additional functionality."""
 
-    def __init__(self, database_client: asyncpg.Connection) -> None:
+    def __init__(self, database_client):
         super().__init__(
             hostname=settings.MQTT_URL,
             port=settings.MQTT_PORT,
@@ -49,17 +48,10 @@ class Client(aiomqtt.Client):
         )
         self.database_client = database_client
 
-    async def publish_configuration(
-        self,
-        sensor_identifier: str,
-        revision: int,
-        configuration: dict[str, typing.Any],
-    ) -> None:
+    async def publish_configuration(self, sensor_identifier, revision, configuration):
         """Publish a configuration to the specified sensor."""
 
-        async def helper(
-            sensor_identifier: str, revision: int, configuration: dict[str, typing.Any]
-        ) -> None:
+        async def helper(sensor_identifier, revision, configuration):
             backoff = 1
             query, arguments = database.build(
                 template="update-configuration-on-publish.sql",
@@ -105,9 +97,7 @@ class Client(aiomqtt.Client):
         task_references.add(task)
         task.add_done_callback(task_references.remove)
 
-    async def _process_heartbeats_message(
-        self, sensor_identifier: str, message: validation.HeartbeatsMessage
-    ) -> None:
+    async def _process_heartbeats_message(self, sensor_identifier, message):
         """Process incoming sensor heartbeats.
 
         Heartbeat messages are critical to the system working correctly. This is in
@@ -160,9 +150,7 @@ class Client(aiomqtt.Client):
             except Exception as e:
                 logger.error(e, exc_info=True)
 
-    async def _process_logs_message(
-        self, sensor_identifier: str, message: validation.LogsMessage
-    ) -> None:
+    async def _process_logs_message(self, sensor_identifier, message):
         """Write incoming sensor logs to the database."""
         try:
             query, arguments = database.build(
@@ -194,9 +182,7 @@ class Client(aiomqtt.Client):
         except Exception as e:
             logger.error(e, exc_info=True)
 
-    async def _process_measurements_message(
-        self, sensor_identifier: str, message: validation.MeasurementsMessage
-    ) -> None:
+    async def _process_measurements_message(self, sensor_identifier, message):
         """Write incoming sensor measurements to the database."""
         try:
             query, arguments = database.build(
@@ -226,7 +212,7 @@ class Client(aiomqtt.Client):
         except Exception as e:
             logger.error(e, exc_info=True)
 
-    async def listen(self) -> None:
+    async def listen(self):
         """Listen to incoming sensor MQTT messages and process them."""
         wildcard_heartbeats = "heartbeats/+"
         wildcard_logs = "log-messages/+"
@@ -244,7 +230,7 @@ class Client(aiomqtt.Client):
             async for message in messages:
                 try:
                     logger.info(
-                        f"[MQTT] Received message: {message.payload} on topic:"
+                        f"[MQTT] Received message: {message.payload!r} on topic:"
                         f" {message.topic}"
                     )
                     # Get sensor identifier from the topic and decode the payload

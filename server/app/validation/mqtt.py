@@ -2,8 +2,8 @@ import typing
 
 import pydantic
 
+import app.validation.constants as constants
 import app.validation.types as types
-import app.validtion.constants as constants
 
 
 class Heartbeat(types._BaseModel):

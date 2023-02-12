@@ -1,5 +1,4 @@
 import json
-import typing
 
 import asyncpg
 import jinja2
@@ -14,16 +13,12 @@ templates = jinja2.Environment(
 )
 
 
-def dictify(result: typing.Sequence[asyncpg.Record]) -> list[dict]:
-    """Cast a database SELECT result into a list of dictionaries."""
+def dictify(result):
+    """Cast a asyncpg SELECT query result into a list of dictionaries."""
     return [dict(record) for record in result]
 
 
-def build(
-    template: str,
-    template_arguments: dict[str, typing.Any],
-    query_arguments: dict[str, typing.Any] | list[dict[str, typing.Any]],
-) -> tuple[str, tuple[typing.Any, ...] | list[tuple[typing.Any, ...]]]:
+def build(template, template_arguments, query_arguments):
     """Dynamically build and parametrize asyncpg query.
 
     1. Render Jinja2 template with the given template arguments
