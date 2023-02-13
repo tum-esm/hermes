@@ -188,9 +188,12 @@ async def update_sensor(request):
     TODO split in two: update sensor and update configuration
     """
     user_identifier, permissions = await auth.authenticate(request, database_client)
+
+    # TODO need to check if sensor is part of network, otherwise this checks nothing
     if request.body.network_identifier not in permissions:
         logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
         raise errors.NotFoundError()
+
     async with database_client.transaction():
         try:
             # Update sensor

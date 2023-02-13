@@ -3,7 +3,7 @@
 - install the python version noted in `pyproject.toml` via `pyenv`
 - install dependencies via `poetry install --with dev --remove-untracked`
 - run tests via `./scripts/test`
-- run server in development mode via `./scripts/develop`
+- run the server in development mode via `./scripts/develop`
 
 ### Deployment
 
@@ -31,7 +31,7 @@ httpx.get(url="http://localhost:8000/status")
     "environment": "production",
     "commit_sha": "1a2984bf5ffda71207fb133d785eb486cb465618",
     "branch_name": "main",
-    "start_time": 1674674178.5367813
+    "start_timestamp": 1674674178.5367813
 }
 ```
 
@@ -169,20 +169,20 @@ httpx.get(
         "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
         "severity": "error",
         "subject": "The CPU is burning",
-        "first_revision": 0,
-        "last_revision": 2,
-        "first_creation_timestamp": 1674678353.210926,
-        "last_creation_timestamp": 1674678408.210929,
+        "min_revision": 0,
+        "max_revision": 2,
+        "min_creation_timestamp": 1674678353.210926,
+        "max_creation_timestamp": 1674678408.210929,
         "count": 2
     },
     {
         "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
         "severity": "warning",
         "subject": "The CPU is pretty hot",
-        "first_revision": 2,
-        "last_revision": 2,
-        "first_creation_timestamp": 1674678412.210929,
-        "last_creation_timestamp": 1674678412.210929,
+        "min_revision": 2,
+        "max_revision": 2,
+        "min_creation_timestamp": 1674678412.210929,
+        "max_creation_timestamp": 1674678412.210929,
         "count": 1
     }
 ]
@@ -216,7 +216,7 @@ The payloads are JSON encoded and have the following structure:
 ```javascript
 {
   "revision": 0,
-  "configuration": {} // this can be any valid (unnested) JSON object
+  "configuration": {} // this can be any valid JSON
 }
 ```
 
@@ -261,7 +261,7 @@ The payloads are JSON encoded and have the following structure:
     {
       "revision": 0,
       "timestamp": 0.0,
-      "value": {} // this can be any valid (unnested) JSON object
+      "value": {} // this can be any valid JSON
     }
   ]
 }
