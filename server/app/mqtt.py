@@ -78,7 +78,7 @@ class Client(aiomqtt.Client):
                         f"[MQTT] Published configuration {sensor_identifier}#{revision}"
                     )
                     break
-                except Exception as e:
+                except Exception as e:  # pragma: no cover
                     # Retry if something fails. Duplicate messages are not a problem,
                     # the sensor can ignore them based on the revision number.
                     # The revision number only increases, never decreases.
@@ -147,7 +147,7 @@ class Client(aiomqtt.Client):
                     "[MQTT] Failed to process heartbeat; Sensor not known:"
                     f" {sensor_identifier}"
                 )
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.error(e, exc_info=True)
 
     async def _process_logs_message(self, sensor_identifier, message):
@@ -179,7 +179,7 @@ class Client(aiomqtt.Client):
                 "[MQTT] Failed to process log messages; Sensor not known:"
                 f" {sensor_identifier}"
             )
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(e, exc_info=True)
 
     async def _process_measurements_message(self, sensor_identifier, message):
@@ -209,7 +209,7 @@ class Client(aiomqtt.Client):
                 "[MQTT] Failed to process measurements; Sensor not known:"
                 f" {sensor_identifier}"
             )
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(e, exc_info=True)
 
     async def listen(self):
@@ -265,5 +265,5 @@ class Client(aiomqtt.Client):
                     # sender ID. Like this, we can show the timestamp of last message
                     # in the sensor status, even if it was invalid
                     logger.warning(f"[MQTT] Invalid message: {repr(e)}")
-                except Exception as e:
+                except Exception as e:  # pragma: no cover
                     logger.error(e, exc_info=True)

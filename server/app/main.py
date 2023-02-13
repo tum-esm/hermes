@@ -54,7 +54,7 @@ async def create_user(request):
                 f"{request.method} {request.url.path} -- User already exists"
             )
             raise errors.ConflictError()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(e, exc_info=True)
             raise errors.InternalServerError()
         try:
@@ -94,7 +94,7 @@ async def create_session(request):
     except IndexError:
         logger.warning(f"{request.method} {request.url.path} -- User not found")
         raise errors.NotFoundError()
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     # Check if password hashes match
@@ -113,7 +113,7 @@ async def create_session(request):
             },
         )
         await database_client.execute(query, *arguments)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     # Return successful response
@@ -150,7 +150,7 @@ async def create_sensor(request):
         except asyncpg.exceptions.UniqueViolationError:
             logger.warning(f"{request.method} {request.url.path} -- Sensor exists")
             raise errors.ConflictError()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(e, exc_info=True)
             raise errors.InternalServerError()
         try:
@@ -165,7 +165,7 @@ async def create_sensor(request):
             )
             result = await database_client.fetch(query, *arguments)
             revision = database.dictify(result)[0]["revision"]
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(e, exc_info=True)
             raise errors.InternalServerError()
     # Send MQTT message with configuration
@@ -206,7 +206,7 @@ async def update_sensor(request):
 
         # TODO catch asyncpg.UniqueViolationError
 
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(e, exc_info=True)
             raise errors.InternalServerError()
         if result != "UPDATE 1":
@@ -226,7 +226,7 @@ async def update_sensor(request):
             )
             result = await database_client.fetch(query, *arguments)
             revision = database.dictify(result)[0]["revision"]
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             logger.error(e, exc_info=True)
             raise errors.InternalServerError()
     # Send MQTT message with configuration
@@ -276,7 +276,7 @@ async def read_measurements(request):
             },
         )
         result = await database_client.fetch(query, *arguments)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     # Return successful response
@@ -296,7 +296,7 @@ async def read_log_message_aggregates(request):
             query_arguments={"sensor_identifier": request.path.sensor_identifier},
         )
         result = await database_client.fetch(query, *arguments)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     # Return successful response

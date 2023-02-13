@@ -65,7 +65,7 @@ async def authenticate(request, database_client):
             query_arguments={"access_token_hash": hash_token(access_token)},
         )
         result = await database_client.fetch(query, *arguments)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     result = database.dictify(result)
