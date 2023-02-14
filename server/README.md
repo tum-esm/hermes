@@ -122,11 +122,12 @@ httpx.put(
 
 **`GET /sensors/<sensor-identifier>/measurements`:**
 
-Read the measurements of a sensor in pages, optionally with keyset parameters `direction` and `creation_timestamp`.
+Read the measurements of a sensor in pages, optionally with keyset query parameters `direction` and `creation_timestamp`.
 
 ```python
 httpx.get(
     url="http://localhost:8000/sensors/102ebc56-edb9-42be-aec0-15a6c1075c7e/measurements",
+    params={"direction": "next", "creation_timestamp": 1674677600.0},
 )
 ```
 

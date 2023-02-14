@@ -28,7 +28,7 @@ task_references = set()
 class Client(aiomqtt.Client):
     """MQTT client with some additional functionality."""
 
-    def __init__(self, database_client):
+    def __init__(self, dbpool):
         super().__init__(
             hostname=settings.MQTT_URL,
             port=settings.MQTT_PORT,
@@ -46,7 +46,7 @@ class Client(aiomqtt.Client):
             clean_start=False,
             client_id="server",
         )
-        self.database_client = database_client
+        self.dbpool = dbpool
 
     async def publish_configuration(self, sensor_identifier, revision, configuration):
         """Publish a configuration to the specified sensor."""
@@ -73,7 +73,7 @@ class Client(aiomqtt.Client):
                         retain=True,
                     )
                     # Try to set the publication timestamp in the database
-                    await self.database_client.execute(query, *arguments)
+                    await self.dbpool.execute(query, *arguments)
                     logger.info(
                         f"[MQTT] Published configuration {sensor_identifier}#{revision}"
                     )
@@ -110,8 +110,8 @@ class Client(aiomqtt.Client):
         """
         for i, heartbeat in enumerate(message.heartbeats):
             # We process each heartheat individually in separate transactions
-            try:
-                with self.database_client.transaction():
+            async with self.dbpool.acquire() as connection:
+                async with connection.transaction():
                     # Write heartbeat as log in the database
                     query, arguments = database.build(
                         template="create-log.sql",
@@ -126,7 +126,15 @@ class Client(aiomqtt.Client):
                             "details": json.dumps({"success": heartbeat.success}),
                         },
                     )
-                    await self.database_client.execute(query, *arguments)
+                    try:
+                        await connection.execute(query, *arguments)
+                    except asyncpg.ForeignKeyViolationError:
+                        logger.warning(
+                            "[MQTT] Failed to process heartbeat; Sensor not known:"
+                            f" {sensor_identifier}"
+                        )
+                    except Exception as e:  # pragma: no cover
+                        logger.error(e, exc_info=True)
                     # Update configuration in the database
                     query, arguments = database.build(
                         template="update-configuration-on-acknowledgement.sql",
@@ -138,42 +146,34 @@ class Client(aiomqtt.Client):
                             "success": heartbeat.success,
                         },
                     )
-                    await self.database_client.execute(query, *arguments)
-                logger.info(
-                    f"[MQTT] Processed heartbeat {heartbeat} from {sensor_identifier}"
-                )
-            except asyncpg.ForeignKeyViolationError:
-                logger.warning(
-                    "[MQTT] Failed to process heartbeat; Sensor not known:"
-                    f" {sensor_identifier}"
-                )
-            except Exception as e:  # pragma: no cover
-                logger.error(e, exc_info=True)
+                    try:
+                        await connection.execute(query, *arguments)
+                    except Exception as e:  # pragma: no cover
+                        logger.error(e, exc_info=True)
+            logger.info(
+                f"[MQTT] Processed heartbeat {heartbeat} from {sensor_identifier}"
+            )
 
     async def _process_logs_message(self, sensor_identifier, message):
         """Write incoming sensor logs to the database."""
+        query, arguments = database.build(
+            template="create-log.sql",
+            template_arguments={},
+            query_arguments=[
+                {
+                    "sensor_identifier": sensor_identifier,
+                    "revision": log.revision,
+                    "creation_timestamp": log.timestamp,
+                    "position_in_transmission": i,
+                    "severity": log.severity,
+                    "subject": log.subject,
+                    "details": log.details,
+                }
+                for i, log in enumerate(message.logs)
+            ],
+        )
         try:
-            query, arguments = database.build(
-                template="create-log.sql",
-                template_arguments={},
-                query_arguments=[
-                    {
-                        "sensor_identifier": sensor_identifier,
-                        "revision": log.revision,
-                        "creation_timestamp": log.timestamp,
-                        "position_in_transmission": i,
-                        "severity": log.severity,
-                        "subject": log.subject,
-                        "details": log.details,
-                    }
-                    for i, log in enumerate(message.logs)
-                ],
-            )
-            await self.database_client.executemany(query, arguments)
-            logger.info(
-                f"[MQTT] Processed {len(message.logs)} log messages from"
-                f" {sensor_identifier}"
-            )
+            await self.dbpool.executemany(query, arguments)
         except asyncpg.ForeignKeyViolationError:
             logger.warning(
                 "[MQTT] Failed to process log messages; Sensor not known:"
@@ -181,29 +181,29 @@ class Client(aiomqtt.Client):
             )
         except Exception as e:  # pragma: no cover
             logger.error(e, exc_info=True)
+        logger.info(
+            f"[MQTT] Processed {len(message.logs)} log messages from"
+            f" {sensor_identifier}"
+        )
 
     async def _process_measurements_message(self, sensor_identifier, message):
         """Write incoming sensor measurements to the database."""
+        query, arguments = database.build(
+            template="create-measurement.sql",
+            template_arguments={},
+            query_arguments=[
+                {
+                    "sensor_identifier": sensor_identifier,
+                    "revision": measurement.revision,
+                    "creation_timestamp": measurement.timestamp,
+                    "position_in_transmission": i,
+                    "measurement": measurement.value,
+                }
+                for i, measurement in enumerate(message.measurements)
+            ],
+        )
         try:
-            query, arguments = database.build(
-                template="create-measurement.sql",
-                template_arguments={},
-                query_arguments=[
-                    {
-                        "sensor_identifier": sensor_identifier,
-                        "revision": measurement.revision,
-                        "creation_timestamp": measurement.timestamp,
-                        "position_in_transmission": i,
-                        "measurement": measurement.value,
-                    }
-                    for i, measurement in enumerate(message.measurements)
-                ],
-            )
-            await self.database_client.executemany(query, arguments)
-            logger.info(
-                f"[MQTT] Processed {len(message.measurements)} measurements from"
-                f" {sensor_identifier}"
-            )
+            await self.dbpool.executemany(query, arguments)
         except asyncpg.ForeignKeyViolationError:
             logger.warning(
                 "[MQTT] Failed to process measurements; Sensor not known:"
@@ -211,6 +211,10 @@ class Client(aiomqtt.Client):
             )
         except Exception as e:  # pragma: no cover
             logger.error(e, exc_info=True)
+        logger.info(
+            f"[MQTT] Processed {len(message.measurements)} measurements from"
+            f" {sensor_identifier}"
+        )
 
     async def listen(self):
         """Listen to incoming sensor MQTT messages and process them."""

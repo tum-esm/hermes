@@ -1,3 +1,4 @@
+import contextlib
 import json
 
 import asyncpg
@@ -15,6 +16,8 @@ templates = jinja2.Environment(
 
 def dictify(result):
     """Cast a asyncpg SELECT query result into a list of dictionaries."""
+    # TODO: implement this as a custom asyncpg record_class on pool?
+    # see https://magicstack.github.io/asyncpg/current/api/index.html#connection-pools
     return [dict(record) for record in result]
 
 
@@ -58,42 +61,43 @@ def build(template, template_arguments, query_arguments):
     return query, arguments  # type: ignore
 
 
-class Client:
-    """Custom context manager for asyncpg database connection."""
+async def initialize(connection):
+    # Automatically encode/decode TIMESTAMPTZ fields to/from unix timestamps
+    await connection.set_type_codec(
+        typename="timestamptz",
+        schema="pg_catalog",
+        encoder=lambda x: pendulum.from_timestamp(x).isoformat(),
+        decoder=lambda x: pendulum.parse(x).float_timestamp,
+    )
+    # Automatically encode/decode JSONB fields to/from str
+    await connection.set_type_codec(
+        typename="jsonb",
+        schema="pg_catalog",
+        encoder=json.dumps,
+        decoder=json.loads,
+    )
+    # Automatically encode/decode UUID fields to/from str
+    await connection.set_type_codec(
+        typename="uuid",
+        schema="pg_catalog",
+        encoder=str,
+        decoder=str,
+    )
 
-    def __init__(self):
-        self.connection = None
 
-    async def __aenter__(self):
-        self.connection = await asyncpg.connect(
-            host=settings.POSTGRESQL_URL,
-            port=settings.POSTGRESQL_PORT,
-            user=settings.POSTGRESQL_IDENTIFIER,
-            password=settings.POSTGRESQL_PASSWORD,
-            database=settings.POSTGRESQL_DATABASE,
-        )
-        # Automatically encode/decode TIMESTAMPTZ fields to/from unix timestamps
-        await self.connection.set_type_codec(
-            typename="timestamptz",
-            schema="pg_catalog",
-            encoder=lambda x: pendulum.from_timestamp(x).isoformat(),
-            decoder=lambda x: pendulum.parse(x).float_timestamp,
-        )
-        # Automatically encode/decode JSONB fields to/from str
-        await self.connection.set_type_codec(
-            typename="jsonb",
-            schema="pg_catalog",
-            encoder=json.dumps,
-            decoder=json.loads,
-        )
-        # Automatically encode/decode UUID fields to/from str
-        await self.connection.set_type_codec(
-            typename="uuid",
-            schema="pg_catalog",
-            encoder=str,
-            decoder=str,
-        )
-        return self.connection
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.connection.close()
+@contextlib.asynccontextmanager
+async def pool():
+    """Context manager for asyncpg database pool with custom settings."""
+    async with asyncpg.create_pool(
+        host=settings.POSTGRESQL_URL,
+        port=settings.POSTGRESQL_PORT,
+        user=settings.POSTGRESQL_IDENTIFIER,
+        password=settings.POSTGRESQL_PASSWORD,
+        database=settings.POSTGRESQL_DATABASE,
+        min_size=2,
+        max_size=8,
+        max_queries=16384,
+        max_inactive_connection_lifetime=300,
+        init=initialize,
+    ) as x:
+        yield x

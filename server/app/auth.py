@@ -46,7 +46,7 @@ def hash_token(token):
 ########################################################################################
 
 
-async def authenticate(request, database_client):
+async def authenticate(request, dbpool):
     """Authenticate and read a user's permissions based on authorization header."""
     # Check for authorization header
     access_token = request.headers.get("authorization")
@@ -64,7 +64,7 @@ async def authenticate(request, database_client):
             template_arguments={},
             query_arguments={"access_token_hash": hash_token(access_token)},
         )
-        result = await database_client.fetch(query, *arguments)
+        result = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()

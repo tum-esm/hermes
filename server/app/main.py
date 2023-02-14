@@ -36,8 +36,8 @@ async def create_user(request):
     password_hash = auth.hash_password(request.body.password)
     access_token = auth.generate_token()
     access_token_hash = auth.hash_token(access_token)
-    async with database_client.transaction():
-        try:
+    async with dbpool.acquire() as connection:
+        async with connection.transaction():
             # Create new user
             query, arguments = database.build(
                 template="create-user.sql",
@@ -47,17 +47,17 @@ async def create_user(request):
                     "password_hash": password_hash,
                 },
             )
-            result = await database_client.fetch(query, *arguments)
+            try:
+                result = await connection.fetch(query, *arguments)
+            except asyncpg.exceptions.UniqueViolationError:
+                logger.warning(
+                    f"{request.method} {request.url.path} -- User already exists"
+                )
+                raise errors.ConflictError()
+            except Exception as e:  # pragma: no cover
+                logger.error(e, exc_info=True)
+                raise errors.InternalServerError()
             user_identifier = database.dictify(result)[0]["user_identifier"]
-        except asyncpg.exceptions.UniqueViolationError:
-            logger.warning(
-                f"{request.method} {request.url.path} -- User already exists"
-            )
-            raise errors.ConflictError()
-        except Exception as e:  # pragma: no cover
-            logger.error(e, exc_info=True)
-            raise errors.InternalServerError()
-        try:
             # Create new session
             query, arguments = database.build(
                 template="create-session.sql",
@@ -67,10 +67,11 @@ async def create_user(request):
                     "user_identifier": user_identifier,
                 },
             )
-            await database_client.execute(query, *arguments)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            raise errors.InternalServerError()
+            try:
+                await connection.execute(query, *arguments)
+            except Exception as e:
+                logger.error(e, exc_info=True)
+                raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=201,
@@ -81,38 +82,39 @@ async def create_user(request):
 @validation.validate(schema=validation.CreateSessionRequest)
 async def create_session(request):
     """Authenticate a user from username and password and return access token."""
+    # Read user
+    query, arguments = database.build(
+        template="read-user.sql",
+        template_arguments={},
+        query_arguments={"username": request.body.username},
+    )
     try:
-        # Read user
-        query, arguments = database.build(
-            template="read-user.sql",
-            template_arguments={},
-            query_arguments={"username": request.body.username},
-        )
-        result = await database_client.fetch(query, *arguments)
-        user_identifier = database.dictify(result)[0]["user_identifier"]
-        password_hash = database.dictify(result)[0]["password_hash"]
-    except IndexError:
-        logger.warning(f"{request.method} {request.url.path} -- User not found")
-        raise errors.NotFoundError()
+        result = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
+    result = database.dictify(result)
+    if len(result) == 0:
+        logger.warning(f"{request.method} {request.url.path} -- User not found")
+        raise errors.NotFoundError()
+    user_identifier = result[0]["user_identifier"]
+    password_hash = result[0]["password_hash"]
     # Check if password hashes match
     if not auth.verify_password(request.body.password, password_hash):
         logger.warning(f"{request.method} {request.url.path} -- Invalid password")
         raise errors.UnauthorizedError()
     access_token = auth.generate_token()
+    # Create new session
+    query, arguments = database.build(
+        template="create-session.sql",
+        template_arguments={},
+        query_arguments={
+            "access_token_hash": auth.hash_token(access_token),
+            "user_identifier": user_identifier,
+        },
+    )
     try:
-        # Create new session
-        query, arguments = database.build(
-            template="create-session.sql",
-            template_arguments={},
-            query_arguments={
-                "access_token_hash": auth.hash_token(access_token),
-                "user_identifier": user_identifier,
-            },
-        )
-        await database_client.execute(query, *arguments)
+        await dbpool.execute(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
@@ -126,13 +128,13 @@ async def create_session(request):
 @validation.validate(schema=validation.CreateSensorRequest)
 async def create_sensor(request):
     """Create a new sensor and configuration."""
-    user_identifier, permissions = await auth.authenticate(request, database_client)
+    user_identifier, permissions = await auth.authenticate(request, dbpool)
     if request.body.network_identifier not in permissions:
         # TODO if user is read-only, return 403 -> "Insufficient authorization"
         logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
         raise errors.NotFoundError()
-    async with database_client.transaction():
-        try:
+    async with dbpool.acquire() as connection:
+        async with connection.transaction():
             # Create new sensor
             query, arguments = database.build(
                 template="create-sensor.sql",
@@ -142,18 +144,20 @@ async def create_sensor(request):
                     "network_identifier": request.body.network_identifier,
                 },
             )
-            result = await database_client.fetch(query, *arguments)
+            try:
+                result = await connection.fetch(query, *arguments)
+            except asyncpg.ForeignKeyViolationError:
+                logger.warning(
+                    f"{request.method} {request.url.path} -- Network not found"
+                )
+                raise errors.NotFoundError()
+            except asyncpg.exceptions.UniqueViolationError:
+                logger.warning(f"{request.method} {request.url.path} -- Sensor exists")
+                raise errors.ConflictError()
+            except Exception as e:  # pragma: no cover
+                logger.error(e, exc_info=True)
+                raise errors.InternalServerError()
             sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
-        except asyncpg.ForeignKeyViolationError:
-            logger.warning(f"{request.method} {request.url.path} -- Network not found")
-            raise errors.NotFoundError()
-        except asyncpg.exceptions.UniqueViolationError:
-            logger.warning(f"{request.method} {request.url.path} -- Sensor exists")
-            raise errors.ConflictError()
-        except Exception as e:  # pragma: no cover
-            logger.error(e, exc_info=True)
-            raise errors.InternalServerError()
-        try:
             # Create new configuration
             query, arguments = database.build(
                 template="create-configuration.sql",
@@ -163,11 +167,12 @@ async def create_sensor(request):
                     "configuration": request.body.configuration,
                 },
             )
-            result = await database_client.fetch(query, *arguments)
+            try:
+                result = await connection.fetch(query, *arguments)
+            except Exception as e:  # pragma: no cover
+                logger.error(e, exc_info=True)
+                raise errors.InternalServerError()
             revision = database.dictify(result)[0]["revision"]
-        except Exception as e:  # pragma: no cover
-            logger.error(e, exc_info=True)
-            raise errors.InternalServerError()
     # Send MQTT message with configuration
     await mqtt_client.publish_configuration(
         sensor_identifier=sensor_identifier,
@@ -187,15 +192,15 @@ async def update_sensor(request):
 
     TODO split in two: update sensor and update configuration
     """
-    user_identifier, permissions = await auth.authenticate(request, database_client)
+    user_identifier, permissions = await auth.authenticate(request, dbpool)
 
     # TODO need to check if sensor is part of network, otherwise this checks nothing
     if request.body.network_identifier not in permissions:
         logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
         raise errors.NotFoundError()
 
-    async with database_client.transaction():
-        try:
+    async with dbpool.acquire() as connection:
+        async with connection.transaction():
             # Update sensor
             query, arguments = database.build(
                 template="update-sensor.sql",
@@ -205,19 +210,19 @@ async def update_sensor(request):
                     "sensor_name": request.body.sensor_name,
                 },
             )
-            result = await database_client.execute(query, *arguments)
+            try:
+                result = await connection.execute(query, *arguments)
 
-        # TODO catch asyncpg.UniqueViolationError
+            # TODO catch asyncpg.UniqueViolationError
 
-        except Exception as e:  # pragma: no cover
-            logger.error(e, exc_info=True)
-            raise errors.InternalServerError()
-        if result != "UPDATE 1":
-            logger.warning(
-                f"{request.method} {request.url.path} -- Sensor doesn't exist"
-            )
-            raise errors.NotFoundError()
-        try:
+            except Exception as e:  # pragma: no cover
+                logger.error(e, exc_info=True)
+                raise errors.InternalServerError()
+            if result != "UPDATE 1":
+                logger.warning(
+                    f"{request.method} {request.url.path} -- Sensor doesn't exist"
+                )
+                raise errors.NotFoundError()
             # Create new configuration
             query, arguments = database.build(
                 template="create-configuration.sql",
@@ -227,11 +232,12 @@ async def update_sensor(request):
                     "configuration": request.body.configuration,
                 },
             )
-            result = await database_client.fetch(query, *arguments)
+            try:
+                result = await connection.fetch(query, *arguments)
+            except Exception as e:  # pragma: no cover
+                logger.error(e, exc_info=True)
+                raise errors.InternalServerError()
             revision = database.dictify(result)[0]["revision"]
-        except Exception as e:  # pragma: no cover
-            logger.error(e, exc_info=True)
-            raise errors.InternalServerError()
     # Send MQTT message with configuration
     await mqtt_client.publish_configuration(
         sensor_identifier=request.path.sensor_identifier,
@@ -268,17 +274,17 @@ async def read_measurements(request):
 
     - use status code 206 for partial content?
     """
+    query, arguments = database.build(
+        template="read-measurements.sql",
+        template_arguments={},
+        query_arguments={
+            "sensor_identifier": request.path.sensor_identifier,
+            "direction": request.query.direction,
+            "creation_timestamp": request.query.creation_timestamp,
+        },
+    )
     try:
-        query, arguments = database.build(
-            template="read-measurements.sql",
-            template_arguments={},
-            query_arguments={
-                "sensor_identifier": request.path.sensor_identifier,
-                "direction": request.query.direction,
-                "creation_timestamp": request.query.creation_timestamp,
-            },
-        )
-        result = await database_client.fetch(query, *arguments)
+        result = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
@@ -292,13 +298,13 @@ async def read_measurements(request):
 @validation.validate(schema=validation.ReadLogsAggregatesRequest)
 async def read_log_message_aggregates(request):
     """Return aggregation of sensor log messages."""
+    query, arguments = database.build(
+        template="aggregate-logs.sql",
+        template_arguments={},
+        query_arguments={"sensor_identifier": request.path.sensor_identifier},
+    )
     try:
-        query, arguments = database.build(
-            template="aggregate-logs.sql",
-            template_arguments={},
-            query_arguments={"sensor_identifier": request.path.sensor_identifier},
-        )
-        result = await database_client.fetch(query, *arguments)
+        result = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
@@ -336,7 +342,7 @@ async def stream_network(request):
                     "network_identifier": request.path.network_identifier,
                 },
             )
-            result = await database_client.fetch(query, *arguments)
+            result = await dbpool.fetch(query, *arguments)
             # TODO handle exceptions
             yield sse.ServerSentEvent(data=database.dictify(result)).encode()
             await asyncio.sleep(10)
@@ -353,19 +359,19 @@ async def stream_network(request):
     )
 
 
-database_client = None
+dbpool = None  # Database connection pool
 mqtt_client = None
 
 
 @contextlib.asynccontextmanager
 async def lifespan(app):
     """Manage lifetime of database client and MQTT client."""
-    global database_client
+    global dbpool
     global mqtt_client
-    async with database.Client() as x:
-        async with mqtt.Client(database_client=x) as y:
+    async with database.pool() as x:
+        async with mqtt.Client(dbpool=x) as y:
             # Make clients globally available
-            database_client = x
+            dbpool = x
             mqtt_client = y
             # Start MQTT listener in (unawaited) asyncio task
             loop = asyncio.get_event_loop()
