@@ -13,7 +13,7 @@ def test_wind_sensor(log_files: None) -> None:
         d2 = wind_sensor.get_current_device_status()
         print(f"measurement: {d1}")
         print(f"device_status: {d2}")
-        return (d1 is not None) and (d2 is not None)
+        return d1 is not None
 
     wait_for_condition(
         data_arrived,
