@@ -85,7 +85,6 @@ class ConfigurationProcedure:
             self.logger.info("received config has the same revision")
             return
 
-        has_same_version = self.config.version == new_version
         has_same_directory = PROJECT_DIR == code_path(new_version)
 
         self.logger.info(
@@ -96,7 +95,7 @@ class ConfigurationProcedure:
         )
 
         try:
-            if has_same_version and has_same_directory:
+            if has_same_directory:
                 store_current_config()
             else:
                 self._download_code(new_version)
@@ -107,9 +106,7 @@ class ConfigurationProcedure:
             self._run_pytests(
                 new_version,
                 scope=(
-                    "parameter-change"
-                    if (has_same_version and has_same_directory)
-                    else "version-change"
+                    "parameter-change" if (has_same_directory) else "version-change"
                 ),
             )
 
@@ -124,7 +121,7 @@ class ConfigurationProcedure:
                 config=self.config,
             )
 
-            if not has_same_directory:
+            if has_same_directory:
                 restore_current_config()
 
             raise ConfigurationProcedure.ExitOnUpdateSuccess()
@@ -139,7 +136,8 @@ class ConfigurationProcedure:
             )
             self.logger.exception(config=self.config)
 
-        restore_current_config()
+        if has_same_directory:
+            restore_current_config()
         self.logger.info(
             f"continuing with current revision {self.config.revision} "
             + f"and version {self.config.version}"
