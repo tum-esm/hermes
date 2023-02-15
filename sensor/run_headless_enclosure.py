@@ -37,10 +37,8 @@ if __name__ == "__main__":
                 assert current_data is not None, "enclosure doesn't send any data"
 
                 if last_update_time != current_data.last_update_time:
-                    (
-                        air_inlet_temperature,
-                        air_inlet_humidity,
-                    ) = air_inlet_sensor.get_current_values()
+                    air_inlet_temperature = air_inlet_sensor.get_current_temperature()
+                    air_inlet_humidity = air_inlet_sensor.get_current_humidity()
                     mainboard_sensor_data = mainboard_sensor.get_system_data()
                     write_data(
                         {
