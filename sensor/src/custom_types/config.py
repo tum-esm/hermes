@@ -51,19 +51,19 @@ class HardwareConfig(BaseModel):
 
 
 class MeasurementTimingConfig(BaseModel):
-    seconds_per_measurement_interval: float
-    seconds_per_measurement: float
+    seconds_per_measurement_interval: int
+    seconds_per_measurement: int
 
     # validators
     _val_seconds_per_measurement_interval = validator(
         "seconds_per_measurement_interval", pre=True, allow_reuse=True
     )(
-        validate_float(minimum=10, maximum=7200),
+        validate_int(minimum=10, maximum=7200),
     )
     _val_seconds_per_measurement = validator(
         "seconds_per_measurement", pre=True, allow_reuse=True
     )(
-        validate_float(minimum=1, maximum=300),
+        validate_int(minimum=1, maximum=300),
     )
 
     class Config:
