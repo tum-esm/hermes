@@ -14,7 +14,7 @@ MEASUREMENT_REGEX = (
     + r"\d+\.\d+\s+"  # compensated
     + r"\d+\.\d+\s+"  # compensated + filtered
     + r"\d+\.\d+\s+"  # temperature
-    + "(R  C  C+F  T)"
+    + r"\(R C C\+F T\)"
 )
 
 CO2_SENSOR_POWER_PIN_OUT = 20
@@ -66,7 +66,7 @@ class CO2SensorInterface:
         for default_setting in [
             "echo off",  # do not output received strings
             "range 1",  # measuring from 0 to 1000 ppm
-            'form CO2RAWUC CO2RAW CO2 T " (R  C  C+F  T)"',
+            'form CO2RAWUC CO2RAW CO2 T " (R C C+F T)"',
             "tc on",  # temperature compensation
             "lc off",  # line correction
             "rhc off",  # relative humidity compensation
