@@ -156,6 +156,11 @@ class MeasurementProcedure:
         )
         time.sleep(0.5)
 
+        # set averaging time to time between datapoints
+        self.hardware_interface.co2_sensor.set_filter_setting(
+            average=self.config.measurement.timing.seconds_per_measurement
+        )
+
         # possibly switches valve every two minutes
         self._update_input_valve()
         self._update_input_air_calibration()
