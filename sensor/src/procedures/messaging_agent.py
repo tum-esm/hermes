@@ -55,6 +55,9 @@ class MessagingAgent:
                 new_process.start()
                 MessagingAgent.communication_loop_process = new_process
 
+        # wait until messaging agent has
+        time.sleep(2)
+
     @staticmethod
     def deinit() -> None:
         """stop the archiving loop and the communication loop"""
