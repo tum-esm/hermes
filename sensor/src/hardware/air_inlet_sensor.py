@@ -15,14 +15,17 @@ class AirInletSensorInterface:
         )
         self.logger.info("Finished initialization")
 
-    def get_current_values(self) -> tuple[Optional[float], Optional[float]]:
-        """get tuple of temperature and humidity"""
+    def get_current_temperature(self) -> Optional[float]:
         # execute Softreset Command  (default T=14Bit RH=12)
         self.i2c_interface.write([0xFE])
         time.sleep(0.05)
-        temperature = self._read_temperature()
-        humidity = self._read_humidity()
-        return temperature, humidity
+        return self._read_temperature()
+
+    def get_current_humidity(self) -> Optional[float]:
+        # execute Softreset Command  (default T=14Bit RH=12)
+        self.i2c_interface.write([0xFE])
+        time.sleep(0.05)
+        return self._read_humidity()
 
     def _read_temperature(self) -> Optional[float]:
         """Temperature measurement (no hold master), blocking for ~ 88ms !!!"""
