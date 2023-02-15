@@ -11,7 +11,8 @@ from src import utils, hardware
 def test_air_inlet_sensor(log_files: None) -> None:
     config = utils.ConfigInterface.read()
     sensor = hardware.AirInletSensorInterface(config)
-    temperature, humidity = sensor.get_current_values()
+    temperature = sensor.get_current_temperature()
+    humidity = sensor.get_current_humidity()
     assert temperature is not None
     assert humidity is not None
     sensor.teardown()

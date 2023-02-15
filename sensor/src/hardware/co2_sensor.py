@@ -193,8 +193,8 @@ class CO2SensorInterface:
                 f"sensor took a long time to answer ({answer_delay}s)",
                 config=self.config,
             )
-        answer_parts = [s for s in answer.replace("\t", " ").split(" ") if len(s) > 0]
-        return tuple([float(answer_parts[i]) for i in range(4)])
+        xs = [s for s in answer.replace("\t", " ").split(" ") if len(s) > 0]
+        return float(xs[0]), float(xs[1]), float(xs[2]), float(xs[3])
 
     def get_current_concentration(self) -> custom_types.CO2SensorData:
         """get the current concentration value from the CO2 probe"""
