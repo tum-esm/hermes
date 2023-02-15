@@ -115,14 +115,12 @@ class ConfigurationProcedure:
                 config=self.config,
             )
 
-            self._update_cli_pointer(new_version)
-            self.logger.info(
-                f"upgrading to revision {new_revision}: switched CLI pointer successfully",
-                config=self.config,
-            )
-
-            if has_same_directory:
-                restore_current_config()
+            if not has_same_directory:
+                self._update_cli_pointer(new_version)
+                self.logger.info(
+                    f"upgrading to revision {new_revision}: switched CLI pointer successfully",
+                    config=self.config,
+                )
 
             raise ConfigurationProcedure.ExitOnUpdateSuccess()
 
