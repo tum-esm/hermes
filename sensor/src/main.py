@@ -52,10 +52,9 @@ def run() -> None:
         logger.exception()
         raise e
 
-    time.sleep(2)
-
     procedures.MessagingAgent.check_errors()
 
+    # wait until retained messages arrive
     time.sleep(2)
 
     # -------------------------------------------------------------------------
@@ -131,7 +130,8 @@ def run() -> None:
                 try:
                     hardware_interface.teardown()
                 except Exception as e:
-                    raise ExitOnHardwareTeardownFail
+                    logger.exception(config=config)
+                    raise ExitOnHardwareTeardownFail()
 
                 # stopping this script inside the procedure if successful
                 logger.info("running configuration procedure")
@@ -177,7 +177,7 @@ def run() -> None:
             exit(0)
 
         except ExitOnHardwareTeardownFail:
-            logger.info(
+            logger.error(
                 "shutting down mainloop due to failed "
                 + "hardware.teardown() before config update",
                 config=config,

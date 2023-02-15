@@ -127,7 +127,7 @@ class ConfigurationProcedure:
             if not has_same_directory:
                 restore_current_config()
 
-            raise ConfigurationProcedure.ExitOnUpdateSuccess
+            raise ConfigurationProcedure.ExitOnUpdateSuccess()
 
         except ConfigurationProcedure.ExitOnUpdateSuccess as e:
             raise e
