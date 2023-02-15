@@ -179,12 +179,13 @@ class HeatedEnclosureInterface:
                         "enclosure temperature sensor not connected",
                         config=self.config,
                     )
-                if self.measurement.measured > 50:
-                    self.logger.warning(
-                        "high temperatures inside heated enclosure: "
-                        + f"{self.measurement.measured} °C",
-                        config=self.config,
-                    )
+                else:
+                    if self.measurement.measured > 50:
+                        self.logger.warning(
+                            "high temperatures inside heated enclosure: "
+                            + f"{self.measurement.measured} °C",
+                            config=self.config,
+                        )
             if (now - last_contact_time) > 300:
                 self.logger.warning("no contact to arduino for more than 5 minutes")
 
