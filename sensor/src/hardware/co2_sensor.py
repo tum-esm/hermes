@@ -4,17 +4,18 @@ from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
 
-NUMBER_REGEX = r"\d+(\.\d+)?"
+NUMBER_REGEX = r"\d+\.\d+"
 STARTUP_REGEX = (
     f"GMP343 - Version STD {NUMBER_REGEX}\\r\\n"
     + f"Copyright: Vaisala Oyj \\d{{4}} - \\d{{4}}"
 )
 MEASUREMENT_REGEX = (
-    f"Raw\\s*{NUMBER_REGEX} ppm; "
-    + f"Comp\\.\\s*{NUMBER_REGEX} ppm; "
-    + f"Filt\\.\\s*{NUMBER_REGEX} ppm"
+    r"\d+\.\d+\s+"  # raw
+    + r"\d+\.\d+\s+"  # compensated
+    + r"\d+\.\d+\s+"  # compensated + filtered
+    + r"\d+\.\d+\s+"  # temperature
+    + "(R  C  C+F  T)"
 )
-
 
 CO2_SENSOR_POWER_PIN_OUT = 20
 CO2_SENSOR_SERIAL_PORT = "/dev/ttySC0"
@@ -65,7 +66,7 @@ class CO2SensorInterface:
         for default_setting in [
             "echo off",  # do not output received strings
             "range 1",  # measuring from 0 to 1000 ppm
-            'form "Raw " CO2RAWUC " ppm; Comp." CO2RAW " ppm; Filt. " CO2 " ppm"',
+            'form CO2RAWUC CO2RAW CO2 T " (R  C  C+F  T)"',
             "tc on",  # temperature compensation
             "lc off",  # line correction
             "rhc off",  # relative humidity compensation
@@ -176,8 +177,9 @@ class CO2SensorInterface:
             + f"humidity = {humidity}, oxygen = {oxygen})"
         )
 
-    def get_current_concentration(self) -> custom_types.CO2SensorData:
-        """get the current concentration value from the CO2 probe"""
+    def _get_current_sensor_data(self) -> tuple[float, float, float, float]:
+        """get the current data from the CO2 probe
+        tuple[co2rawuc, co2raw, co2, t]"""
         self.rs232_interface.flush_receiver_stream()
 
         request_time = time.time()
@@ -191,15 +193,20 @@ class CO2SensorInterface:
                 f"sensor took a long time to answer ({answer_delay}s)",
                 config=self.config,
             )
+        answer_parts = [s for s in answer.replace("\t", " ").split(" ") if len(s) > 0]
+        return tuple([float(answer_parts[i]) for i in range(4)])
 
-        for s in [" ", "Raw", "ppm", "Comp.", "Filt.", ">", "\r\n"]:
-            answer = answer.replace(s, "")
-        raw_value_string, comp_value_string, filt_value_string = answer.split(";")
+    def get_current_concentration(self) -> custom_types.CO2SensorData:
+        """get the current concentration value from the CO2 probe"""
+        sensor_data = self._get_current_sensor_data()
         return custom_types.CO2SensorData(
-            raw=float(raw_value_string),
-            compensated=float(comp_value_string),
-            filtered=float(filt_value_string),
+            raw=sensor_data[0], compensated=sensor_data[1], filtered=sensor_data[2]
         )
+
+    def get_current_chamber_temperature(self) -> float:
+        """get the current concentration value from the CO2 probe"""
+        sensor_data = self._get_current_sensor_data()
+        return sensor_data[3]
 
     def _format_raw_answer(self, raw: str) -> str:
         """replace all useless characters in the CO2 probe's answer"""

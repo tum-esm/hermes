@@ -119,14 +119,15 @@ class MeasurementProcedure:
             temperature,
             humidity,
         ) = self.hardware_interface.air_inlet_sensor.get_current_values()
+        chamber_temperature = (
+            self.hardware_interface.co2_sensor.get_current_chamber_temperature()
+        )
         mainboard_data = self.hardware_interface.mainboard_sensor.get_system_data()
 
         self.hardware_interface.co2_sensor.set_compensation_values(
             humidity=humidity,
             pressure=mainboard_data.enclosure_pressure,
         )
-
-        # TODO: fetch chamber temperature from CO2 sensor
 
         self.active_mqtt_queue.enqueue_message(
             self.config,
@@ -138,7 +139,7 @@ class MeasurementProcedure:
                     data=custom_types.AirSensorData(
                         inlet_temperature=temperature,
                         inlet_humidity=humidity,
-                        chamber_temperature=None,
+                        chamber_temperature=chamber_temperature,
                     ),
                 ),
             ),
