@@ -160,37 +160,33 @@ class HeatedEnclosureInterface:
             return
 
         self._update_data()
+        now = time.time()
 
-        if self.measurement is None:
-            self.logger.debug("waiting 5 seconds for data")
-            time.sleep(5)
+        last_contact_time = (
+            self.initializing_time
+            if (self.measurement is None)
+            else self.measurement.last_update_time
+        )
+        if (now - last_contact_time) > (3600 * 6):
+            raise HeatedEnclosureInterface.DeviceFailure(
+                "no contact to arduino for 6 hours"
+            )
 
-        self._update_data()
-
-        if self.measurement is None:
-            self.logger.warning("heated enclosure doesn't send any data")
-            if (time.time() - self.initializing_time) > 3600 * 6:
-                raise HeatedEnclosureInterface.DeviceFailure(
-                    "no contact to arduino for 6 hours"
-                )
-        else:
-            if self.measurement.measured is None:
-                self.logger.warning(
-                    "enclosure temperature sensor not connected",
-                    config=self.config,
-                )
-            else:
+        if self.measurement is not None:
+            if (now - last_contact_time) < 120:
+                if self.measurement.measured is None:
+                    self.logger.warning(
+                        "enclosure temperature sensor not connected",
+                        config=self.config,
+                    )
                 if self.measurement.measured > 50:
                     self.logger.warning(
                         "high temperatures inside heated enclosure: "
                         + f"{self.measurement.measured} °C",
                         config=self.config,
                     )
-
-            if time.time() - self.measurement.last_update_time > 120:
-                self.logger.warning(
-                    "last heated enclosure data is older than two minutes"
-                )
+            if (now - last_contact_time) > 300:
+                self.logger.warning("no contact to arduino for more than 5 minutes")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
