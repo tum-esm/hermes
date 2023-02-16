@@ -75,9 +75,9 @@ pigs w 19 1
 <br/>
 <br/>
 
-## Raspberry Pi Setup (`raspi-setup/`)
+## Raspberry Pi Setup (`raspi-setup-files/`)
 
-All files in the `boot-files/` directory should be copied to a Raspberry Pi's `/boot/midcost-init-files/` directory. The setup script has to be run manually after initially connecting the Pi using the following command:
+All files in the `raspi-setup-files/` directory should be copied to a Raspberry Pi's `/boot/` directory. The setup script has to be run manually after initially connecting the Pi using the following command:
 
 ```bash
 # test network connection

@@ -6,14 +6,14 @@ rm -rf .mypy_cache
 # *********************************************************
 # raspi setup
 
-echo "Checking initialize_root.py"
-mypy raspi-setup/boot-files/midcost-init-files/initialize_root.py
+echo "Checking raspi-setup-files/midcost-init-files/initialize_root.py"
+mypy raspi-setup-files/midcost-init-files/initialize_root.py
 
-echo "Checking initialize_pi.py"
-mypy raspi-setup/boot-files/midcost-init-files/initialize_pi.py
+echo "Checking raspi-setup-files/midcost-init-files/initialize_pi.py"
+mypy raspi-setup-files/midcost-init-files/initialize_pi.py
 
-echo "Checking run_node_tests.py"
-mypy raspi-setup/boot-files/midcost-init-files/run_node_tests.py
+echo "Checking raspi-setup-files/midcost-init-files/run_node_tests.py"
+mypy raspi-setup-files/midcost-init-files/run_node_tests.py
 
 # *********************************************************
 # sensor code
@@ -39,5 +39,5 @@ mypy cli/main.py
 echo "Checking scripts/"
 mypy scripts/
 
-echo "Checking pytest types"
+echo "Checking tests/"
 mypy tests/

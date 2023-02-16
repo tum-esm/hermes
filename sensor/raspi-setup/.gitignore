@@ -1,7 +1,0 @@
-id_ed25519_esm_technical_user
-id_ed25519_esm_technical_user.pub
-authorized_keys
-wpa_supplicant.conf
-config.json
-.env
-hostname_to_mqtt_id.json
