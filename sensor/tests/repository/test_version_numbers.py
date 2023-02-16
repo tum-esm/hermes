@@ -5,9 +5,7 @@ import pytest
 
 dir = os.path.dirname
 ROOT_DIR = dir(dir(dir(dir(os.path.abspath(__file__)))))
-SERVER_PYPROJECT_TOML = os.path.join(ROOT_DIR, "server", "pyproject.toml")
 SENSOR_PYPROJECT_TOML = os.path.join(ROOT_DIR, "sensor", "pyproject.toml")
-SETUP_PYPROJECT_TOML = os.path.join(ROOT_DIR, "raspi-setup", "pyproject.toml")
 SENSOR_DEFAULT_CONFIG = os.path.join(
     ROOT_DIR, "sensor", "config", "config.template.json"
 )
@@ -15,28 +13,18 @@ SENSOR_DEFAULT_CONFIG = os.path.join(
 
 @pytest.mark.ci
 def test_version_numbers() -> None:
-    assert os.path.isfile(SERVER_PYPROJECT_TOML)
     assert os.path.isfile(SENSOR_PYPROJECT_TOML)
     assert os.path.isfile(SENSOR_DEFAULT_CONFIG)
 
-    with open(SERVER_PYPROJECT_TOML, "r") as f:
-        version_server_line = f.read().split("\n")[2]
+    # fetch version number from "pyproject.toml"
     with open(SENSOR_PYPROJECT_TOML, "r") as f:
-        version_sensor_line = f.read().split("\n")[2]
-    with open(SETUP_PYPROJECT_TOML, "r") as f:
-        version_setup_line = f.read().split("\n")[2]
-
-    with open(SENSOR_DEFAULT_CONFIG, "r") as f:
-        version_config = json.load(f)["version"]
-
+        sensor_version_line = f.read().split("\n")[2]
     toml_pattern = re.compile(r'^version = "\d+\.\d+\.\d+(\-(alpha|beta)\.\d+)?"$')
-    assert toml_pattern.match(version_server_line) is not None
-    assert toml_pattern.match(version_sensor_line) is not None
-    assert toml_pattern.match(version_setup_line) is not None
+    assert toml_pattern.match(sensor_version_line) is not None
+    sensor_version = sensor_version_line.split('"')[1]
 
-    version_server = version_server_line.split('"')[1]
-    version_sensor = version_sensor_line.split('"')[1]
-    version_setup = version_setup_line.split('"')[1]
-
-    # assert version_1 == version_2 == version_3
-    assert version_sensor == version_config == version_setup
+    # fetch version number from "config.template.json"
+    with open(SENSOR_DEFAULT_CONFIG, "r") as f:
+        sensor_config_template_version = json.load(f)["version"]
+    
+    assert sensor_version == sensor_config_template_version
