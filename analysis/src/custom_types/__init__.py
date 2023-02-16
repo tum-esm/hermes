@@ -1,3 +1,5 @@
+from .config import Config
+
 from .mqtt import (
     MQTTDataMessageBody,
     MQTTLogMessageBody,
