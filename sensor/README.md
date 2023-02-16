@@ -7,7 +7,7 @@
 ```bash
 python3.10 -m venv .venv
 source .venv/bin/activate
-poetry install --with=dev # dev is optional
+poetry install --with=dev
 ```
 
 **Run tests/check static types:**
@@ -41,8 +41,8 @@ On the sensor, the codebase layout will look like this:
 
 ```bash
 📁 Documents
-    📁 insert-name-here
-        insert-name-here-cli.sh
+    📁 hermes
+        hermes-cli.sh
         📁 0.1.0
             📁 .venv
             run.py
@@ -54,30 +54,17 @@ On the sensor, the codebase layout will look like this:
         ...
 ```
 
-The `insert-name-here-cli.sh` will point to the currently used version. Upgrading the software:
-
-1. Download the new version into the respective directory
-2. Migrate the config.json
-3. Create new .venv
-4. Install new dependencies
-5. Run tests
-6. Update the `insert-name-here-cli.sh` to point to the new version
-7. Call `insert-name-here-cli start` using the `at in 1 minute` command
-8. Call `sys.exit()`
-
-Set individual output pins to high/low:
-
-```
-pigs w 19 0
-pigs w 19 1
-```
+The `hermes-cli.sh` will point to the currently used version and the bash shell
+has an alias `hermes-cli`.
 
 <br/>
 <br/>
 
 ## Raspberry Pi Setup (`raspi-setup-files/`)
 
-All files in the `raspi-setup-files/` directory should be copied to a Raspberry Pi's `/boot/` directory. The setup script has to be run manually after initially connecting the Pi using the following command:
+All files in the `raspi-setup-files/` directory should be copied to a Raspberry
+Pi's `/boot/` directory. The setup script has to be run manually after initially
+connecting the Pi using the following command:
 
 ```bash
 # test network connection
@@ -129,4 +116,25 @@ The `boot-files/` should contain the following files:
         📁 system/
             📄 .bashrc
             📄 crontab
+```
+
+<br/>
+<br/>
+
+## Manual commands
+
+```bash
+# setting the pump to max/zero rps
+pigs w 19 1
+pigs w 19 0
+
+# powering the co2 sensor up/down
+# serial: /dev/ttySC0, baudrate 19200, bytes 8, parity N, stopbits 1, newline \r\n
+pigs w 20 1
+pigs w 20 0
+
+# powering the wind sensor up/down
+# serial: /dev/ttySC1, baudrate 19200, bytes 8, parity N, stopbits 1, newline \r\n
+pigs w 21 1
+pigs w 21 0
 ```
