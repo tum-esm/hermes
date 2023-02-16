@@ -70,4 +70,3 @@ class HeatedEnclosureData(BaseModel):
     heater_is_on: bool
     fan_is_on: bool
     last_update_time: float
-

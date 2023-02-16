@@ -103,4 +103,3 @@ class MQTTDataMessageBody(BaseModel):
 
     class Config:
         extra = "forbid"
-
