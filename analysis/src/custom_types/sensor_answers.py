@@ -1,10 +1,25 @@
 from typing import Literal, Optional
 from pydantic import BaseModel, validator
-from .validators import validate_str, validate_float
-from .config import CalibrationGasConfig
+from .validators import validate_int, validate_float
 
 # validation is only necessary for external sources
 # internal source will be covered by mypy
+
+
+class CalibrationGasConfig(BaseModel):
+    valve_number: Literal[1, 2, 3, 4]
+    concentration: float
+
+    # validators
+    _val_valve_number = validator("valve_number", pre=True, allow_reuse=True)(
+        validate_int(allowed=[1, 2, 3, 4]),
+    )
+    _val_concentration = validator("concentration", pre=True, allow_reuse=True)(
+        validate_float(minimum=0, maximum=10000),
+    )
+
+    class Config:
+        extra = "forbid"
 
 
 class AirSensorData(BaseModel):

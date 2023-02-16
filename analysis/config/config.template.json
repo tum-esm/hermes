@@ -1,4 +1,11 @@
 {
+    "database": {
+        "host": "...",
+        "port": 0,
+        "user": "...",
+        "password": "...",
+        "database": "..."
+    },
     "sensors": [
         {
             "sensor_name": "tum-esm-midcost-raspi-1",
