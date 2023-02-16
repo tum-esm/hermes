@@ -3,6 +3,21 @@ set -o errexit
 echo "Removing old mypy cache"
 rm -rf .mypy_cache 
 
+# *********************************************************
+# raspi setup
+
+echo "Checking initialize_root.py"
+mypy raspi-setup/boot-files/midcost-init-files/initialize_root.py
+
+echo "Checking initialize_pi.py"
+mypy raspi-setup/boot-files/midcost-init-files/initialize_pi.py
+
+echo "Checking run_node_tests.py"
+mypy raspi-setup/boot-files/midcost-init-files/run_node_tests.py
+
+# *********************************************************
+# sensor code
+
 echo "Checking run_automation.py"
 mypy run_automation.py
 
@@ -14,6 +29,9 @@ mypy run_headless_wind_sensor.py
 
 echo "Checking run_pump_cycle.py"
 mypy run_pump_cycle.py
+
+# *********************************************************
+# other
 
 echo "Checking cli/main.py"
 mypy cli/main.py
