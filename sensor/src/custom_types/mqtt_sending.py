@@ -52,7 +52,7 @@ class MQTTConfig(BaseModel):
 
 
 # -----------------------------------------------------------------------------
-# MQTT Status Message
+# MQTT Log Message
 
 
 class MQTTLogMessageBody(BaseModel):
