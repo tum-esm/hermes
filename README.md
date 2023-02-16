@@ -19,4 +19,4 @@ This software is developed for the ACROPOLIS project. The goal of ACROPOLIS is t
 
 ## Structure 🔨
 
-![](assets/schema.png)
+![](docs/schema.png)
