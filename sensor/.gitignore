@@ -20,3 +20,8 @@ config.h
 insert-name-here-*/
 insert-name-here-*.tar.gz
 insert-name-here-cli.sh
+
+# ssh stuff
+authorized_keys
+id_ed25519_esm_technical_user
+id_ed25519_esm_technical_user.pub
