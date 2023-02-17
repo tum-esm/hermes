@@ -19,3 +19,5 @@ from .sensor_answers import (
     WindSensorData,
     HeatedEnclosureData,
 )
+
+from .sql import Sensor, SensorCodeVersionActivity
