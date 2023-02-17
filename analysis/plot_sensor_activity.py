@@ -13,7 +13,7 @@ if __name__ == "__main__":
     print(f"{len(measurements)} measurement(s)")
     print(f"{len(logs)} log(s)")
 
-    measurement_df = pl.DataFrame(
+    measurements_df = pl.DataFrame(
         {
             "timestamp": [m.timestamp for m in measurements],
             "variant": [m.value.variant for m in measurements],
@@ -26,10 +26,10 @@ if __name__ == "__main__":
         }
     ).sort(by="timestamp")
 
-    print(measurement_df)
+    print(measurements_df)
     # print(logs_df)
 
-    grouped_measurement_df = measurement_df.groupby_dynamic(
+    grouped_measurements_df = measurements_df.groupby_dynamic(
         "timestamp", every="2m"
     ).agg(
         [
@@ -56,7 +56,24 @@ if __name__ == "__main__":
         ]
     )
 
-    print(grouped_measurement_df)
+    print(grouped_measurements_df)
+
+    grouped_logs_df = logs_df.groupby_dynamic("timestamp", every="2m").agg(
+        [
+            (
+                (pl.col("severity").filter(pl.col("severity") == "info")).count() * 0.5
+            ).alias("info_rpm"),
+            (
+                (pl.col("severity").filter(pl.col("severity") == "warning")).count()
+                * 0.5
+            ).alias("warning_rpm"),
+            (
+                (pl.col("severity").filter(pl.col("severity") == "error")).count() * 0.5
+            ).alias("error_rpm"),
+        ]
+    )
+
+    print(grouped_logs_df)
 
     """
     plt.subplots(
