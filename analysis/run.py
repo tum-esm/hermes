@@ -45,7 +45,7 @@ if __name__ == "__main__":
         xlabel="UTC time",
         ylabel="code version with\nactive measurement data",
         title="Used code version over time",
-        xaxis_scale="months",
+        xaxis_scale="days",
     ) as p:
         p.set_yticks(
             list(code_version_offsets.values()),
@@ -61,7 +61,7 @@ if __name__ == "__main__":
                 ys = [
                     code_version_offsets[code_version] + sensor_offsets[sensor_name]
                 ] * 2
-                p.plot(xs, ys, linewidth=5, color="#eeeeff")
+                p.plot(xs, ys, linewidth=5, color="#e2e8f0")
 
         for a in activities:
             xs = [

@@ -25,7 +25,7 @@ def plot(
             "center left",
         ]
     ] = None,
-    xaxis_scale: Literal["hours", "months", "years"] = "years",
+    xaxis_scale: Literal["hours", "days", "months", "years"] = "years",
     plot_date_range: Optional[tuple[str, str]] = None,
 ) -> Iterator[plt.Axes]:
     axes = plt.subplot(subplot_row_count, subplot_col_count, subplot_number)
@@ -50,19 +50,13 @@ def plot(
             axes.legend(loc=legend)
 
     if xaxis_scale == "hours":
-        # every month
         axes.xaxis.set_minor_locator(dates.MinuteLocator(byminute=[0, 15, 30, 45]))
-
-        # every 6 months
         axes.xaxis.set_major_locator(dates.HourLocator(byhour=range(0, 24, 2)))
         axes.xaxis.set_major_formatter(dates.DateFormatter("%H:%M"))
 
-    if xaxis_scale == "years":
-        # every month
-        axes.xaxis.set_minor_locator(dates.MonthLocator(bymonthday=1))
-
-        # every 6 months
-        axes.xaxis.set_major_locator(dates.MonthLocator(bymonth=[1, 7], bymonthday=1))
+    if xaxis_scale == "days":
+        axes.xaxis.set_minor_locator(dates.HourLocator())
+        axes.xaxis.set_major_locator(dates.DayLocator())
         axes.xaxis.set_major_formatter(dates.DateFormatter("%Y-%m-%d"))
 
     elif xaxis_scale == "months":
@@ -71,6 +65,14 @@ def plot(
 
         # every 14 days
         axes.xaxis.set_major_locator(dates.DayLocator(bymonthday=[1, 15]))
+        axes.xaxis.set_major_formatter(dates.DateFormatter("%Y-%m-%d"))
+
+    if xaxis_scale == "years":
+        # every month
+        axes.xaxis.set_minor_locator(dates.MonthLocator(bymonthday=1))
+
+        # every 6 months
+        axes.xaxis.set_major_locator(dates.MonthLocator(bymonth=[1, 7], bymonthday=1))
         axes.xaxis.set_major_formatter(dates.DateFormatter("%Y-%m-%d"))
 
     if plot_date_range is not None:
