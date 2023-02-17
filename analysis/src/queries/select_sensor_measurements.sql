@@ -1,4 +1,4 @@
-SELECT *
+SELECT measurements.creation_timestamp, measurements.measurement
 FROM sensors
 JOIN measurements USING (sensor_identifier)
 WHERE (

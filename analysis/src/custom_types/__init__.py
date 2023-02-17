@@ -20,4 +20,9 @@ from .sensor_answers import (
     HeatedEnclosureData,
 )
 
-from .sql import Sensor, SensorCodeVersionActivity
+from .sql import (
+    Sensor,
+    SensorCodeVersionActivity,
+    SensorMeasurement,
+    SensorLog,
+)

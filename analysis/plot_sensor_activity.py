@@ -5,7 +5,7 @@ if __name__ == "__main__":
     result = utils.SQLQueries.fetch_sensor_measurements(
         config, "tum-esm-midcost-raspi-1"
     )
-    print(len(result), len(str(result)))
+    print(result[:2])
 
     result = utils.SQLQueries.fetch_sensor_logs(config, "tum-esm-midcost-raspi-1")
-    print(len(result), len(str(result)))
+    print(result[:2])

@@ -1,3 +1,4 @@
+import json
 import os
 from os.path import dirname
 from typing import Any, Literal
@@ -62,19 +63,32 @@ class SQLQueries:
         config: custom_types.Config,
         sensor_id: str,
     ) -> list[Any]:
-        return SQLQueries._run_sql_query(
-            config,
-            "select_sensor_measurements",
-            replacements={"SENSOR_ID": sensor_id},
-        )
+        return [
+            custom_types.SensorMeasurement(
+                timestamp=r[0],
+                value=r[1],
+            )
+            for r in SQLQueries._run_sql_query(
+                config,
+                "select_sensor_measurements",
+                replacements={"SENSOR_ID": sensor_id},
+            )
+        ]
 
     @staticmethod
     def fetch_sensor_logs(
         config: custom_types.Config,
         sensor_id: str,
     ) -> list[Any]:
-        return SQLQueries._run_sql_query(
-            config,
-            "select_sensor_logs",
-            replacements={"SENSOR_ID": sensor_id},
-        )
+        return [
+            custom_types.SensorLog(
+                timestamp=r[0],
+                severity=r[1],
+                subject=r[2],
+            )
+            for r in SQLQueries._run_sql_query(
+                config,
+                "select_sensor_logs",
+                replacements={"SENSOR_ID": sensor_id},
+            )
+        ]

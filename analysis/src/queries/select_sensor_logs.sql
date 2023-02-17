@@ -1,4 +1,4 @@
-SELECT *
+SELECT logs.creation_timestamp, logs.severity, logs.subject, logs.details
 FROM sensors
 JOIN logs USING (sensor_identifier)
 WHERE (
