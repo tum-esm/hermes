@@ -11,10 +11,19 @@ class SQLQueries:
     @staticmethod
     def _run_sql_query(
         config: custom_types.Config,
-        filename: Literal["used_sensor_software", "select_all_sensors"],
+        filename: Literal[
+            "used_sensor_software",
+            "select_all_sensors",
+            "select_sensor_measurements",
+        ],
+        replacements: dict[str, str] = {},
     ) -> list[Any]:
         with open(os.path.join(PROJECT_DIR, "src", "queries", f"{filename}.sql")) as f:
             sql_string = f.read()
+
+        # replace things like %SENSOR_ID% in the sql string
+        for k, v in replacements.items():
+            sql_string = sql_string.replace(f"%{k}%", v)
 
         with psycopg.connect(
             "postgresql://"
@@ -46,3 +55,14 @@ class SQLQueries:
             )
             for r in SQLQueries._run_sql_query(config, "used_sensor_software")
         ]
+
+    @staticmethod
+    def fetch_sensor_measurements(
+        config: custom_types.Config,
+        sensor_id: str,
+    ) -> list[Any]:
+        return SQLQueries._run_sql_query(
+            config,
+            "select_sensor_measurements",
+            replacements={"SENSOR_ID": sensor_id},
+        )
