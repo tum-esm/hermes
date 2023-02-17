@@ -15,6 +15,7 @@ class SQLQueries:
             "used_sensor_software",
             "select_all_sensors",
             "select_sensor_measurements",
+            "select_sensor_logs",
         ],
         replacements: dict[str, str] = {},
     ) -> list[Any]:
@@ -64,5 +65,16 @@ class SQLQueries:
         return SQLQueries._run_sql_query(
             config,
             "select_sensor_measurements",
+            replacements={"SENSOR_ID": sensor_id},
+        )
+
+    @staticmethod
+    def fetch_sensor_logs(
+        config: custom_types.Config,
+        sensor_id: str,
+    ) -> list[Any]:
+        return SQLQueries._run_sql_query(
+            config,
+            "select_sensor_logs",
             replacements={"SENSOR_ID": sensor_id},
         )
