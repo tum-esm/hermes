@@ -1,3 +1,3 @@
 from .config_interface import ConfigInterface
-from . import sql_queries
+from .plotting import plot, save_plot
 from .sql_queries import SQLQueries
