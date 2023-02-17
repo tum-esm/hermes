@@ -1,23 +1,6 @@
-import colorsys
-import math
 from matplotlib import pyplot as plt
 from src import utils
 import matplotlib.patches as mpatches
-
-sensor_offsets = {
-    f"tum-esm-midcost-raspi-{i+1}": -round((i * 0.03) + (0.03 * math.floor(i / 5)), 2)
-    for i in range(20)
-}
-sensor_colors = {
-    f"tum-esm-midcost-raspi-{i+1}": "#"
-    + "".join(
-        [
-            hex(int(c * 255))[2:].zfill(2)
-            for c in colorsys.hls_to_rgb((i * 12 / 360), 0.7, 0.8)
-        ]
-    )
-    for i in range(20)
-}
 
 if __name__ == "__main__":
     config = utils.ConfigInterface.read()
@@ -56,10 +39,11 @@ if __name__ == "__main__":
         max_timestamp = max([a.last_measurement_timestamp for a in activities])
 
         for code_version in code_version_offsets.keys():
-            for sensor_name in sensor_offsets.keys():
+            for sensor_name in utils.SENSOR_OFFSETS.keys():
                 xs = [min_timestamp, max_timestamp]
                 ys = [
-                    code_version_offsets[code_version] + sensor_offsets[sensor_name]
+                    code_version_offsets[code_version]
+                    + utils.SENSOR_OFFSETS[sensor_name]
                 ] * 2
                 p.plot(xs, ys, linewidth=5, color="#e2e8f0")
 
@@ -69,11 +53,14 @@ if __name__ == "__main__":
                 a.last_measurement_timestamp,
             ]
             ys = [
-                code_version_offsets[a.code_version] + sensor_offsets[a.sensor_name]
+                code_version_offsets[a.code_version]
+                + utils.SENSOR_OFFSETS[a.sensor_name]
             ] * 2
-            p.plot(xs, ys, linewidth=5, color=sensor_colors[a.sensor_name])
+            p.plot(xs, ys, linewidth=5, color=utils.SENSOR_COLORS[a.sensor_name])
 
-        patches = [mpatches.Patch(color=v, label=k) for k, v in sensor_colors.items()]
+        patches = [
+            mpatches.Patch(color=v, label=k) for k, v in utils.SENSOR_COLORS.items()
+        ]
         p.legend(handles=patches, bbox_to_anchor=(1.02, 1))
 
     utils.save_plot("used_code_versions.png")
