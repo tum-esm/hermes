@@ -62,7 +62,7 @@ class SQLQueries:
     def fetch_sensor_measurements(
         config: custom_types.Config,
         sensor_id: str,
-    ) -> list[Any]:
+    ) -> list[custom_types.SensorMeasurement]:
         return [
             custom_types.SensorMeasurement(
                 timestamp=r[0],
@@ -79,7 +79,7 @@ class SQLQueries:
     def fetch_sensor_logs(
         config: custom_types.Config,
         sensor_id: str,
-    ) -> list[Any]:
+    ) -> list[custom_types.SensorLog]:
         return [
             custom_types.SensorLog(
                 timestamp=r[0],
