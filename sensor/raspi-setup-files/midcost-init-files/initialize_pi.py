@@ -92,8 +92,8 @@ for src, dst in [
         "/home/pi/.ssh/id_ed25519_esm_technical_user.pub",
     ),
     (
-        "/boot/midcost-init-files/ssh/config.txt",
-        "/home/pi/.ssh/config.txt",
+        "/boot/midcost-init-files/ssh/config",
+        "/home/pi/.ssh/config",
     ),
 ]:
     if not os.path.isfile(dst):
@@ -102,7 +102,7 @@ for src, dst in [
 print(f"\tadding ssh key to agent")
 run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user")
 run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user.pub")
-run_shell_command('eval "$(ssh-agent)"')
+run_shell_command("eval `ssh-agent -s`")
 run_shell_command("ssh-add /home/pi/.ssh/id_ed25519_esm_technical_user")
 
 print(f"\ttesting access to github")
