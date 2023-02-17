@@ -4,7 +4,8 @@ from src import utils
 
 if __name__ == "__main__":
     config = utils.ConfigInterface.read()
-    sensor_name = "tum-esm-midcost-raspi-20"
+    sensor_number = 20
+    sensor_name = f"tum-esm-midcost-raspi-{sensor_number}"
 
     measurements = utils.SQLQueries.fetch_sensor_measurements(config, sensor_name)
     logs = utils.SQLQueries.fetch_sensor_logs(config, sensor_name)
@@ -26,61 +27,39 @@ if __name__ == "__main__":
         }
     ).sort(by="timestamp")
 
-    print(measurements_df)
+    # print(measurements_df)
     # print(logs_df)
+
+    measurement_data_type = ["co2", "calibration", "air", "system", "wind", "enclosure"]
+    log_data_type = ["info", "warning", "error"]
 
     grouped_measurements_df = measurements_df.groupby_dynamic(
         "timestamp", every="2m"
     ).agg(
         [
-            (
-                (pl.col("variant").filter(pl.col("variant") == "co2")).count() * 0.5
-            ).alias("co2_rpm"),
-            (
-                (pl.col("variant").filter(pl.col("variant") == "calibration")).count()
-                * 0.5
-            ).alias("calibration_rpm"),
-            (
-                (pl.col("variant").filter(pl.col("variant") == "air")).count() * 0.5
-            ).alias("air_rpm"),
-            (
-                (pl.col("variant").filter(pl.col("variant") == "system")).count() * 0.5
-            ).alias("system_rpm"),
-            (
-                (pl.col("variant").filter(pl.col("variant") == "wind")).count() * 0.5
-            ).alias("wind_rpm"),
-            (
-                (pl.col("variant").filter(pl.col("variant") == "enclosure")).count()
-                * 0.5
-            ).alias("enclosure_rpm"),
+            ((pl.col("variant").filter(pl.col("variant") == t)).count()).alias(
+                f"{t}_rpm"
+            )
+            for t in measurement_data_type
         ]
     )
-
-    print(grouped_measurements_df)
-
     grouped_logs_df = logs_df.groupby_dynamic("timestamp", every="2m").agg(
         [
-            (
-                (pl.col("severity").filter(pl.col("severity") == "info")).count() * 0.5
-            ).alias("info_rpm"),
-            (
-                (pl.col("severity").filter(pl.col("severity") == "warning")).count()
-                * 0.5
-            ).alias("warning_rpm"),
-            (
-                (pl.col("severity").filter(pl.col("severity") == "error")).count() * 0.5
-            ).alias("error_rpm"),
+            ((pl.col("severity").filter(pl.col("severity") == t)).count()).alias(
+                f"{t}_rpm"
+            )
+            for t in log_data_type
         ]
     )
 
-    print(grouped_logs_df)
+    # print(grouped_measurements_df)
+    # print(grouped_logs_df)
 
-    """
     plt.subplots(
         1,
         1,
         gridspec_kw={"height_ratios": [2], "hspace": 0.5},
-        figsize=(20, 12),
+        figsize=(12, 6),
     )
 
     with utils.plot(
@@ -92,32 +71,9 @@ if __name__ == "__main__":
         title="Used code version over time",
         xaxis_scale="days",
     ) as p:
-        min_timestamp = min([a.first_measurement_timestamp for a in activities])
-        max_timestamp = max([a.last_measurement_timestamp for a in activities])
+        for t in measurement_data_type:
+            xs = grouped_measurements_df.get_column("timestamp")
+            ys = [y + 0 for y in grouped_measurements_df.get_column(f"{t}_rpm")]
+            p.scatter(xs, ys, s=1, color="red", alpha=0.5)
 
-        for code_version in code_version_offsets.keys():
-            for sensor_name in utils.SENSOR_OFFSETS.keys():
-                xs = [min_timestamp, max_timestamp]
-                ys = [
-                    code_version_offsets[code_version]
-                    + utils.SENSOR_OFFSETS[sensor_name]
-                ] * 2
-                p.plot(xs, ys, linewidth=5, color="#e2e8f0")
-
-        for a in activities:
-            xs = [
-                a.first_measurement_timestamp,
-                a.last_measurement_timestamp,
-            ]
-            ys = [
-                code_version_offsets[a.code_version]
-                + utils.SENSOR_OFFSETS[a.sensor_name]
-            ] * 2
-            p.plot(xs, ys, linewidth=5, color=utils.SENSOR_COLORS[a.sensor_name])
-
-        patches = [
-            mpatches.Patch(color=v, label=k) for k, v in utils.SENSOR_COLORS.items()
-        ]
-        p.legend(handles=patches, bbox_to_anchor=(1.02, 1))
-
-    utils.save_plot("used_code_versions.png")"""
+    utils.save_plot(f"sensor_activity_{sensor_number}.png")
