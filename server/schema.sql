@@ -81,7 +81,7 @@ SELECT create_hypertable('measurements', 'creation_timestamp');
 
 
 CREATE MATERIALIZED VIEW measurements_aggregation_4_hours
-WITH (timescaledb.continuous, timescaledb.materialized_only = true)
+WITH (timescaledb.continuous, timescaledb.materialized_only = true) AS
     SELECT
         sensor_identifier,
         time_bucket('4 hours', creation_timestamp) AS bucket_timestamp,

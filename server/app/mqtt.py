@@ -211,10 +211,12 @@ class Client(aiomqtt.Client):
             )
         except Exception as e:  # pragma: no cover
             logger.error(e, exc_info=True)
+        """
         logger.info(
             f"[MQTT] Processed {len(message.measurements)} measurements from"
             f" {sensor_identifier}"
         )
+        """
 
     async def listen(self):
         """Listen to incoming sensor MQTT messages and process them."""
@@ -233,10 +235,13 @@ class Client(aiomqtt.Client):
 
             async for message in messages:
                 try:
-                    logger.info(
-                        f"[MQTT] Received message: {message.payload!r} on topic:"
-                        f" {message.topic}"
-                    )
+                    if not message.topic.matches(
+                        wildcard_measurements
+                    ):  # TODO: Remove condition when there's no more logs limit
+                        logger.info(
+                            f"[MQTT] Received message: {message.payload!r} on topic:"
+                            f" {message.topic}"
+                        )
                     # Get sensor identifier from the topic and decode the payload
                     sensor_identifier = str(message.topic).split("/")[-1]
                     payload = _decode_payload(message.payload)
