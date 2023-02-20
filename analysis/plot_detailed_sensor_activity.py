@@ -1,6 +1,4 @@
-import colorsys
 from datetime import timedelta
-import math
 from matplotlib import pyplot as plt
 import polars as pl
 from os.path import dirname
@@ -14,7 +12,6 @@ MEASUREMENT_DF_CACHE_PATH = lambda sensor_number: os.path.join(
 LOGS_DF_CACHE_PATH = lambda sensor_number: os.path.join(
     PROJECT_DIR, "cache", f"grouped_logs_df_{sensor_number}.parquet"
 )
-
 
 MEASUREMENT_TYPE = [
     "co2",
@@ -130,6 +127,12 @@ if __name__ == "__main__":
             gridspec_kw={"height_ratios": [2, 2, 2], "hspace": 1},
             figsize=(12, 8),
         )
+
+        # TODO: fixed x axis range (the last two days)
+        # TODO: label logs properly
+        # TODO: label y axis properly
+        # TODO: add titles
+        # TODO: add legends
 
         with utils.plot(
             subplot_row_count=3,
