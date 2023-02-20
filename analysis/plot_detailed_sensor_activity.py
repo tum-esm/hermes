@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from matplotlib import pyplot as plt
 import polars as pl
 from os.path import dirname
@@ -128,8 +128,6 @@ if __name__ == "__main__":
             figsize=(12, 8),
         )
 
-        # TODO: fixed x axis range (the last two days)
-        # TODO: label logs properly
         # TODO: label y axis properly
         # TODO: add titles
         # TODO: add legends
@@ -155,6 +153,10 @@ if __name__ == "__main__":
                 color=DATA_TYPE_COLOR["co2"],
                 alpha=1,
                 label="co2",
+            )
+            p.set_xlim(
+                xmin=datetime.utcnow() - timedelta(days=2),
+                xmax=datetime.utcnow(),
             )
 
         with utils.plot(
@@ -182,6 +184,10 @@ if __name__ == "__main__":
                     alpha=0.7,
                     label=t,
                 )
+            p.set_xlim(
+                xmin=datetime.utcnow() - timedelta(days=2),
+                xmax=datetime.utcnow(),
+            )
 
         with utils.plot(
             subplot_row_count=3,
@@ -198,10 +204,19 @@ if __name__ == "__main__":
                 p.scatter(
                     xs,
                     ys,
-                    s=2.5,
+                    s=10,
                     color=DATA_TYPE_COLOR[t],
-                    alpha=1,
+                    alpha=0.7,
                     label=t,
                 )
+            p.set_xlim(
+                xmin=datetime.utcnow() - timedelta(days=2),
+                xmax=datetime.utcnow(),
+            )
+            p.set_ylim(ymax=0.03, ymin=-0.09)
+            p.set_yticks(
+                list(LOG_TYPE_OFFSET.values()),
+                list(LOG_TYPE_OFFSET.keys()),
+            )
 
         utils.save_plot(f"sensor_activity_{sensor_number}.png")
