@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 import polars as pl
 from os.path import dirname
 import os
+from tailwind_colors import TAILWIND_COLORS
 from src import utils
 
 PROJECT_DIR = dirname(os.path.abspath(__file__))
@@ -27,14 +28,14 @@ LOG_TYPE = [
 ]
 
 DATA_TYPE_COLOR = {
-    "co2": "#0f766e",  # teal-500
-    "air": "#f97316",  # orange-500
-    "system": "#22c55e",  # green-500
-    "wind": "#0f766e",  # teal-500
-    "enclosure": "#06b6d4",  # cyan-500
-    "info": "#22c55e",  # green-500
-    "warning": "#f97316",  # orange-500
-    "error": "#ef4444",  # red-500
+    "co2": TAILWIND_COLORS.TEAL_500,
+    "air": TAILWIND_COLORS.ORANGE_500,
+    "system": TAILWIND_COLORS.GREEN_500,
+    "wind": TAILWIND_COLORS.TEAL_500,
+    "enclosure": TAILWIND_COLORS.CYAN_500,
+    "info": TAILWIND_COLORS.GREEN_500,
+    "warning": TAILWIND_COLORS.ORANGE_500,
+    "error": TAILWIND_COLORS.RED_500,
 }
 MEASUREMENT_TYPE_LINE_STYLE = {
     "co2": "-",
