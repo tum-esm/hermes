@@ -1,8 +1,8 @@
 import os
 import signal
 import time
-from typing import Any
-from src import utils, hardware, procedures
+from typing import Any, Optional
+from src import custom_types, utils, hardware, procedures
 
 
 class ExitOnHardwareTeardownFail(Exception):
@@ -77,23 +77,33 @@ def run() -> None:
     # initialize config procedure and check for new configurations
     # before doing any hardware stuff
 
-    # TODO: wait longer for retained messages
-
-    # wait until retained messages arrived
-    time.sleep(2)
+    # wait up to 15 seconds until retained messages arrived
+    t = time.time()
+    logger.info("checking for new config messages", config=config)
+    new_config_message: Optional[custom_types.MQTTConfigurationRequest] = None
+    while (time.time() - t) < 15:
+        new_config_message = procedures.MessagingAgent.get_config_message()
+        if new_config_message is not None:
+            break
+        time.sleep(1)
 
     configuration_prodecure = procedures.ConfigurationProcedure(config)
-    logger.info("checking for new config messages")
-    new_config_message = procedures.MessagingAgent.get_config_message()
     if new_config_message is None:
-        logger.warning(
-            "initial config message not received",
-            config=config,
-        )
+        logger.warning("initial config message not received", config=config)
     else:
-        # exiting inside the procedure if successful
-        logger.info("running configuration procedure")
-        configuration_prodecure.run(new_config_message)
+        try:
+            logger.info("running configuration procedure", config=config)
+            configuration_prodecure.run(new_config_message)
+        except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
+            logger.info(
+                "shutting down mainloop due to successful update", config=config
+            )
+            exit(0)
+        except Exception as e:
+            logger.exception(
+                label="error during configuration procedure", config=config
+            )
+            raise e
 
     # -------------------------------------------------------------------------
     # initialize a single hardware interface that is only used by one
@@ -158,7 +168,7 @@ def run() -> None:
                     raise ExitOnHardwareTeardownFail()
 
                 # stopping this script inside the procedure if successful
-                logger.info("running configuration procedure")
+                logger.info("running configuration procedure", config=config)
                 configuration_prodecure.run(new_config_message)
 
                 hardware_interface.reinitialize(config)
