@@ -23,6 +23,9 @@ class MessagingAgent:
         custom_types.MQTTConfigurationRequest
     ] = multiprocessing.Queue()
 
+    class CommuncationOutage(Exception):
+        """raised when the sending or the archiving loop stopped"""
+
     @staticmethod
     def init(config: custom_types.Config) -> None:
         """start the archiving loop and the communication loop
@@ -330,17 +333,20 @@ class MessagingAgent:
 
     @staticmethod
     def check_errors() -> None:
-        """checks whether the loop processes is still running"""
+        """Checks whether the loop processes is still running. Possibly
+        raises an `MessagingAgent.CommuncationOutage` exception."""
 
         if MessagingAgent.communication_loop_process is not None:
-            assert (
-                MessagingAgent.communication_loop_process.is_alive()
-            ), "communication loop process is not running"
+            if not MessagingAgent.communication_loop_process.is_alive():
+                raise MessagingAgent.CommuncationOutage(
+                    "communication loop process is not running"
+                )
 
         if MessagingAgent.archiving_loop_process is not None:
-            assert (
-                MessagingAgent.archiving_loop_process.is_alive()
-            ), "archiving loop process is not running"
+            if not MessagingAgent.archiving_loop_process.is_alive():
+                raise MessagingAgent.CommuncationOutage(
+                    "archiving loop process is not running"
+                )
 
     @staticmethod
     def __on_config_message(
