@@ -29,7 +29,6 @@ def run() -> None:
     """
     logger = utils.Logger(origin="main")
     logger.horizontal_line()
-    logger.info(f"starting mainloop with process ID {os.getpid()}")
 
     try:
         config = utils.ConfigInterface.read()
@@ -37,6 +36,11 @@ def run() -> None:
         logger.error("could not load local config.json")
         logger.exception()
         raise e
+
+    logger.info(
+        f"started new automation process with PID {os.getpid()}",
+        config=config,
+    )
 
     # incremental backoff times on exceptions (15s, 1m, 5m, 20m)
     backoff_time_bucket_index = 0
@@ -63,24 +67,29 @@ def run() -> None:
     try:
         procedures.MessagingAgent.init(config)
     except Exception as e:
-        logger.error("could not start messaging agent")
-        logger.exception()
+        logger.exception(
+            label="could not start messaging agent",
+            config=config,
+        )
         raise e
-
-    procedures.MessagingAgent.check_errors()
-
-    # wait until retained messages arrive
-    time.sleep(2)
 
     # -------------------------------------------------------------------------
     # initialize config procedure and check for new configurations
     # before doing any hardware stuff
 
+    # TODO: wait longer for retained messages
+
+    # wait until retained messages arrived
+    time.sleep(2)
+
     configuration_prodecure = procedures.ConfigurationProcedure(config)
     logger.info("checking for new config messages")
     new_config_message = procedures.MessagingAgent.get_config_message()
     if new_config_message is None:
-        logger.warning("initial config message not received", config=config)
+        logger.warning(
+            "initial config message not received",
+            config=config,
+        )
     else:
         # exiting inside the procedure if successful
         logger.info("running configuration procedure")
@@ -197,7 +206,7 @@ def run() -> None:
                 + "hardware.teardown() before config update",
                 config=config,
             )
-            exit(-1)
+            exit(1)
 
         except procedures.MessagingAgent.CommuncationOutage:
             logger.exception(config=config)
@@ -223,6 +232,8 @@ def run() -> None:
 
         except Exception:
             logger.exception(label="exception in mainloop", config=config)
+
+            # TODO: reboot if exception lasts longer than 24 hours
 
             try:
                 logger.info(f"performing hard reset", config=config)
