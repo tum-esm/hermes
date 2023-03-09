@@ -145,11 +145,13 @@ class HeatedEnclosureThread:
     @staticmethod
     def communication_loop(config: custom_types.Config) -> None:
         heated_enclosure: Optional[HeatedEnclosureInterface] = None
+        last_init_time = 0
+
         usb_ports = USBPortInterface()
         logger = utils.Logger("heated-enclosure-thread")
         last_datapoint_time = 0
 
-        # TODO: only log exceptions when error persists for more than 1 hour
+        # TODO: only log exceptions once when error persists for more than 1 hour
 
         while True:
             time_remaining_to_next_datapoint = (
@@ -160,10 +162,42 @@ class HeatedEnclosureThread:
                 time.sleep(time_remaining_to_next_datapoint)
 
             try:
+                now = time.time()
+
                 if heated_enclosure is None:
                     heated_enclosure = HeatedEnclosureInterface(config)
+                    last_init_time = now
 
-                # TODO: add communication logic
+                measurement = heated_enclosure.get_current_measurement()
+                last_datapoint_time = now
+
+                if measurement is None:
+                    if (now - last_init_time) < 120:
+                        continue
+                    raise TimeoutError(
+                        "Arduino still didn't send anything "
+                        + "two minutes after initialization"
+                    )
+
+                if (now - measurement.last_update_time) > 120:
+                    raise TimeoutError(
+                        "Arduino didn't send anything for the last two minutes"
+                    )
+
+                # TODO: send measurement datapoint via MQTT
+
+                if measurement.measured is None:
+                    logger.warning(
+                        "enclosure temperature sensor not connected",
+                        config=config,
+                    )
+                else:
+                    if measurement.measured > 50:
+                        logger.warning(
+                            "high temperatures inside heated enclosure: "
+                            + f"{measurement.measured} °C",
+                            config=config,
+                        )
 
             except:
                 logger.exception(label="error in heated enclosure thread")
