@@ -53,17 +53,16 @@ class PumpInterface:
         # ---------------------------------------------------------------------
         # PUMP RPS MONITORING IN A THREAD
 
-        self.rps_monitoring_process: Optional[multiprocessing.Process] = None
+        self.rps_monitoring_process = multiprocessing.Process(
+            target=PumpInterface.monitor_rps,
+            args=(
+                config,
+                self.rps_measurement_queue,
+                self.desired_rps_queue,
+                self.rps_monitoring_exceptions,
+            ),
+        )
         if self.config.active_components.pump_speed_monitoring:
-            self.rps_monitoring_process = multiprocessing.Process(
-                target=PumpInterface.monitor_rps,
-                args=(
-                    config,
-                    self.rps_measurement_queue,
-                    self.desired_rps_queue,
-                    self.rps_monitoring_exceptions,
-                ),
-            )
             self.rps_monitoring_process.start()
 
         # ---------------------------------------------------------------------

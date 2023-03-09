@@ -33,7 +33,7 @@ if __name__ == "__main__":
             last_update_time: Optional[float] = None
 
             while True:
-                current_data = heated_enclosure.get_current_data()
+                current_data = heated_enclosure.get_current_measurement()
                 assert current_data is not None, "enclosure doesn't send any data"
 
                 if last_update_time != current_data.last_update_time:

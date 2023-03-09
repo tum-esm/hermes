@@ -117,6 +117,9 @@ class HardwareInterface:
 class HeatedEnclosureThread:
     communication_loop_process: Optional[multiprocessing.Process] = None
 
+    class CommuncationOutage(Exception):
+        """raised when the communication loop stopped"""
+
     @staticmethod
     def init(config: custom_types.Config) -> None:
         """start the archiving loop and the communication loop
@@ -124,10 +127,10 @@ class HeatedEnclosureThread:
 
         if HeatedEnclosureThread.communication_loop_process is not None:
             if not HeatedEnclosureThread.communication_loop_process.is_alive():
-                HeatedEnclosureThread.archiving_loop_process.join()
+                HeatedEnclosureThread.communication_loop_process.join()
 
         new_process = multiprocessing.Process(
-            target=HeatedEnclosureThread.communcation_loop,
+            target=HeatedEnclosureThread.communication_loop,
             args=(config,),
             daemon=True,
         )
@@ -138,10 +141,10 @@ class HeatedEnclosureThread:
     def deinit() -> None:
         """stop the archiving loop and the communication loop"""
 
-        if HeatedEnclosureThread.archiving_loop_process is not None:
-            HeatedEnclosureThread.archiving_loop_process.terminate()
-            HeatedEnclosureThread.archiving_loop_process.join()
-            HeatedEnclosureThread.archiving_loop_process = None
+        if HeatedEnclosureThread.communication_loop_process is not None:
+            HeatedEnclosureThread.communication_loop_process.terminate()
+            HeatedEnclosureThread.communication_loop_process.join()
+            HeatedEnclosureThread.communication_loop_process = None
 
     @staticmethod
     def communication_loop(config: custom_types.Config) -> None:
@@ -151,8 +154,8 @@ class HeatedEnclosureThread:
         active_mqtt_queue = utils.ActiveMQTTQueue()
         logger = utils.Logger("heated-enclosure-thread")
 
-        last_init_time = 0
-        last_datapoint_time = 0
+        last_init_time: float = 0
+        last_datapoint_time: float = 0
         exception_is_present = False
 
         while True:
@@ -239,7 +242,8 @@ class HeatedEnclosureThread:
         """Raises an `MessagingAgent.CommuncationOutage` exception
         if communication loop processes is not running."""
 
-        if not HeatedEnclosureThread.communication_loop_process.is_alive():
-            raise HeatedEnclosureThread.CommuncationOutage(
-                "communication loop process is not running"
-            )
+        if HeatedEnclosureThread.communication_loop_process is not None:
+            if not HeatedEnclosureThread.communication_loop_process.is_alive():
+                raise HeatedEnclosureThread.CommuncationOutage(
+                    "communication loop process is not running"
+                )
