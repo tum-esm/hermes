@@ -1,7 +1,7 @@
 import multiprocessing
 import queue
 import time
-from typing import Literal
+from typing import Literal, Optional
 import gpiozero
 import gpiozero.pins.pigpio
 from src import utils, custom_types
@@ -53,16 +53,17 @@ class PumpInterface:
         # ---------------------------------------------------------------------
         # PUMP RPS MONITORING IN A THREAD
 
-        self.rps_monitoring_process = multiprocessing.Process(
-            target=PumpInterface.monitor_rps,
-            args=(
-                config,
-                self.rps_measurement_queue,
-                self.desired_rps_queue,
-                self.rps_monitoring_exceptions,
-            ),
-        )
+        self.rps_monitoring_process: Optional[multiprocessing.Process] = None
         if self.config.active_components.pump_speed_monitoring:
+            self.rps_monitoring_process = multiprocessing.Process(
+                target=PumpInterface.monitor_rps,
+                args=(
+                    config,
+                    self.rps_measurement_queue,
+                    self.desired_rps_queue,
+                    self.rps_monitoring_exceptions,
+                ),
+            )
             self.rps_monitoring_process.start()
 
         # ---------------------------------------------------------------------
@@ -102,10 +103,10 @@ class PumpInterface:
     def teardown(self) -> None:
         """ends all hardware/system connections"""
         self.set_desired_pump_speed(unit="rps", value=0)
-        if (
-            self.rps_monitoring_process is not None
-        ) and self.rps_monitoring_process.is_alive():
-            self.rps_monitoring_process.terminate()
+
+        if self.rps_monitoring_process is not None:
+            if self.rps_monitoring_process.is_alive():
+                self.rps_monitoring_process.terminate()
 
         self.pin_factory.close()
 
@@ -167,18 +168,18 @@ class PumpInterface:
             )
             if -7.5 < difference_in_percent < 7.5:
                 logger.debug(
-                    f"pump speed varies {difference_in_percent}%"
+                    f"pump speed varies by ± {difference_in_percent}%"
                     + " target (in good range)"
                 )
             elif -15 < difference_in_percent < 15:
                 logger.warning(
-                    f"pump speed varies {difference_in_percent}%"
+                    f"pump speed varies by ± {difference_in_percent}%"
                     + " target (in noticeable range)",
                     config=config,
                 )
             else:
                 error_message = (
-                    f"pump speed varies {difference_in_percent}%"
+                    f"pump speed varies by ± {difference_in_percent}%"
                     + " target (in unaccpetable range)"
                 )
                 logger.error(error_message, config=config)
