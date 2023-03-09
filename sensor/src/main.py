@@ -42,6 +42,21 @@ def run() -> None:
     backoff_time_bucket_index = 0
     backoff_time_buckets = [15, 60, 300, 1200]
 
+    def wait_during_repair() -> int:
+        """Wait for the current backoff time and increase backoff time
+        bucket index. Log the waiting time. Return the new backoff time
+        bucket index."""
+        current_backoff_time = backoff_time_buckets[backoff_time_bucket_index]
+        logger.info(
+            f"waiting for {current_backoff_time} seconds",
+            config=config,
+        )
+        time.sleep(current_backoff_time)
+        return min(
+            backoff_time_bucket_index + 1,
+            len(backoff_time_buckets) - 1,
+        )
+
     # -------------------------------------------------------------------------
     # initialize mqtt receiver, archiver, and sender (sending is optional)
 
@@ -184,29 +199,19 @@ def run() -> None:
             )
             exit(-1)
 
-        except Exception as e1:
+        except Exception:
+            logger.exception(label="exception in mainloop", config=config)
+
             try:
+                logger.info(f"performing hard reset", config=config)
                 hardware_interface.perform_hard_reset()
-            except Exception as e2:
-                logger.error(
-                    "exception in mainloop and during hard reset of hardware",
-                    config=config,
+                # TODO: teardown only
+                backoff_time_bucket_index = wait_during_repair()
+                # TODO: buildup only
+                logger.info(f"hard reset was successful", config=config)
+
+            except Exception as e:
+                logger.exception(
+                    label="exception during hard reset of hardware", config=config
                 )
-                logger.exception(config=config)
-                raise e2
-
-            # send exception via MQTT
-            current_backoff_time = backoff_time_buckets[backoff_time_bucket_index]
-            logger.error(
-                f"exception in mainloop, hard reset successful,"
-                + f" waiting for {current_backoff_time} seconds",
-                config=config,
-            )
-            logger.exception(config=config)
-
-            # wait until starting up again
-            time.sleep(current_backoff_time)
-            backoff_time_bucket_index = min(
-                backoff_time_bucket_index + 1,
-                len(backoff_time_buckets) - 1,
-            )
+                raise e
