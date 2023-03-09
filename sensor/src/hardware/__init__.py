@@ -19,8 +19,6 @@ hardware_lock = filelock.FileLock(
     "/home/pi/Documents/hermes/hermes-hardware.lock", timeout=5
 )
 
-# TODO: only init enclosure thread when component is active
-
 
 class HardwareInterface:
     class HardwareOccupiedException(Exception):
@@ -47,7 +45,10 @@ class HardwareInterface:
 
         # heated enclosure communication with repairing
         # routine is running in a separate thread
-        HeatedEnclosureThread.init(config)
+        if self.config.active_components.heated_enclosure_communication:
+            HeatedEnclosureThread.init(config)
+        else:
+            self.logger.debug("skipping heated enclosure communication")
 
     def check_errors(self) -> None:
         """checks for detectable hardware errors"""
@@ -227,11 +228,10 @@ class HeatedEnclosureThread:
 
     @staticmethod
     def check_errors() -> None:
-        """Checks whether the loop processes is still running. Possibly
-        raises an `MessagingAgent.CommuncationOutage` exception."""
+        """Raises an `MessagingAgent.CommuncationOutage` exception
+        if communication loop processes is not running."""
 
-        if HeatedEnclosureThread.communication_loop_process is not None:
-            if not HeatedEnclosureThread.communication_loop_process.is_alive():
-                raise HeatedEnclosureThread.CommuncationOutage(
-                    "communication loop process is not running"
-                )
+        if not HeatedEnclosureThread.communication_loop_process.is_alive():
+            raise HeatedEnclosureThread.CommuncationOutage(
+                "communication loop process is not running"
+            )
