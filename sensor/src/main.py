@@ -130,6 +130,27 @@ def run() -> None:
     signal.signal(signal.SIGTERM, graceful_teardown)
 
     # -------------------------------------------------------------------------
+    # define behaviour when mainloop takes too long
+
+    max_calibration_time = (
+        len(config.calibration.gases)
+        * (
+            config.calibration.flushing.seconds
+            + (
+                config.calibration.sampling.seconds_per_sample
+                * config.calibration.sampling.sample_count
+            )
+        )
+    ) + config.calibration.cleaning.seconds
+    max_measurement_time = config.measurement.timing.seconds_per_measurement_interval
+    max_mainloop_time = round(max_calibration_time + max_measurement_time + 120)
+
+    def raise_mainloop_timeout(*args: Any) -> None:
+        raise TimeoutError(f"mainloop took longer than {max_mainloop_time} seconds")
+
+    signal.signal(signal.SIGALRM, raise_mainloop_timeout)
+
+    # -------------------------------------------------------------------------
     # initialize procedures interacting with hardware
     # system_check:   logging system statistics and reporting hardware/system errors
     # calibration:    using the two reference gas bottles to calibrate the CO2 sensor
@@ -154,6 +175,9 @@ def run() -> None:
     # infinite mainloop
 
     while True:
+        # raise a TimeoutError when mainloop takes too long
+        signal.alarm(max_mainloop_time)
+
         try:
             logger.info("starting mainloop iteration")
 
@@ -206,6 +230,9 @@ def run() -> None:
             logger.info("finished mainloop iteration")
             backoff_time_bucket_index = 0
             last_successful_mainloop_iteration_time = time.time()
+
+            # cancel the previously set alarm
+            signal.alarm(0)
 
         except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
             logger.info(
