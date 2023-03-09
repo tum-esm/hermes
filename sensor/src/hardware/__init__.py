@@ -42,6 +42,10 @@ class HardwareInterface:
         self.mainboard_sensor = MainboardSensorInterface(config)
         self.ups = UPSInterface(config)
 
+        # heated enclosure communication with repairing
+        # routine is running in a separate thread
+        HeatedEnclosureThread.init(config)
+
     def check_errors(self) -> None:
         """checks for detectable hardware errors"""
         self.logger.info("checking for hardware errors")
@@ -49,6 +53,7 @@ class HardwareInterface:
         self.wind_sensor.check_errors()
         self.pump.check_errors()
         self.mainboard_sensor.check_errors()
+        HeatedEnclosureThread.check_errors()
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
@@ -70,6 +75,7 @@ class HardwareInterface:
         # enclosure controls
         self.mainboard_sensor.teardown()
         self.ups.teardown()
+        HeatedEnclosureThread.deinit()
 
         # release lock
         hardware_lock.release()
@@ -92,6 +98,7 @@ class HardwareInterface:
         # enclosure controls
         self.mainboard_sensor = MainboardSensorInterface(config)
         self.ups = UPSInterface(config)
+        HeatedEnclosureThread.init(config)
 
     def acquire_hardare_lock(self) -> None:
         """make sure that there is only one initialized hardware connection"""
