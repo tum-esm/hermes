@@ -199,6 +199,28 @@ def run() -> None:
             )
             exit(-1)
 
+        except procedures.MessagingAgent.CommuncationOutage:
+            logger.exception(config=config)
+
+            try:
+                logger.info(
+                    f"restarting messaging agent",
+                    config=config,
+                )
+                procedures.MessagingAgent.deinit()
+                backoff_time_bucket_index = wait_during_repair()
+                procedures.MessagingAgent.init(config)
+                logger.info(
+                    f"successfully restarted messaging agent",
+                    config=config,
+                )
+            except Exception as e:
+                logger.exception(
+                    label="failed to restart messaging agent",
+                    config=config,
+                )
+                raise e
+
         except Exception:
             logger.exception(label="exception in mainloop", config=config)
 
