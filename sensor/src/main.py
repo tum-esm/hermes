@@ -27,6 +27,7 @@ def run() -> None:
         * continue
     4. run measurement procedure
     """
+
     logger = utils.Logger(origin="main")
     logger.horizontal_line()
 
@@ -41,6 +42,22 @@ def run() -> None:
         f"started new automation process with PID {os.getpid()}",
         config=config,
     )
+
+    # -------------------------------------------------------------------------
+    # define behaviour when setup takes too long
+
+    max_setup_time = 180
+
+    def raise_setup_timeout(*args: Any) -> None:
+        message = f"setup took longer than {max_setup_time} seconds"
+        logger.error(message, config=config)
+        raise TimeoutError(message)
+
+    signal.signal(signal.SIGALRM, raise_setup_timeout)
+    signal.alarm(max_setup_time)
+
+    # -------------------------------------------------------------------------
+    # define incremental backoff mechanism
 
     # will be used for rebooting when errors persist for more than 24 hours
     last_successful_mainloop_iteration_time = time.time()
@@ -130,27 +147,6 @@ def run() -> None:
     signal.signal(signal.SIGTERM, graceful_teardown)
 
     # -------------------------------------------------------------------------
-    # define behaviour when mainloop takes too long
-
-    max_calibration_time = (
-        len(config.calibration.gases)
-        * (
-            config.calibration.flushing.seconds
-            + (
-                config.calibration.sampling.seconds_per_sample
-                * config.calibration.sampling.sample_count
-            )
-        )
-    ) + config.calibration.cleaning.seconds
-    max_measurement_time = config.measurement.timing.seconds_per_measurement_interval
-    max_mainloop_time = round(max_calibration_time + max_measurement_time + 120)
-
-    def raise_mainloop_timeout(*args: Any) -> None:
-        raise TimeoutError(f"mainloop took longer than {max_mainloop_time} seconds")
-
-    signal.signal(signal.SIGALRM, raise_mainloop_timeout)
-
-    # -------------------------------------------------------------------------
     # initialize procedures interacting with hardware
     # system_check:   logging system statistics and reporting hardware/system errors
     # calibration:    using the two reference gas bottles to calibrate the CO2 sensor
@@ -170,6 +166,27 @@ def run() -> None:
         logger.error("could not initialize procedures", config=config)
         logger.exception(config=config)
         raise e
+
+    # -------------------------------------------------------------------------
+    # define behaviour when mainloop takes too long
+
+    max_calibration_time = (
+        len(config.calibration.gases)
+        * (
+            config.calibration.flushing.seconds
+            + (
+                config.calibration.sampling.seconds_per_sample
+                * config.calibration.sampling.sample_count
+            )
+        )
+    ) + config.calibration.cleaning.seconds
+    max_measurement_time = config.measurement.timing.seconds_per_measurement_interval
+    max_mainloop_time = round(max_calibration_time + max_measurement_time + 120)
+
+    def raise_mainloop_timeout(*args: Any) -> None:
+        raise TimeoutError(f"mainloop took longer than {max_mainloop_time} seconds")
+
+    signal.signal(signal.SIGALRM, raise_mainloop_timeout)
 
     # -------------------------------------------------------------------------
     # infinite mainloop
