@@ -231,9 +231,6 @@ def run() -> None:
             backoff_time_bucket_index = 0
             last_successful_mainloop_iteration_time = time.time()
 
-            # cancel the previously set alarm
-            signal.alarm(0)
-
         except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
             logger.info(
                 "shutting down mainloop due to successful update",
@@ -250,8 +247,12 @@ def run() -> None:
             exit(1)
 
         except procedures.MessagingAgent.CommuncationOutage:
-            logger.exception(config=config)
+            logger.exception(label="exception in mainloop", config=config)
 
+            # cancel the alarm for too long mainloops
+            signal.alarm(0)
+
+            # reboot if exception lasts longer than 12 hours
             if (time.time() - last_successful_mainloop_iteration_time) >= 43200:
                 logger.info(
                     "rebooting because no successful mainloop iteration for 12 hours",
@@ -281,7 +282,16 @@ def run() -> None:
         except Exception:
             logger.exception(label="exception in mainloop", config=config)
 
-            # TODO: reboot if exception lasts longer than 24 hours
+            # cancel the alarm for too long mainloops
+            signal.alarm(0)
+
+            # reboot if exception lasts longer than 12 hours
+            if (time.time() - last_successful_mainloop_iteration_time) >= 43200:
+                logger.info(
+                    "rebooting because no successful mainloop iteration for 12 hours",
+                    config=config,
+                )
+                os.system("reboot")
 
             try:
                 logger.info(f"performing hard reset", config=config)
