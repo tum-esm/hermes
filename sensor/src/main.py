@@ -42,6 +42,9 @@ def run() -> None:
         config=config,
     )
 
+    # will be used for rebooting when errors persist for more than 24 hours
+    last_successful_mainloop_iteration_time = time.time()
+
     # incremental backoff times on exceptions (15s, 1m, 5m, 20m)
     backoff_time_bucket_index = 0
     backoff_time_buckets = [15, 60, 300, 1200]
@@ -202,6 +205,7 @@ def run() -> None:
 
             logger.info("finished mainloop iteration")
             backoff_time_bucket_index = 0
+            last_successful_mainloop_iteration_time = time.time()
 
         except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
             logger.info(
@@ -220,6 +224,13 @@ def run() -> None:
 
         except procedures.MessagingAgent.CommuncationOutage:
             logger.exception(config=config)
+
+            if (time.time() - last_successful_mainloop_iteration_time) >= 43200:
+                logger.info(
+                    "rebooting because no successful mainloop iteration for 12 hours",
+                    config=config,
+                )
+                os.system("reboot")
 
             try:
                 logger.info(
