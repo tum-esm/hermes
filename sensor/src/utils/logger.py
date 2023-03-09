@@ -114,9 +114,24 @@ class Logger:
                 config, level="error", subject=message, details=details
             )
 
-    def exception(self, config: Optional[custom_types.Config] = None) -> None:
+    def exception(
+        self,
+        label: Optional[str] = None,
+        config: Optional[custom_types.Config] = None,
+    ) -> None:
         """logs the traceback of an exception, sends the message via
-        MQTT when config is passed (required for revision number)
+        MQTT when config is passed (required for revision number).
+
+        exceptions will be formattted like this:
+
+        ```txt
+        label: exception_name
+        --- details: -----------------
+        ...
+        --- traceback: ---------------
+        ...
+        ------------------------------
+        ```
         """
         exc_type, exc, exc_traceback = sys.exc_info()
         exception_name = traceback.format_exception_only(exc_type, exc)[0].strip()
@@ -127,7 +142,9 @@ class Logger:
         if isinstance(exc, CommandLineException) and (exc.details is not None):
             exception_details = exc.details.strip()
 
-        subject_string = exception_name
+        subject_string = (
+            exception_name if label is None else f"{label}: {exception_name}"
+        )
         details_string = (
             f"--- details: -----------------\n"
             + f"{exception_details}\n"
