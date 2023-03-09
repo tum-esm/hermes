@@ -146,14 +146,14 @@ class HeatedEnclosureThread:
     @staticmethod
     def communication_loop(config: custom_types.Config) -> None:
         heated_enclosure: Optional[HeatedEnclosureInterface] = None
-        last_init_time = 0
 
         usb_ports = USBPortInterface()
         active_mqtt_queue = utils.ActiveMQTTQueue()
         logger = utils.Logger("heated-enclosure-thread")
-        last_datapoint_time = 0
 
-        # TODO: only log exceptions once when error persists for more than 1 hour
+        last_init_time = 0
+        last_datapoint_time = 0
+        exception_is_present = False
 
         while True:
             time_remaining_to_next_datapoint = (
@@ -216,8 +216,16 @@ class HeatedEnclosureThread:
                     ),
                 )
 
+                exception_is_present = False
+
             except:
-                logger.exception(label="error in heated enclosure thread")
+                # only log exceptions when they are newly occuring
+                if not exception_is_present:
+                    logger.exception(
+                        label="new error in heated enclosure thread",
+                        config=config,
+                    )
+                    exception_is_present = True
 
                 if heated_enclosure is not None:
                     heated_enclosure.teardown()
