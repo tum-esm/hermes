@@ -1,4 +1,5 @@
 import multiprocessing
+import time
 from typing import Optional
 import filelock
 from src import custom_types, utils
@@ -17,6 +18,8 @@ from .wind_sensor import WindSensorInterface
 hardware_lock = filelock.FileLock(
     "/home/pi/Documents/hermes/hermes-hardware.lock", timeout=5
 )
+
+# TODO: only init enclosure thread when component is active
 
 
 class HardwareInterface:
@@ -140,14 +143,37 @@ class HeatedEnclosureThread:
             HeatedEnclosureThread.archiving_loop_process = None
 
     @staticmethod
-    def communcation_loop(config: custom_types.Config) -> None:
-        heated_enclosure = HeatedEnclosureInterface(config)
+    def communication_loop(config: custom_types.Config) -> None:
+        heated_enclosure: Optional[HeatedEnclosureInterface] = None
         usb_ports = USBPortInterface()
+        logger = utils.Logger("heated-enclosure-thread")
+        last_datapoint_time = 0
 
-        # TODO: add logic with own backoff cycle
+        # TODO: only log exceptions when error persists for more than 1 hour
 
-        # heated_enclosure.check_errors()
-        # heated_enclosure.teardown()
+        while True:
+            time_remaining_to_next_datapoint = (
+                config.heated_enclosure.seconds_per_stored_datapoint
+                - (time.time() - last_datapoint_time)
+            )
+            if time_remaining_to_next_datapoint > 0:
+                time.sleep(time_remaining_to_next_datapoint)
+
+            try:
+                if heated_enclosure is None:
+                    heated_enclosure = HeatedEnclosureInterface(config)
+
+                # TODO: add communication logic
+
+            except:
+                logger.exception(label="error in heated enclosure thread")
+
+                if heated_enclosure is not None:
+                    heated_enclosure.teardown()
+
+                logger.info("waiting two minutes until trying again")
+                usb_ports.toggle_usb_power(delay=30)
+                time.sleep(90)
 
     @staticmethod
     def check_errors() -> None:
