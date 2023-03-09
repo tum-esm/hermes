@@ -31,7 +31,7 @@ class MessagingAgent:
         """start the archiving loop and the communication loop
         in two separate processes"""
 
-        # the archiving loop takes car of moving processed
+        # the archiving loop takes care of moving processed
         # messages from the active queue db to the archive
         if MessagingAgent.archiving_loop_process is None:
             new_process = multiprocessing.Process(
