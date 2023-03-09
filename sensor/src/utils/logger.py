@@ -122,10 +122,10 @@ class Logger:
         """logs the traceback of an exception, sends the message via
         MQTT when config is passed (required for revision number).
 
-        exceptions will be formattted like this:
+        exceptions will be formatted like this:
 
         ```txt
-        label: exception_name
+        (label, )ZeroDivisionError: division by zer
         --- details: -----------------
         ...
         --- traceback: ---------------
@@ -143,7 +143,7 @@ class Logger:
             exception_details = exc.details.strip()
 
         subject_string = (
-            exception_name if label is None else f"{label}: {exception_name}"
+            exception_name if label is None else f"{label}, {exception_name}"
         )
         details_string = (
             f"--- details: -----------------\n"

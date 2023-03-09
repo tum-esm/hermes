@@ -40,6 +40,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         "pytests                 - WARNING       - some message c",
         "pytests                 - ERROR         - some message d",
         "pytests                 - EXCEPTION     - ZeroDivisionError: division by zero",
+        "pytests                 - EXCEPTION     - customlabel, ZeroDivisionError: division by zero",
     ]
 
     expect_log_lines(forbidden_lines=generated_log_lines)
@@ -76,6 +77,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         30 / 0
     except Exception as e:
         logger.exception(config=config)
+        logger.exception(label="customlabel", config=config)
 
     expect_log_lines(required_lines=generated_log_lines)
 
@@ -89,7 +91,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         )
     ]
     active_logs_messages.sort(key=lambda m: m.body.timestamp)
-    assert len(active_logs_messages) == 3
+    assert len(active_logs_messages) == 4
     assert all([m.variant == "logs" for m in active_logs_messages])
 
     assert active_logs_messages[0].header.mqtt_topic == None
@@ -134,7 +136,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
             for m in [json.loads(m) for m in f.read().split("\n") if len(m) > 0]
         ]
     archived_log_messages.sort(key=lambda m: m.body.timestamp)
-    assert len(archived_log_messages) == 3
+    assert len(archived_log_messages) == 4
     assert archived_log_messages[0].header.mqtt_topic == EXPECTED_MQTT_TOPIC
     assert archived_log_messages[0].body.severity == "warning"
     assert archived_log_messages[0].body.subject == "pytests - some message c"
