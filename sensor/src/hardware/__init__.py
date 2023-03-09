@@ -148,6 +148,7 @@ class HeatedEnclosureThread:
         last_init_time = 0
 
         usb_ports = USBPortInterface()
+        active_mqtt_queue = utils.ActiveMQTTQueue()
         logger = utils.Logger("heated-enclosure-thread")
         last_datapoint_time = 0
 
@@ -184,8 +185,6 @@ class HeatedEnclosureThread:
                         "Arduino didn't send anything for the last two minutes"
                     )
 
-                # TODO: send measurement datapoint via MQTT
-
                 if measurement.measured is None:
                     logger.warning(
                         "enclosure temperature sensor not connected",
@@ -198,6 +197,23 @@ class HeatedEnclosureThread:
                             + f"{measurement.measured} °C",
                             config=config,
                         )
+
+                logger.debug(
+                    f"heated enclosure measurement: temperature is {measurement.measured} °C, "
+                    + f"heater is {'on' if measurement.heater_is_on else 'off'}, "
+                    + f"fan is {'on' if measurement.fan_is_on else 'off'}"
+                )
+                active_mqtt_queue.enqueue_message(
+                    config,
+                    custom_types.MQTTDataMessageBody(
+                        revision=config.revision,
+                        timestamp=round(time.time(), 2),
+                        value=custom_types.MQTTEnclosureData(
+                            variant="enclosure",
+                            data=measurement,
+                        ),
+                    ),
+                )
 
             except:
                 logger.exception(label="error in heated enclosure thread")

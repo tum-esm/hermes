@@ -28,24 +28,6 @@ class SystemCheckProcedure:
             + f"enclosure pressure = {system_data.enclosure_pressure} hPa"
         )
 
-        # interact with heated enclosure
-        if self.config.active_components.heated_enclosure_communication:
-            if self.hardware_interface.heated_enclosure is None:
-                self.hardware_interface.heated_enclosure = (
-                    self.hardware_interface.HeatedEnclosureInterface(self.config)
-                )
-
-            heated_enclosure_data = (
-                self.hardware_interface.heated_enclosure.get_current_data()
-            )
-            if heated_enclosure_data is not None:
-                self.logger.debug(
-                    f"heated enclosure temperature = {heated_enclosure_data.measured} °C, "
-                    + f"heated enclosure heater = is {'on' if heated_enclosure_data.heater_is_on else 'off'}, "
-                    + f"heated enclosure fan = is {'on' if heated_enclosure_data.fan_is_on else 'off'}"
-                )
-                # TODO: send heated enclosure data via MQTT
-
         # evaluate disk usage
         disk_usage = psutil.disk_usage("/")
         self.logger.debug(
@@ -65,8 +47,6 @@ class SystemCheckProcedure:
             self.logger.warning(
                 f"CPU usage is very high ({cpu_usage_percent} %)", config=self.config
             )
-
-        # TODO: add memory usage to printouts and mqtt
 
         self.active_mqtt_queue.enqueue_message(
             self.config,
