@@ -23,7 +23,7 @@ class MeasurementProcedure:
 
         # state variables
         self.active_air_inlet: Optional[custom_types.MeasurementAirInletConfig] = None
-        self.last_iteration_start_time: float = 0
+        self.last_measurement_time: float = 0
         self.active_mqtt_queue = utils.ActiveMQTTQueue()
 
     def _switch_to_air_inlet(
@@ -160,7 +160,7 @@ class MeasurementProcedure:
         during the collection (2 minutes)
         """
         self.logger.info(f"starting measurement interval")
-        loop_start_time = time.time()
+        measurement_procedure_start_time = time.time()
 
         # set up pump to run continuously
         self.hardware_interface.pump.set_desired_pump_speed(
@@ -180,7 +180,15 @@ class MeasurementProcedure:
 
         # do regular measurements for about 2 minutes
         while True:
-            self.last_iteration_start_time = time.time()
+            seconds_to_wait_for_next_measurement = max(
+                self.config.measurement.timing.seconds_per_measurement
+                - (time.time() - self.last_measurement_time),
+                0,
+            )
+            self.logger.debug(
+                f"sleeping {round(seconds_to_wait_for_next_measurement, 3)} seconds"
+            )
+            time.sleep(seconds_to_wait_for_next_measurement)
 
             current_sensor_data = (
                 self.hardware_interface.co2_sensor.get_current_concentration()
@@ -196,22 +204,11 @@ class MeasurementProcedure:
                     revision=self.config.revision,
                 ),
             )
-
-            iteration_end_time = time.time()
+            self.last_measurement_time = time.time()
 
             if (
-                iteration_end_time - loop_start_time
+                self.last_measurement_time - measurement_procedure_start_time
             ) >= self.config.measurement.timing.seconds_per_measurement_interval:
                 break
-
-            elapsed_time = iteration_end_time - self.last_iteration_start_time
-            remaining_sleep_seconds = (
-                self.config.measurement.timing.seconds_per_measurement - elapsed_time
-            )
-            if remaining_sleep_seconds > 0:
-                self.logger.debug(
-                    f"sleeping {round(remaining_sleep_seconds, 3)} seconds"
-                )
-                time.sleep(remaining_sleep_seconds)
 
         self.logger.info(f"finished measurement interval")
