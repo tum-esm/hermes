@@ -178,21 +178,17 @@ class Logger:
         subject: str,
         details: str = "",
     ) -> None:
-        if len(subject) > 1024:
-            extension_message_subject = (
-                f" ... SUBJECT HAS BEEN CUT ({len(subject)} CHARS LONG)"
-            )
+        if len(subject) > 256:
+            extension_message_subject = f" ... CUT ({len(subject)} -> 256)"
             details = (
-                details[: (1024 - len(extension_message_subject))]
+                details[: (256 - len(extension_message_subject))]
                 + extension_message_subject
             )
 
-        if len(details) > 1024:
-            extension_message_details = (
-                f" ... DETAILS HAVE BEEN CUT ({len(details)} CHARS LONG)"
-            )
+        if len(details) > 16384:
+            extension_message_details = f" ... CUT ({len(details)} -> 16384)"
             details = (
-                details[: (1024 - len(extension_message_details))]
+                details[: (16384 - len(extension_message_details))]
                 + extension_message_details
             )
 
