@@ -1,9 +1,6 @@
 from src import utils
 
 
-# TODO: give uhubctl sudo permissions in the setup script
-
-
 class USBPortInterface:
     """This interface is used to toggle the power of all USB
     ports in case the Arduino or the LTE hat behave weird"""
