@@ -38,6 +38,7 @@ def validate_int(
     minimum: Optional[int] = None,
     maximum: Optional[int] = None,
     allowed: Optional[list[int]] = None,
+    divisible_by: Optional[int] = None,
 ) -> Callable[[Any, Optional[int]], Optional[int]]:
     def f(cls: Any, v: Optional[int]) -> Optional[int]:
         if v is None:
@@ -53,6 +54,8 @@ def validate_int(
             raise ValueError(f'"{v}" is larger than {maximum}')
         if allowed is not None and v not in allowed:
             raise ValueError(f'"{v}" is not a allowed (not one of {allowed})')
+        if divisible_by is not None and (v % divisible_by != 0):
+            raise ValueError(f'"{v}" is not divisible by {divisible_by}')
         return v
 
     return f

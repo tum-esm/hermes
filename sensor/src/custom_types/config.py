@@ -214,6 +214,7 @@ class CalibrationConfig(BaseModel):
 class HeatedEnclosureConfig(BaseModel):
     target_temperature: float
     allowed_deviation: float
+    seconds_per_stored_datapoint: int
 
     # validators
     _val_target_temperature = validator(
@@ -223,6 +224,11 @@ class HeatedEnclosureConfig(BaseModel):
     )
     _val_allowed_deviation = validator("allowed_deviation", pre=True, allow_reuse=True)(
         validate_float(minimum=0, maximum=10),
+    )
+    _val_seconds_per_stored_datapoint = validator(
+        "seconds_per_stored_datapoint", pre=True, allow_reuse=True
+    )(
+        validate_int(minimum=5),
     )
 
     class Config:
