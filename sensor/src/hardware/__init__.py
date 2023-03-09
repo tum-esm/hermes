@@ -103,17 +103,3 @@ class HardwareInterface:
             raise HardwareInterface.HardwareOccupiedException(
                 "hardware occupied by another process"
             )
-
-    def perform_hard_reset(self) -> None:
-        """teardown and reinitialize all hardware interfaces,
-        toggle the power of all USB ports inbetween"""
-
-        self.logger.info("performing hardware reset")
-
-        self.teardown()
-        time.sleep(1)
-        self.usb_ports.toggle_usb_power(delay=10)
-        time.sleep(1)
-        self.reinitialize(self.config)
-
-        self.logger.info("hardware reset successful")

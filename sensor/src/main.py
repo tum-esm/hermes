@@ -204,10 +204,9 @@ def run() -> None:
 
             try:
                 logger.info(f"performing hard reset", config=config)
-                hardware_interface.perform_hard_reset()
-                # TODO: teardown only
+                hardware_interface.teardown()
                 backoff_time_bucket_index = wait_during_repair()
-                # TODO: buildup only
+                hardware_interface.reinitialize(config)
                 logger.info(f"hard reset was successful", config=config)
 
             except Exception as e:
