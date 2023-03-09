@@ -1,3 +1,4 @@
+import time
 from typing import Literal
 from src import utils, custom_types
 import gpiozero
@@ -47,14 +48,12 @@ class ValveInterface:
         self.logger.info("Finished initialization")
 
     def set_active_input(self, no: Literal[1, 2, 3, 4]) -> None:
-        for number, device in self.valves.items():
-            if number == no:
-                device.on()
-            else:
-                device.off()
-
+        """first opens the new valve, then closes the old valve"""
+        self.valves[no].on()
+        time.sleep(0.02)
+        self.valves[self.active_input].off()
         self.active_input = no
-        self.logger.info(f"switching to valve {no}")
+        self.logger.info(f"switched to valve {no}")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
