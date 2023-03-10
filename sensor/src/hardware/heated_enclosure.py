@@ -2,7 +2,7 @@ import json
 import multiprocessing
 import os
 import time
-from typing import Optional
+from typing import Literal, Optional
 from src import utils, custom_types
 from .usb_ports import USBPortInterface
 
@@ -170,7 +170,11 @@ class HeatedEnclosureThread:
 
         last_init_time: float = 0
         last_datapoint_time: float = 0
-        exception_is_present = False
+        present_states: list[
+            Literal[
+                "exception",
+            ]
+        ] = []
 
         while True:
             time_remaining_to_next_datapoint = (
@@ -233,16 +237,21 @@ class HeatedEnclosureThread:
                     ),
                 )
 
-                exception_is_present = False
+                if "exception" in present_states:
+                    logger.info(
+                        "exception in heated enclosure thread resolved",
+                        config=config,
+                    )
+                    present_states.remove("exception")
 
             except:
                 # only log exceptions when they are newly occuring
-                if not exception_is_present:
+                if "exception" not in present_states:
                     logger.exception(
-                        label="new error in heated enclosure thread",
+                        label="new exception in heated enclosure thread",
                         config=config,
                     )
-                    exception_is_present = True
+                    present_states.append("exception")
 
                 if heated_enclosure is not None:
                     heated_enclosure.teardown()
