@@ -1,8 +1,10 @@
 import json
+import multiprocessing
 import os
 import time
 from typing import Optional
 from src import utils, custom_types
+from .usb_ports import USBPortInterface
 
 dirname = os.path.dirname
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
@@ -124,3 +126,138 @@ class HeatedEnclosureInterface:
     def teardown(self) -> None:
         """ends all hardware/system connections"""
         self.serial_interface.close()
+
+
+class HeatedEnclosureThread:
+    communication_loop_process: Optional[multiprocessing.Process] = None
+
+    class CommuncationOutage(Exception):
+        """raised when the communication loop stopped"""
+
+    @staticmethod
+    def init(config: custom_types.Config) -> None:
+        """start the archiving loop and the communication loop
+        in two separate processes"""
+
+        if HeatedEnclosureThread.communication_loop_process is not None:
+            if not HeatedEnclosureThread.communication_loop_process.is_alive():
+                HeatedEnclosureThread.communication_loop_process.join()
+
+        new_process = multiprocessing.Process(
+            target=HeatedEnclosureThread.communication_loop,
+            args=(config,),
+            daemon=True,
+        )
+        new_process.start()
+        HeatedEnclosureThread.communication_loop_process = new_process
+
+    @staticmethod
+    def deinit() -> None:
+        """stop the archiving loop and the communication loop"""
+
+        if HeatedEnclosureThread.communication_loop_process is not None:
+            HeatedEnclosureThread.communication_loop_process.terminate()
+            HeatedEnclosureThread.communication_loop_process.join()
+            HeatedEnclosureThread.communication_loop_process = None
+
+    @staticmethod
+    def communication_loop(config: custom_types.Config) -> None:
+        heated_enclosure: Optional[HeatedEnclosureInterface] = None
+
+        usb_ports = USBPortInterface()
+        active_mqtt_queue = utils.ActiveMQTTQueue()
+        logger = utils.Logger("heated-enclosure-thread")
+
+        last_init_time: float = 0
+        last_datapoint_time: float = 0
+        exception_is_present = False
+
+        while True:
+            time_remaining_to_next_datapoint = (
+                config.heated_enclosure.seconds_per_stored_datapoint
+                - (time.time() - last_datapoint_time)
+            )
+            if time_remaining_to_next_datapoint > 0:
+                time.sleep(time_remaining_to_next_datapoint)
+
+            try:
+                now = time.time()
+
+                if heated_enclosure is None:
+                    heated_enclosure = HeatedEnclosureInterface(config)
+                    last_init_time = now
+
+                measurement = heated_enclosure.get_current_measurement()
+                last_datapoint_time = now
+
+                if measurement is None:
+                    if (now - last_init_time) < 120:
+                        continue
+                    raise TimeoutError(
+                        "Arduino still didn't send anything "
+                        + "two minutes after initialization"
+                    )
+
+                if (now - measurement.last_update_time) > 120:
+                    raise TimeoutError(
+                        "Arduino didn't send anything for the last two minutes"
+                    )
+
+                if measurement.measured is None:
+                    logger.warning(
+                        "enclosure temperature sensor not connected",
+                        config=config,
+                    )
+                else:
+                    if measurement.measured > 50:
+                        logger.warning(
+                            "high temperatures inside heated enclosure: "
+                            + f"{measurement.measured} °C",
+                            config=config,
+                        )
+
+                logger.debug(
+                    f"heated enclosure measurement: temperature is {measurement.measured} °C, "
+                    + f"heater is {'on' if measurement.heater_is_on else 'off'}, "
+                    + f"fan is {'on' if measurement.fan_is_on else 'off'}"
+                )
+                active_mqtt_queue.enqueue_message(
+                    config,
+                    custom_types.MQTTDataMessageBody(
+                        revision=config.revision,
+                        timestamp=round(time.time(), 2),
+                        value=custom_types.MQTTEnclosureData(
+                            variant="enclosure",
+                            data=measurement,
+                        ),
+                    ),
+                )
+
+                exception_is_present = False
+
+            except:
+                # only log exceptions when they are newly occuring
+                if not exception_is_present:
+                    logger.exception(
+                        label="new error in heated enclosure thread",
+                        config=config,
+                    )
+                    exception_is_present = True
+
+                if heated_enclosure is not None:
+                    heated_enclosure.teardown()
+
+                logger.info("waiting two minutes until trying again")
+                usb_ports.toggle_usb_power(delay=30)
+                time.sleep(90)
+
+    @staticmethod
+    def check_errors() -> None:
+        """Raises an `MessagingAgent.CommuncationOutage` exception
+        if communication loop processes is not running."""
+
+        if HeatedEnclosureThread.communication_loop_process is not None:
+            if not HeatedEnclosureThread.communication_loop_process.is_alive():
+                raise HeatedEnclosureThread.CommuncationOutage(
+                    "communication loop process is not running"
+                )
