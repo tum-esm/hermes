@@ -176,11 +176,11 @@ class HeatedEnclosureThread:
                 "high-temperature",
                 "disconnected-sensor",
             ],
-            bool,
+            Optional[bool],
         ] = {
-            "exception": False,
-            "high-temperature": False,
-            "disconnected-sensor": False,
+            "exception": None,
+            "high-temperature": None,
+            "disconnected-sensor": None,
         }
 
         while True:
@@ -215,35 +215,36 @@ class HeatedEnclosureThread:
                     )
 
                 if measurement.measured is None:
-                    if not present_states["disconnected-sensor"]:
+                    if present_states["disconnected-sensor"] != True:
                         logger.warning(
                             "enclosure temperature sensor not connected",
                             config=config,
                         )
                         present_states["disconnected-sensor"] = True
-                    else:
+
+                else:
+                    if present_states["disconnected-sensor"] != False:
                         logger.info(
-                            "enclosure temperature sensor is connected again",
+                            "enclosure temperature sensor is connected (again)",
                             config=config,
                         )
                         present_states["disconnected-sensor"] = False
 
-                else:
-                    if (measurement.measured > 50) and (
-                        not present_states["high-temperature"]
-                    ):
-                        logger.warning(
-                            "high temperatures inside heated enclosure: "
-                            + f"{measurement.measured} °C",
-                            config=config,
-                        )
-                        present_states["high-temperature"] = True
-                    elif present_states["high-temperature"]:
-                        logger.info(
-                            "temperature is below 50 °C again",
-                            config=config,
-                        )
-                        present_states["high-temperature"] = False
+                    if measurement.measured > 50:
+                        if present_states["high-temperature"] != True:
+                            logger.warning(
+                                "high temperatures inside heated enclosure: "
+                                + f"{measurement.measured} °C",
+                                config=config,
+                            )
+                            present_states["high-temperature"] = True
+                    else:
+                        if present_states["high-temperature"] != False:
+                            logger.info(
+                                "temperature is below 50 °C (again)",
+                                config=config,
+                            )
+                            present_states["high-temperature"] = False
 
                 logger.debug(
                     f"heated enclosure measurement: temperature is {measurement.measured} °C, "
@@ -262,18 +263,18 @@ class HeatedEnclosureThread:
                     ),
                 )
 
-                if present_states["exception"]:
+                if present_states["exception"] != False:
                     logger.info(
-                        "exception in heated enclosure thread resolved",
+                        "no exception in heated enclosure thread (anymore)",
                         config=config,
                     )
                     present_states["exception"] = False
 
             except:
                 # only log exceptions when they are newly occuring
-                if not present_states["exception"]:
+                if present_states["exception"] != True:
                     logger.exception(
-                        label="new exception in heated enclosure thread",
+                        label="(new) exception in heated enclosure thread",
                         config=config,
                     )
                     present_states["exception"] = True
