@@ -171,9 +171,17 @@ class HeatedEnclosureThread:
         last_init_time: float = 0
         last_datapoint_time: float = 0
         present_states: dict[
-            Literal["exception", "high-temperature"],
+            Literal[
+                "exception",
+                "high-temperature",
+                "disconnected-sensor",
+            ],
             bool,
-        ] = {"exception": False, "high-temperature": False}
+        ] = {
+            "exception": False,
+            "high-temperature": False,
+            "disconnected-sensor": False,
+        }
 
         while True:
             time_remaining_to_next_datapoint = (
@@ -207,10 +215,19 @@ class HeatedEnclosureThread:
                     )
 
                 if measurement.measured is None:
-                    logger.warning(
-                        "enclosure temperature sensor not connected",
-                        config=config,
-                    )
+                    if not present_states["disconnected-sensor"]:
+                        logger.warning(
+                            "enclosure temperature sensor not connected",
+                            config=config,
+                        )
+                        present_states["disconnected-sensor"] = True
+                    else:
+                        logger.info(
+                            "enclosure temperature sensor is connected again",
+                            config=config,
+                        )
+                        present_states["disconnected-sensor"] = False
+
                 else:
                     if (measurement.measured > 50) and (
                         not present_states["high-temperature"]
