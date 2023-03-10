@@ -42,14 +42,14 @@ On the sensor, the codebase layout will look like this:
 ```bash
 📁 Documents
     📁 hermes
-        hermes-cli.sh
+        📄 hermes-cli.sh
         📁 0.1.0
             📁 .venv
-            run.py
+            📄 run.py
             ...
         📁 0.1.1
             📁 .venv
-            run.py
+            📄 run.py
             ...
         ...
 ```
@@ -103,7 +103,7 @@ The `boot-files/` should contain the following files:
         📁 hermes/
             📄 .env
             📄 config.json
-            📄 hermes-cli.template.sh
+            📄 hermes-cli.template
             📄 hostname_to_mqtt_id.json
 
         📁 ssh/

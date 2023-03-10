@@ -23,10 +23,14 @@ with open("/boot/midcost-init-files/system/.bashrc", "r") as f:
     new_bashrc_lines = [l for l in f.read().split("\n") if (not l.startswith("#"))]
 with open("/home/pi/.bashrc", "r") as f:
     current_bashrc_content = f.read()
-for l in new_bashrc_lines:
-    if l not in current_bashrc_content:
+
+with open("/home/pi/.bashrc", "a") as f:
+    f.write("\n")
+
+for line in new_bashrc_lines:
+    if line not in current_bashrc_content.split("\n"):
         with open("/home/pi/.bashrc", "a") as f:
-            f.write(f"\n\n{l}\n")
+            f.write(line + "\n")
 
 # =============================================================================
 # INSTALL POETRY AND ARDUINO CLI
