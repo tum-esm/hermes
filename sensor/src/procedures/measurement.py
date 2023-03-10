@@ -189,6 +189,7 @@ class MeasurementProcedure:
                 f"sleeping {round(seconds_to_wait_for_next_measurement, 3)} seconds"
             )
             time.sleep(seconds_to_wait_for_next_measurement)
+            self.last_measurement_time = time.time()
 
             current_sensor_data = (
                 self.hardware_interface.co2_sensor.get_current_concentration()
@@ -204,7 +205,6 @@ class MeasurementProcedure:
                     revision=self.config.revision,
                 ),
             )
-            self.last_measurement_time = time.time()
 
             if (
                 self.last_measurement_time - measurement_procedure_start_time
