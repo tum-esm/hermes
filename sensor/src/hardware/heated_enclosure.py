@@ -170,11 +170,10 @@ class HeatedEnclosureThread:
 
         last_init_time: float = 0
         last_datapoint_time: float = 0
-        present_states: list[
-            Literal[
-                "exception",
-            ]
-        ] = []
+        present_states: dict[
+            Literal["exception", "high-temperature"],
+            bool,
+        ] = {"exception": False, "high-temperature": False}
 
         while True:
             time_remaining_to_next_datapoint = (
@@ -213,12 +212,21 @@ class HeatedEnclosureThread:
                         config=config,
                     )
                 else:
-                    if measurement.measured > 50:
+                    if (measurement.measured > 50) and (
+                        not present_states["high-temperature"]
+                    ):
                         logger.warning(
                             "high temperatures inside heated enclosure: "
                             + f"{measurement.measured} °C",
                             config=config,
                         )
+                        present_states["high-temperature"] = True
+                    elif present_states["high-temperature"]:
+                        logger.info(
+                            "temperature is below 50 °C again",
+                            config=config,
+                        )
+                        present_states["high-temperature"] = False
 
                 logger.debug(
                     f"heated enclosure measurement: temperature is {measurement.measured} °C, "
@@ -237,21 +245,21 @@ class HeatedEnclosureThread:
                     ),
                 )
 
-                if "exception" in present_states:
+                if present_states["exception"]:
                     logger.info(
                         "exception in heated enclosure thread resolved",
                         config=config,
                     )
-                    present_states.remove("exception")
+                    present_states["exception"] = False
 
             except:
                 # only log exceptions when they are newly occuring
-                if "exception" not in present_states:
+                if not present_states["exception"]:
                     logger.exception(
                         label="new exception in heated enclosure thread",
                         config=config,
                     )
-                    present_states.append("exception")
+                    present_states["exception"] = True
 
                 if heated_enclosure is not None:
                     heated_enclosure.teardown()
