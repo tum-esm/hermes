@@ -25,3 +25,6 @@ insert-name-here-cli.sh
 authorized_keys
 id_ed25519_esm_technical_user
 id_ed25519_esm_technical_user.pub
+
+# system stuff
+wpa_supplicant.conf
