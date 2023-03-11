@@ -129,6 +129,8 @@ def run() -> None:
     # initialize a single hardware interface that is only used by one
     # procedure at a time; tear down hardware on program termination
 
+    logger.info("initializing hardware interfaces", config=config)
+
     try:
         hardware_interface = hardware.HardwareInterface(config)
     except Exception as e:
@@ -151,6 +153,8 @@ def run() -> None:
     # system_check:   logging system statistics and reporting hardware/system errors
     # calibration:    using the two reference gas bottles to calibrate the CO2 sensor
     # measurements:   do regular measurements for x minutes
+
+    logger.info("initializing procedures", config=config)
 
     try:
         system_check_prodecure = procedures.SystemCheckProcedure(
@@ -190,6 +194,8 @@ def run() -> None:
 
     # -------------------------------------------------------------------------
     # infinite mainloop
+
+    logger.info("successfully finished setup, starting mainloop", config=config)
 
     while True:
         # raise a TimeoutError when mainloop takes too long
@@ -311,11 +317,11 @@ def run() -> None:
                 os.system("reboot")
 
             try:
-                logger.info(f"performing hard reset", config=config)
+                logger.info("performing hard reset", config=config)
                 hardware_interface.teardown()
                 backoff_time_bucket_index = wait_during_repair()
                 hardware_interface.reinitialize(config)
-                logger.info(f"hard reset was successful", config=config)
+                logger.info("hard reset was successful", config=config)
 
             except Exception as e:
                 logger.exception(

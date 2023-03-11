@@ -82,13 +82,17 @@ class ConfigurationProcedure:
         new_version = config_request.configuration.version
 
         if self.config.revision == new_revision:
-            self.logger.info("received config has the same revision")
+            self.logger.info(
+                "received config has the same revision",
+                config=self.config,
+            )
             return
 
         has_same_directory = PROJECT_DIR == code_path(new_version)
 
         self.logger.info(
-            message=f"upgrading to revision {new_revision}", config=self.config
+            message=f"upgrading to revision {new_revision}",
+            config=self.config,
         )
         self.logger.info(
             message=f"using config {json.dumps(config_request.configuration.dict(), indent=4)}"
@@ -102,6 +106,11 @@ class ConfigurationProcedure:
                 self._set_up_venv(new_version)
 
             self._dump_new_config(config_request)
+
+            self.logger.info(
+                f"upgrading to revision {new_revision}: installation was successful",
+                config=self.config,
+            )
 
             self._run_pytests(
                 new_version,
@@ -128,11 +137,10 @@ class ConfigurationProcedure:
             raise e
 
         except Exception as e:
-            self.logger.error(
-                f"upgrading to revision {new_revision}: exception during upgrade",
+            self.logger.exception(
+                label="upgrading to revision {new_revision}: exception during upgrade",
                 config=self.config,
             )
-            self.logger.exception(config=self.config)
 
         if has_same_directory:
             restore_current_config()
@@ -256,7 +264,7 @@ class ConfigurationProcedure:
             venvs_to_be_removed.append(venv_path)
 
         for p in venvs_to_be_removed:
-            self.logger.info(f'removing old .venv at path "{p}"', config=self.config)
+            self.logger.debug(f'removing old .venv at path "{p}"')
             shutil.rmtree(p)
 
-        self.logger.info(f"successfully removed all old .venvs", config=self.config)
+        self.logger.info(f"successfully removed all old .venvs")
