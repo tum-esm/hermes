@@ -107,18 +107,16 @@ class _UpdateSensorRequestQuery(types._BaseModel):
 
 
 class _ReadMeasurementsRequestQuery(types._BaseModel):
-    direction: typing.Literal[None, "previous", "next"] = None
     creation_timestamp: types.Timestamp = None
+    direction: typing.Literal[None, "previous", "next"] = None
 
-    @pydantic.validator("creation_timestamp", always=True)
+    @pydantic.validator("direction", always=True)
     def check_exists(cls, v, values, field):
-        if values.get("direction") is not None and v is None:
+        if (values.get("creation_timestamp") is None and v is not None) or (
+            values.get("creation_timestamp") is not None and v is None
+        ):
             raise ValueError(
-                f"Must specify '{field.name}' when 'direction' is specified"
-            )
-        if values.get("direction") is None and v is not None:
-            raise ValueError(
-                f"Must specify 'direction' when '{field.name}' is specified"
+                "Must provide both 'creation_timestamp' and 'direction' or neither"
             )
         return v
 
