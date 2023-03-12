@@ -94,7 +94,7 @@ async def pool():
         user=settings.POSTGRESQL_IDENTIFIER,
         password=settings.POSTGRESQL_PASSWORD,
         database=settings.POSTGRESQL_DATABASE,
-        min_size=2,
+        min_size=4,
         max_size=8,
         max_queries=16384,
         max_inactive_connection_lifetime=300,
