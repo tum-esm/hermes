@@ -20,8 +20,8 @@ class Sensor(BaseModel):
 class SensorCodeVersionActivity(BaseModel):
     sensor_name: str
     code_version: str
-    first_measurement_timestamp: datetime
-    last_measurement_timestamp: datetime
+    first_timestamp: datetime
+    last_timestamp: datetime
 
 
 class SensorMeasurement(BaseModel):

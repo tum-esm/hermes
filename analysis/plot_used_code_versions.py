@@ -35,8 +35,8 @@ if __name__ == "__main__":
             list(code_version_offsets.keys()),
         )
 
-        min_timestamp = min([a.first_measurement_timestamp for a in activities])
-        max_timestamp = max([a.last_measurement_timestamp for a in activities])
+        min_timestamp = min([a.first_timestamp for a in activities])
+        max_timestamp = max([a.last_timestamp for a in activities])
 
         for code_version in code_version_offsets.keys():
             for sensor_name in utils.SENSOR_OFFSETS.keys():
@@ -49,8 +49,8 @@ if __name__ == "__main__":
 
         for a in activities:
             xs = [
-                a.first_measurement_timestamp,
-                a.last_measurement_timestamp,
+                a.first_timestamp,
+                a.last_timestamp,
             ]
             ys = [
                 code_version_offsets[a.code_version]

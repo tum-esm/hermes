@@ -12,7 +12,8 @@ class SQLQueries:
     def _run_sql_query(
         config: custom_types.Config,
         filename: Literal[
-            "used_sensor_software",
+            "used_sensor_software_measurements",
+            "used_sensor_software_logs",
             "select_all_sensors",
             "select_sensor_measurements",
             "select_sensor_logs",
@@ -30,7 +31,7 @@ class SQLQueries:
             "postgresql://"
             + f"{config.database.user}:{config.database.password}"
             + f"@{config.database.host}:{config.database.port}/"
-            + f"{config.database.db_name}"
+            + f"{config.database.db_name}",
         ) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(sql_string)
@@ -47,15 +48,36 @@ class SQLQueries:
     def fetch_sensor_code_version_activity(
         config: custom_types.Config,
     ) -> list[custom_types.SensorCodeVersionActivity]:
-        return [
+        output = [
             custom_types.SensorCodeVersionActivity(
                 sensor_name=r[0],
                 code_version=r[1],
-                first_measurement_timestamp=r[2],
-                last_measurement_timestamp=r[3],
+                first_timestamp=r[2],
+                last_timestamp=r[3],
             )
-            for r in SQLQueries._run_sql_query(config, "used_sensor_software")
+            for r in [
+                *SQLQueries._run_sql_query(config, "used_sensor_software_measurements"),
+                *SQLQueries._run_sql_query(config, "used_sensor_software_logs"),
+            ]
         ]
+
+        output.sort(key=lambda a: a.sensor_name + a.code_version)
+
+        merged_outputs: list[custom_types.SensorCodeVersionActivity] = []
+        for a, b in zip(output[:-1], output[1:]):
+            if (a.code_version != b.code_version) or (a.sensor_name != b.sensor_name):
+                merged_outputs.append(a)
+            else:
+                merged_outputs.append(
+                    custom_types.SensorCodeVersionActivity(
+                        sensor_name=a.sensor_name,
+                        code_version=a.code_version,
+                        first_timestamp=min(a.first_timestamp, b.first_timestamp),
+                        last_timestamp=max(a.last_timestamp, b.last_timestamp),
+                    )
+                )
+
+        return merged_outputs
 
     @staticmethod
     def fetch_sensor_measurements(
