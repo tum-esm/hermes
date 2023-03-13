@@ -108,7 +108,17 @@ class Logger:
         if len(details) == 0:
             self._write_log_line("ERROR", message)
         else:
-            self._write_log_line("ERROR", f"{message}, details: {details}")
+            self._write_log_line(
+                "ERROR",
+                "\n".join(
+                    [
+                        message,
+                        "--- details: -----------------",
+                        details,
+                        "------------------------------",
+                    ]
+                ),
+            )
         if config is not None:
             self._write_mqtt_message(
                 config, level="error", subject=message, details=details
@@ -195,10 +205,12 @@ class Logger:
         subject: str,
         details: str = "",
     ) -> None:
+        subject = f"{self.origin} - {subject}"
+
         if len(subject) > 256:
             extension_message_subject = f" ... CUT ({len(subject)} -> 256)"
-            details = (
-                details[: (256 - len(extension_message_subject))]
+            subject = (
+                subject[: (256 - len(extension_message_subject))]
                 + extension_message_subject
             )
 
@@ -213,7 +225,7 @@ class Logger:
             config,
             message_body=custom_types.MQTTLogMessageBody(
                 severity=level,
-                subject=f"{self.origin} - {subject}",
+                subject=subject,
                 details=details,
                 timestamp=round(time.time(), 2),
                 revision=config.revision,

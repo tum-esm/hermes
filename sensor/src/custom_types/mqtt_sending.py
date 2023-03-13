@@ -75,10 +75,10 @@ class MQTTLogMessageBody(BaseModel):
         validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
     )
     _val_subject = validator("subject", pre=True, allow_reuse=True)(
-        validate_str(min_len=1, max_len=1024),
+        validate_str(min_len=1, max_len=256),
     )
     _val_details = validator("details", pre=True, allow_reuse=True)(
-        validate_str(min_len=0, max_len=1024),
+        validate_str(min_len=0, max_len=16_384),
     )
 
     class Config:
