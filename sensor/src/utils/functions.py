@@ -1,4 +1,6 @@
 import os
+import random
+import string
 import subprocess
 from typing import Optional
 import pigpio
@@ -71,3 +73,14 @@ def get_gpio_pin_factory() -> gpiozero.pins.pigpio.PiGPIOFactory:
             'pigpio is not connected, please run "sudo pigpiod -n 127.0.0.1"'
         )
     return pin_factory
+
+
+def get_random_string(length: int, forbidden: list[str] = []) -> str:
+    """a random string from lowercase letter, the strings from
+    the list passed as `forbidden` will not be generated"""
+    output: str = ""
+    while True:
+        output = "".join(random.choices(string.ascii_lowercase, k=length))
+        if output not in forbidden:
+            break
+    return output

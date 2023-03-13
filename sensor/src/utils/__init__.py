@@ -13,4 +13,5 @@ from .functions import (
     get_hostname,
     distance_between_angles,
     get_gpio_pin_factory,
+    get_random_string,
 )

@@ -4,7 +4,7 @@ import pytest
 from os.path import dirname, abspath, join
 import sys
 import deepdiff
-from ..pytest_utils import expect_log_lines, wait_for_condition
+from ..pytest_utils import expect_log_file_contents, wait_for_condition
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
@@ -65,8 +65,8 @@ def test_mqtt_receiving(
 
     time.sleep(5)
 
-    expect_log_lines(
-        required_lines=[
+    expect_log_file_contents(
+        required_content_blocks=[
             f"message-communication   - INFO          - subscribed to topic {config_topic}",
             f"message-communication   - INFO          - received message on config topic: ",
             f"message-communication   - DEBUG         - put config message into the message queue",

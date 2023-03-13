@@ -1,10 +1,10 @@
 from datetime import datetime
 import json
 import os
+import re
 import time
 import pytest
-
-from ..pytest_utils import expect_log_lines, wait_for_condition
+from ..pytest_utils import expect_log_file_contents, wait_for_condition
 from os.path import dirname, abspath, join
 import sys
 
@@ -28,6 +28,50 @@ def test_logger_with_sending(messaging_agent_with_sending: None) -> None:
     _test_logger(mqtt_communication_enabled=True)
 
 
+@pytest.mark.version_update
+@pytest.mark.ci
+def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None:
+
+    config = utils.ConfigInterface.read()
+    config.active_components.mqtt_communication = True
+    active_mqtt_queue = utils.ActiveMQTTQueue()
+
+    logger = utils.Logger(origin="pytests")
+
+    message = utils.get_random_string(length=300)
+    details = "\n".join(
+        [utils.get_random_string(length=80) for i in range(250)]
+    )  # 20.249 characters long
+
+    expected_log_file_content = (
+        f"pytests                 - ERROR         - {message}\n"
+        + "--- details: -----------------\n"
+        + f"{details}\n"
+        + "------------------------------\n"
+    )
+    expected_mqtt_subject = f"pytests - {message[: (256 - 31)]} ... CUT (310 -> 256)"
+    expected_mqtt_details = f"{details[: (16384 - 25)]} ... CUT (20249 -> 16384)"
+
+    assert len(active_mqtt_queue.get_rows_by_status("pending")) == 0
+    expect_log_file_contents(forbidden_content_blocks=[expected_log_file_content])
+
+    logger.error(message=message, config=config, details=details)
+
+    mqtt_messages = active_mqtt_queue.get_rows_by_status("pending")
+    assert len(mqtt_messages) == 1
+    mqtt_message_content = mqtt_messages[0].content
+    assert mqtt_message_content.variant == "logs"
+    assert mqtt_message_content.body.subject == expected_mqtt_subject
+    assert mqtt_message_content.body.details == expected_mqtt_details
+    expect_log_file_contents(required_content_blocks=[expected_log_file_content])
+
+    wait_for_condition(
+        lambda: len(active_mqtt_queue.get_rows_by_status("pending")) == 0,
+        timeout_message="message was not sent",
+        timeout_seconds=10,
+    )
+
+
 def _test_logger(mqtt_communication_enabled: bool) -> None:
     config = utils.ConfigInterface.read()
     config.active_components.mqtt_communication = mqtt_communication_enabled
@@ -43,7 +87,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         "pytests                 - EXCEPTION     - customlabel, ZeroDivisionError: division by zero",
     ]
 
-    expect_log_lines(forbidden_lines=generated_log_lines)
+    expect_log_file_contents(forbidden_content_blocks=generated_log_lines)
     assert len(active_mqtt_queue.get_rows_by_status("pending")) == 0
     assert len(active_mqtt_queue.get_rows_by_status("in-progress")) == 0
     assert len(active_mqtt_queue.get_rows_by_status("done")) == 0
@@ -79,7 +123,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         logger.exception(config=config)
         logger.exception(label="customlabel", config=config)
 
-    expect_log_lines(required_lines=generated_log_lines)
+    expect_log_file_contents(required_content_blocks=generated_log_lines)
 
     # -------------------------------------------------------------------------
     # check whether all records are correctly inserted in sending queue

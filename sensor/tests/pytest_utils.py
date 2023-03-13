@@ -6,18 +6,18 @@ PROJECT_DIR = dirname(dirname(abspath(__file__)))
 LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
 
 
-def expect_log_lines(
-    required_lines: list[str] = [],
-    forbidden_lines: list[str] = [],
+def expect_log_file_contents(
+    required_content_blocks: list[str] = [],
+    forbidden_content_blocks: list[str] = [],
 ) -> None:
     with open(LOG_FILE, "r") as f:
         file_content = f.read()
 
-    for l in required_lines:
-        assert l in file_content, f'required log line not found "{l}"'
+    for b in required_content_blocks:
+        assert b in file_content, f'required log content block not found "{b}"'
 
-    for l in forbidden_lines:
-        assert l not in file_content, f'forbidden log line found "{l}"'
+    for b in forbidden_content_blocks:
+        assert b not in file_content, f'forbidden log content block found "{b}"'
 
 
 def wait_for_condition(
