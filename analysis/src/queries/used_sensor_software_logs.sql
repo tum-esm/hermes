@@ -9,7 +9,7 @@ JOIN logs USING (sensor_identifier, revision)
 WHERE (
     (NOT ((configurations.configuration ->> 'version') IS NULL)) AND
     (sensors.sensor_name LIKE 'tum-esm-midcost-raspi-%') AND
-    (logs.creation_timestamp > now() - interval '7 days')
+    (logs.creation_timestamp > now() - interval '5 days')
 )
 GROUP BY sensors.sensor_name, sensor_code_version
 ORDER BY sensor_code_version DESC, sensors.sensor_name ASC;
