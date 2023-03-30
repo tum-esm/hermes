@@ -285,7 +285,7 @@ def run() -> None:
                     "rebooting because no successful mainloop iteration for 12 hours",
                     config=config,
                 )
-                os.system("reboot")
+                os.system("sudo reboot")
 
             try:
                 logger.info(
@@ -319,7 +319,7 @@ def run() -> None:
                     "rebooting because no successful mainloop iteration for 12 hours",
                     config=config,
                 )
-                os.system("reboot")
+                os.system("sudo reboot")
 
             try:
                 logger.info("performing hard reset", config=config)
