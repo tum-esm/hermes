@@ -273,7 +273,7 @@ def run() -> None:
             )
             exit(1)
 
-        except procedures.MessagingAgent.CommuncationOutage as e:
+        except procedures.MessagingAgent.CommunicationOutage as e:
             logger.exception(e, label="exception in mainloop", config=config)
 
             # cancel the alarm for too long mainloops

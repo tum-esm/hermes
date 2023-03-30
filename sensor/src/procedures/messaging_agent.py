@@ -23,7 +23,7 @@ class MessagingAgent:
         custom_types.MQTTConfigurationRequest
     ] = multiprocessing.Queue()
 
-    class CommuncationOutage(Exception):
+    class CommunicationOutage(Exception):
         """raised when the sending or the archiving loop stopped"""
 
     @staticmethod
@@ -94,13 +94,8 @@ class MessagingAgent:
             logger.info("shutting down")
             exit(0)
 
-        try:
-            signal.signal(signal.SIGINT, graceful_teardown)
-            signal.signal(signal.SIGTERM, graceful_teardown)
-        except Exception as e:
-            logger.exception()
-            raise e
-
+        signal.signal(signal.SIGINT, graceful_teardown)
+        signal.signal(signal.SIGTERM, graceful_teardown)
         logger.info("established graceful teardown hook")
 
         # maps date_strings to lists of messages to be archived
@@ -168,7 +163,9 @@ class MessagingAgent:
             )
             raise e
 
-        logger.info("established connection to mqtt client and active mqtt queue")
+        logger.info(
+            "established connection to mqtt broker and active mqtt queue",
+        )
 
         # tear down connection on program termination
         def graceful_teardown(*args: Any) -> None:
@@ -177,14 +174,8 @@ class MessagingAgent:
             logger.info("finished graceful shutdown")
             exit(0)
 
-        try:
-            signal.signal(signal.SIGINT, graceful_teardown)
-            signal.signal(signal.SIGTERM, graceful_teardown)
-        except Exception as e:
-            logger.exception()
-            mqtt_connection.teardown()
-            raise e
-
+        signal.signal(signal.SIGINT, graceful_teardown)
+        signal.signal(signal.SIGTERM, graceful_teardown)
         logger.info("established graceful teardown hook")
 
         try:
@@ -205,8 +196,6 @@ class MessagingAgent:
             raise e
 
         logger.info(f"subscribed to topic {config_topic}")
-
-        # TODO: fetch initial config messages
 
         # this queue is necessary because paho-mqtt does not support
         # a function that answers the question "has this message id
@@ -249,7 +238,6 @@ class MessagingAgent:
             records_to_be_archived: list[custom_types.SQLMQTTRecord] = []
 
             try:
-
                 assert mqtt_client.is_connected(), "mqtt client is not connected"
 
                 # -----------------------------------------------------------------
@@ -340,17 +328,17 @@ class MessagingAgent:
     @staticmethod
     def check_errors() -> None:
         """Checks whether the loop processes is still running. Possibly
-        raises an `MessagingAgent.CommuncationOutage` exception."""
+        raises an `MessagingAgent.CommunicationOutage` exception."""
 
         if MessagingAgent.communication_loop_process is not None:
             if not MessagingAgent.communication_loop_process.is_alive():
-                raise MessagingAgent.CommuncationOutage(
+                raise MessagingAgent.CommunicationOutage(
                     "communication loop process is not running"
                 )
 
         if MessagingAgent.archiving_loop_process is not None:
             if not MessagingAgent.archiving_loop_process.is_alive():
-                raise MessagingAgent.CommuncationOutage(
+                raise MessagingAgent.CommunicationOutage(
                     "archiving loop process is not running"
                 )
 
