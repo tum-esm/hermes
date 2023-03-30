@@ -126,7 +126,7 @@ if __name__ == "__main__":
             subplot_col_count=1,
             subplot_number=1,
             xlabel="UTC time",
-            ylabel="messages\nper minute",
+            ylabel="Messages\nper Minute",
             title="CO2 Messages",
             xaxis_scale="days",
         ) as p:
@@ -151,7 +151,7 @@ if __name__ == "__main__":
             subplot_col_count=1,
             subplot_number=2,
             xlabel="UTC time",
-            ylabel="messages\nper minute",
+            ylabel="Messages\nper Minute",
             title="Other Measurement Messages",
             xaxis_scale="days",
             legend="center left",
@@ -177,7 +177,7 @@ if __name__ == "__main__":
             subplot_col_count=1,
             subplot_number=3,
             xlabel="UTC time",
-            ylabel="message type",
+            ylabel="Message Type",
             title="Log Messages",
             xaxis_scale="days",
         ) as p:

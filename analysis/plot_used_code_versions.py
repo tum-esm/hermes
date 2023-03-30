@@ -26,8 +26,8 @@ if __name__ == "__main__":
         subplot_col_count=1,
         subplot_number=1,
         xlabel="UTC time",
-        ylabel="code version with\nactive measurement data",
-        title="Used code version over time",
+        ylabel="Code Version With\n Measurement/Log Data",
+        title="Used Code Version Over Time",
         xaxis_scale="days",
     ) as p:
         p.set_yticks(

@@ -9,7 +9,7 @@ JOIN measurements USING (sensor_identifier, revision)
 WHERE (
     (NOT ((configurations.configuration ->> 'version') IS NULL)) AND
     (sensors.sensor_name LIKE 'tum-esm-midcost-raspi-%') AND
-    (measurements.creation_timestamp > now() - interval '5 days')
+    (measurements.creation_timestamp > now() - interval '6 days')
 )
 GROUP BY sensors.sensor_name, sensor_code_version
 ORDER BY sensor_code_version DESC, sensors.sensor_name ASC;
