@@ -283,9 +283,9 @@ class HeatedEnclosureThread:
                 if heated_enclosure is not None:
                     heated_enclosure.teardown()
 
-                logger.info("waiting two minutes until trying again")
+                logger.info("waiting 15 minutes until trying again")
                 usb_ports.toggle_usb_power(delay=30)
-                time.sleep(90)
+                time.sleep(870)
 
     @staticmethod
     def check_errors() -> None:
