@@ -270,10 +270,11 @@ class HeatedEnclosureThread:
                     )
                     present_states["exception"] = False
 
-            except:
+            except Exception as e:
                 # only log exceptions when they are newly occuring
                 if present_states["exception"] != True:
                     logger.exception(
+                        e,
                         label="(new) exception in heated enclosure thread",
                         config=config,
                     )

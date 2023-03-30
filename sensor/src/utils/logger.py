@@ -126,6 +126,7 @@ class Logger:
 
     def exception(
         self,
+        e: Exception,
         label: Optional[str] = None,
         config: Optional[custom_types.Config] = None,
     ) -> None:
@@ -143,14 +144,13 @@ class Logger:
         ------------------------------
         ```
         """
-        exc_type, exc, exc_traceback = sys.exc_info()
-        exception_name = traceback.format_exception_only(exc_type, exc)[0].strip()
+        exception_name = traceback.format_exception_only(type(e), e)[0].strip()
         exception_traceback = "\n".join(
-            traceback.format_exception(exc_type, exc, exc_traceback)
+            traceback.format_exception(type(e), e, e.__traceback__)
         ).strip()
         exception_details = "None"
-        if isinstance(exc, CommandLineException) and (exc.details is not None):
-            exception_details = exc.details.strip()
+        if isinstance(e, CommandLineException) and (e.details is not None):
+            exception_details = e.details.strip()
 
         subject_string = (
             exception_name if label is None else f"{label}, {exception_name}"

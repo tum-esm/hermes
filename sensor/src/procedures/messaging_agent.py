@@ -87,7 +87,7 @@ class MessagingAgent:
         try:
             active_mqtt_queue = utils.ActiveMQTTQueue()
         except Exception as e:
-            logger.exception()
+            logger.exception(e, "could not connect to active mqtt queue", config=config)
             raise e
 
         def graceful_teardown(*args: Any) -> None:
@@ -161,7 +161,11 @@ class MessagingAgent:
             mqtt_client = mqtt_connection.client
             active_mqtt_queue = utils.ActiveMQTTQueue()
         except Exception as e:
-            logger.exception()
+            logger.exception(
+                e,
+                label="could not start connection to mqtt broker",
+                config=config,
+            )
             raise e
 
         logger.info("established connection to mqtt client and active mqtt queue")
@@ -193,8 +197,11 @@ class MessagingAgent:
             )
             mqtt_client.subscribe(config_topic, qos=1)
         except Exception as e:
-            logger.exception()
-            mqtt_connection.teardown()
+            logger.exception(
+                e,
+                label="could not subscribe to config topic",
+                config=config,
+            )
             raise e
 
         logger.info(f"subscribed to topic {config_topic}")
@@ -310,8 +317,7 @@ class MessagingAgent:
                 time.sleep(3)
 
             except Exception as e:
-                logger.error("sending loop has stopped")
-                logger.exception()
+                logger.exception(e, label="sending loop has stopped", config=config)
                 mqtt_connection.teardown()
                 raise e
 

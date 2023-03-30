@@ -120,8 +120,8 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     try:
         30 / 0
     except Exception as e:
-        logger.exception(config=config)
-        logger.exception(label="customlabel", config=config)
+        logger.exception(e, config=config)
+        logger.exception(e, label="customlabel", config=config)
 
     expect_log_file_contents(required_content_blocks=generated_log_lines)
 

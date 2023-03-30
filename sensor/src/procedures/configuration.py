@@ -138,6 +138,7 @@ class ConfigurationProcedure:
 
         except Exception as e:
             self.logger.exception(
+                e,
                 label="upgrading to revision {new_revision}: exception during upgrade",
                 config=self.config,
             )

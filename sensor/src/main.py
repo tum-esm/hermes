@@ -34,8 +34,7 @@ def run() -> None:
     try:
         config = utils.ConfigInterface.read()
     except Exception as e:
-        logger.error("could not load local config.json")
-        logger.exception()
+        logger.exception(e, label="could not load local config.json")
         raise e
 
     logger.info(
@@ -88,6 +87,7 @@ def run() -> None:
         procedures.MessagingAgent.init(config)
     except Exception as e:
         logger.exception(
+            e,
             label="could not start messaging agent",
             config=config,
         )
@@ -121,7 +121,7 @@ def run() -> None:
             exit(0)
         except Exception as e:
             logger.exception(
-                label="error during configuration procedure", config=config
+                e, label="error during configuration procedure", config=config
             )
             raise e
 
@@ -134,8 +134,9 @@ def run() -> None:
     try:
         hardware_interface = hardware.HardwareInterface(config)
     except Exception as e:
-        logger.error("could not initialize hardware interface", config=config)
-        logger.exception(config=config)
+        logger.exception(
+            e, label="could not initialize hardware interface", config=config
+        )
         raise e
 
     # tear down hardware on program termination
@@ -167,8 +168,7 @@ def run() -> None:
             config, hardware_interface
         )
     except Exception as e:
-        logger.error("could not initialize procedures", config=config)
-        logger.exception(config=config)
+        logger.exception(e, label="could not initialize procedures", config=config)
         raise e
 
     # -------------------------------------------------------------------------
@@ -214,7 +214,11 @@ def run() -> None:
                 try:
                     hardware_interface.teardown()
                 except Exception as e:
-                    logger.exception(config=config)
+                    logger.exception(
+                        e,
+                        "error in hardware-teardown before configuration procedure",
+                        config=config,
+                    )
                     raise ExitOnHardwareTeardownFail()
 
                 # stopping this script inside the procedure if successful
@@ -269,8 +273,8 @@ def run() -> None:
             )
             exit(1)
 
-        except procedures.MessagingAgent.CommuncationOutage:
-            logger.exception(label="exception in mainloop", config=config)
+        except procedures.MessagingAgent.CommuncationOutage as e:
+            logger.exception(e, label="exception in mainloop", config=config)
 
             # cancel the alarm for too long mainloops
             signal.alarm(0)
@@ -297,13 +301,14 @@ def run() -> None:
                 )
             except Exception as e:
                 logger.exception(
+                    e,
                     label="failed to restart messaging agent",
                     config=config,
                 )
                 raise e
 
-        except Exception:
-            logger.exception(label="exception in mainloop", config=config)
+        except Exception as e:
+            logger.exception(e, label="exception in mainloop", config=config)
 
             # cancel the alarm for too long mainloops
             signal.alarm(0)
@@ -325,6 +330,6 @@ def run() -> None:
 
             except Exception as e:
                 logger.exception(
-                    label="exception during hard reset of hardware", config=config
+                    e, label="exception during hard reset of hardware", config=config
                 )
                 raise e
