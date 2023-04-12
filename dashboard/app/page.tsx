@@ -69,16 +69,20 @@ export default function Home() {
   return (
     <>
       <header className="flex flex-row items-center justify-start flex-shrink-0 w-full h-16 px-6 border-b border-slate-300">
-        <h1 className="text-xl font-medium">
-          TUM - Environmental Sensing and Modeling - Acropolis Sensor Network
+        <div className="-ml-6 flex h-full w-[5.5rem] items-center border-r border-slate-300 bg-slate-900 px-6 text-slate-100">
+          {ICONS.tum}
+        </div>
+        <h1 className="pl-5 text-xl font-light uppercase text-slate-950">
+          <span className="font-medium">Acropolis Sensor Network</span>{" "}
+          &nbsp;|&nbsp; Professorship of Environmental Sensing and Modeling
         </h1>
         <div className="flex-grow" />
-        <p>
+        <p className="text-slate-800">
           powered by{" "}
           <a
             href="https://github.com/tum-esm/hermes"
             target="_blank"
-            className="font-medium underline text-slate-800"
+            className="font-medium underline text-slate-950"
           >
             github.com/tum-esm/hermes
           </a>{" "}
@@ -100,7 +104,7 @@ export default function Home() {
         </nav>
         <div className="flex-grow bg-slate-50"></div>
       </main>
-      <footer className="flex flex-row items-center justify-center h-10 text-sm bg-slate-900 text-slate-50">
+      <footer className="flex flex-row items-center justify-center h-10 text-sm bg-slate-900 text-slate-100">
         © TUM Professorship of Environmental Sensing and Modeling
         {process.env.NEXT_PUBLIC_BUILD_TIMESTAMP !== undefined && (
           <>
