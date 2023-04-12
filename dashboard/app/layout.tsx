@@ -55,7 +55,9 @@ export default function RootLayout({
               ))}
             </ul>
           </nav>
-          <div className="flex-grow bg-slate-50">{children}</div>
+          <div className="flex-grow h-full p-6 overflow-y-scroll bg-slate-50">
+            {children}
+          </div>
         </main>
         <footer className="flex flex-row items-center justify-center h-10 text-sm bg-slate-900 text-slate-100">
           © TUM Professorship of Environmental Sensing and Modeling
