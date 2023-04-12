@@ -67,9 +67,57 @@ function SensorListItem(props: { sensorName: string }) {
 
 export default function Home() {
   return (
-    <main className="flex flex-col items-center min-h-screen px-8 py-16 gap-y-6 bg-slate-50">
-      <h1 className="text-3xl font-medium">TUM ESM - Acropolis</h1>
-      <div className="w-full max-w-3xl overflow-hidden bg-white border rounded-lg shadow border-slate-300">
+    <>
+      <header className="flex flex-row items-center justify-start flex-shrink-0 w-full h-16 px-6 border-b border-slate-300">
+        <h1 className="text-xl font-medium">
+          TUM - Environmental Sensing and Modeling - Acropolis Sensor Network
+        </h1>
+        <div className="flex-grow" />
+        <p>
+          powered by{" "}
+          <a
+            href="https://github.com/tum-esm/hermes"
+            target="_blank"
+            className="font-medium underline text-slate-800"
+          >
+            github.com/tum-esm/hermes
+          </a>{" "}
+          ({process.env.NEXT_PUBLIC_COMMIT_SHA})
+        </p>
+      </header>
+      <main className="flex h-[calc(100vh-6.5rem)] w-screen flex-row">
+        <nav className="flex max-h-full w-[24rem] flex-col overflow-y-scroll border-r border-slate-300">
+          <ul>
+            {Object.keys(SENSOR_IDS).map((sensorName) => (
+              <Link
+                href={`/sensor/${sensorName}`}
+                className="block border-b group border-slate-100 last:border-none hover:bg-slate-50"
+              >
+                <SensorListItem sensorName={sensorName} />
+              </Link>
+            ))}
+          </ul>
+        </nav>
+        <div className="flex-grow bg-slate-50"></div>
+      </main>
+      <footer className="flex flex-row items-center justify-center h-10 text-sm bg-slate-900 text-slate-50">
+        © TUM Professorship of Environmental Sensing and Modeling
+        {process.env.NEXT_PUBLIC_BUILD_TIMESTAMP !== undefined && (
+          <>
+            ,{" "}
+            {new Date(
+              parseInt(process.env.NEXT_PUBLIC_BUILD_TIMESTAMP) * 1000
+            ).getFullYear()}
+          </>
+        )}
+      </footer>
+    </>
+  );
+}
+
+/*
+
+<div className="w-full max-w-3xl overflow-hidden bg-white border rounded-lg shadow border-slate-300">
         <ul>
           {Object.keys(SENSOR_IDS).map((sensorName) => (
             <Link
@@ -82,6 +130,5 @@ export default function Home() {
         </ul>
         <PointColorLegend />
       </div>
-    </main>
-  );
-}
+
+*/
