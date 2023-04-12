@@ -15,7 +15,31 @@ const variantToTextColor = {
   offline: "text-slate-800",
 };
 
-function NetworkStatisticsElement(props: {
+const variantToDescription = {
+  online: (
+    <>
+      <span className="font-medium">only</span> data in the last 30 minutes
+    </>
+  ),
+  unstable: (
+    <>
+      data <span className="font-medium">and</span> logs in the last 30 minutes{" "}
+    </>
+  ),
+  error: (
+    <>
+      <span className="font-medium">only</span> logs in the last 30 minutes
+    </>
+  ),
+  offline: (
+    <>
+      no data <span className="font-medium">or</span> logs in the last 30
+      minutes
+    </>
+  ),
+};
+
+function NetworkActivityItem(props: {
   number: number;
   variant: "online" | "unstable" | "error" | "offline";
 }) {
@@ -36,42 +60,42 @@ function NetworkStatisticsElement(props: {
         <p className="px-1 text-2xl font-semibold">{props.number}</p> of 20
       </div>
       <div className="flex-grow w-full px-4 py-2 text-sm bg-slate-50 text-slate-700">
-        {props.variant === "online" && (
-          <>
-            <span className="font-medium">only</span> data in the last 30
-            minutes
-          </>
-        )}
-        {props.variant === "unstable" && (
-          <>
-            data <span className="font-medium">and</span> logs in the last 30
-            minutes
-          </>
-        )}
-        {props.variant === "error" && (
-          <>
-            <span className="font-medium">only</span> logs in the last 30
-            minutes
-          </>
-        )}
-        {props.variant === "offline" && (
-          <>
-            no data <span className="font-medium">or</span> logs in the last 30
-            minutes
-          </>
-        )}
+        {variantToDescription[props.variant]}
       </div>
     </div>
   );
 }
 
-function NetworkStatistics() {
+// TODO: connect data
+
+function NetworkActivity() {
   return (
     <div className="grid max-w-3xl grid-cols-2 mx-auto gap-x-3 gap-y-3">
-      <NetworkStatisticsElement variant="online" number={2} />
-      <NetworkStatisticsElement variant="unstable" number={2} />
-      <NetworkStatisticsElement variant="error" number={2} />
-      <NetworkStatisticsElement variant="offline" number={2} />
+      <NetworkActivityItem variant="online" number={12} />
+      <NetworkActivityItem variant="unstable" number={3} />
+      <NetworkActivityItem variant="error" number={2} />
+      <NetworkActivityItem variant="offline" number={3} />
+    </div>
+  );
+}
+
+function DashboardStatus() {
+  return (
+    <div className="flex flex-col max-w-3xl p-4 mx-auto overflow-hidden bg-white border rounded shadow border-slate-300">
+      <p>
+        <span className="inline-flex w-28">Commit SHA:</span>{" "}
+        <span className="font-medium">
+          {process.env.NEXT_PUBLIC_COMMIT_SHA}
+        </span>
+      </p>
+      <p>
+        <span className="inline-flex w-28">Deploy Time:</span>{" "}
+        <span className="font-medium">
+          {new Date(
+            parseInt(process.env.NEXT_PUBLIC_BUILD_TIMESTAMP || "0") * 1000
+          ).toISOString()}
+        </span>
+      </p>
     </div>
   );
 }
@@ -80,12 +104,18 @@ export default function Home() {
   return (
     <>
       <h2 className="w-full pt-8 pb-4 text-2xl font-medium text-center">
-        Server Stats
+        Server Status
       </h2>
       <h2 className="w-full pt-8 pb-4 text-2xl font-medium text-center">
         Network Activity
       </h2>
-      <NetworkStatistics />
+      <NetworkActivity />
+      <h2 className="w-full pt-8 pb-4 text-2xl font-medium text-center">
+        Dashboard Status
+      </h2>
+      <DashboardStatus />
     </>
   );
 }
+
+// ({process.env.NEXT_PUBLIC_COMMIT_SHA})

@@ -38,8 +38,7 @@ export default function RootLayout({
               className="font-medium underline text-slate-950"
             >
               github.com/tum-esm/hermes
-            </a>{" "}
-            ({process.env.NEXT_PUBLIC_COMMIT_SHA})
+            </a>
           </p>
         </header>
         <main className="flex h-[calc(100vh-6.5rem)] w-screen flex-row">
