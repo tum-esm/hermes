@@ -2,7 +2,14 @@ import { SENSOR_IDS } from "@/components/constants";
 import { ICONS } from "@/components/icons";
 import Link from "next/link";
 
+// TODO: render server status and URL
+
 function SensorListItem(props: { sensorName: string }) {
+  // TODO: fetch measurement and logs data
+  // TODO: green if measurements in the last 10 minutes
+  // TODO: yellow if no measurements in the last 10 minutes but logs in the last 30 minutes (doing reset routine)
+  // TODO: red otherwise
+
   return (
     <li
       key={props.sensorName}
@@ -19,6 +26,7 @@ function SensorListItem(props: { sensorName: string }) {
     </li>
   );
 }
+
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center gap-y-6 bg-slate-50 px-8 py-16">

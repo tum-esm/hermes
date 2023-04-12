@@ -1,5 +1,10 @@
 import { SENSOR_IDS } from "@/components/constants";
 
+// TODO: render overview section (last measurement, last log, sensor id)
+// TODO: render tbs for logs and measurements
+// TODO: render logs
+// TODO: render measurements
+
 export function generateStaticParams() {
   return Object.values(SENSOR_IDS).map((sensorName) => ({
     sensorName,
