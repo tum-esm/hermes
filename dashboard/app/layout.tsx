@@ -1,5 +1,9 @@
 import "./globals.css";
 import { Rubik } from "next/font/google";
+import { SENSOR_IDS } from "@/components/constants";
+import { ICONS } from "@/components/icons";
+import Link from "next/link";
+import { SensorListItem } from "@/components/sensorListItem";
 
 export const metadata = {
   title: "Create Next App",
@@ -16,7 +20,55 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={rubik.className}>{children}</body>
+      <body className={rubik.className}>
+        <header className="flex flex-row items-center justify-start flex-shrink-0 w-full h-16 px-6 border-b border-slate-300">
+          <div className="-ml-6 flex h-full w-[5.5rem] items-center border-r border-slate-300 bg-slate-900 px-6 text-slate-100">
+            {ICONS.tum}
+          </div>
+          <h1 className="pl-5 text-xl font-light uppercase text-slate-950">
+            <span className="font-medium">Acropolis Sensor Network</span>{" "}
+            &nbsp;|&nbsp; Professorship of Environmental Sensing and Modeling
+          </h1>
+          <div className="flex-grow" />
+          <p className="text-slate-800">
+            powered by{" "}
+            <a
+              href="https://github.com/tum-esm/hermes"
+              target="_blank"
+              className="font-medium underline text-slate-950"
+            >
+              github.com/tum-esm/hermes
+            </a>{" "}
+            ({process.env.NEXT_PUBLIC_COMMIT_SHA})
+          </p>
+        </header>
+        <main className="flex h-[calc(100vh-6.5rem)] w-screen flex-row">
+          <nav className="flex h-full w-[24rem] flex-col overflow-y-scroll border-r border-slate-300">
+            <ul>
+              {Object.keys(SENSOR_IDS).map((sensorName) => (
+                <Link
+                  href={`/sensor/${sensorName}`}
+                  className="block border-b group border-slate-100 last:border-none hover:bg-slate-50"
+                >
+                  <SensorListItem sensorName={sensorName} />
+                </Link>
+              ))}
+            </ul>
+          </nav>
+          <div className="flex-grow bg-slate-50">{children}</div>
+        </main>
+        <footer className="flex flex-row items-center justify-center h-10 text-sm bg-slate-900 text-slate-100">
+          © TUM Professorship of Environmental Sensing and Modeling
+          {process.env.NEXT_PUBLIC_BUILD_TIMESTAMP !== undefined && (
+            <>
+              ,{" "}
+              {new Date(
+                parseInt(process.env.NEXT_PUBLIC_BUILD_TIMESTAMP) * 1000
+              ).getFullYear()}
+            </>
+          )}
+        </footer>
+      </body>
     </html>
   );
 }
