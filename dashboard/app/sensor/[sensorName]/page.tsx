@@ -26,11 +26,11 @@ export default function Page({ params }: { params: { sensorName: string } }) {
         <p>back to overview</p>
       </Link>
 
-      <h1 className="px-4 mt-3 text-2xl text-slate-800">
+      <h2 className="px-4 mt-3 text-2xl text-slate-800">
         Station{" "}
         <span className="font-semibold text-black">{params.sensorName}</span>{" "}
         (ID: {sensorId})
-      </h1>
+      </h2>
     </>
   );
 }
