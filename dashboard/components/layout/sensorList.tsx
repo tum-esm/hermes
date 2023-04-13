@@ -1,10 +1,9 @@
-"use client";
-
-import { ICONS } from "@/components/icons";
+import { SENSOR_IDS } from "@/components/constants";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export function SensorListItem(props: { sensorName: string }) {
-  // TODO: fetch data and logs
+function SensorListItem(props: { sensorName: string }) {
+  // TODO: connect data and logs
   // TODO: determine color
 
   const pathname = usePathname();
@@ -21,7 +20,7 @@ export function SensorListItem(props: { sensorName: string }) {
           : "hover:bg-slate-50")
       }
     >
-      <div className="w-2 h-2 bg-green-500 rounded-sm" />
+      <div className="h-2 w-2 rounded-sm bg-green-500" />
       <div
         className={
           "flex flex-col leading-tight " +
@@ -39,5 +38,21 @@ export function SensorListItem(props: { sensorName: string }) {
         </p>
       </div>
     </li>
+  );
+}
+
+export function SensorList() {
+  return (
+    <ul>
+      {Object.keys(SENSOR_IDS).map((sensorName) => (
+        <Link
+          key={sensorName}
+          href={`/sensor/${sensorName}`}
+          className="group block border-b border-slate-100 last:border-none hover:bg-slate-50"
+        >
+          <SensorListItem sensorName={sensorName} />
+        </Link>
+      ))}
+    </ul>
   );
 }
