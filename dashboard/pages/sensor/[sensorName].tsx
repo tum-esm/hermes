@@ -6,9 +6,9 @@ import Link from "next/link";
 // TODO: render logs
 // TODO: render measurements
 
-export async function getStaticPaths() {
+export function getStaticPaths() {
   return {
-    paths: Object.values(SENSOR_IDS).map((sensorName) => ({
+    paths: Object.keys(SENSOR_IDS).map((sensorName) => ({
       params: { sensorName },
     })),
     fallback: false,
@@ -16,7 +16,7 @@ export async function getStaticPaths() {
 }
 
 // `getStaticPaths` requires using `getStaticProps`
-export async function getStaticProps(context: any) {
+export function getStaticProps(context: any) {
   return {
     // Passed to the page component as props
     props: { sensorName: context.params.sensorName },
