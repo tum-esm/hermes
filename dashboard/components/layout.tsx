@@ -2,10 +2,21 @@ import { Rubik } from "next/font/google";
 import { SensorList } from "@/components/layout/sensorList";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { useEffect } from "react";
+import { useStore } from "@/components/state";
 
 const rubik = Rubik({ subsets: ["latin"] });
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const increasePopulation = useStore((state) => state.increasePopulation);
+
+  useEffect(() => {
+    setTimeout(() => {
+      console.log("loaded");
+      increasePopulation();
+    }, 3000);
+  }, []);
+
   return (
     <div className={rubik.className}>
       <Header />
