@@ -1,4 +1,4 @@
-import { SensorState, useNetworkStore } from "@/components/state";
+import { determinSensorStatus, useNetworkStore } from "@/components/state";
 
 const variantToBgColor = {
   online: "bg-green-500",
@@ -70,39 +70,27 @@ function NetworkActivityItem(props: {
 export function NetworkActivity() {
   const networkState = useNetworkStore((state) => state.state);
 
-  const dataInLast30Minutes = (sensor: SensorState) =>
-    sensor.data !== null &&
-    sensor.data.filter(
-      (data) => data.creation_timestamp > Date.now() - 30 * 60 * 1000
-    ).length > 0;
-
-  const logsInLast30Minutes = (sensor: SensorState) =>
-    sensor.logs !== null &&
-    sensor.logs.filter(
-      (log) => log.max_creation_timestamp > Date.now() - 30 * 60 * 1000
-    ).length > 0;
-
-  const sensorCountTotal = networkState.filter(
-    (sensor) => sensor.data !== null && sensor.logs !== null
-  ).length;
-
   const sensorCountOnline = networkState.filter(
-    (sensor) => dataInLast30Minutes(sensor) && !logsInLast30Minutes(sensor)
+    (sensor) => determinSensorStatus(sensor) === "online"
   ).length;
 
   const sensorCountUnstable = networkState.filter(
-    (sensor) => dataInLast30Minutes(sensor) && logsInLast30Minutes(sensor)
+    (sensor) => determinSensorStatus(sensor) === "unstable"
   ).length;
 
   const sensorCountError = networkState.filter(
-    (sensor) => !dataInLast30Minutes(sensor) && logsInLast30Minutes(sensor)
+    (sensor) => determinSensorStatus(sensor) === "error"
   ).length;
 
-  const sensorCountOffline =
-    sensorCountTotal -
-    sensorCountOnline -
-    sensorCountUnstable -
-    sensorCountError;
+  const sensorCountOffline = networkState.filter(
+    (sensor) => determinSensorStatus(sensor) === "offline"
+  ).length;
+
+  const sensorCountTotal =
+    sensorCountOnline +
+    sensorCountUnstable +
+    sensorCountError +
+    sensorCountOffline;
 
   return (
     <div className="mx-auto grid max-w-3xl grid-cols-2 gap-x-3 gap-y-3">

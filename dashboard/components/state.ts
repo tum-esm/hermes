@@ -98,3 +98,33 @@ export const useNetworkStore = create<NetworkState>((set) => ({
       ),
     })),
 }));
+
+export function determinSensorStatus(
+  sensor: SensorState
+): "online" | "unstable" | "error" | "offline" | undefined {
+  if (sensor.data === null || sensor.logs === null) {
+    return undefined;
+  }
+
+  // has data in last 30 minutes
+  const hasData =
+    sensor.data.filter(
+      (data) => data.creation_timestamp > Date.now() - 30 * 60 * 1000
+    ).length > 0;
+
+  // has logs in last 30 minutes
+  const hasLogs =
+    sensor.logs.filter(
+      (log) => log.max_creation_timestamp > Date.now() - 30 * 60 * 1000
+    ).length > 0;
+
+  if (hasData && !hasLogs) {
+    return "online";
+  } else if (hasData && hasLogs) {
+    return "unstable";
+  } else if (!hasData && hasLogs) {
+    return "error";
+  } else {
+    return "offline";
+  }
+}
