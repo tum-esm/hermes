@@ -25,7 +25,7 @@ export function ServerStatus() {
         <span className="inline-flex w-28">Start Time:</span>{" "}
         <span className="font-medium">
           {serverStatus
-            ? new Date(serverStatus.start_time * 1000).toISOString()
+            ? new Date(serverStatus.start_timestamp * 1000).toISOString()
             : "..."}
         </span>
       </p>

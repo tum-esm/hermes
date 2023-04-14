@@ -6,13 +6,13 @@ type ServerState = {
     environment: string;
     commit_sha: string;
     branch_name: string;
-    start_time: number;
+    start_timestamp: number;
   };
   setState: (newState: {
     environment: string;
     commit_sha: string;
     branch_name: string;
-    start_time: number;
+    start_timestamp: number;
   }) => void;
 };
 
@@ -61,7 +61,6 @@ type NetworkState = {
       min_revision: number;
       max_revision: number;
       min_creation_timestamp: number;
-
       max_creation_timestamp: number;
       count: number;
     }[]
