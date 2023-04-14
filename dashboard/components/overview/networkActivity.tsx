@@ -1,3 +1,5 @@
+import { SensorState, useNetworkStore } from "@/components/state";
+
 const variantToBgColor = {
   online: "bg-green-500",
   unstable: "bg-yellow-500",
@@ -37,7 +39,8 @@ const variantToDescription = {
 };
 
 function NetworkActivityItem(props: {
-  number: number;
+  count: number;
+  total: number;
   variant: "online" | "unstable" | "error" | "offline";
 }) {
   return (
@@ -54,7 +57,8 @@ function NetworkActivityItem(props: {
           {props.variant}
         </p>
         <div className="flex-grow" />
-        <p className="px-1 text-2xl font-semibold">{props.number}</p> of 20
+        <p className="px-1 text-2xl font-semibold">{props.count}</p> of{" "}
+        {props.total}
       </div>
       <div className="w-full flex-grow bg-slate-50 px-4 py-2 text-sm text-slate-700">
         {variantToDescription[props.variant]}
@@ -63,14 +67,65 @@ function NetworkActivityItem(props: {
   );
 }
 
-// TODO: connect data
 export function NetworkActivity() {
+  const networkState = useNetworkStore((state) => state.state);
+
+  const dataInLast30Minutes = (sensor: SensorState) =>
+    sensor.data !== null &&
+    sensor.data.filter(
+      (data) => data.creation_timestamp > Date.now() - 30 * 60 * 1000
+    ).length > 0;
+
+  const logsInLast30Minutes = (sensor: SensorState) =>
+    sensor.logs !== null &&
+    sensor.logs.filter(
+      (log) => log.max_creation_timestamp > Date.now() - 30 * 60 * 1000
+    ).length > 0;
+
+  const sensorCountTotal = networkState.filter(
+    (sensor) => sensor.data !== null && sensor.logs !== null
+  ).length;
+
+  const sensorCountOnline = networkState.filter(
+    (sensor) => dataInLast30Minutes(sensor) && !logsInLast30Minutes(sensor)
+  ).length;
+
+  const sensorCountUnstable = networkState.filter(
+    (sensor) => dataInLast30Minutes(sensor) && logsInLast30Minutes(sensor)
+  ).length;
+
+  const sensorCountError = networkState.filter(
+    (sensor) => !dataInLast30Minutes(sensor) && logsInLast30Minutes(sensor)
+  ).length;
+
+  const sensorCountOffline =
+    sensorCountTotal -
+    sensorCountOnline -
+    sensorCountUnstable -
+    sensorCountError;
+
   return (
     <div className="mx-auto grid max-w-3xl grid-cols-2 gap-x-3 gap-y-3">
-      <NetworkActivityItem variant="online" number={12} />
-      <NetworkActivityItem variant="unstable" number={3} />
-      <NetworkActivityItem variant="error" number={2} />
-      <NetworkActivityItem variant="offline" number={3} />
+      <NetworkActivityItem
+        variant="online"
+        count={sensorCountOnline}
+        total={sensorCountTotal}
+      />
+      <NetworkActivityItem
+        variant="unstable"
+        count={sensorCountUnstable}
+        total={sensorCountTotal}
+      />
+      <NetworkActivityItem
+        variant="error"
+        count={sensorCountError}
+        total={sensorCountTotal}
+      />
+      <NetworkActivityItem
+        variant="offline"
+        count={sensorCountOffline}
+        total={sensorCountTotal}
+      />
     </div>
   );
 }
