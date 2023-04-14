@@ -3,6 +3,8 @@ import contextlib
 
 import asyncpg
 import starlette.applications
+import starlette.middleware
+import starlette.middleware.cors
 import starlette.responses
 import starlette.routing
 
@@ -388,6 +390,16 @@ async def lifespan(app):
                 pass
 
 
+middleware = [
+    starlette.middleware.Middleware(
+        starlette.middleware.cors.CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+]
+
+
 app = starlette.applications.Starlette(
     routes=[
         starlette.routing.Route(
@@ -437,4 +449,5 @@ app = starlette.applications.Starlette(
         ),
     ],
     lifespan=lifespan,
+    middleware=middleware,
 )
