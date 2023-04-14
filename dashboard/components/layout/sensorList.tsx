@@ -7,7 +7,6 @@ function SensorListItem(props: { sensorName: string }) {
   // TODO: determine color
 
   const pathname = usePathname();
-
   const isSelected = pathname === `/sensor/${props.sensorName}`;
 
   return (

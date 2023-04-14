@@ -1,10 +1,7 @@
+import { useServerStore } from "@/components/state";
+
 export function ServerStatus() {
-  const serverStatus = {
-    environment: "development",
-    commit_sha: "a1b2c3d4",
-    branch_name: "main",
-    start_timestamp: 1620000000,
-  };
+  const serverStatus = useServerStore((state) => state.state);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col overflow-hidden rounded border border-slate-300 bg-white p-4 shadow">
@@ -26,7 +23,11 @@ export function ServerStatus() {
       </p>
       <p>
         <span className="inline-flex w-28">Start Time:</span>{" "}
-        <span className="font-medium">{serverStatus ? "14" : "..."}</span>
+        <span className="font-medium">
+          {serverStatus
+            ? new Date(serverStatus.start_time * 1000).toISOString()
+            : "..."}
+        </span>
       </p>
     </div>
   );
