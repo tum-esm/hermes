@@ -6,7 +6,7 @@ export function Header() {
       <div className="-ml-6 flex h-full w-[5.5rem] items-center border-r border-slate-300 bg-slate-900 px-6 text-slate-100">
         {ICONS.tum}
       </div>
-      <h1 className="pl-5 text-xl font-light uppercase text-slate-950">
+      <h1 className="hidden pl-5 font-light uppercase text-slate-950 xl:block xl:text-lg 2xl:text-xl">
         <span className="font-medium">Acropolis Sensor Network</span>{" "}
         &nbsp;|&nbsp; Professorship of Environmental Sensing and Modeling
       </h1>
