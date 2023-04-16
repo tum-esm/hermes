@@ -1,10 +1,10 @@
-import { SENSOR_IDS } from "@/utils/constants";
-import { useNetworkStore } from "@/utils/state";
+import { SENSOR_IDS } from "@/src/utils/constants";
+import { useNetworkStore } from "@/src/utils/state";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { maxBy } from "lodash";
-import { determinSensorStatus, renderTimeString } from "@/utils/functions";
-import { VARIANT_TO_BG_COLOR } from "@/utils/colors";
+import { determinSensorStatus, renderTimeString } from "@/src/utils/functions";
+import { VARIANT_TO_BG_COLOR } from "@/src/utils/colors";
 
 function SensorListItem({ sensorName }: { sensorName: string }) {
   const networkState = useNetworkStore((state) => state.state);

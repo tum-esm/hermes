@@ -1,6 +1,6 @@
-import { VARIANT_TO_BG_COLOR, VARIANT_TO_TEXT_COLOR } from "@/utils/colors";
-import { determinSensorStatus } from "@/utils/functions";
-import { useNetworkStore } from "@/utils/state";
+import { VARIANT_TO_BG_COLOR, VARIANT_TO_TEXT_COLOR } from "@/src/utils/colors";
+import { determinSensorStatus } from "@/src/utils/functions";
+import { useNetworkStore } from "@/src/utils/state";
 
 const variantToDescription = {
   online: (

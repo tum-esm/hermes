@@ -1,4 +1,4 @@
-import { SENSOR_IDS } from "@/utils/constants";
+import { SENSOR_IDS } from "@/src/utils/constants";
 import { create } from "zustand";
 
 type ServerState = {

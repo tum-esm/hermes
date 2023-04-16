@@ -1,4 +1,4 @@
-import { SensorState } from "@/utils/state";
+import { SensorState } from "@/src/utils/state";
 
 export function renderTimeString(time: number | undefined): string {
   if (time === undefined) {

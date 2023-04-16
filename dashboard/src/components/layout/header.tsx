@@ -1,4 +1,4 @@
-import { ICONS } from "@/components/icons";
+import { ICONS } from "@/src/components/icons";
 import Link from "next/link";
 
 export function Header() {

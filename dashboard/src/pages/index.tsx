@@ -1,6 +1,6 @@
-import { NetworkActivity } from "@/components/overview/networkActivity";
-import { ServerStatus } from "@/components/overview/serverStatus";
-import { DashboardStatus } from "@/components/overview/dashboardStatus";
+import { NetworkActivity } from "@/src/components/overview/networkActivity";
+import { ServerStatus } from "@/src/components/overview/serverStatus";
+import { DashboardStatus } from "@/src/components/overview/dashboardStatus";
 
 export default function Page() {
   return (

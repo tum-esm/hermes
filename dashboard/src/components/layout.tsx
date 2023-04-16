@@ -1,9 +1,9 @@
 import { Rubik } from "next/font/google";
-import { SensorList } from "@/components/layout/sensorList";
-import { Header } from "@/components/layout/header";
+import { SensorList } from "@/src/components/layout/sensorList";
+import { Header } from "@/src/components/layout/header";
 import { useEffect } from "react";
-import { useServerStore, useNetworkStore } from "@/utils/state";
-import { SENSOR_IDS, SERVER_URL } from "@/utils/constants";
+import { useServerStore, useNetworkStore } from "@/src/utils/state";
+import { SENSOR_IDS, SERVER_URL } from "@/src/utils/constants";
 import Head from "next/head";
 
 const RUBIK = Rubik({ subsets: ["latin"] });
