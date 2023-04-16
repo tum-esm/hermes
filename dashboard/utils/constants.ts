@@ -1,3 +1,5 @@
+export const SERVER_URL = "https://sea-turtle-app-38sco.ondigitalocean.app";
+
 export const SENSOR_IDS: { [key: string]: string } = {
   "tum-esm-midcost-raspi-1": "c04e0bcc-2b32-4fb3-8971-9cbe27ab7117",
   "tum-esm-midcost-raspi-2": "64c5c8ec-4e6b-413b-b113-b130f80eae91",

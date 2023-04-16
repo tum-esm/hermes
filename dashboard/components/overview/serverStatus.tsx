@@ -1,4 +1,4 @@
-import { useServerStore } from "@/components/state";
+import { useServerStore } from "@/utils/state";
 
 export function ServerStatus() {
   const serverStatus = useServerStore((state) => state.state);

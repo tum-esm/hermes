@@ -1,8 +1,9 @@
-import { SENSOR_IDS } from "@/components/constants";
+import { SENSOR_IDS } from "@/utils/constants";
 import { ICONS } from "@/components/icons";
 import Link from "next/link";
 import { useState } from "react";
-import { determinSensorStatus, useNetworkStore } from "@/components/state";
+import { useNetworkStore } from "@/utils/state";
+import { determinSensorStatus } from "@/utils/functions";
 
 export function getStaticPaths() {
   return {
@@ -131,7 +132,7 @@ export default function Page({ sensorName }: { sensorName: string }) {
                     </div>
                   </div>
                   <span className="pb-2 pl-7 text-xs">
-                    last occured at{" "}
+                    last occured {} -
                     {new Date(
                       log.max_creation_timestamp * 1000
                     ).toLocaleString()}{" "}

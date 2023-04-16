@@ -1,8 +1,9 @@
-import { SENSOR_IDS } from "@/components/constants";
-import { determinSensorStatus, useNetworkStore } from "@/components/state";
+import { SENSOR_IDS } from "@/utils/constants";
+import { useNetworkStore } from "@/utils/state";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { maxBy } from "lodash";
+import { determinSensorStatus, renderTimeString } from "@/utils/functions";
 
 const variantToBgColor = {
   online: "bg-green-500",
@@ -11,27 +12,7 @@ const variantToBgColor = {
   offline: "bg-slate-500",
 };
 
-function renderTimeString(time: number | undefined): string {
-  if (time === undefined) {
-    return "-";
-  }
-  const diff = new Date().getTime() / 1000 - time;
-  const formatter = new Intl.RelativeTimeFormat("en");
-  if (diff < 60) {
-    return formatter.format(Math.floor(-diff), "seconds");
-  } else if (diff < 60 * 60) {
-    return formatter.format(Math.floor(-diff / 60), "minutes");
-  } else if (diff < 60 * 60 * 24 * 2) {
-    return formatter.format(Math.floor(-diff / (60 * 60)), "hours");
-  } else {
-    return formatter.format(Math.floor(-diff / (60 * 60 * 24)), "days");
-  }
-}
-
 function SensorListItem({ sensorName }: { sensorName: string }) {
-  // TODO: connect data and logs
-  // TODO: determine color
-
   const networkState = useNetworkStore((state) => state.state);
   const sensorState = networkState.filter(
     (sensor) => sensor.sensorId === SENSOR_IDS[sensorName]

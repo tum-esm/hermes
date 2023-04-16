@@ -1,14 +1,12 @@
 import { Rubik } from "next/font/google";
 import { SensorList } from "@/components/layout/sensorList";
 import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 import { useEffect } from "react";
-import { useServerStore, useNetworkStore } from "@/components/state";
-import { SENSOR_IDS } from "@/components/constants";
+import { useServerStore, useNetworkStore } from "@/utils/state";
+import { SENSOR_IDS, SERVER_URL } from "@/utils/constants";
 import Head from "next/head";
 
 const RUBIK = Rubik({ subsets: ["latin"] });
-const SERVER_URL = "https://sea-turtle-app-38sco.ondigitalocean.app";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const setServerState = useServerStore((state) => state.setState);

@@ -1,4 +1,5 @@
-import { determinSensorStatus, useNetworkStore } from "@/components/state";
+import { determinSensorStatus } from "@/utils/functions";
+import { useNetworkStore } from "@/utils/state";
 
 const variantToBgColor = {
   online: "bg-green-500",
