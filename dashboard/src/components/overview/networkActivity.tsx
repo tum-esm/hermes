@@ -48,7 +48,7 @@ function NetworkActivityItem(props: {
         <p className="px-1 text-2xl font-semibold">{props.count}</p> of{" "}
         {props.total}
       </div>
-      <div className="w-full flex-grow bg-slate-50 px-4 py-2 text-sm text-slate-700">
+      <div className="w-full flex-grow border-t border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-900 text-opacity-80">
         {variantToDescription[props.variant]}
       </div>
     </div>

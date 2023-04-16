@@ -128,16 +128,13 @@ export default function Page({ sensorName }: { sensorName: string }) {
                       {new Date(
                         data.creation_timestamp * 1000
                       ).toLocaleString()}{" "}
-                      (local time, unix timestamp ={" "}
-                      {Math.round(data.creation_timestamp)})
+                      (local time)
                     </div>
                   </div>
                   <div className="pb-2 pl-7 text-xs">
-                    {renderTimeString(data.creation_timestamp)} -{" "}
-                    {new Date(data.creation_timestamp * 1000).toLocaleString()}{" "}
-                    (local time)
+                    {renderTimeString(data.creation_timestamp)}
                   </div>
-                  <div className="whitespace-break-spaces border-t border-slate-200 bg-slate-100 px-3 py-2 text-xs leading-tight text-slate-700">
+                  <div className="whitespace-break-spaces border-t border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-tight text-slate-900 text-opacity-80">
                     {JSON.stringify(data, null, 4)}
                   </div>
                 </div>
@@ -183,7 +180,7 @@ export default function Page({ sensorName }: { sensorName: string }) {
                     ).toLocaleString()}{" "}
                     (local time)
                   </div>
-                  <div className="whitespace-break-spaces border-t border-slate-200 bg-slate-100 px-3 py-2 text-xs leading-tight text-slate-700">
+                  <div className="whitespace-break-spaces border-t border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-tight text-slate-900 text-opacity-80">
                     {JSON.stringify(log, null, 4)}
                   </div>
                 </div>
