@@ -28,13 +28,13 @@ function renderTimeString(time: number | undefined): string {
   }
 }
 
-function SensorListItem(props: { sensorName: string }) {
+function SensorListItem({ sensorName }: { sensorName: string }) {
   // TODO: connect data and logs
   // TODO: determine color
 
   const networkState = useNetworkStore((state) => state.state);
   const sensorState = networkState.filter(
-    (sensor) => sensor.sensorId === SENSOR_IDS[props.sensorName]
+    (sensor) => sensor.sensorId === SENSOR_IDS[sensorName]
   )[0];
 
   const sensorStatus = determinSensorStatus(sensorState);
@@ -48,11 +48,11 @@ function SensorListItem(props: { sensorName: string }) {
   )?.max_creation_timestamp;
 
   const pathname = usePathname();
-  const isSelected = pathname === `/sensor/${props.sensorName}`;
+  const isSelected = pathname === `/sensor/${sensorName}`;
 
   return (
     <li
-      key={props.sensorName}
+      key={sensorName}
       className={
         "flex w-full flex-row items-center justify-start gap-x-4 px-5 py-4 " +
         (isSelected
@@ -76,7 +76,7 @@ function SensorListItem(props: { sensorName: string }) {
             : "text-slate-800 group-hover:text-slate-900")
         }
       >
-        <p className="mr-2 font-medium">{props.sensorName}</p>
+        <p className="mr-2 font-medium">{sensorName}</p>
         <p className="text-xs">
           <span className="inline-block w-14">last data:</span>{" "}
           {renderTimeString(lastDataTime)}

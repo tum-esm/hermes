@@ -88,7 +88,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="hidden xl:block">
         <Header />
         <main className="flex h-[calc(100vh-6.5rem)] w-screen flex-row">
-          <nav className="flex h-full w-[24rem] flex-col overflow-y-scroll border-r border-slate-300">
+          <nav className="flex h-full w-[24rem] flex-shrink-0 flex-col overflow-y-scroll border-r border-slate-300">
             <SensorList />
           </nav>
           <div className="h-full flex-grow overflow-y-scroll bg-slate-50 p-6">
