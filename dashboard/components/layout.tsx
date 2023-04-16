@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/footer";
 import { useEffect } from "react";
 import { useServerStore, useNetworkStore } from "@/components/state";
 import { SENSOR_IDS } from "@/components/constants";
+import Head from "next/head";
 
 const RUBIK = Rubik({ subsets: ["latin"] });
 const SERVER_URL = "https://sea-turtle-app-38sco.ondigitalocean.app";
@@ -82,12 +83,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={RUBIK.className}>
+      <Head>
+        <title>Acropolis</title>
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <meta property="og:title" content="My page title" key="title" />
+      </Head>
       <div className="flex h-screen w-screen items-center justify-center text-lg xl:hidden">
         Please use a larger screen
       </div>
       <div className="hidden xl:block">
         <Header />
-        <main className="flex h-[calc(100vh-6.5rem)] w-screen flex-row">
+        <main className="flex h-[calc(100vh-4rem)] w-screen flex-row">
           <nav className="flex h-full w-[24rem] flex-shrink-0 flex-col overflow-y-scroll border-r border-slate-300">
             <SensorList />
           </nav>
@@ -95,7 +101,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {children}
           </div>
         </main>
-        <Footer />
       </div>
     </div>
   );
