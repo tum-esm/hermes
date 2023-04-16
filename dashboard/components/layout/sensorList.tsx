@@ -4,13 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { maxBy } from "lodash";
 import { determinSensorStatus, renderTimeString } from "@/utils/functions";
-
-const variantToBgColor = {
-  online: "bg-green-500",
-  unstable: "bg-yellow-500",
-  error: "bg-red-500",
-  offline: "bg-slate-500",
-};
+import { VARIANT_TO_BG_COLOR } from "@/utils/colors";
 
 function SensorListItem({ sensorName }: { sensorName: string }) {
   const networkState = useNetworkStore((state) => state.state);
@@ -46,7 +40,7 @@ function SensorListItem({ sensorName }: { sensorName: string }) {
           "h-2 w-2 rounded-sm " +
           (sensorStatus === undefined
             ? "bg-slate-200"
-            : variantToBgColor[sensorStatus])
+            : VARIANT_TO_BG_COLOR[sensorStatus])
         }
       />
       <div

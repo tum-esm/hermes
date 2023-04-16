@@ -1,19 +1,6 @@
+import { VARIANT_TO_BG_COLOR, VARIANT_TO_TEXT_COLOR } from "@/utils/colors";
 import { determinSensorStatus } from "@/utils/functions";
 import { useNetworkStore } from "@/utils/state";
-
-const variantToBgColor = {
-  online: "bg-green-500",
-  unstable: "bg-yellow-500",
-  error: "bg-red-500",
-  offline: "bg-slate-500",
-};
-
-const variantToTextColor = {
-  online: "text-green-800",
-  unstable: "text-yellow-800",
-  error: "text-red-800",
-  offline: "text-slate-800",
-};
 
 const variantToDescription = {
   online: (
@@ -48,11 +35,11 @@ function NetworkActivityItem(props: {
     <div className="flex w-full flex-col overflow-hidden rounded border border-slate-300 bg-white shadow">
       <div className="flex flex-row items-center justify-start gap-x-2 bg-white p-4">
         <div
-          className={"h-3 w-3 rounded-sm " + variantToBgColor[props.variant]}
+          className={"h-3 w-3 rounded-sm " + VARIANT_TO_BG_COLOR[props.variant]}
         />
         <p
           className={
-            "font-medium uppercase " + variantToTextColor[props.variant]
+            "font-medium uppercase " + VARIANT_TO_TEXT_COLOR[props.variant]
           }
         >
           {props.variant}

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useNetworkStore } from "@/utils/state";
 import { determinSensorStatus, renderTimeString } from "@/utils/functions";
 import { maxBy } from "lodash";
+import { VARIANT_TO_PILL_COLOR } from "@/utils/colors";
 
 export function getStaticPaths() {
   return {
@@ -63,15 +64,30 @@ export default function Page({ sensorName }: { sensorName: string }) {
 
       <div className="mb-4 mt-2 flex flex-col border-b border-slate-300 px-4 pb-4 text-base">
         <div>
-          <span className="inline-block w-24">ID:</span>
+          <span className="inline-block w-24">Status:</span>
+          {sensorStatus === undefined ? (
+            "-"
+          ) : (
+            <span
+              className={
+                "rounded px-1.5 py-0.5 text-sm leading-tight " +
+                VARIANT_TO_PILL_COLOR[sensorStatus]
+              }
+            >
+              {sensorStatus}
+            </span>
+          )}
+        </div>
+        <div>
+          <span className="inline-block w-24">Identifier:</span>
           {sensorId}
         </div>
         <div>
-          <span className="inline-block w-24">Last data:</span>{" "}
+          <span className="inline-block w-24">Last data:</span>
           {renderTimeString(lastDataTime)}
         </div>
         <div>
-          <span className="inline-block w-24">Last logs:</span>{" "}
+          <span className="inline-block w-24">Last logs:</span>
           {renderTimeString(lastDataTime)}
         </div>
       </div>
