@@ -88,7 +88,7 @@ export default function Page({ sensorName }: { sensorName: string }) {
         </div>
         <div>
           <span className="inline-block w-24">Last logs:</span>
-          {renderTimeString(lastDataTime)}
+          {renderTimeString(lastLogTime)}
         </div>
       </div>
 
@@ -97,8 +97,8 @@ export default function Page({ sensorName }: { sensorName: string }) {
           <button
             key={tabName}
             className={`${
-              tab === tabName ? "bg-slate-200 text-slate-950" : "text-slate-500"
-            } rounded-md px-3 py-2 text-sm font-medium`}
+              tab === tabName ? "bg-slate-200 text-black" : "text-slate-800/60"
+            } rounded-md px-3 py-1 text-sm font-medium`}
             onClick={() => setTab(tabName)}
           >
             {tabName}
