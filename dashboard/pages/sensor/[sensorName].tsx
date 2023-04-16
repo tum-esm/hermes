@@ -21,11 +21,14 @@ export function getStaticProps(context: any) {
   };
 }
 
-const TAB_NAMES: ("data" | "logs")[] = ["data", "logs"];
+const TAB_NAMES: ("data" | "logs (aggregated)")[] = [
+  "data",
+  "logs (aggregated)",
+];
 
 export default function Page({ sensorName }: { sensorName: string }) {
   const sensorId = SENSOR_IDS[sensorName];
-  const [tab, setTab] = useState<"data" | "logs">("data");
+  const [tab, setTab] = useState<"data" | "logs (aggregated)">("data");
 
   const networkState = useNetworkStore((state) => state.state);
   const sensorState = networkState.filter(
@@ -97,7 +100,7 @@ export default function Page({ sensorName }: { sensorName: string }) {
           </div>
           <div
             className={
-              (tab === "logs" ? "block" : "hidden") +
+              (tab === "logs (aggregated)" ? "block" : "hidden") +
               " flex w-full flex-col gap-y-4"
             }
           >
