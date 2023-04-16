@@ -1,10 +1,11 @@
 import { Rubik } from "next/font/google";
 import { SensorList } from "@/src/components/layout/sensorList";
 import { Header } from "@/src/components/layout/header";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useServerStore, useNetworkStore } from "@/src/utils/state";
 import { SENSOR_IDS, SERVER_URL } from "@/src/utils/constants";
 import Head from "next/head";
+import { usePathname } from "next/navigation";
 
 const RUBIK = Rubik({ subsets: ["latin"] });
 
@@ -12,6 +13,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const setServerState = useServerStore((state) => state.setState);
   const setSensorData = useNetworkStore((state) => state.setSensorData);
   const setSensorLogs = useNetworkStore((state) => state.setSensorLogs);
+
+  const pathname = usePathname();
+  const pageDivRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (pageDivRef.current !== null) {
+      pageDivRef.current.scroll({ top: 0, behavior: "smooth" });
+    }
+  }, [pathname, pageDivRef.current === null]);
 
   useEffect(() => {
     console.log("start fetching");
@@ -100,7 +109,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <nav className="flex h-full w-[24rem] flex-shrink-0 flex-col overflow-y-scroll border-r border-slate-300">
             <SensorList />
           </nav>
-          <div className="h-full flex-grow overflow-y-scroll bg-slate-50 p-6 pb-32 ">
+          <div
+            className="h-full flex-grow overflow-y-scroll bg-slate-50 p-6 pb-32 "
+            ref={pageDivRef}
+          >
             {children}
           </div>
         </main>
