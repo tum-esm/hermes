@@ -84,9 +84,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className={RUBIK.className}>
       <Head>
-        <title>Acropolis</title>
+        <title>Acropolis Sensor Network</title>
         <link rel="shortcut icon" href="/favicon.ico" />
-        <meta property="og:title" content="My page title" key="title" />
+        <meta property="og:title" content="Acropolis Sensor Network" />
+        <meta
+          property="og:description"
+          content="Acropolis Sensor Network | Professorship of Environmental Sensing And Modeling"
+        />
+        <meta property="og:image" content="/favicon.ico" />
       </Head>
       <div className="flex h-screen w-screen items-center justify-center text-lg xl:hidden">
         Please use a larger screen
