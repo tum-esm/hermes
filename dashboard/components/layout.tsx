@@ -100,7 +100,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <nav className="flex h-full w-[24rem] flex-shrink-0 flex-col overflow-y-scroll border-r border-slate-300">
             <SensorList />
           </nav>
-          <div className="h-full flex-grow overflow-y-scroll bg-slate-50 p-6">
+          <div className="h-full flex-grow overflow-y-scroll bg-slate-50 p-6 pb-32 ">
             {children}
           </div>
         </main>

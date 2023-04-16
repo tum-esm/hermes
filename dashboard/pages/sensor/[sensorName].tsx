@@ -3,7 +3,8 @@ import { ICONS } from "@/components/icons";
 import Link from "next/link";
 import { useState } from "react";
 import { useNetworkStore } from "@/utils/state";
-import { determinSensorStatus } from "@/utils/functions";
+import { determinSensorStatus, renderTimeString } from "@/utils/functions";
+import { maxBy } from "lodash";
 
 export function getStaticPaths() {
   return {
@@ -37,6 +38,14 @@ export default function Page({ sensorName }: { sensorName: string }) {
   )[0];
 
   const sensorStatus = determinSensorStatus(sensorState);
+  const lastDataTime = maxBy(
+    sensorState?.data,
+    (data) => data.creation_timestamp
+  )?.creation_timestamp;
+  const lastLogTime = maxBy(
+    sensorState?.logs,
+    (log) => log.max_creation_timestamp
+  )?.max_creation_timestamp;
 
   return (
     <>
@@ -49,11 +58,25 @@ export default function Page({ sensorName }: { sensorName: string }) {
       </Link>
 
       <h2 className="mt-3 px-4 text-2xl text-slate-800">
-        <span className="font-semibold text-black">{sensorName}</span> <br />
-        <span className="text-lg">ID: {sensorId}</span>
+        <span className="font-semibold text-black">{sensorName}</span>
       </h2>
 
-      <div className="mb-4 mt-6 inline-flex w-full flex-row items-center justify-start space-x-4 border-b border-slate-300 px-4 pb-4 text-slate-700">
+      <div className="mb-4 mt-2 flex flex-col border-b border-slate-300 px-4 pb-4 text-base">
+        <div>
+          <span className="inline-block w-24">ID:</span>
+          {sensorId}
+        </div>
+        <div>
+          <span className="inline-block w-24">Last data:</span>{" "}
+          {renderTimeString(lastDataTime)}
+        </div>
+        <div>
+          <span className="inline-block w-24">Last logs:</span>{" "}
+          {renderTimeString(lastDataTime)}
+        </div>
+      </div>
+
+      <div className="mb-4 inline-flex w-full flex-row items-center justify-start space-x-4 border-b border-slate-300 px-4 pb-4 text-slate-700">
         {TAB_NAMES.map((tabName) => (
           <button
             key={tabName}
@@ -83,7 +106,7 @@ export default function Page({ sensorName }: { sensorName: string }) {
                   className="flex w-full flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow"
                   key={data.creation_timestamp}
                 >
-                  <div className="flex flex-row items-center justify-start gap-x-2 px-3 py-2 text-sm text-slate-900">
+                  <div className="flex flex-row items-center justify-start gap-x-2 px-3 pb-1 pt-2 text-sm text-slate-900">
                     <div className="h-2 w-2 flex-shrink-0 rounded-sm bg-blue-500" />
                     <div>
                       {new Date(
@@ -92,6 +115,11 @@ export default function Page({ sensorName }: { sensorName: string }) {
                       (local time, unix timestamp ={" "}
                       {Math.round(data.creation_timestamp)})
                     </div>
+                  </div>
+                  <div className="pb-2 pl-7 text-xs">
+                    {renderTimeString(data.creation_timestamp)} -{" "}
+                    {new Date(data.creation_timestamp * 1000).toLocaleString()}{" "}
+                    (local time)
                   </div>
                   <div className="whitespace-break-spaces border-t border-slate-200 bg-slate-100 px-3 py-2 text-xs leading-tight text-slate-700">
                     {JSON.stringify(data, null, 4)}
@@ -131,13 +159,14 @@ export default function Page({ sensorName }: { sensorName: string }) {
                         : log.subject}
                     </div>
                   </div>
-                  <span className="pb-2 pl-7 text-xs">
-                    last occured {} -
+                  <div className="pb-2 pl-7 text-xs">
+                    last occured {renderTimeString(log.max_creation_timestamp)}{" "}
+                    -{" "}
                     {new Date(
                       log.max_creation_timestamp * 1000
                     ).toLocaleString()}{" "}
                     (local time)
-                  </span>
+                  </div>
                   <div className="whitespace-break-spaces border-t border-slate-200 bg-slate-100 px-3 py-2 text-xs leading-tight text-slate-700">
                     {JSON.stringify(log, null, 4)}
                   </div>

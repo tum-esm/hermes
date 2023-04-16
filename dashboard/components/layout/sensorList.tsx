@@ -63,7 +63,7 @@ function SensorListItem({ sensorName }: { sensorName: string }) {
           {renderTimeString(lastDataTime)}
         </p>
         <p className="text-xs">
-          <span className="inline-block w-14">last log:</span>{" "}
+          <span className="inline-block w-14">last logs:</span>{" "}
           {renderTimeString(lastLogTime)}
         </p>
       </div>
