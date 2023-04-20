@@ -390,64 +390,64 @@ async def lifespan(app):
                 pass
 
 
-middleware = [
-    starlette.middleware.Middleware(
-        starlette.middleware.cors.CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+ROUTES = [
+    starlette.routing.Route(
+        path="/status",
+        endpoint=read_status,
+        methods=["GET"],
+    ),
+    starlette.routing.Route(
+        path="/users",
+        endpoint=create_user,
+        methods=["POST"],
+    ),
+    starlette.routing.Route(
+        path="/authentication",
+        endpoint=create_session,
+        methods=["POST"],
+    ),
+    starlette.routing.Route(
+        path="/sensors",
+        endpoint=create_sensor,
+        methods=["POST"],
+    ),
+    starlette.routing.Route(
+        path="/sensors/{sensor_identifier}",
+        endpoint=update_sensor,
+        methods=["PUT"],
+    ),
+    starlette.routing.Route(
+        path="/sensors",
+        endpoint=read_sensors,
+        methods=["GET"],
+    ),
+    starlette.routing.Route(
+        path="/sensors/{sensor_identifier}/measurements",
+        endpoint=read_measurements,
+        methods=["GET"],
+    ),
+    starlette.routing.Route(
+        path="/sensors/{sensor_identifier}/logs/aggregates",
+        endpoint=read_log_message_aggregates,
+        methods=["GET"],
+    ),
+    starlette.routing.Route(
+        path="/streams/{network_identifier}",
+        endpoint=stream_network,
+        methods=["GET"],
+    ),
 ]
 
 
 app = starlette.applications.Starlette(
-    routes=[
-        starlette.routing.Route(
-            path="/status",
-            endpoint=read_status,
-            methods=["GET"],
-        ),
-        starlette.routing.Route(
-            path="/users",
-            endpoint=create_user,
-            methods=["POST"],
-        ),
-        starlette.routing.Route(
-            path="/authentication",
-            endpoint=create_session,
-            methods=["POST"],
-        ),
-        starlette.routing.Route(
-            path="/sensors",
-            endpoint=create_sensor,
-            methods=["POST"],
-        ),
-        starlette.routing.Route(
-            path="/sensors/{sensor_identifier}",
-            endpoint=update_sensor,
-            methods=["PUT"],
-        ),
-        starlette.routing.Route(
-            path="/sensors",
-            endpoint=read_sensors,
-            methods=["GET"],
-        ),
-        starlette.routing.Route(
-            path="/sensors/{sensor_identifier}/measurements",
-            endpoint=read_measurements,
-            methods=["GET"],
-        ),
-        starlette.routing.Route(
-            path="/sensors/{sensor_identifier}/logs/aggregates",
-            endpoint=read_log_message_aggregates,
-            methods=["GET"],
-        ),
-        starlette.routing.Route(
-            path="/streams/{network_identifier}",
-            endpoint=stream_network,
-            methods=["GET"],
-        ),
-    ],
+    routes=ROUTES,
     lifespan=lifespan,
-    middleware=middleware,
+    middleware=[
+        starlette.middleware.Middleware(
+            starlette.middleware.cors.CORSMiddleware,
+            allow_origins=["*"],
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    ],
 )

@@ -18,7 +18,7 @@ class HeartbeatsMessage(types._BaseModel):
 
 
 class Log(types._BaseModel):
-    severity: typing.Literal["debug", "info", "warning", "error"]
+    severity: typing.Literal["info", "warning", "error"]
     revision: types.Revision
     timestamp: types.Timestamp
     subject: pydantic.StrictStr
