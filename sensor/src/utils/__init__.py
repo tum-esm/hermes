@@ -14,4 +14,5 @@ from .functions import (
     distance_between_angles,
     get_gpio_pin_factory,
     get_random_string,
+    get_cpu_temperature,
 )

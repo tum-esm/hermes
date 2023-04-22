@@ -1,10 +1,9 @@
 import filelock
 from src import custom_types, utils
 
-from .air_inlet_sensor import AirInletSensorInterface
 from .co2_sensor import CO2SensorInterface
 from .heated_enclosure import HeatedEnclosureInterface, HeatedEnclosureThread
-from .mainboard_sensor import MainboardSensorInterface
+from .bme280_sensor import BME280SensorInterface
 from .pump import PumpInterface
 from .ups import UPSInterface
 from .usb_ports import USBPortInterface
@@ -28,7 +27,9 @@ class HardwareInterface:
         self.acquire_hardare_lock()
 
         # measurement sensors
-        self.air_inlet_sensor = AirInletSensorInterface(config)
+        self.air_inlet_bme280_sensor = BME280SensorInterface(
+            config, variant="air inlet"
+        )
         self.co2_sensor = CO2SensorInterface(config)
         self.wind_sensor = WindSensorInterface(config)
 
@@ -37,7 +38,7 @@ class HardwareInterface:
         self.valves = ValveInterface(config)
 
         # enclosure controls
-        self.mainboard_sensor = MainboardSensorInterface(config)
+        self.mainboard_sensor = BME280SensorInterface(config, variant="mainboard")
         self.ups = UPSInterface(config)
 
         # heated enclosure communication with repairing
@@ -53,6 +54,7 @@ class HardwareInterface:
         self.co2_sensor.check_errors()
         self.wind_sensor.check_errors()
         self.pump.check_errors()
+        self.air_inlet_bme280_sensor.check_errors()
         self.mainboard_sensor.check_errors()
         HeatedEnclosureThread.check_errors()
 
@@ -65,7 +67,7 @@ class HardwareInterface:
             return
 
         # measurement sensors
-        self.air_inlet_sensor.teardown()
+        self.air_inlet_bme280_sensor.teardown()
         self.co2_sensor.teardown()
         self.wind_sensor.teardown()
 
@@ -88,7 +90,9 @@ class HardwareInterface:
         self.acquire_hardare_lock()
 
         # measurement sensors
-        self.air_inlet_sensor = AirInletSensorInterface(config)
+        self.air_inlet_bme280_sensor = BME280SensorInterface(
+            config, variant="air inlet"
+        )
         self.co2_sensor = CO2SensorInterface(config)
         self.wind_sensor = WindSensorInterface(config)
 
@@ -97,7 +101,7 @@ class HardwareInterface:
         self.valves = ValveInterface(config)
 
         # enclosure controls
-        self.mainboard_sensor = MainboardSensorInterface(config)
+        self.mainboard_sensor = BME280SensorInterface(config, variant="mainboard")
         self.ups = UPSInterface(config)
         HeatedEnclosureThread.init(config)
 

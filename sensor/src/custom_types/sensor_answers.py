@@ -8,8 +8,11 @@ from .config import CalibrationGasConfig
 
 
 class AirSensorData(BaseModel):
-    inlet_temperature: Optional[float]
-    inlet_humidity: Optional[float]
+    bme280_temperature: Optional[float]
+    bme280_humidity: Optional[float]
+    bme280_pressure: Optional[float]
+    sht45_temperature: Optional[float]
+    sht45_humidity: Optional[float]
     chamber_temperature: Optional[float]
 
 
@@ -24,13 +27,12 @@ class CalibrationProcedureData(BaseModel):
     readings: list[list[CO2SensorData]]
 
 
-class MainboardSensorData(BaseModel):
+class BME280SensorData(BaseModel):
     """units: °C for temperature, rH for humidity, hPa for pressure"""
 
-    mainboard_temperature: Optional[float]
-    cpu_temperature: Optional[float]
-    enclosure_humidity: Optional[float]
-    enclosure_pressure: Optional[float]
+    temperature: Optional[float]
+    humidity: Optional[float]
+    pressure: Optional[float]
 
 
 class SystemData(BaseModel):

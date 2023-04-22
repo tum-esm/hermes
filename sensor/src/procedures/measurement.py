@@ -115,20 +115,17 @@ class MeasurementProcedure:
         1. fetches the latest temperature and pressure data at air inlet
         2. sends these values to the CO2 sensor
         """
-        air_inlet_temperature = (
-            self.hardware_interface.air_inlet_sensor.get_current_temperature()
-        )
-        air_inlet_humidity = (
-            self.hardware_interface.air_inlet_sensor.get_current_humidity()
+
+        air_inlet_bme280_data = (
+            self.hardware_interface.air_inlet_bme280_sensor.get_data()
         )
         chamber_temperature = (
             self.hardware_interface.co2_sensor.get_current_chamber_temperature()
         )
-        mainboard_data = self.hardware_interface.mainboard_sensor.get_system_data()
 
         self.hardware_interface.co2_sensor.set_compensation_values(
-            humidity=air_inlet_humidity,
-            pressure=mainboard_data.enclosure_pressure,
+            humidity=air_inlet_bme280_data.humidity,
+            pressure=air_inlet_bme280_data.pressure,
         )
 
         self.active_mqtt_queue.enqueue_message(
@@ -139,8 +136,11 @@ class MeasurementProcedure:
                 value=custom_types.MQTTAirData(
                     variant="air",
                     data=custom_types.AirSensorData(
-                        inlet_temperature=air_inlet_temperature,
-                        inlet_humidity=air_inlet_humidity,
+                        bme280_temperature=air_inlet_bme280_data.temperature,
+                        bme280_humidity=air_inlet_bme280_data.humidity,
+                        bme280_pressure=air_inlet_bme280_data.pressure,
+                        sht45_temperature=None,
+                        sht45_humidity=None,
                         chamber_temperature=chamber_temperature,
                     ),
                 ),

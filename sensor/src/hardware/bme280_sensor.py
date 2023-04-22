@@ -1,7 +1,6 @@
 from typing import Literal, Optional
 import smbus2
 import bme280
-import os
 from src import utils, custom_types
 
 
@@ -9,7 +8,7 @@ class BME280SensorInterface:
     def __init__(
         self,
         config: custom_types.Config,
-        address: Literal[0x76, 0x77] = 0x77,
+        variant: Literal["mainboard", "air inlet"],
     ) -> None:
         self.logger, self.config = utils.Logger("mainboard-sensor"), config
         self.logger.info("Starting initialization")
@@ -17,7 +16,7 @@ class BME280SensorInterface:
         # set up connection to BME280 sensor
         self.i2c_device = smbus2.SMBus(1)
         self.bus = smbus2.SMBus(1)
-        self.address = address
+        self.address = 0x77 if variant == "mainboard" else 0x76
         self.compensation_params: Optional[bme280.params] = None
         self.init_sensor()
 
@@ -41,9 +40,9 @@ class BME280SensorInterface:
 
         bme280_data: Optional[bme280.compensated_readings] = None
         output = custom_types.BME280SensorData(
-            mainboard_temperature=None,
-            enclosure_humidity=None,
-            enclosure_pressure=None,
+            temperature=None,
+            humidity=None,
+            pressure=None,
         )
         try:
             assert self.compensation_params is not None
@@ -52,34 +51,33 @@ class BME280SensorInterface:
                 self.address,
                 self.compensation_params,
             )
-            custom_types.BME280SensorData(
-                mainboard_temperature=round(bme280_data.temperature, 1),
-                enclosure_humidity=round(bme280_data.humidity, 1),
-                enclosure_pressure=round(bme280_data.pressure, 1),
-            )
+            output.temperature = round(bme280_data.temperature, 1)
+            output.humidity = round(bme280_data.humidity, 1)
+            output.pressure = round(bme280_data.pressure, 1)
+
         except (AssertionError, OSError):
             self.logger.warning("could not sample data", config=self.config)
 
         return output
 
+    # TODO: move these checks into syste checks module
     def check_errors(self) -> None:
         """logs warnings when mainboard or CPU temperature are above 70°C"""
-        system_data = self.get_system_data()
+        data = self.get_data()
 
-        if (system_data.mainboard_temperature is not None) and (
-            system_data.mainboard_temperature > 70
-        ):
+        if (data.temperature is not None) and (data.temperature > 70):
             self.logger.warning(
-                f"mainboard temperature is very high ({system_data.mainboard_temperature}°C)",
+                f"mainboard temperature is very high ({data.temperature}°C)",
                 config=self.config,
             )
-        if (system_data.cpu_temperature is not None) and (
-            system_data.cpu_temperature > 70
-        ):
-            self.logger.warning(
-                f"cpu temperature is very high ({system_data.cpu_temperature}°C)",
-                config=self.config,
-            )
+
+        # if (system_data.cpu_temperature is not None) and (
+        #     system_data.cpu_temperature > 70
+        # ):
+        #     self.logger.warning(
+        #         f"cpu temperature is very high ({system_data.cpu_temperature}°C)",
+        #         config=self.config,
+        #     )
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""

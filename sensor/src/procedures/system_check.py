@@ -18,14 +18,15 @@ class SystemCheckProcedure:
 
     def run(self) -> None:
         # evaluate system ambient conditions
-        system_data = self.hardware_interface.mainboard_sensor.get_system_data()
+        mainboard_sensor_data = self.hardware_interface.mainboard_sensor.get_data()
+        cpu_temperature = utils.get_cpu_temperature()
         self.logger.debug(
-            f"mainboard temp. = {system_data.mainboard_temperature} °C, "
-            + f"raspi cpu temp. = {system_data.cpu_temperature} °C"
+            f"mainboard temp. = {mainboard_sensor_data.temperature} °C, "
+            + f"raspi cpu temp. = {cpu_temperature} °C"
         )
         self.logger.debug(
-            f"enclosure humidity = {system_data.enclosure_humidity} % rH, "
-            + f"enclosure pressure = {system_data.enclosure_pressure} hPa"
+            f"enclosure humidity = {mainboard_sensor_data.humidity} % rH, "
+            + f"enclosure pressure = {mainboard_sensor_data.pressure} hPa"
         )
 
         # evaluate disk usage
@@ -56,10 +57,10 @@ class SystemCheckProcedure:
                 value=custom_types.MQTTSystemData(
                     variant="system",
                     data=custom_types.SystemData(
-                        mainboard_temperature=system_data.mainboard_temperature,
-                        cpu_temperature=system_data.cpu_temperature,
-                        enclosure_humidity=system_data.enclosure_humidity,
-                        enclosure_pressure=system_data.enclosure_pressure,
+                        mainboard_temperature=mainboard_sensor_data.temperature,
+                        cpu_temperature=cpu_temperature,
+                        enclosure_humidity=mainboard_sensor_data.humidity,
+                        enclosure_pressure=mainboard_sensor_data.pressure,
                         disk_usage=round(disk_usage.percent / 100, 4),
                         cpu_usage=round(cpu_usage_percent / 100, 4),
                     ),

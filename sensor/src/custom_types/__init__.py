@@ -31,7 +31,7 @@ from .mqtt_receiving import (
 from .sensor_answers import (
     CO2SensorData,
     CalibrationProcedureData,
-    MainboardSensorData,
+    BME280SensorData,
     SystemData,
     WindSensorData,
     AirSensorData,
