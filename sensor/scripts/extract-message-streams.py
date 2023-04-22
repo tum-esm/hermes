@@ -92,7 +92,7 @@ bottom_plot.set_ylabel("")
 
 bottom_plot.scatter(
     [c[0] for c in air_data],
-    [c[1].data.inlet_temperature for c in air_data],
+    [c[1].data.bme280_temperature for c in air_data],
     label="inlet temperature",
     color="red",
     s=0.2,

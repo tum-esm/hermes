@@ -24,8 +24,12 @@ if __name__ == "__main__":
             print(f"acquired lock with PID {os.getpid()} at {datetime.now()}")
             config = utils.ConfigInterface.read()
             heated_enclosure = hardware.HeatedEnclosureInterface(config)
-            mainboard_sensor = hardware.MainboardSensorInterface(config)
-            air_inlet_sensor = hardware.AirInletSensorInterface(config)
+            mainboard_sensor = hardware.BME280SensorInterface(
+                config, variant="mainboard"
+            )
+            air_inlet_bme280_sensor = hardware.BME280SensorInterface(
+                config, variant="air inlet"
+            )
 
             print("sleeping 10 seconds to wait for data")
             time.sleep(10)
@@ -37,15 +41,13 @@ if __name__ == "__main__":
                 assert current_data is not None, "enclosure doesn't send any data"
 
                 if last_update_time != current_data.last_update_time:
-                    air_inlet_temperature = air_inlet_sensor.get_current_temperature()
-                    air_inlet_humidity = air_inlet_sensor.get_current_humidity()
-                    mainboard_sensor_data = mainboard_sensor.get_system_data()
+                    air_inlet_bme280_data = air_inlet_bme280_sensor.get_data()
+                    mainboard_sensor_data = mainboard_sensor.get_data()
                     write_data(
                         {
-                            **current_data.dict(),
-                            **mainboard_sensor_data.dict(),
-                            "air_inlet_temperature": air_inlet_temperature,
-                            "air_inlet_humidity": air_inlet_humidity,
+                            "enclosure": current_data.dict(),
+                            "air_inlet_bme280": air_inlet_bme280_data.dict(),
+                            "mainboard": mainboard_sensor_data.dict(),
                         }
                     )
                     last_update_time = current_data.last_update_time

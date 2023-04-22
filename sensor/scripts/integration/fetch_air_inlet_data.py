@@ -31,7 +31,8 @@ bus = SMBus(1)
 
 for a in range(0x000, 0xFFF):
     try:
-        print(f"{hex(a)} -> {bus.write_byte_data(a, 0, 0)}")
+        bus.write_byte_data(a, 0, 0)
+        print(f"{hex(a)} exists")
     except OSError:
         pass
 bus.close()

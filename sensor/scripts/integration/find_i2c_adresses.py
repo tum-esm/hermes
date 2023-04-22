@@ -10,7 +10,8 @@ for b in os.listdir("/dev"):
 
         for a in range(0x000, 0xFFF):
             try:
-                print(f"{b} -> {hex(a)} -> {bus.read_byte_data(a, 0)}")
+                bus.write_byte_data(a, 0, 0)
+                print(f"{b} -> {hex(a)} exists")
             except OSError:
                 pass
         bus.close()
