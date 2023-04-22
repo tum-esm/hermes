@@ -17,30 +17,10 @@ class ValveInterface:
         # set up valve control pin connections
         self.pin_factory = utils.get_gpio_pin_factory()
         self.valves: dict[Literal[1, 2, 3, 4], gpiozero.OutputDevice] = {
-            1: gpiozero.OutputDevice(
-                VALVE_PIN_1_OUT,
-                active_high=False,
-                initial_value=True,
-                pin_factory=self.pin_factory,
-            ),
-            2: gpiozero.OutputDevice(
-                VALVE_PIN_2_OUT,
-                active_high=True,
-                initial_value=False,
-                pin_factory=self.pin_factory,
-            ),
-            3: gpiozero.OutputDevice(
-                VALVE_PIN_3_OUT,
-                active_high=True,
-                initial_value=False,
-                pin_factory=self.pin_factory,
-            ),
-            4: gpiozero.OutputDevice(
-                VALVE_PIN_4_OUT,
-                active_high=True,
-                initial_value=False,
-                pin_factory=self.pin_factory,
-            ),
+            1: gpiozero.OutputDevice(VALVE_PIN_1_OUT, pin_factory=self.pin_factory),
+            2: gpiozero.OutputDevice(VALVE_PIN_2_OUT, pin_factory=self.pin_factory),
+            3: gpiozero.OutputDevice(VALVE_PIN_3_OUT, pin_factory=self.pin_factory),
+            4: gpiozero.OutputDevice(VALVE_PIN_4_OUT, pin_factory=self.pin_factory),
         }
         self.active_input: Literal[1, 2, 3, 4] = 1
         self.set_active_input(1)
