@@ -76,8 +76,7 @@ class HardwareInterface:
         # enclosure controls
         self.mainboard_sensor.teardown()
         self.ups.teardown()
-        if self.config.active_components.heated_enclosure_communication:
-            HeatedEnclosureThread.deinit()
+        HeatedEnclosureThread.deinit()
 
         # release lock
         hardware_lock.release()
@@ -100,10 +99,7 @@ class HardwareInterface:
         # enclosure controls
         self.mainboard_sensor = MainboardSensorInterface(config)
         self.ups = UPSInterface(config)
-        if self.config.active_components.heated_enclosure_communication:
-            HeatedEnclosureThread.init(config)
-        else:
-            self.logger.debug("skipping heated enclosure communication")
+        HeatedEnclosureThread.init(config)
 
     def acquire_hardare_lock(self) -> None:
         """make sure that there is only one initialized hardware connection"""

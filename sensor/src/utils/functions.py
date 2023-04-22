@@ -84,3 +84,8 @@ def get_random_string(length: int, forbidden: list[str] = []) -> str:
         if output not in forbidden:
             break
     return output
+
+
+def get_cpu_temperature() -> Optional[float]:
+    s = os.popen("vcgencmd measure_temp").readline()
+    return float(s.replace("temp=", "").replace("'C\n", ""))
