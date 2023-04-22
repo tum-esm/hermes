@@ -91,7 +91,7 @@ class RawHeatedEnclosureData(BaseModel):
 
     # validators
     _val_version = validator("version", pre=True, allow_reuse=True)(
-        validate_str(regex=r"^\d+\.\d+\.\d+$"),
+        validate_str(regex=r"^\d+\.\d+\.\d+(-(alpha|beta|rc)\.\d+)?$"),
     )
     _val_target = validator("target", pre=True, allow_reuse=True)(
         validate_float(),
