@@ -35,6 +35,13 @@ class BME280SensorData(BaseModel):
     pressure: Optional[float]
 
 
+class SHT45SensorData(BaseModel):
+    """units: °C for temperature, rH for humidity"""
+
+    temperature: Optional[float]
+    humidity: Optional[float]
+
+
 class SystemData(BaseModel):
     """fractional values from 0 to 1"""
 

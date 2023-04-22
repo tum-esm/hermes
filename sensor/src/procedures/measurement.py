@@ -119,12 +119,13 @@ class MeasurementProcedure:
         air_inlet_bme280_data = (
             self.hardware_interface.air_inlet_bme280_sensor.get_data()
         )
+        air_inlet_sht45_data = self.hardware_interface.air_inlet_sht45_sensor.get_data()
         chamber_temperature = (
             self.hardware_interface.co2_sensor.get_current_chamber_temperature()
         )
 
         self.hardware_interface.co2_sensor.set_compensation_values(
-            humidity=air_inlet_bme280_data.humidity,
+            humidity=air_inlet_sht45_data.humidity,
             pressure=air_inlet_bme280_data.pressure,
         )
 
@@ -139,8 +140,8 @@ class MeasurementProcedure:
                         bme280_temperature=air_inlet_bme280_data.temperature,
                         bme280_humidity=air_inlet_bme280_data.humidity,
                         bme280_pressure=air_inlet_bme280_data.pressure,
-                        sht45_temperature=None,
-                        sht45_humidity=None,
+                        sht45_temperature=air_inlet_sht45_data.temperature,
+                        sht45_humidity=air_inlet_sht45_data.humidity,
                         chamber_temperature=chamber_temperature,
                     ),
                 ),

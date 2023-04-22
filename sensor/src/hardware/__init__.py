@@ -4,6 +4,7 @@ from src import custom_types, utils
 from .co2_sensor import CO2SensorInterface
 from .heated_enclosure import HeatedEnclosureInterface, HeatedEnclosureThread
 from .bme280_sensor import BME280SensorInterface
+from .sht45_sensor import SHT45SensorInterface
 from .pump import PumpInterface
 from .ups import UPSInterface
 from .usb_ports import USBPortInterface
@@ -30,6 +31,7 @@ class HardwareInterface:
         self.air_inlet_bme280_sensor = BME280SensorInterface(
             config, variant="air inlet"
         )
+        self.air_inlet_sht45_sensor = SHT45SensorInterface(config)
         self.co2_sensor = CO2SensorInterface(config)
         self.wind_sensor = WindSensorInterface(config)
 
@@ -93,6 +95,7 @@ class HardwareInterface:
         self.air_inlet_bme280_sensor = BME280SensorInterface(
             config, variant="air inlet"
         )
+        self.air_inlet_sht45_sensor = SHT45SensorInterface(config)
         self.co2_sensor = CO2SensorInterface(config)
         self.wind_sensor = WindSensorInterface(config)
 

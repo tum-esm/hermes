@@ -51,9 +51,9 @@ class BME280SensorInterface:
                 self.address,
                 self.compensation_params,
             )
-            output.temperature = round(bme280_data.temperature, 1)
-            output.humidity = round(bme280_data.humidity, 1)
-            output.pressure = round(bme280_data.pressure, 1)
+            output.temperature = round(bme280_data.temperature, 2)
+            output.humidity = round(bme280_data.humidity, 2)
+            output.pressure = round(bme280_data.pressure, 2)
 
         except (AssertionError, OSError):
             self.logger.warning("could not sample data", config=self.config)

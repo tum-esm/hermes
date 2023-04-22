@@ -32,6 +32,7 @@ from .sensor_answers import (
     CO2SensorData,
     CalibrationProcedureData,
     BME280SensorData,
+    SHT45SensorData,
     SystemData,
     WindSensorData,
     AirSensorData,
