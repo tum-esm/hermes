@@ -17,6 +17,26 @@ assert valve_no in [1, 2, 3, 4]
 valves.set_active_input(valve_no)
 
 co2_sensor = hardware.CO2SensorInterface(config)
+air_inlet_bme280_sensor = hardware.BME280SensorInterface(config, variant="air inlet")
+air_inlet_sht45_sensor = hardware.SHT45SensorInterface(config)
+mainboard_bme280_sensor = hardware.BME280SensorInterface(config, variant="mainboard")
 
-while True:
-    print(co2_sensor.get_current_concentration())
+try:
+    while True:
+        print(co2_sensor.get_current_concentration())
+        print(air_inlet_bme280_sensor.get_data())
+        print(air_inlet_sht45_sensor.get_data())
+        print(mainboard_bme280_sensor.get_data())
+        print()
+except KeyboardInterrupt:
+    print("\n 🚫 starting teardown")
+
+co2_sensor.teardown()
+pump.teardown()
+valves.teardown()
+
+print("✅ done")
+
+# soll: 800, filtered: 734.2
+# soll: 400±, filtered: 376
+# soll: outside, filterd: 15
