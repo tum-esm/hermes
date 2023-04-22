@@ -26,30 +26,6 @@ class MeasurementProcedure:
         self.last_measurement_time: float = 0
         self.active_mqtt_queue = utils.ActiveMQTTQueue()
 
-    def _switch_to_air_inlet(
-        self, new_air_inlet: custom_types.MeasurementAirInletConfig
-    ) -> None:
-        """
-        1. switches to a different valve
-        2. pumps air according to tube length
-        """
-        self.hardware_interface.valves.set_active_input(new_air_inlet.valve_number)
-
-        # pump air out of the new tube
-        tube_volume_in_litres = (
-            3.141592
-            * pow(self.config.hardware.inner_tube_diameter_millimiters * 0.5 * 0.01, 2)
-            * new_air_inlet.tube_length
-            * 10
-        )
-        required_pumping_time = tube_volume_in_litres / (
-            self.config.measurement.pumped_litres_per_minute / 60
-        )
-        self.logger.debug(f"pumping {required_pumping_time} second(s)")
-        time.sleep(required_pumping_time)
-
-        self.active_air_inlet = new_air_inlet
-
     def _get_current_wind_data(self) -> Optional[custom_types.WindSensorData]:
         """fetches the latest wind sensor data and returns None if the
         wind sensor doesn't respond with any data"""
@@ -98,7 +74,9 @@ class MeasurementProcedure:
         # perform switch
         if self.active_air_inlet is None:
             self.logger.info(f"enabeling air inlet {new_air_inlet.dict()}")
-            self._switch_to_air_inlet(new_air_inlet)
+            self.hardware_interface.valves.set_active_input(new_air_inlet.valve_number)
+            self.active_air_inlet = new_air_inlet
+
         else:
             if (wind_data is not None) and (wind_data.speed_avg < 0.2):
                 self.logger.debug(f"wind speed very low ({wind_data.speed_avg} m/s)")
@@ -106,7 +84,11 @@ class MeasurementProcedure:
             else:
                 if self.active_air_inlet.valve_number != new_air_inlet.valve_number:
                     self.logger.info(f"switching to air inlet {new_air_inlet.dict()}")
-                    self._switch_to_air_inlet(new_air_inlet)
+                    self.hardware_interface.valves.set_active_input(
+                        new_air_inlet.valve_number
+                    )
+                    self.active_air_inlet = new_air_inlet
+
                 else:
                     self.logger.info(f"staying at air inlet {new_air_inlet.dict()}")
 

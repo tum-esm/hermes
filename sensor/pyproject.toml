@@ -72,8 +72,10 @@ module = [
     "serial",
     "deepdiff",
     "filelock",
-    "matplotlib",
     "matplotlib.*",
+    "busio",
+    "board",
+    "adafruit_sht4x",
 ]
 ignore_missing_imports = true
 
