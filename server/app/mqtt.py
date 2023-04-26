@@ -224,7 +224,7 @@ async def listen(mqttc, dbpool):
         # Loop through incoming messages
         async for message in messages:
             # TODO: Remove condition when there's no more logs limit
-            if not message.topic.matches(WILDCARDS.keys()[-1]):
+            if not message.topic.matches(list(WILDCARDS.keys())[-1]):
                 logger.info(
                     f"[MQTT] Received message: {message.payload!r} on topic:"
                     f" {message.topic}"
