@@ -15,6 +15,7 @@ heated_enclosure.ino.*
 config.h
 .vscode/
 *.lock
+state.json
 
 # code download artifacts
 insert-name-here-*/

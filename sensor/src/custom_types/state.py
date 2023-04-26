@@ -9,5 +9,5 @@ class State(BaseModel):
 
     # validators
     _val_float = validator("*", pre=True, allow_reuse=True)(
-        validate_float(),
+        validate_float(nullable=True),
     )

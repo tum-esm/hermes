@@ -58,8 +58,7 @@ class CalibrationProcedure:
         previous_measurement_valve_input = self.hardware_interface.valves.active_input
 
         self.logger.debug("setting the CO2 sensor to calibration mode")
-        self.hardware_interface.co2_sensor.start_calibration_sampling()
-        self.hardware_interface.co2_sensor.set_filter_setting(average=5)
+        self.hardware_interface.co2_sensor.set_filter_setting(average=6)
         self.hardware_interface.pump.set_desired_pump_speed(
             unit="litres_per_minute", value=0.5
         )
@@ -69,9 +68,12 @@ class CalibrationProcedure:
 
             gas_readings: list[custom_types.CO2SensorData] = []
             timestamps: list[float] = []
-            number_of_readings = math.ceil(
-                self.config.calibration.seconds_per_gas_bottle / 6
+            number_of_readings = (
+                math.ceil(self.config.calibration.seconds_per_gas_bottle / 6)
+                if (not self.testing)
+                else 10
             )
+            self.logger.debug(f"collecting {number_of_readings} readings")
             for _ in range(number_of_readings):
                 with _ensure_section_duration(6):
                     t1 = datetime.utcnow().timestamp()
@@ -80,12 +82,12 @@ class CalibrationProcedure:
                     )
                     t2 = datetime.utcnow().timestamp()
                     timestamps.append((t1 + t2) / 2)
+                    self.logger.debug("new reading")
 
             result.readings.append(gas_readings)
             result.timestamps.append(timestamps)
 
         # start the calibration sampling, reset CO2 sensor to default filters
-        self.hardware_interface.co2_sensor.stop_calibration_sampling()
         self.hardware_interface.co2_sensor.set_filter_setting()
 
         # clean up tube again
@@ -97,7 +99,7 @@ class CalibrationProcedure:
         if self.testing:
             self.logger.info(
                 f"calibration result is available",
-                details=json.dumps(result.dict()),
+                details=json.dumps(result.dict(), indent=4),
             )
         else:
             self.active_mqtt_queue.enqueue_message(
@@ -112,6 +114,7 @@ class CalibrationProcedure:
             )
 
         # save last calibration time
+        self.logger.debug("updating state")
         state = utils.StateInterface.read()
         state.last_calibration_time = calibration_time
         utils.StateInterface.write(state)
