@@ -128,80 +128,25 @@ class CalibrationGasConfig(BaseModel):
         extra = "forbid"
 
 
-class CalibrationFlushingConfig(BaseModel):
-    seconds: float
-    pumped_litres_per_minute: float
-
-    # validators
-    _val_seconds = validator("seconds", pre=True, allow_reuse=True)(
-        validate_float(minimum=0, maximum=1800),
-    )
-    _val_pumped_litres_per_minute = validator(
-        "pumped_litres_per_minute", pre=True, allow_reuse=True
-    )(
-        validate_float(minimum=0, maximum=10000),
-    )
-
-    class Config:
-        extra = "forbid"
-
-
-class CalibrationSamplingConfig(BaseModel):
-    pumped_litres_per_minute: float
-    sample_count: int
-    seconds_per_sample: int
-
-    # validators
-    _val_pumped_litres_per_minute = validator(
-        "pumped_litres_per_minute", pre=True, allow_reuse=True
-    )(
-        validate_float(minimum=0, maximum=10000),
-    )
-    _val_sample_count = validator("sample_count", pre=True, allow_reuse=True)(
-        validate_int(minimum=0, maximum=500),
-    )
-    _val_seconds_per_sample = validator(
-        "seconds_per_sample", pre=True, allow_reuse=True
-    )(
-        validate_int(minimum=1, maximum=1800),
-    )
-
-    class Config:
-        extra = "forbid"
-
-
-class CalibrationCleaningConfig(BaseModel):
-    seconds: float
-    pumped_litres_per_minute: float
-
-    # validators
-    _val_seconds = validator("seconds", pre=True, allow_reuse=True)(
-        validate_float(minimum=0, maximum=1800),
-    )
-    _val_pumped_litres_per_minute = validator(
-        "pumped_litres_per_minute", pre=True, allow_reuse=True
-    )(
-        validate_float(minimum=0, maximum=10000),
-    )
-
-    class Config:
-        extra = "forbid"
-
-
 class CalibrationConfig(BaseModel):
+    start_timestamp: int
     hours_between_calibrations: float
+    seconds_per_gas_bottle: int
     gases: list[CalibrationGasConfig]
-    flushing: CalibrationFlushingConfig
-    sampling: CalibrationSamplingConfig
-    cleaning: CalibrationCleaningConfig
 
     # validators
 
-    # we have only implemented multi-point calibration for now
-    # that is why min_len=2, but single-point calibration can be
-    # implemented in the future
+    _val_start_timestamp = validator("start_timestamp", pre=True, allow_reuse=True)(
+        validate_int(minimum=1672531200)  # start 2023-01-01T00:00
+    )
+    _val_hours_between_calibrations = validator(
+        "hours_between_calibrations", pre=True, allow_reuse=True
+    )(validate_float(minimum=0.5))
+    _val_seconds_per_gas_bottle = validator(
+        "seconds_per_gas_bottle", pre=True, allow_reuse=True
+    )(validate_int(minimum=6, maximum=1800))
     _val_gases = validator("gases", pre=True, allow_reuse=True)(
-        validate_list(min_len=2),
+        validate_list(min_len=1, max_len=3),
     )
 
     class Config:

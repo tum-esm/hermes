@@ -19,32 +19,20 @@
         },
         "pumped_litres_per_minute": 4,
         "air_inlets": [
-            { "valve_number": 1, "direction": 300, "tube_length": 50 },
-            { "valve_number": 2, "direction": 50, "tube_length": 50 }
+            { "valve_number": 1, "direction": 0, "tube_length": 50 }
         ]
     },
     "calibration": {
+        "start_timestamp": 1682503200,
         "hours_between_calibrations": 25,
+        "seconds_per_gas_bottle": 600,
         "gases": [
-            { "valve_number": 3, "concentration": 400 },
-            { "valve_number": 4, "concentration": 800 }
-        ],
-        "flushing": {
-            "seconds": 300,
-            "pumped_litres_per_minute": 0.5
-        },
-        "sampling": {
-            "pumped_litres_per_minute": 0.5,
-            "sample_count": 20,
-            "seconds_per_sample": 300
-        },
-        "cleaning": {
-            "seconds": 300,
-            "pumped_litres_per_minute": 0.5
-        }
+            { "valve_number": 2, "concentration": 400 },
+            { "valve_number": 3, "concentration": 800 }
+        ]
     },
     "heated_enclosure": {
-        "target_temperature": 40,
+        "target_temperature": 25,
         "allowed_deviation": 3,
         "seconds_per_stored_datapoint": 60
     }
