@@ -45,6 +45,7 @@ no_implicit_optional = true
 [tool.sqlfluff.core]
 dialect = "postgres"
 templater = "placeholder"
+exclude_rules = "L032"
 
 [tool.sqlfluff.templater.placeholder]
 param_style = "dollar"

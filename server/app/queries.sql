@@ -3,13 +3,16 @@ SELECT
     sensor_identifier,
     severity,
     subject,
-    first(revision, creation_timestamp) as min_revision,
-    last(revision, creation_timestamp) as max_revision,
-    min(creation_timestamp) as min_creation_timestamp,
-    max(creation_timestamp) as max_creation_timestamp,
-    count(*) as count
+    first(revision, creation_timestamp) AS min_revision,
+    last(revision, creation_timestamp) AS max_revision,
+    min(creation_timestamp) AS min_creation_timestamp,
+    max(creation_timestamp) AS max_creation_timestamp,
+    count(*) AS count
 FROM logs
-WHERE sensor_identifier = ${sensor_identifier} AND severity = ANY(ARRAY['warning', 'error'])
+WHERE
+    sensor_identifier = ${sensor_identifier} AND severity = any(
+        ARRAY['warning', 'error']
+    )
 GROUP BY sensor_identifier, severity, subject;
 
 
@@ -24,14 +27,19 @@ WITH aggregation AS (
     WHERE bucket_timestamp > now() - INTERVAL '28 days'
     GROUP BY sensor_identifier
 )
+
 -- Filter by sensors belonging to the given network
 SELECT
     sensor_identifier,
-    sensor_name,
-    coalesce(bucket_timestamps, ARRAY[]::TIMESTAMPTZ[]) AS bucket_timestamps,
-    coalesce(measurements_counts, ARRAY[]::INT[]) AS measurements_counts
+    sensors.sensor_name,
+    coalesce(
+        aggregation.bucket_timestamps, ARRAY[]::TIMESTAMPTZ[]
+    ) AS bucket_timestamps,
+    coalesce(
+        aggregation.measurements_counts, ARRAY[]::INT[]
+    ) AS measurements_counts
 FROM networks
-JOIN sensors USING (network_identifier)
+INNER JOIN sensors USING (network_identifier)
 LEFT JOIN aggregation USING (sensor_identifier)
 WHERE network_identifier = ${network_identifier};
 
@@ -45,7 +53,10 @@ INSERT INTO configurations (
 )
 VALUES (
     ${sensor_identifier},
-    (SELECT COALESCE(MAX(revision) + 1, 0) FROM configurations WHERE sensor_identifier = ${sensor_identifier}),
+    (
+        SELECT coalesce(max(revision) + 1, 0)
+        FROM configurations WHERE sensor_identifier = ${sensor_identifier}
+    ),
     now(),
     ${configuration}
 )
@@ -151,8 +162,8 @@ WHERE
     sensor_identifier = ${sensor_identifier}
     AND (
         CASE
-            WHEN ${direction} = 'next' THEN creation_timestamp > ${creation_timestamp}
-            WHEN ${direction} = 'previous' THEN creation_timestamp < ${creation_timestamp}
+            WHEN ${direction} = 'next' THEN creation_timestamp > ${creation_timestamp}  -- noqa: L016
+            WHEN ${direction} = 'previous' THEN creation_timestamp < ${creation_timestamp}  -- noqa: L016
             ELSE TRUE
         END
     )
@@ -161,16 +172,21 @@ LIMIT 64;
 
 
 -- name: read-user
-SELECT user_identifier, password_hash
+SELECT
+    user_identifier,
+    password_hash
 FROM users
 WHERE username = ${username};
 
 
 -- name: read-permissions
-SELECT user_identifier, network_identifier  -- TODO: return role/level as well
+-- Could be extended to support finer grained permissions
+SELECT
+    user_identifier,
+    permissions.network_identifier
 FROM sessions
 LEFT JOIN permissions USING (user_identifier)
-WHERE access_token_hash = ${access_token_hash};
+WHERE sessions.access_token_hash = ${access_token_hash};
 
 
 -- name: update-configuration-on-acknowledgement

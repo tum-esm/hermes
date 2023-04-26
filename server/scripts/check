@@ -17,6 +17,6 @@ printf '\r%s[OK]%s Running ruff\n' "$GREEN" "$RESTORE"
 [ -z "$output" ] || printf '\n%s\n' "$output"
 
 printf "[..] Running sqlfluff"
-output=$(script -q /dev/null poetry run sqlfluff lint --disable-progress-bar ./app/queries.sql 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
+output=$(script -q /dev/null poetry run sqlfluff fix --force -v --disable-progress-bar ./app/queries.sql 2>&1 | tr -d '\r' | cat | sed 's/^/  /')
 printf '\r%s[OK]%s Running sqlfluff\n' "$GREEN" "$RESTORE"
 [ -z "$output" ] || printf '\n%s\n' "$output"
