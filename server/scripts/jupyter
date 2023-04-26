@@ -19,5 +19,8 @@ export MQTT_PORT="1883"
 export MQTT_IDENTIFIER="server"
 export MQTT_PASSWORD="password"
 
+# Enable importing local modules
+export PYTHONPATH=$(pwd)
+
 # Start jupyter server
 poetry run python -m jupyterlab --no-browser --port 8532

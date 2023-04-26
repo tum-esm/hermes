@@ -1,5 +1,6 @@
 import contextlib
 import json
+import os
 
 import asyncpg
 import pendulum
@@ -8,7 +9,7 @@ import app.settings as settings
 
 
 def prepare():
-    with open("app/queries.sql", "r") as file:
+    with open(os.path.join(os.path.dirname(__file__), "queries.sql"), "r") as file:
         statements = file.read().split("\n\n\n")
         # Validate format
         assert all(statement.startswith("-- name: ") for statement in statements)
