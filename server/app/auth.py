@@ -59,10 +59,9 @@ async def authenticate(request, dbpool):
     access_token = access_token[7:]
     # Check if access token is valid and read permissions
     try:
-        query, arguments = database.build(
-            template="read-permissions.sql",
-            template_arguments={},
-            query_arguments={"access_token_hash": hash_token(access_token)},
+        query, arguments = database.parametrize(
+            query="read-permissions",
+            arguments={"access_token_hash": hash_token(access_token)},
         )
         result = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover

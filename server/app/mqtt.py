@@ -51,10 +51,9 @@ async def publish_configuration(
 
     async def helper(sensor_identifier, revision, configuration):
         backoff = 1
-        query, arguments = database.build(
-            template="update-configuration-on-publish.sql",
-            template_arguments={},
-            query_arguments={
+        query, arguments = database.parametrize(
+            query="update-configuration-on-publication",
+            arguments={
                 "sensor_identifier": sensor_identifier,
                 "revision": revision,
             },
@@ -112,10 +111,9 @@ async def _handle_heartbeats(sensor_identifier, payload, dbpool):
         async with dbpool.acquire() as connection:
             async with connection.transaction():
                 # Write heartbeat as log in the database
-                query, arguments = database.build(
-                    template="create-log.sql",
-                    template_arguments={},
-                    query_arguments={
+                query, arguments = database.parametrize(
+                    query="create-log",
+                    arguments={
                         "sensor_identifier": sensor_identifier,
                         "revision": heartbeat.revision,
                         "creation_timestamp": heartbeat.timestamp,
@@ -135,10 +133,9 @@ async def _handle_heartbeats(sensor_identifier, payload, dbpool):
                 except Exception as e:  # pragma: no cover
                     logger.error(e, exc_info=True)
                 # Update configuration in the database
-                query, arguments = database.build(
-                    template="update-configuration-on-acknowledgement.sql",
-                    template_arguments={},
-                    query_arguments={
+                query, arguments = database.parametrize(
+                    query="update-configuration-on-acknowledgement",
+                    arguments={
                         "sensor_identifier": sensor_identifier,
                         "revision": heartbeat.revision,
                         "acknowledgement_timestamp": heartbeat.timestamp,
@@ -149,14 +146,13 @@ async def _handle_heartbeats(sensor_identifier, payload, dbpool):
                     await connection.execute(query, *arguments)
                 except Exception as e:  # pragma: no cover
                     logger.error(e, exc_info=True)
-        logger.info(f"[MQTT] Processed heartbeat {heartbeat} from {sensor_identifier}")
+        logger.info(f"[MQTT] Handled heartbeat {heartbeat} from {sensor_identifier}")
 
 
 async def _handle_logs(sensor_identifier, payload, dbpool):
-    query, arguments = database.build(
-        template="create-log.sql",
-        template_arguments={},
-        query_arguments=[
+    query, arguments = database.parametrize(
+        query="create-log",
+        arguments=[
             {
                 "sensor_identifier": sensor_identifier,
                 "revision": log.revision,
@@ -175,14 +171,14 @@ async def _handle_logs(sensor_identifier, payload, dbpool):
         logger.warning(
             f"[MQTT] Failed to handle; Sensor not found: {sensor_identifier}"
         )
-    logger.info(f"[MQTT] Processed {len(payload.logs)} logs from {sensor_identifier}")
+    else:
+        logger.info(f"[MQTT] Handled {len(payload.logs)} logs from {sensor_identifier}")
 
 
 async def _handle_measurements(sensor_identifier, payload, dbpool):
-    query, arguments = database.build(
-        template="create-measurement.sql",
-        template_arguments={},
-        query_arguments=[
+    query, arguments = database.parametrize(
+        query="create-measurement",
+        arguments=[
             {
                 "sensor_identifier": sensor_identifier,
                 "revision": measurement.revision,
@@ -200,14 +196,15 @@ async def _handle_measurements(sensor_identifier, payload, dbpool):
             f"[MQTT] Failed to handle; Sensor not found: {sensor_identifier}"
         )
     """
-    logger.info(
-        f"[MQTT] Processed {len(payload.measurements)} measurements from"
-        f" {sensor_identifier}"
-    )
+    else:
+        logger.info(
+            f"[MQTT] Handled {len(payload.measurements)} measurements from"
+            f" {sensor_identifier}"
+        )
     """
 
 
-WILDCARDS = {
+SUBSCRIPTIONS = {
     "heartbeats/+": (_handle_heartbeats, validation.HeartbeatsMessage),
     "logs/+": (_handle_logs, validation.LogsMessage),
     "measurements/+": (_handle_measurements, validation.MeasurementsMessage),
@@ -218,13 +215,13 @@ async def listen(mqttc, dbpool):
     """Listen to and handle incoming MQTT messages from sensor systems."""
     async with mqttc.messages() as messages:
         # Subscribe to all topics
-        for wildcard in WILDCARDS.keys():
+        for wildcard in SUBSCRIPTIONS.keys():
             await mqttc.subscribe(wildcard, qos=1, timeout=10)
             logger.info(f"[MQTT] Subscribed to: {wildcard}")
         # Loop through incoming messages
         async for message in messages:
             # TODO: Remove condition when there's no more logs limit
-            if not message.topic.matches(list(WILDCARDS.keys())[-1]):
+            if not message.topic.matches(list(SUBSCRIPTIONS.keys())[-1]):
                 logger.info(
                     f"[MQTT] Received message: {message.payload!r} on topic:"
                     f" {message.topic}"
@@ -241,7 +238,7 @@ async def listen(mqttc, dbpool):
                 continue
             # Call the appropriate handler
             matched = False
-            for wildcard, (handler, validator) in WILDCARDS.items():
+            for wildcard, (handler, validator) in SUBSCRIPTIONS.items():
                 if message.topic.matches(wildcard):
                     try:
                         payload = validator(**payload)

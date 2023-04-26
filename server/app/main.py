@@ -41,10 +41,9 @@ async def create_user(request):
     async with dbpool.acquire() as connection:
         async with connection.transaction():
             # Create new user
-            query, arguments = database.build(
-                template="create-user.sql",
-                template_arguments={},
-                query_arguments={
+            query, arguments = database.parametrize(
+                query="create-user",
+                arguments={
                     "username": request.body.username,
                     "password_hash": password_hash,
                 },
@@ -61,10 +60,9 @@ async def create_user(request):
                 raise errors.InternalServerError()
             user_identifier = database.dictify(result)[0]["user_identifier"]
             # Create new session
-            query, arguments = database.build(
-                template="create-session.sql",
-                template_arguments={},
-                query_arguments={
+            query, arguments = database.parametrize(
+                query="create-session",
+                arguments={
                     "access_token_hash": access_token_hash,
                     "user_identifier": user_identifier,
                 },
@@ -85,10 +83,8 @@ async def create_user(request):
 async def create_session(request):
     """Authenticate a user from username and password and return access token."""
     # Read user
-    query, arguments = database.build(
-        template="read-user.sql",
-        template_arguments={},
-        query_arguments={"username": request.body.username},
+    query, arguments = database.parametrize(
+        query="read-user", arguments={"username": request.body.username}
     )
     try:
         result = await dbpool.fetch(query, *arguments)
@@ -107,10 +103,9 @@ async def create_session(request):
         raise errors.UnauthorizedError()
     access_token = auth.generate_token()
     # Create new session
-    query, arguments = database.build(
-        template="create-session.sql",
-        template_arguments={},
-        query_arguments={
+    query, arguments = database.parametrize(
+        query="create-session",
+        arguments={
             "access_token_hash": auth.hash_token(access_token),
             "user_identifier": user_identifier,
         },
@@ -138,10 +133,9 @@ async def create_sensor(request):
     async with dbpool.acquire() as connection:
         async with connection.transaction():
             # Create new sensor
-            query, arguments = database.build(
-                template="create-sensor.sql",
-                template_arguments={},
-                query_arguments={
+            query, arguments = database.parametrize(
+                query="create-sensor",
+                arguments={
                     "sensor_name": request.body.sensor_name,
                     "network_identifier": request.body.network_identifier,
                 },
@@ -161,10 +155,9 @@ async def create_sensor(request):
                 raise errors.InternalServerError()
             sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
             # Create new configuration
-            query, arguments = database.build(
-                template="create-configuration.sql",
-                template_arguments={},
-                query_arguments={
+            query, arguments = database.parametrize(
+                query="create-configuration",
+                arguments={
                     "sensor_identifier": sensor_identifier,
                     "configuration": request.body.configuration,
                 },
@@ -206,10 +199,9 @@ async def update_sensor(request):
     async with dbpool.acquire() as connection:
         async with connection.transaction():
             # Update sensor
-            query, arguments = database.build(
-                template="update-sensor.sql",
-                template_arguments={},
-                query_arguments={
+            query, arguments = database.parametrize(
+                query="update-sensor",
+                arguments={
                     "sensor_identifier": request.path.sensor_identifier,
                     "sensor_name": request.body.sensor_name,
                 },
@@ -228,10 +220,9 @@ async def update_sensor(request):
                 )
                 raise errors.NotFoundError()
             # Create new configuration
-            query, arguments = database.build(
-                template="create-configuration.sql",
-                template_arguments={},
-                query_arguments={
+            query, arguments = database.parametrize(
+                query="create-configuration",
+                arguments={
                     "sensor_identifier": request.path.sensor_identifier,
                     "configuration": request.body.configuration,
                 },
@@ -280,10 +271,9 @@ async def read_measurements(request):
 
     - use status code 206 for partial content?
     """
-    query, arguments = database.build(
-        template="read-measurements.sql",
-        template_arguments={},
-        query_arguments={
+    query, arguments = database.parametrize(
+        query="read-measurements",
+        arguments={
             "sensor_identifier": request.path.sensor_identifier,
             "direction": request.query.direction,
             "creation_timestamp": request.query.creation_timestamp,
@@ -304,10 +294,9 @@ async def read_measurements(request):
 @validation.validate(schema=validation.ReadLogsAggregatesRequest)
 async def read_log_message_aggregates(request):
     """Return aggregation of sensor log messages."""
-    query, arguments = database.build(
-        template="aggregate-logs.sql",
-        template_arguments={},
-        query_arguments={"sensor_identifier": request.path.sensor_identifier},
+    query, arguments = database.parametrize(
+        query="aggregate-logs",
+        arguments={"sensor_identifier": request.path.sensor_identifier},
     )
     try:
         result = await dbpool.fetch(query, *arguments)
@@ -341,10 +330,9 @@ async def stream_network(request):
 
     async def stream(request):
         while True:
-            query, arguments = database.build(
-                template="aggregate-network.sql",
-                template_arguments={},
-                query_arguments={
+            query, arguments = database.parametrize(
+                query="aggregate-network",
+                arguments={
                     "network_identifier": request.path.network_identifier,
                 },
             )
