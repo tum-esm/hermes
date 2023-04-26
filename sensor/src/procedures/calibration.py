@@ -151,8 +151,8 @@ class CalibrationProcedure:
 
         # skip calibration when sensor has had power for less than 30
         # minutes (a full warming up is required for maximum accuracy)
-        seconds_since_last_co2_sensor_boot = (
-            time.time() - self.hardware_interface.co2_sensor.last_powerup_time
+        seconds_since_last_co2_sensor_boot = round(
+            time.time() - self.hardware_interface.co2_sensor.last_powerup_time, 2
         )
         if seconds_since_last_co2_sensor_boot < 1800:
             self.logger.info(
