@@ -176,7 +176,7 @@ async def create_sensor(request):
                 raise errors.InternalServerError()
             revision = database.dictify(result)[0]["revision"]
     # Send MQTT message with configuration
-    await mqtt_client.publish_configuration(
+    await mqttc.publish_configuration(
         sensor_identifier=sensor_identifier,
         revision=revision,
         configuration=request.body.configuration,
@@ -241,7 +241,7 @@ async def update_sensor(request):
                 raise errors.InternalServerError()
             revision = database.dictify(result)[0]["revision"]
     # Send MQTT message with configuration
-    await mqtt_client.publish_configuration(
+    await mqttc.publish_configuration(
         sensor_identifier=request.path.sensor_identifier,
         revision=revision,
         configuration=request.body.configuration,
@@ -362,22 +362,22 @@ async def stream_network(request):
 
 
 dbpool = None  # Database connection pool
-mqtt_client = None
+mqttc = None  # MQTT client
 
 
 @contextlib.asynccontextmanager
 async def lifespan(app):
     """Manage lifetime of database client and MQTT client."""
     global dbpool
-    global mqtt_client
+    global mqttc
     async with database.pool() as x:
-        async with mqtt.Client(dbpool=x) as y:
+        async with mqtt.client() as y:
             # Make clients globally available
             dbpool = x
-            mqtt_client = y
+            mqttc = y
             # Start MQTT listener in (unawaited) asyncio task
             loop = asyncio.get_event_loop()
-            task = loop.create_task(mqtt_client.listen())
+            task = loop.create_task(mqtt.listen(mqttc, dbpool))
 
             # TODO Spawn tasks for configurations that have not yet been sent
 
