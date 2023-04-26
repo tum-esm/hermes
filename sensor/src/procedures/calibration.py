@@ -111,7 +111,6 @@ class CalibrationProcedure:
         state.last_calibration_time = calibration_time
         utils.StateInterface.write(state)
 
-    # TODO: log more
     def is_due(self) -> bool:
         """returns true when calibration procedure should run now"""
 
@@ -119,26 +118,42 @@ class CalibrationProcedure:
         state = utils.StateInterface.read()
         current_utc_timestamp = datetime.utcnow().timestamp()
 
+        # if last calibration time is unknown, calibrate now
+        # should only happen when the state.json is not copied
+        # during the upgrade routine or its interface changes
+        if state.last_calibration_time is None:
+            self.logger.info("last calibration time is unknown, calibrating now")
+            return True
+
+        seconds_between_calibrations = (
+            3600 * self.config.calibration.hours_between_calibrations
+        )
+        calibrations_since_start_time = math.floor(
+            (current_utc_timestamp - self.config.calibration.start_timestamp)
+            / seconds_between_calibrations
+        )
+        last_calibration_time = (
+            calibrations_since_start_time * seconds_between_calibrations
+            + self.config.calibration.start_timestamp
+        )
+
+        if state.last_calibration_time > last_calibration_time:
+            self.logger.info("last calibration is up to date")
+            return False
+
         # skip calibration when sensor has had power for less than 30
         # minutes (a full warming up is required for maximum accuracy)
         seconds_since_last_co2_sensor_boot = (
             time.time() - self.hardware_interface.co2_sensor.last_powerup_time
         )
         if seconds_since_last_co2_sensor_boot < 1800:
+            self.logger.info(
+                f"skipping calibration, sensor is still warming up (co2 sensor"
+                + f" booted {seconds_since_last_co2_sensor_boot} seconds ago)"
+            )
             return False
 
-        # if last calibration time is unknown, calibrate now
-        # should only happen when the state.json is not copied
-        # during the upgrade routine or its interface changes
-        if state.last_calibration_time is None:
-            return True
-
-        seconds_per_calibration_interval = (
-            3600 * self.config.calibration.hours_between_calibrations
+        self.logger.info(
+            "last calibration is older than last calibration due date, calibrating now"
         )
-        last_calibration_due_time = (
-            math.floor(current_utc_timestamp / seconds_per_calibration_interval)
-            * seconds_per_calibration_interval
-        )
-
-        return state.last_calibration_time < last_calibration_due_time
+        return True
