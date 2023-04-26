@@ -175,15 +175,8 @@ def run() -> None:
     # define behaviour when mainloop takes too long
 
     max_calibration_time = (
-        len(config.calibration.gases)
-        * (
-            config.calibration.flushing.seconds
-            + (
-                config.calibration.sampling.seconds_per_sample
-                * config.calibration.sampling.sample_count
-            )
-        )
-    ) + config.calibration.cleaning.seconds
+        len(config.calibration.gases) * config.calibration.seconds_per_gas_bottle
+    )
     max_measurement_time = config.measurement.timing.seconds_per_measurement_interval
     max_mainloop_time = round(max_calibration_time + max_measurement_time + 120)
 

@@ -4,8 +4,10 @@ import math
 import time
 from typing import Generator
 from src import custom_types, utils, hardware
+from contextlib import contextmanager
 
 
+@contextmanager
 def _ensure_section_duration(duration: float) -> Generator[None, None, None]:
     """Make sure that the duration of the section is at least
     the given duration.
@@ -41,14 +43,15 @@ class CalibrationProcedure:
             write_to_file=(not testing),
         )
         self.config = config
+        self.testing = testing
         self.hardware_interface = hardware_interface
         self.active_mqtt_queue = utils.ActiveMQTTQueue()
 
     def run(self) -> None:
+        calibration_time = datetime.utcnow().timestamp()
         self.logger.info(
             f"running calibration procedure at timestamp {calibration_time}"
         )
-        calibration_time = datetime.utcnow().timestamp()
         result = custom_types.CalibrationProcedureData(
             gases=self.config.calibration.gases, readings=[], timestamps=[]
         )
@@ -71,13 +74,15 @@ class CalibrationProcedure:
             )
             for _ in range(number_of_readings):
                 with _ensure_section_duration(6):
-                    timestamps.append(datetime.utcnow().timestamp())
+                    t1 = datetime.utcnow().timestamp()
                     gas_readings.append(
                         self.hardware_interface.co2_sensor.get_current_concentration()
                     )
+                    t2 = datetime.utcnow().timestamp()
+                    timestamps.append((t1 + t2) / 2)
 
             result.readings.append(gas_readings)
-            result.timestamps.append(gas_readings)
+            result.timestamps.append(timestamps)
 
         # start the calibration sampling, reset CO2 sensor to default filters
         self.hardware_interface.co2_sensor.stop_calibration_sampling()

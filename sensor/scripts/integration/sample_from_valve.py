@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Literal
 
 dir = os.path.dirname
 PROJECT_DIR = dir(dir(dir(os.path.abspath(__file__))))
@@ -12,7 +13,7 @@ pump = hardware.PumpInterface(config)
 pump.set_desired_pump_speed(unit="rps", value=30)
 
 valves = hardware.ValveInterface(config)
-valve_no = int(input("Enter valve number: "))
+valve_no: Literal[1, 2, 3, 4] = int(input("Enter valve number: "))  # type:ignore
 assert valve_no in [1, 2, 3, 4]
 valves.set_active_input(valve_no)
 

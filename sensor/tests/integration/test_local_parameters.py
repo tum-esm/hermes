@@ -33,24 +33,6 @@ def test_local_config() -> None:
         "config.measurement.pumped_litres_per_minute is above the maximum "
         + f"of {max_litres_per_minute} litres per minute"
     )
-    assert (
-        config.calibration.flushing.pumped_litres_per_minute <= max_litres_per_minute
-    ), (
-        "config.calibration.flushing.pumped_litres_per_minut is above the maximum "
-        + f"of {max_litres_per_minute} litres per minute"
-    )
-    assert (
-        config.calibration.sampling.pumped_litres_per_minute <= max_litres_per_minute
-    ), (
-        "config.calibration.sampling.pumped_litres_per_minut is above the maximum "
-        + f"of {max_litres_per_minute} litres per minute"
-    )
-    assert (
-        config.calibration.cleaning.pumped_litres_per_minute <= max_litres_per_minute
-    ), (
-        "config.calibration.cleaning.pumped_litres_per_minut is above the maximum "
-        + f"of {max_litres_per_minute} litres per minute"
-    )
 
     # check valve numbers
     valve_numbers = [ai.valve_number for ai in config.measurement.air_inlets] + [
