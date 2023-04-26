@@ -25,8 +25,17 @@ class WindSensorInterface:
         """raised when the wind sensor either reports
         low voltage or has not sent any data in a while"""
 
-    def __init__(self, config: custom_types.Config) -> None:
-        self.logger, self.config = utils.Logger(origin="wind-sensor"), config
+    def __init__(
+        self,
+        config: custom_types.Config,
+        testing: bool = False,
+    ) -> None:
+        self.logger = utils.Logger(
+            origin="wind-sensor",
+            print_to_console=testing,
+            write_to_file=(not testing),
+        )
+        self.config = config
         self.logger.info("Starting initialization")
 
         # power pin to power up/down wind sensor

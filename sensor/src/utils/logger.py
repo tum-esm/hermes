@@ -44,9 +44,11 @@ class Logger:
         self,
         origin: str = "insert-name-here",
         print_to_console: bool = False,
+        write_to_file: bool = True,
     ) -> None:
         self.origin: str = origin
         self.print_to_console = print_to_console
+        self.write_to_file = write_to_file
         self.active_mqtt_queue = ActiveMQTTQueue()
 
     def horizontal_line(self, fill_char: Literal["-", "=", ".", "_"] = "=") -> None:
@@ -190,7 +192,7 @@ class Logger:
         )
         if self.print_to_console:
             print(log_string, end="")
-        else:
+        if self.write_to_file:
             with open(LOG_FILE, "a") as f1:
                 f1.write(log_string)
 

@@ -25,8 +25,17 @@ class CO2SensorInterface:
     class DeviceFailure(Exception):
         """raised when the CO2 probe "errs" command responds with an error"""
 
-    def __init__(self, config: custom_types.Config) -> None:
-        self.logger, self.config = utils.Logger(origin="co2-sensor"), config
+    def __init__(
+        self,
+        config: custom_types.Config,
+        testing: bool = False,
+    ) -> None:
+        self.logger = utils.Logger(
+            origin="co2-sensor",
+            print_to_console=testing,
+            write_to_file=(not testing),
+        )
+        self.config = config
         self.logger.info("Starting initialization")
         self.last_powerup_time: float = time.time()
 

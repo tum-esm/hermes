@@ -36,7 +36,9 @@ class CalibrationProcedure:
         testing: bool = False,
     ) -> None:
         self.logger = utils.Logger(
-            origin="calibration-procedure", print_to_console=testing
+            origin="calibration-procedure",
+            print_to_console=testing,
+            write_to_file=(not testing),
         )
         self.config = config
         self.hardware_interface = hardware_interface

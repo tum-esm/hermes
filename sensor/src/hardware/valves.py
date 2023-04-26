@@ -10,8 +10,17 @@ VALVE_PIN_4_OUT = 22
 
 
 class ValveInterface:
-    def __init__(self, config: custom_types.Config) -> None:
-        self.logger, self.config = utils.Logger("valves"), config
+    def __init__(
+        self,
+        config: custom_types.Config,
+        testing: bool = False,
+    ) -> None:
+        self.logger = utils.Logger(
+            origin="valves",
+            print_to_console=testing,
+            write_to_file=(not testing),
+        )
+        self.config = config
         self.logger.info("Starting initialization")
 
         # set up valve control pin connections

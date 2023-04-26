@@ -7,8 +7,17 @@ UPS_ALARM_PIN_IN = 7
 
 
 class UPSInterface:
-    def __init__(self, config: custom_types.Config):
-        self.logger, self.config = utils.Logger("ups"), config
+    def __init__(
+        self,
+        config: custom_types.Config,
+        testing: bool = False,
+    ):
+        self.logger = utils.Logger(
+            origin="ups",
+            print_to_console=testing,
+            write_to_file=(not testing),
+        )
+        self.config = config
         self.logger.info("Starting initialization")
 
         # use underlying pigpio library

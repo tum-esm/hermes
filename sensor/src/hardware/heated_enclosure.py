@@ -19,8 +19,17 @@ class HeatedEnclosureInterface:
         """raised when the arduino either didn't answer for a while
         or when the code could not be uploaded to the device"""
 
-    def __init__(self, config: custom_types.Config) -> None:
-        self.logger, self.config = utils.Logger(origin="heated-enclosure"), config
+    def __init__(
+        self,
+        config: custom_types.Config,
+        testing: bool = False,
+    ) -> None:
+        self.logger = utils.Logger(
+            origin="heated-enclosure",
+            print_to_console=testing,
+            write_to_file=(not testing),
+        )
+        self.config = config
         self.logger.debug("Starting initialization")
 
         self.logger.debug("Finding arduino port")

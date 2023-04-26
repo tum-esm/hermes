@@ -22,30 +22,43 @@ class HardwareInterface:
         """raise when trying to use the hardware but it
         is used by another process"""
 
-    def __init__(self, config: custom_types.Config) -> None:
+    def __init__(
+        self,
+        config: custom_types.Config,
+        testing: bool = False,
+    ) -> None:
         self.config = config
-        self.logger = utils.Logger("hardware-interface")
+        self.logger = utils.Logger(
+            "hardware-interface",
+            print_to_console=testing,
+            write_to_file=(not testing),
+        )
+        self.testing = testing
         self.acquire_hardare_lock()
 
         # measurement sensors
         self.air_inlet_bme280_sensor = BME280SensorInterface(
-            config, variant="air inlet"
+            config, variant="air inlet", testing=self.testing
         )
-        self.air_inlet_sht45_sensor = SHT45SensorInterface(config)
-        self.co2_sensor = CO2SensorInterface(config)
-        self.wind_sensor = WindSensorInterface(config)
+        self.air_inlet_sht45_sensor = SHT45SensorInterface(config, testing=self.testing)
+        self.co2_sensor = CO2SensorInterface(config, testing=self.testing)
+        self.wind_sensor = WindSensorInterface(config, testing=self.testing)
 
         # measurement actors
-        self.pump = PumpInterface(config)
-        self.valves = ValveInterface(config)
+        self.pump = PumpInterface(config, testing=self.testing)
+        self.valves = ValveInterface(config, testing=self.testing)
 
         # enclosure controls
-        self.mainboard_sensor = BME280SensorInterface(config, variant="mainboard")
-        self.ups = UPSInterface(config)
+        self.mainboard_sensor = BME280SensorInterface(
+            config, variant="mainboard", testing=self.testing
+        )
+        self.ups = UPSInterface(config, testing=self.testing)
 
         # heated enclosure communication with repairing
         # routine is running in a separate thread
-        if self.config.active_components.heated_enclosure_communication:
+        if (
+            not self.testing
+        ) and self.config.active_components.heated_enclosure_communication:
             HeatedEnclosureThread.init(config)
         else:
             self.logger.debug("skipping heated enclosure communication")
@@ -93,20 +106,28 @@ class HardwareInterface:
 
         # measurement sensors
         self.air_inlet_bme280_sensor = BME280SensorInterface(
-            config, variant="air inlet"
+            config, variant="air inlet", testing=self.testing
         )
-        self.air_inlet_sht45_sensor = SHT45SensorInterface(config)
-        self.co2_sensor = CO2SensorInterface(config)
-        self.wind_sensor = WindSensorInterface(config)
+        self.air_inlet_sht45_sensor = SHT45SensorInterface(config, testing=self.testing)
+        self.co2_sensor = CO2SensorInterface(config, testing=self.testing)
+        self.wind_sensor = WindSensorInterface(config, testing=self.testing)
 
         # measurement actors
-        self.pump = PumpInterface(config)
-        self.valves = ValveInterface(config)
+        self.pump = PumpInterface(config, testing=self.testing)
+        self.valves = ValveInterface(config, testing=self.testing)
 
         # enclosure controls
-        self.mainboard_sensor = BME280SensorInterface(config, variant="mainboard")
-        self.ups = UPSInterface(config)
-        HeatedEnclosureThread.init(config)
+        self.mainboard_sensor = BME280SensorInterface(
+            config, variant="mainboard", testing=self.testing
+        )
+        self.ups = UPSInterface(config, testing=self.testing)
+
+        if (
+            not self.testing
+        ) and self.config.active_components.heated_enclosure_communication:
+            HeatedEnclosureThread.init(config)
+        else:
+            self.logger.debug("skipping heated enclosure communication")
 
     def acquire_hardare_lock(self) -> None:
         """make sure that there is only one initialized hardware connection"""

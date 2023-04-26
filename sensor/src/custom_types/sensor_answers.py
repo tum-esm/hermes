@@ -25,6 +25,7 @@ class CO2SensorData(BaseModel):
 class CalibrationProcedureData(BaseModel):
     gases: list[CalibrationGasConfig]
     readings: list[list[CO2SensorData]]
+    timestamps: list[list[float]]
 
 
 class BME280SensorData(BaseModel):

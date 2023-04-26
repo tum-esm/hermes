@@ -9,8 +9,14 @@ class BME280SensorInterface:
         self,
         config: custom_types.Config,
         variant: Literal["mainboard", "air inlet"],
+        testing: bool = False,
     ) -> None:
-        self.logger, self.config = utils.Logger("mainboard-sensor"), config
+        self.logger = utils.Logger(
+            "mainboard-sensor",
+            print_to_console=testing,
+            write_to_file=(not testing),
+        )
+        self.config = config
         self.logger.info("Starting initialization")
 
         # set up connection to BME280 sensor
