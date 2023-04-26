@@ -2728,14 +2728,14 @@ files = [
 
 [[package]]
 name = "sqlfluff"
-version = "1.4.2"
+version = "2.0.7"
 description = "The SQL Linter for Humans"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "sqlfluff-1.4.2-py3-none-any.whl", hash = "sha256:e23dc5f709e16e7a9788f9f65c65f9ac8b9b564bb4437c4971d673969a99b0bd"},
-    {file = "sqlfluff-1.4.2.tar.gz", hash = "sha256:6182c8523b46b133bd4826462070fdcf72349e45906ad755813fb5b0f6cdcb4b"},
+    {file = "sqlfluff-2.0.7-py3-none-any.whl", hash = "sha256:0847bd888329ae45375724bed2ac8a4ab9d2ddc48331e98ec2de679d276de254"},
+    {file = "sqlfluff-2.0.7.tar.gz", hash = "sha256:c5349f1a8dc70a79a766a6cb0f84d3b73382c43b0abe76e33873d6eaffef1f84"},
 ]
 
 [package.dependencies]
@@ -2750,7 +2750,7 @@ pytest = "*"
 pyyaml = ">=5.1"
 regex = "*"
 tblib = "*"
-toml = "*"
+toml = {version = "*", markers = "python_version < \"3.11\""}
 tqdm = "*"
 typing-extensions = "*"
 
@@ -3180,4 +3180,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "3.10.8"
-content-hash = "8cd72bcbdbc549954614266cf505a33525f2565f700697ed82a39431892e8a34"
+content-hash = "964412ee556e98579bf497921c1103219a78962f689e82847837d6d0f03f7bdd"
