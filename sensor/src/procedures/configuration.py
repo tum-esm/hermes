@@ -81,9 +81,10 @@ class ConfigurationProcedure:
         new_revision = config_request.revision
         new_version = config_request.configuration.version
 
-        if self.config.revision == new_revision:
+        if self.config.revision >= new_revision:
             self.logger.info(
-                "received config has the same revision",
+                "received config revision is not newer",
+                details=f"received revision = {new_revision}, current revision = {self.config.revision}",
                 config=self.config,
             )
             return
