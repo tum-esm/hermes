@@ -244,11 +244,11 @@ async def listen(mqttc, dbpool):
                         payload = validator(**payload)
                     except pydantic.ValidationError:
                         logger.warning(f"[MQTT] Malformed message: {message.payload!r}")
-                    else:
-                        try:
-                            await handler(sensor_identifier, payload, dbpool)
-                        except Exception as e:  # pragma: no cover
-                            logger.error(e, exc_info=True)
-                        matched = True
+                        continue
+                    try:
+                        await handler(sensor_identifier, payload, dbpool)
+                    except Exception as e:  # pragma: no cover
+                        logger.error(e, exc_info=True)
+                    matched = True
             if not matched:
                 logger.warning(f"[MQTT] Failed to match topic: {message.topic}")

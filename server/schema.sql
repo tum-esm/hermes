@@ -51,7 +51,7 @@ CREATE TABLE configurations (
     creation_timestamp TIMESTAMPTZ NOT NULL,
     publication_timestamp TIMESTAMPTZ,
     acknowledgement_timestamp TIMESTAMPTZ,
-    ack_reception_timestamp TIMESTAMPTZ,
+    receipt_timestamp TIMESTAMPTZ,
     success BOOLEAN,
 
     -- Add more pre-defined values here (needed if we want to visualize them in the dashboard)

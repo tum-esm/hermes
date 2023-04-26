@@ -193,7 +193,7 @@ WHERE sessions.access_token_hash = ${access_token_hash};
 UPDATE configurations
 SET
     acknowledgement_timestamp = ${acknowledgement_timestamp},
-    ack_reception_timestamp = now(),
+    receipt_timestamp = now(),
     success = ${success}
 WHERE
     sensor_identifier = ${sensor_identifier}
