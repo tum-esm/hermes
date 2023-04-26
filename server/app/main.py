@@ -176,10 +176,12 @@ async def create_sensor(request):
                 raise errors.InternalServerError()
             revision = database.dictify(result)[0]["revision"]
     # Send MQTT message with configuration
-    await mqttc.publish_configuration(
+    await mqtt.publish_configuration(
         sensor_identifier=sensor_identifier,
         revision=revision,
         configuration=request.body.configuration,
+        mqttc=mqttc,
+        dbpool=dbpool,
     )
     # Return successful response
     return starlette.responses.JSONResponse(
@@ -241,10 +243,12 @@ async def update_sensor(request):
                 raise errors.InternalServerError()
             revision = database.dictify(result)[0]["revision"]
     # Send MQTT message with configuration
-    await mqttc.publish_configuration(
+    await mqtt.publish_configuration(
         sensor_identifier=request.path.sensor_identifier,
         revision=revision,
         configuration=request.body.configuration,
+        mqttc=mqttc,
+        dbpool=dbpool,
     )
     # Return successful response
     return starlette.responses.JSONResponse(
