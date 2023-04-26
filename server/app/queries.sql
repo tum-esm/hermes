@@ -9,7 +9,7 @@ SELECT
     max(creation_timestamp) as max_creation_timestamp,
     count(*) as count
 FROM logs
-WHERE sensor_identifier = {sensor_identifier} AND severity = ANY(ARRAY['warning', 'error'])
+WHERE sensor_identifier = ${sensor_identifier} AND severity = ANY(ARRAY['warning', 'error'])
 GROUP BY sensor_identifier, severity, subject;
 
 
@@ -33,7 +33,7 @@ SELECT
 FROM networks
 JOIN sensors USING (network_identifier)
 LEFT JOIN aggregation USING (sensor_identifier)
-WHERE network_identifier = {network_identifier}
+WHERE network_identifier = ${network_identifier};
 
 
 -- name: create-configuration
@@ -44,10 +44,10 @@ INSERT INTO configurations (
     configuration
 )
 VALUES (
-    {sensor_identifier},
-    (SELECT COALESCE(MAX(revision) + 1, 0) FROM configurations WHERE sensor_identifier = {sensor_identifier}),
+    ${sensor_identifier},
+    (SELECT COALESCE(MAX(revision) + 1, 0) FROM configurations WHERE sensor_identifier = ${sensor_identifier}),
     now(),
-    {configuration}
+    ${configuration}
 )
 RETURNING revision;
 
@@ -64,14 +64,14 @@ INSERT INTO logs (
     details
 )
 VALUES (
-    {sensor_identifier},
-    {revision},
-    {creation_timestamp},
+    ${sensor_identifier},
+    ${revision},
+    ${creation_timestamp},
     now(),
-    {position_in_transmission},
-    {severity},
-    {subject},
-    {details}
+    ${position_in_transmission},
+    ${severity},
+    ${subject},
+    ${details}
 )
 ON CONFLICT (sensor_identifier, creation_timestamp) DO NOTHING;
 
@@ -86,12 +86,12 @@ INSERT INTO measurements (
     measurement
 )
 VALUES (
-    {sensor_identifier},
-    {revision},
-    {creation_timestamp},
+    ${sensor_identifier},
+    ${revision},
+    ${creation_timestamp},
     now(),
-    {position_in_transmission},
-    {measurement}
+    ${position_in_transmission},
+    ${measurement}
 )
 ON CONFLICT (sensor_identifier, creation_timestamp) DO NOTHING;
 
@@ -105,8 +105,8 @@ INSERT INTO sensors (
 )
 VALUES (
     uuid_generate_v4(),
-    {sensor_name},
-    {network_identifier},
+    ${sensor_name},
+    ${network_identifier},
     now()
 )
 RETURNING sensor_identifier;
@@ -119,10 +119,10 @@ INSERT INTO sessions (
     creation_timestamp
 )
 VALUES (
-    {access_token_hash},
-    {user_identifier},
+    ${access_token_hash},
+    ${user_identifier},
     now()
-)
+);
 
 
 -- name: create-user
@@ -134,9 +134,9 @@ INSERT INTO users (
 )
 VALUES (
     uuid_generate_v4(),
-    {username},
+    ${username},
     now(),
-    {password_hash}
+    ${password_hash}
 )
 RETURNING user_identifier;
 
@@ -148,11 +148,11 @@ SELECT
     measurement
 FROM measurements
 WHERE
-    sensor_identifier = {sensor_identifier}
+    sensor_identifier = ${sensor_identifier}
     AND (
         CASE
-            WHEN {direction} = 'next' THEN creation_timestamp > {creation_timestamp}
-            WHEN {direction} = 'previous' THEN creation_timestamp < {creation_timestamp}
+            WHEN ${direction} = 'next' THEN creation_timestamp > ${creation_timestamp}
+            WHEN ${direction} = 'previous' THEN creation_timestamp < ${creation_timestamp}
             ELSE TRUE
         END
     )
@@ -163,25 +163,25 @@ LIMIT 64;
 -- name: read-user
 SELECT user_identifier, password_hash
 FROM users
-WHERE username = {username};
+WHERE username = ${username};
 
 
 -- name: read-permissions
 SELECT user_identifier, network_identifier  -- TODO: return role/level as well
 FROM sessions
 LEFT JOIN permissions USING (user_identifier)
-WHERE access_token_hash = {access_token_hash}
+WHERE access_token_hash = ${access_token_hash};
 
 
 -- name: update-configuration-on-acknowledgement
 UPDATE configurations
 SET
-    acknowledgement_timestamp = {acknowledgement_timestamp},
+    acknowledgement_timestamp = ${acknowledgement_timestamp},
     ack_reception_timestamp = now(),
-    success = {success}
+    success = ${success}
 WHERE
-    sensor_identifier = {sensor_identifier}
-    AND revision = {revision}
+    sensor_identifier = ${sensor_identifier}
+    AND revision = ${revision}
     AND acknowledgement_timestamp IS NULL;
 
 
@@ -189,13 +189,13 @@ WHERE
 UPDATE configurations
 SET publication_timestamp = now()
 WHERE
-    sensor_identifier = {sensor_identifier}
-    AND revision = {revision}
+    sensor_identifier = ${sensor_identifier}
+    AND revision = ${revision}
     AND publication_timestamp IS NULL;
 
 
 -- name: update-sensor
 -- Update general sensor information that is not relayed to the sensor
 UPDATE sensors
-SET sensor_name = {sensor_name}
-WHERE sensor_identifier = {sensor_identifier};
+SET sensor_name = ${sensor_name}
+WHERE sensor_identifier = ${sensor_identifier};

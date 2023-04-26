@@ -25,7 +25,6 @@ queries = prepare()
 def parametrize(query, arguments):
     """Parametrize query and translate named parameters into valid PostgreSQL.
 
-    TODO change named parameters so they're compatible with sqlfluff? (:param?)
     TODO not only remove unused arguments, but fill missing ones with NULL
     """
     query = queries[query]
@@ -34,9 +33,9 @@ def parametrize(query, arguments):
         arguments.keys() if isinstance(arguments, dict) else arguments[0].keys()
     )
     # Remove keys that are not used in the query template
-    keys = [key for key in keys if f"{{{key}}}" in query]
+    keys = [key for key in keys if f"${{{key}}}" in query]
     # Replace named arguments with native numbered arguments
-    query = query.format_map({key: f"${index + 1}" for index, key in enumerate(keys)})
+    query = query.format_map({key: str(index + 1) for index, key in enumerate(keys)})
     # Build the tuple (or list of tuples) of arguments
     arguments = (
         tuple(arguments[key] for key in keys)
