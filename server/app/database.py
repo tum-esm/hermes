@@ -1,6 +1,7 @@
 import contextlib
 import json
 import os
+import string
 
 import asyncpg
 import pendulum
@@ -9,6 +10,7 @@ import app.settings as settings
 
 
 def prepare():
+    """Load SQL queries from queries.sql."""
     with open(os.path.join(os.path.dirname(__file__), "queries.sql"), "r") as file:
         statements = file.read().split("\n\n\n")
         # Validate format
@@ -23,25 +25,22 @@ def prepare():
 queries = prepare()
 
 
-def parametrize(query, arguments):
-    """Parametrize query and translate named parameters into valid PostgreSQL.
-
-    TODO not only remove unused arguments, but fill missing ones with NULL
-    """
-    query = queries[query]
-    # Get the names of the query arguments in some fixed order
-    keys = list(
-        arguments.keys() if isinstance(arguments, dict) else arguments[0].keys()
-    )
-    # Remove keys that are not used in the query template
-    keys = [key for key in keys if f"${{{key}}}" in query]
+def parametrize(identifier, arguments):
+    """Return the query and translate named arguments into valid PostgreSQL."""
+    template = string.Template(queries[identifier])
+    single = isinstance(arguments, dict)
+    # Get a list of the query argument names from the template
+    keys = template.get_identifiers()
+    # Raise an error if unknown arguments are passed
+    if diff := set(arguments.keys() if single else arguments[0].keys()) - set(keys):
+        raise ValueError(f"Unknown query arguments: {diff}")
     # Replace named arguments with native numbered arguments
-    query = query.format_map({key: str(index + 1) for index, key in enumerate(keys)})
-    # Build the tuple (or list of tuples) of arguments
+    query = template.substitute({key: f"${i+1}" for i, key in enumerate(keys)})
+    # Build argument tuple and fill missing arguments with None
     arguments = (
-        tuple(arguments[key] for key in keys)
-        if isinstance(arguments, dict)
-        else [tuple(x[key] for key in keys) for x in arguments]
+        tuple(arguments.get(key) for key in keys)
+        if single
+        else [tuple(x.get(key) for key in keys) for x in arguments]
     )
     return query, arguments
 

@@ -42,7 +42,7 @@ async def create_user(request):
         async with connection.transaction():
             # Create new user
             query, arguments = database.parametrize(
-                query="create-user",
+                identifier="create-user",
                 arguments={
                     "username": request.body.username,
                     "password_hash": password_hash,
@@ -61,7 +61,7 @@ async def create_user(request):
             user_identifier = database.dictify(result)[0]["user_identifier"]
             # Create new session
             query, arguments = database.parametrize(
-                query="create-session",
+                identifier="create-session",
                 arguments={
                     "access_token_hash": access_token_hash,
                     "user_identifier": user_identifier,
@@ -84,7 +84,7 @@ async def create_session(request):
     """Authenticate a user from username and password and return access token."""
     # Read user
     query, arguments = database.parametrize(
-        query="read-user", arguments={"username": request.body.username}
+        identifier="read-user", arguments={"username": request.body.username}
     )
     try:
         result = await dbpool.fetch(query, *arguments)
@@ -104,7 +104,7 @@ async def create_session(request):
     access_token = auth.generate_token()
     # Create new session
     query, arguments = database.parametrize(
-        query="create-session",
+        identifier="create-session",
         arguments={
             "access_token_hash": auth.hash_token(access_token),
             "user_identifier": user_identifier,
@@ -134,7 +134,7 @@ async def create_sensor(request):
         async with connection.transaction():
             # Create new sensor
             query, arguments = database.parametrize(
-                query="create-sensor",
+                identifier="create-sensor",
                 arguments={
                     "sensor_name": request.body.sensor_name,
                     "network_identifier": request.body.network_identifier,
@@ -156,7 +156,7 @@ async def create_sensor(request):
             sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
             # Create new configuration
             query, arguments = database.parametrize(
-                query="create-configuration",
+                identifier="create-configuration",
                 arguments={
                     "sensor_identifier": sensor_identifier,
                     "configuration": request.body.configuration,
@@ -200,7 +200,7 @@ async def update_sensor(request):
         async with connection.transaction():
             # Update sensor
             query, arguments = database.parametrize(
-                query="update-sensor",
+                identifier="update-sensor",
                 arguments={
                     "sensor_identifier": request.path.sensor_identifier,
                     "sensor_name": request.body.sensor_name,
@@ -221,7 +221,7 @@ async def update_sensor(request):
                 raise errors.NotFoundError()
             # Create new configuration
             query, arguments = database.parametrize(
-                query="create-configuration",
+                identifier="create-configuration",
                 arguments={
                     "sensor_identifier": request.path.sensor_identifier,
                     "configuration": request.body.configuration,
@@ -272,7 +272,7 @@ async def read_measurements(request):
     - use status code 206 for partial content?
     """
     query, arguments = database.parametrize(
-        query="read-measurements",
+        identifier="read-measurements",
         arguments={
             "sensor_identifier": request.path.sensor_identifier,
             "direction": request.query.direction,
@@ -295,7 +295,7 @@ async def read_measurements(request):
 async def read_log_message_aggregates(request):
     """Return aggregation of sensor log messages."""
     query, arguments = database.parametrize(
-        query="aggregate-logs",
+        identifier="aggregate-logs",
         arguments={"sensor_identifier": request.path.sensor_identifier},
     )
     try:
@@ -331,7 +331,7 @@ async def stream_network(request):
     async def stream(request):
         while True:
             query, arguments = database.parametrize(
-                query="aggregate-network",
+                identifier="aggregate-network",
                 arguments={
                     "network_identifier": request.path.network_identifier,
                 },

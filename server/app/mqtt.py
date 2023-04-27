@@ -52,7 +52,7 @@ async def publish_configuration(
     async def helper(sensor_identifier, revision, configuration):
         backoff = 1
         query, arguments = database.parametrize(
-            query="update-configuration-on-publication",
+            identifier="update-configuration-on-publication",
             arguments={
                 "sensor_identifier": sensor_identifier,
                 "revision": revision,
@@ -112,7 +112,7 @@ async def _handle_heartbeats(sensor_identifier, payload, dbpool):
             async with connection.transaction():
                 # Write heartbeat as log in the database
                 query, arguments = database.parametrize(
-                    query="create-log",
+                    identifier="create-log",
                     arguments={
                         "sensor_identifier": sensor_identifier,
                         "revision": heartbeat.revision,
@@ -130,11 +130,12 @@ async def _handle_heartbeats(sensor_identifier, payload, dbpool):
                         "[MQTT] Failed to handle; Sensor not found:"
                         f" {sensor_identifier}"
                     )
+                    break
                 except Exception as e:  # pragma: no cover
                     logger.error(e, exc_info=True)
                 # Update configuration in the database
                 query, arguments = database.parametrize(
-                    query="update-configuration-on-acknowledgement",
+                    identifier="update-configuration-on-acknowledgement",
                     arguments={
                         "sensor_identifier": sensor_identifier,
                         "revision": heartbeat.revision,
@@ -151,7 +152,7 @@ async def _handle_heartbeats(sensor_identifier, payload, dbpool):
 
 async def _handle_logs(sensor_identifier, payload, dbpool):
     query, arguments = database.parametrize(
-        query="create-log",
+        identifier="create-log",
         arguments=[
             {
                 "sensor_identifier": sensor_identifier,
@@ -177,7 +178,7 @@ async def _handle_logs(sensor_identifier, payload, dbpool):
 
 async def _handle_measurements(sensor_identifier, payload, dbpool):
     query, arguments = database.parametrize(
-        query="create-measurement",
+        identifier="create-measurement",
         arguments=[
             {
                 "sensor_identifier": sensor_identifier,
@@ -242,13 +243,13 @@ async def listen(mqttc, dbpool):
                 if message.topic.matches(wildcard):
                     try:
                         payload = validator(**payload)
+                        await handler(sensor_identifier, payload, dbpool)
                     except pydantic.ValidationError:
                         logger.warning(f"[MQTT] Malformed message: {message.payload!r}")
                         continue
-                    try:
-                        await handler(sensor_identifier, payload, dbpool)
                     except Exception as e:  # pragma: no cover
                         logger.error(e, exc_info=True)
+                        continue
                     matched = True
             if not matched:
                 logger.warning(f"[MQTT] Failed to match topic: {message.topic}")

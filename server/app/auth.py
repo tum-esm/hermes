@@ -60,7 +60,7 @@ async def authenticate(request, dbpool):
     # Check if access token is valid and read permissions
     try:
         query, arguments = database.parametrize(
-            query="read-permissions",
+            identifier="read-permissions",
             arguments={"access_token_hash": hash_token(access_token)},
         )
         result = await dbpool.fetch(query, *arguments)
