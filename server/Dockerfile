@@ -1,10 +1,10 @@
-FROM python:3.10.8-slim
+FROM python:3.11.0-slim
 
 LABEL maintainer="Felix Böhm <felix@felixboehm.dev>"
 LABEL source="https://github.com/tum-esm/insert-name-here"
 
 # Install poetry
-ENV POETRY_VERSION=1.3.1 \
+ENV POETRY_VERSION=1.4.2 \
     POETRY_HOME=/opt/poetry
 RUN python -m venv $POETRY_HOME && \
     $POETRY_HOME/bin/pip install poetry==${POETRY_VERSION}
