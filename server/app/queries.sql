@@ -33,10 +33,10 @@ SELECT
     sensor_identifier,
     sensors.sensor_name,
     coalesce(
-        aggregation.bucket_timestamps, ARRAY[]::TIMESTAMPTZ[]
+        aggregation.bucket_timestamps, ARRAY[]::TIMESTAMPTZ []
     ) AS bucket_timestamps,
     coalesce(
-        aggregation.measurements_counts, ARRAY[]::INT[]
+        aggregation.measurements_counts, ARRAY[]::INT []
     ) AS measurements_counts
 FROM networks
 INNER JOIN sensors USING (network_identifier)

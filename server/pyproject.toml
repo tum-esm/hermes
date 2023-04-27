@@ -18,11 +18,11 @@ pendulum = "^2.1.2"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-jupyterlab = "^3.4.7"
-black = "^22.10.0"
+jupyterlab = "^3.6.3"
+black = "^23.3.0"
 sqlfluff = "^2.0.7"
-httpx = "^0.23.0"
-ruff = "^0.0.124"
+httpx = "^0.24.0"
+ruff = "^0.0.263"
 pytest = "^7.2.0"
 pytest-cov = "^4.0.0"
 anyio = "^3.6.2"
@@ -34,9 +34,9 @@ preview = true
 
 [tool.ruff]
 line-length = 88
-select = ["E", "F", "I"]
+select = ["E", "W", "F", "I"]
 ignore = []
-target-version = "py310"
+target-version = "py311"
 
 [tool.mypy]
 show_error_codes = true
