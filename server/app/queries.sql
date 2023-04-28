@@ -161,7 +161,36 @@ FROM measurements
 WHERE
     sensor_identifier = ${sensor_identifier}
     AND CASE
-        WHEN ${creation_timestamp} IS NOT NULL
+        WHEN ${creation_timestamp}::TIMESTAMPTZ IS NOT NULL
+            THEN (
+                CASE
+                    WHEN ${direction} = 'next'
+                        THEN creation_timestamp > ${creation_timestamp}
+                    WHEN ${direction} = 'previous'
+                        THEN creation_timestamp < ${creation_timestamp}
+                    ELSE TRUE
+                END
+            )
+        ELSE TRUE
+    END
+ORDER BY
+    CASE WHEN ${direction} = 'next' THEN creation_timestamp END ASC,
+    CASE WHEN ${direction} = 'previous' THEN creation_timestamp END DESC
+LIMIT 64;
+
+
+-- name: read-logs
+SELECT
+    revision,
+    creation_timestamp,
+    severity,
+    subject,
+    details
+FROM logs
+WHERE
+    sensor_identifier = ${sensor_identifier}
+    AND CASE
+        WHEN ${creation_timestamp}::TIMESTAMPTZ IS NOT NULL
             THEN (
                 CASE
                     WHEN ${direction} = 'next'

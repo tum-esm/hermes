@@ -38,6 +38,9 @@ select = ["E", "W", "F", "I"]
 ignore = []
 target-version = "py311"
 
+[tool.ruff.isort]
+lines-after-imports = 2
+
 [tool.mypy]
 show_error_codes = true
 no_implicit_optional = true

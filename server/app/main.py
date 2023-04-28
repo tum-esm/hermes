@@ -258,25 +258,20 @@ async def read_sensors(request):
 
 @validation.validate(schema=validation.ReadMeasurementsRequest)
 async def read_measurements(request):
-    """Return pages of measurements sorted ascending by creation timestamp.
+    """Return pages of measurements sorted ascendingly by creation timestamp.
 
-    When no query parameters are given, the latest N measurements are returned. When
-    direction and creation_timestamp are given, the next/previous N measurements based
-    on the given timestamp are returned.
-
-    - maybe we can choose based on some header, if we page or export the data
-    - for export, we can also offer start/end timestamps parameters
-    - we should also be able to choose multiple sensors to return the data for
-    -> it's probably best to have a separate endpoint for export
-
-    - use status code 206 for partial content?
+    The query parameter `creation_timestamp` defines the base timestamp for the query.
+    Depending on the value of the query parameter `direction`, the request returns
+    the "next" or "previous" N records. If `direction` is not set, it defaults to
+    "next". If `creation_timestamp` is not set, the request returns the first N records
+    if `direction` is "next" and the latest N records if `direction` is "previous".
     """
     query, arguments = database.parametrize(
         identifier="read-measurements",
         arguments={
             "sensor_identifier": request.path.sensor_identifier,
-            "direction": request.query.direction,
             "creation_timestamp": request.query.creation_timestamp,
+            "direction": request.query.direction,
         },
     )
     try:
@@ -287,7 +282,41 @@ async def read_measurements(request):
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=200,
-        content=database.dictify(result)[::-1],
+        content=database.dictify(
+            result if request.query.direction == "next" else result[::-1]
+        ),
+    )
+
+
+@validation.validate(schema=validation.ReadLogsRequest)
+async def read_logs(request):
+    """Return pages of logs sorted ascendingly by creation timestamp.
+
+    The query parameter `creation_timestamp` defines the base timestamp for the query.
+    Depending on the value of the query parameter `direction`, the request returns
+    the "next" or "previous" N records. If `direction` is not set, it defaults to
+    "next". If `creation_timestamp` is not set, the request returns the first N records
+    if `direction` is "next" and the latest N records if `direction` is "previous".
+    """
+    query, arguments = database.parametrize(
+        identifier="read-logs",
+        arguments={
+            "sensor_identifier": request.path.sensor_identifier,
+            "creation_timestamp": request.query.creation_timestamp,
+            "direction": request.query.direction,
+        },
+    )
+    try:
+        result = await dbpool.fetch(query, *arguments)
+    except Exception as e:  # pragma: no cover
+        logger.error(e, exc_info=True)
+        raise errors.InternalServerError()
+    # Return successful response
+    return starlette.responses.JSONResponse(
+        status_code=200,
+        content=database.dictify(
+            result if request.query.direction == "next" else result[::-1]
+        ),
     )
 
 
@@ -416,6 +445,11 @@ ROUTES = [
     starlette.routing.Route(
         path="/sensors/{sensor_identifier}/measurements",
         endpoint=read_measurements,
+        methods=["GET"],
+    ),
+    starlette.routing.Route(
+        path="/sensors/{sensor_identifier}/logs",
+        endpoint=read_logs,
         methods=["GET"],
     ),
     starlette.routing.Route(

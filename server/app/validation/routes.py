@@ -1,8 +1,6 @@
 import json
 import typing
 
-import pydantic
-
 import app.errors as errors
 import app.validation.types as types
 from app.logs import logger
@@ -73,6 +71,10 @@ class _ReadMeasurementsRequestPath(types._BaseModel):
     sensor_identifier: types.Identifier
 
 
+class _ReadLogsRequestPath(types._BaseModel):
+    sensor_identifier: types.Identifier
+
+
 class _ReadLogsAggregatesRequestPath(types._BaseModel):
     sensor_identifier: types.Identifier
 
@@ -108,17 +110,12 @@ class _UpdateSensorRequestQuery(types._BaseModel):
 
 class _ReadMeasurementsRequestQuery(types._BaseModel):
     creation_timestamp: types.Timestamp = None
-    direction: typing.Literal[None, "previous", "next"] = None
+    direction: typing.Literal["next", "previous"] = "next"
 
-    @pydantic.validator("direction", always=True)
-    def check_exists(cls, v, values, field):
-        if (values.get("creation_timestamp") is None and v is not None) or (
-            values.get("creation_timestamp") is not None and v is None
-        ):
-            raise ValueError(
-                "Must provide both 'creation_timestamp' and 'direction' or neither"
-            )
-        return v
+
+class _ReadLogsRequestQuery(types._BaseModel):
+    creation_timestamp: types.Timestamp = None
+    direction: typing.Literal["next", "previous"] = "next"
 
 
 class _ReadLogsAggregatesRequestQuery(types._BaseModel):
@@ -160,6 +157,10 @@ class _UpdateSensorRequestBody(types._BaseModel):
 
 
 class _ReadMeasurementsRequestBody(types._BaseModel):
+    pass
+
+
+class _ReadLogsRequestBody(types._BaseModel):
     pass
 
 
@@ -225,6 +226,15 @@ class ReadMeasurementsRequest(types._BaseModel):
     path: _ReadMeasurementsRequestPath
     query: _ReadMeasurementsRequestQuery
     body: _ReadMeasurementsRequestBody
+
+
+class ReadLogsRequest(types._BaseModel):
+    method: str
+    url: object
+    headers: dict
+    path: _ReadLogsRequestPath
+    query: _ReadLogsRequestQuery
+    body: _ReadLogsRequestBody
 
 
 class ReadLogsAggregatesRequest(types._BaseModel):

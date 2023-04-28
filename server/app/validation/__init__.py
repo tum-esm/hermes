@@ -4,12 +4,14 @@ from app.validation.routes import (
     CreateSessionRequest,
     CreateUserRequest,
     ReadLogsAggregatesRequest,
+    ReadLogsRequest,
     ReadMeasurementsRequest,
     ReadStatusRequest,
     StreamNetworkRequest,
     UpdateSensorRequest,
     validate,
 )
+
 
 __all__ = [
     "HeartbeatsMessage",
@@ -19,6 +21,7 @@ __all__ = [
     "CreateUserRequest",
     "CreateSessionRequest",
     "ReadLogsAggregatesRequest",
+    "ReadLogsRequest",
     "ReadMeasurementsRequest",
     "ReadStatusRequest",
     "StreamNetworkRequest",
