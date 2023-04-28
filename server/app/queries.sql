@@ -154,20 +154,28 @@ RETURNING user_identifier;
 
 -- name: read-measurements
 SELECT
-    sensor_identifier,
+    revision,
     creation_timestamp,
     measurement
 FROM measurements
 WHERE
     sensor_identifier = ${sensor_identifier}
-    AND (
-        CASE
-            WHEN ${direction} = 'next' THEN creation_timestamp > ${creation_timestamp}  -- noqa: L016
-            WHEN ${direction} = 'previous' THEN creation_timestamp < ${creation_timestamp}  -- noqa: L016
-            ELSE TRUE
-        END
-    )
-ORDER BY creation_timestamp DESC
+    AND CASE
+        WHEN ${creation_timestamp} IS NOT NULL
+            THEN (
+                CASE
+                    WHEN ${direction} = 'next'
+                        THEN creation_timestamp > ${creation_timestamp}
+                    WHEN ${direction} = 'previous'
+                        THEN creation_timestamp < ${creation_timestamp}
+                    ELSE TRUE
+                END
+            )
+        ELSE TRUE
+    END
+ORDER BY
+    CASE WHEN ${direction} = 'next' THEN creation_timestamp END ASC,
+    CASE WHEN ${direction} = 'previous' THEN creation_timestamp END DESC
 LIMIT 64;
 
 
