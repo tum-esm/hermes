@@ -122,19 +122,19 @@ httpx.put(
 
 **`GET /sensors/<sensor-identifier>/measurements`:**
 
-Read the measurements of a sensor in pages, optionally with keyset query parameters `direction` and `creation_timestamp`.
+Read the measurements of a sensor in pages, optionally with keyset query parameters `creation_timestamp` and `direction`.
 
 ```python
 httpx.get(
     url="http://localhost:8000/sensors/102ebc56-edb9-42be-aec0-15a6c1075c7e/measurements",
-    params={"direction": "next", "creation_timestamp": 1674677600.0},
+    params={"creation_timestamp": 1674677600.0, "direction": "next"},
 )
 ```
 
 ```javascript
 [
     {
-        "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
+        "revision": 0,
         "creation_timestamp": 1674677601.900101,
         "measurement": {
             "what": 42,
@@ -143,13 +143,43 @@ httpx.get(
         }
     },
     {
-        "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
+        "revision": 2,
         "creation_timestamp": 1674677604.365664,
         "measurement": {
             "what": 42,
             "tomorrow": true,
             "somewhere": 320
         }
+    }
+]
+```
+
+**`GET /sensors/<sensor-identifier>/measurements`:**
+
+Read the logs of a sensor in pages, optionally with keyset query parameters `creation_timestamp` and `direction`.
+
+```python
+httpx.get(
+    url="http://localhost:8000/sensors/102ebc56-edb9-42be-aec0-15a6c1075c7e/logs",
+    params={"creation_timestamp": 1674677600.0, "direction": "next"},
+)
+```
+
+```javascript
+[
+    {
+        "revision": 0,
+        "creation_timestamp": 1674677601.900101,
+        "severity": "warning",
+        "subject": "The CPU is pretty hot",
+        "details": null
+    },
+    {
+        "revision": 2,
+        "creation_timestamp": 1674677604.365664,
+        "severity": "error",
+        "subject": "The CPU is burning",
+        "details": "Please call the fire department"
     }
 ]
 ```
@@ -168,18 +198,18 @@ httpx.get(
 [
     {
         "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
-        "severity": "error",
-        "subject": "The CPU is burning",
+        "severity": "warning",
+        "subject": "The CPU is pretty hot",
         "min_revision": 0,
-        "max_revision": 2,
+        "max_revision": 1,
         "min_creation_timestamp": 1674678353.210926,
         "max_creation_timestamp": 1674678408.210929,
-        "count": 2
+        "count": 3
     },
     {
         "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
-        "severity": "warning",
-        "subject": "The CPU is pretty hot",
+        "severity": "error",
+        "subject": "The CPU is burning",
         "min_revision": 2,
         "max_revision": 2,
         "min_creation_timestamp": 1674678412.210929,
@@ -243,7 +273,7 @@ The payloads are JSON encoded and have the following structure:
   // the array structure allows to batch messages
   "log_messages": [
     {
-      "severity": "warning", // one of debug, info, warning, error
+      "severity": "error", // one of debug, info, warning, error
       "revision": 0,
       "timestamp": 0.0,
       "subject": "The CPU is burning",
