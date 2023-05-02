@@ -73,7 +73,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           console.error(`could not load sensor data for sensor id ${sensorId}`);
         });
 
-      fetch(`${SERVER_URL}/sensors/${sensorId}/logs`, {
+      fetch(`${SERVER_URL}/sensors/${sensorId}/logs?direction=previous`, {
         headers: {
           "Content-Type": "application/json",
         },

@@ -166,6 +166,37 @@ export default function Page({ sensorName }: { sensorName: string }) {
               ))}
           </Tab>
 
+          <Tab visible={tab == "logs"}>
+            {sensorState.logs
+              ?.sort((a, b) => b.creation_timestamp - a.creation_timestamp)
+              .map((log) => (
+                <Card
+                  key={log.creation_timestamp}
+                  title={
+                    <>
+                      <div
+                        className={
+                          "h-2 w-2 flex-shrink-0 rounded-sm " +
+                          (log.severity === "info"
+                            ? "bg-slate-300"
+                            : log.severity === "warning"
+                            ? "bg-yellow-500"
+                            : "bg-red-500")
+                        }
+                      />
+                      <div>
+                        {log.subject.length > 100
+                          ? `${log.subject.slice(0, 100)} ...`
+                          : log.subject}
+                      </div>
+                    </>
+                  }
+                  subtitle={renderTimeString(log.creation_timestamp)}
+                  bottom={log}
+                />
+              ))}
+          </Tab>
+
           <Tab visible={tab == "logs (aggregated)"}>
             {sensorState.aggregatedLogs
               ?.sort(
