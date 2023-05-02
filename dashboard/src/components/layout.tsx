@@ -48,12 +48,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     Object.values(SENSOR_IDS).forEach((sensorId) => {
       console.log(`start fetching data/logs for sensor id ${sensorId}`);
 
-      fetch(`${SERVER_URL}/sensors/${sensorId}/measurements`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        cache: "no-cache",
-      })
+      fetch(
+        `${SERVER_URL}/sensors/${sensorId}/measurements?direction=previous`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-cache",
+        }
+      )
         .then((res) => res?.json())
         .then((data) => {
           if (data === undefined) {
@@ -100,7 +103,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         />
         <meta property="og:image" content="/favicon.ico" />
       </Head>
-      <div className="flex h-screen w-screen items-center justify-center text-lg xl:hidden">
+      <div className="flex items-center justify-center w-screen h-screen text-lg xl:hidden">
         Please use a larger screen
       </div>
       <div className="hidden xl:block">
@@ -110,7 +113,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <SensorList />
           </nav>
           <div
-            className="h-full flex-grow overflow-y-scroll bg-slate-50 p-6 pb-32 "
+            className="flex-grow h-full p-6 pb-32 overflow-y-scroll bg-slate-50 "
             ref={pageDivRef}
           >
             {children}
