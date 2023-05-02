@@ -31,13 +31,13 @@ export function determinSensorStatus(
   // has data in last 30 minutes
   const hasData =
     sensor.data.filter(
-      (data) => data.creation_timestamp > Date.now() - 30 * 60 * 1000
+      (data) => data.creation_timestamp * 1000 > Date.now() - 1800000
     ).length > 0;
 
   // has logs in last 30 minutes
   const hasLogs =
     sensor.logs.filter(
-      (log) => log.creation_timestamp > Date.now() - 30 * 60 * 1000
+      (log) => log.creation_timestamp * 1000 > Date.now() - 1800000
     ).length > 0;
 
   if (hasData && !hasLogs) {
