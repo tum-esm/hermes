@@ -20,7 +20,11 @@ export function renderTimeString(time: number | undefined): string {
 export function determinSensorStatus(
   sensor: SensorState
 ): "online" | "unstable" | "error" | "offline" | undefined {
-  if (sensor.data === null || sensor.logs === null) {
+  if (
+    sensor.data === null ||
+    sensor.logs === null ||
+    sensor.aggregatedLogs === null
+  ) {
     return undefined;
   }
 
@@ -33,7 +37,7 @@ export function determinSensorStatus(
   // has logs in last 30 minutes
   const hasLogs =
     sensor.logs.filter(
-      (log) => log.max_creation_timestamp > Date.now() - 30 * 60 * 1000
+      (log) => log.creation_timestamp > Date.now() - 30 * 60 * 1000
     ).length > 0;
 
   if (hasData && !hasLogs) {

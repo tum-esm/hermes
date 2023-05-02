@@ -11,8 +11,11 @@ const RUBIK = Rubik({ subsets: ["latin"] });
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const setServerState = useServerStore((state) => state.setState);
-  const setSensorData = useNetworkStore((state) => state.setSensorData);
-  const setSensorLogs = useNetworkStore((state) => state.setSensorLogs);
+  const setSensorData = useNetworkStore((state) => state.setData);
+  const setSensorLogs = useNetworkStore((state) => state.setLogs);
+  const setSensorAggregatedLogs = useNetworkStore(
+    (state) => state.setAggregatedLogs
+  );
 
   const pathname = usePathname();
   const pageDivRef = useRef<HTMLDivElement>(null);
@@ -70,7 +73,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           console.error(`could not load sensor data for sensor id ${sensorId}`);
         });
 
-      fetch(`${SERVER_URL}/sensors/${sensorId}/logs/aggregates`, {
+      fetch(`${SERVER_URL}/sensors/${sensorId}/logs`, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -82,6 +85,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             throw "";
           } else {
             setSensorLogs(sensorId, data);
+            console.log(`loaded sensor logs for sensor id ${sensorId}`);
+          }
+        })
+        .catch((err) => {
+          console.error(`could not load sensor logs for sensor id ${sensorId}`);
+        });
+
+      fetch(`${SERVER_URL}/sensors/${sensorId}/logs/aggregates`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-cache",
+      })
+        .then((res) => res?.json())
+        .then((data) => {
+          if (data === undefined) {
+            throw "";
+          } else {
+            setSensorAggregatedLogs(sensorId, data);
             console.log(`loaded sensor logs for sensor id ${sensorId}`);
           }
         })

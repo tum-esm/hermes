@@ -19,8 +19,8 @@ function SensorListItem({ sensorName }: { sensorName: string }) {
   )?.creation_timestamp;
   const lastLogTime = maxBy(
     sensorState?.logs,
-    (log) => log.max_creation_timestamp
-  )?.max_creation_timestamp;
+    (log) => log.creation_timestamp
+  )?.creation_timestamp;
 
   const pathname = usePathname();
   const isSelected = pathname === `/sensor/${sensorName}`;
@@ -72,7 +72,7 @@ export function SensorList() {
         <Link
           key={sensorName}
           href={`/sensor/${sensorName}`}
-          className="group block border-b border-slate-100 last:border-none hover:bg-slate-50"
+          className="block border-b group border-slate-100 last:border-none hover:bg-slate-50"
         >
           <SensorListItem sensorName={sensorName} />
         </Link>

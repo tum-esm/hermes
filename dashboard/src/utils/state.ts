@@ -1,19 +1,41 @@
 import { SENSOR_IDS } from "@/src/utils/constants";
 import { create } from "zustand";
 
-type ServerState = {
-  state: null | {
+namespace StateObjects {
+  export type ServerStatus = {
     environment: string;
     commit_sha: string;
     branch_name: string;
     start_timestamp: number;
   };
-  setState: (newState: {
-    environment: string;
-    commit_sha: string;
-    branch_name: string;
-    start_timestamp: number;
-  }) => void;
+  export type SensorData = {
+    sensor_identifier: string;
+    creation_timestamp: number;
+    measurement: any;
+  };
+  export type SensorLog = {
+    revision: number;
+    creation_timestamp: number;
+    sensor_identifier: string;
+    severity: "error" | "warning" | "info";
+    subject: string;
+    details: string;
+  };
+  export type SensorAggregatedLog = {
+    sensor_identifier: string;
+    severity: "error" | "warning" | "info";
+    subject: string;
+    min_revision: number;
+    max_revision: number;
+    min_creation_timestamp: number;
+    max_creation_timestamp: number;
+    count: number;
+  };
+}
+
+type ServerState = {
+  state: null | StateObjects.ServerStatus;
+  setState: (newState: StateObjects.ServerStatus) => void;
 };
 
 export const useServerStore = create<ServerState>((set) => ({
@@ -23,49 +45,18 @@ export const useServerStore = create<ServerState>((set) => ({
 
 export type SensorState = {
   sensorId: string;
-  data:
-    | null
-    | {
-        sensor_identifier: string;
-        creation_timestamp: number;
-        measurement: any;
-      }[];
-  logs:
-    | null
-    | {
-        sensor_identifier: string;
-        severity: "error" | "warning" | "info";
-        subject: string;
-        min_revision: number;
-        max_revision: number;
-        min_creation_timestamp: number;
-        max_creation_timestamp: number;
-        count: number;
-      }[];
+  data: null | StateObjects.SensorData[];
+  logs: null | StateObjects.SensorLog[];
+  aggregatedLogs: null | StateObjects.SensorAggregatedLog[];
 };
 
 type NetworkState = {
   state: SensorState[];
-  setSensorData: (
+  setData: (sensorId: string, newData: StateObjects.SensorData[]) => void;
+  setLogs: (sensorId: string, newLogs: StateObjects.SensorLog[]) => void;
+  setAggregatedLogs: (
     sensorId: string,
-    newSensorData: {
-      sensor_identifier: string;
-      creation_timestamp: number;
-      measurement: any;
-    }[]
-  ) => void;
-  setSensorLogs: (
-    sensorId: string,
-    newSensorLogs: {
-      sensor_identifier: string;
-      severity: "error" | "warning" | "info";
-      subject: string;
-      min_revision: number;
-      max_revision: number;
-      min_creation_timestamp: number;
-      max_creation_timestamp: number;
-      count: number;
-    }[]
+    newAggregatedLogs: StateObjects.SensorAggregatedLog[]
   ) => void;
 };
 
@@ -74,25 +65,37 @@ export const useNetworkStore = create<NetworkState>((set) => ({
     sensorId: sensorId,
     data: null,
     logs: null,
+    aggregatedLogs: null,
   })),
-  setSensorData: (sensorId, newSensorData) =>
+  setData: (sensorId, newData) =>
     set((state) => ({
       state: state.state.map((sensor) =>
         sensor.sensorId === sensorId
           ? {
               ...sensor,
-              data: newSensorData,
+              data: newData,
             }
           : { ...sensor }
       ),
     })),
-  setSensorLogs: (sensorId, newSensorLogs) =>
+  setLogs: (sensorId, newLogs) =>
     set((state) => ({
       state: state.state.map((sensor) =>
         sensor.sensorId === sensorId
           ? {
               ...sensor,
-              logs: newSensorLogs,
+              logs: newLogs,
+            }
+          : { ...sensor }
+      ),
+    })),
+  setAggregatedLogs: (sensorId, newAggregatedLogs) =>
+    set((state) => ({
+      state: state.state.map((sensor) =>
+        sensor.sensorId === sensorId
+          ? {
+              ...sensor,
+              aggregatedLogs: newAggregatedLogs,
             }
           : { ...sensor }
       ),

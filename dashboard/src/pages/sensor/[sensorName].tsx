@@ -45,24 +45,24 @@ export default function Page({ sensorName }: { sensorName: string }) {
   )?.creation_timestamp;
   const lastLogTime = maxBy(
     sensorState?.logs,
-    (log) => log.max_creation_timestamp
-  )?.max_creation_timestamp;
+    (log) => log.creation_timestamp
+  )?.creation_timestamp;
 
   return (
     <>
       <Link
         href="/"
-        className="inline-flex flex-row items-center justify-center gap-x-1 p-1 text-sm font-medium text-slate-800 hover:text-rose-600"
+        className="inline-flex flex-row items-center justify-center p-1 text-sm font-medium gap-x-1 text-slate-800 hover:text-rose-600"
       >
         <div className="h-3.5 w-3.5 rotate-180">{ICONS.chevronRight}</div>
         <p>back to overview</p>
       </Link>
 
-      <h2 className="mt-3 px-4 text-2xl text-slate-800">
+      <h2 className="px-4 mt-3 text-2xl text-slate-800">
         <span className="font-semibold text-black">{sensorName}</span>
       </h2>
 
-      <div className="mb-4 mt-2 flex flex-col border-b border-slate-300 px-4 pb-4 text-base">
+      <div className="flex flex-col px-4 pb-4 mt-2 mb-4 text-base border-b border-slate-300">
         <div>
           <span className="inline-block w-24">Status:</span>
           {sensorStatus === undefined ? (
@@ -92,7 +92,7 @@ export default function Page({ sensorName }: { sensorName: string }) {
         </div>
       </div>
 
-      <div className="mb-4 inline-flex w-full flex-row items-center justify-start space-x-4 border-b border-slate-300 px-4 pb-4 text-slate-700">
+      <div className="inline-flex flex-row items-center justify-start w-full px-4 pb-4 mb-4 space-x-4 border-b border-slate-300 text-slate-700">
         {TAB_NAMES.map((tabName) => (
           <button
             key={tabName}
@@ -119,11 +119,11 @@ export default function Page({ sensorName }: { sensorName: string }) {
               ?.sort((a, b) => b.creation_timestamp - a.creation_timestamp)
               .map((data) => (
                 <div
-                  className="flex w-full flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow"
+                  className="flex flex-col w-full overflow-hidden bg-white border rounded-lg shadow border-slate-300"
                   key={data.creation_timestamp}
                 >
-                  <div className="flex flex-row items-center justify-start gap-x-2 px-3 pb-1 pt-2 text-sm text-slate-900">
-                    <div className="h-2 w-2 flex-shrink-0 rounded-sm bg-blue-500" />
+                  <div className="flex flex-row items-center justify-start px-3 pt-2 pb-1 text-sm gap-x-2 text-slate-900">
+                    <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-sm" />
                     <div>
                       {new Date(
                         data.creation_timestamp * 1000
@@ -131,10 +131,10 @@ export default function Page({ sensorName }: { sensorName: string }) {
                       (local time)
                     </div>
                   </div>
-                  <div className="pb-2 pl-7 text-xs">
+                  <div className="pb-2 text-xs pl-7">
                     {renderTimeString(data.creation_timestamp)}
                   </div>
-                  <div className="whitespace-break-spaces border-t border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-tight text-slate-900 text-opacity-80">
+                  <div className="px-3 py-2 text-xs leading-tight border-t whitespace-break-spaces border-slate-200 bg-slate-50 text-slate-900 text-opacity-80">
                     {JSON.stringify(data, null, 4)}
                   </div>
                 </div>
@@ -146,16 +146,16 @@ export default function Page({ sensorName }: { sensorName: string }) {
               " flex w-full flex-col gap-y-4"
             }
           >
-            {sensorState.logs
+            {sensorState.aggregatedLogs
               ?.sort(
                 (a, b) => b.max_creation_timestamp - a.max_creation_timestamp
               )
               .map((log) => (
                 <div
-                  className="flex w-full flex-col overflow-hidden rounded-lg border border-slate-300 bg-white shadow"
+                  className="flex flex-col w-full overflow-hidden bg-white border rounded-lg shadow border-slate-300"
                   key={log.subject}
                 >
-                  <div className="flex flex-row items-center justify-start gap-x-2 px-3 pb-1 pt-2 text-sm text-slate-900">
+                  <div className="flex flex-row items-center justify-start px-3 pt-2 pb-1 text-sm gap-x-2 text-slate-900">
                     <div
                       className={
                         "h-2 w-2 flex-shrink-0 rounded-sm " +
@@ -172,7 +172,7 @@ export default function Page({ sensorName }: { sensorName: string }) {
                         : log.subject}
                     </div>
                   </div>
-                  <div className="pb-2 pl-7 text-xs">
+                  <div className="pb-2 text-xs pl-7">
                     last occured {renderTimeString(log.max_creation_timestamp)}{" "}
                     -{" "}
                     {new Date(
@@ -180,7 +180,7 @@ export default function Page({ sensorName }: { sensorName: string }) {
                     ).toLocaleString()}{" "}
                     (local time)
                   </div>
-                  <div className="whitespace-break-spaces border-t border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-tight text-slate-900 text-opacity-80">
+                  <div className="px-3 py-2 text-xs leading-tight border-t whitespace-break-spaces border-slate-200 bg-slate-50 text-slate-900 text-opacity-80">
                     {JSON.stringify(log, null, 4)}
                   </div>
                 </div>
