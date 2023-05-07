@@ -10,7 +10,7 @@ import app.settings as settings
 
 
 def prepare():
-    """Load SQL queries from queries.sql."""
+    """Load SQL queries from `queries.sql` file."""
     with open(os.path.join(os.path.dirname(__file__), "queries.sql"), "r") as file:
         statements = file.read().split("\n\n\n")
         # Validate format

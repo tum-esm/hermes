@@ -41,6 +41,9 @@ target-version = "py311"
 [tool.ruff.isort]
 lines-after-imports = 2
 
+[tool.ruff.pep8-naming]
+classmethod-decorators = ["classmethod", "pydantic.validator"]
+
 [tool.sqlfluff.core]
 dialect = "postgres"
 templater = "placeholder"

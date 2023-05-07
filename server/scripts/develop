@@ -29,7 +29,7 @@ docker run -td --rm --name mosquitto -p 127.0.0.1:1883:1883 -v "${MOSQUITTO_CONF
 # Wait for services to be ready
 sleep 4
 # Run the database initialization script
-./scripts/setup
+./scripts/initialize --populate
 # Run in development mode
 poetry run uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --reload-include "*.sql" --log-level debug || status=$?
 # Stop and remove the Mosquitto docker container

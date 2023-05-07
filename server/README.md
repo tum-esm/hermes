@@ -1,9 +1,9 @@
 ## Development Setup
 
-- install the python version noted in `pyproject.toml` via `pyenv`
-- install dependencies via `poetry install --with dev --remove-untracked`
-- run tests via `./scripts/test`
-- run the server in development mode via `./scripts/develop`
+- install the python version noted in `.python-version` via `pyenv`
+- install the dependencies via `poetry install --with dev --sync`
+- run the tests via `./scripts/test`
+- start a development instance with pre-populated example data via `./scripts/develop`
 
 ### Deployment
 
@@ -13,8 +13,7 @@ When you have your PostgreSQL instance and the MQTT broker ready:
 
 - specify your environment variables in a `.env` file (see `.env.example`)
 - initialize the database via `(set -a && source .env && ./scripts/initialize)`
-
-The easiest way to deploy the server is via Docker. Many cloud providers offer a way to deploy Docker images automatically from a git repository. If you prefer to build and run the Docker image manually, you can do that via `./scripts/build` and `./scripts/run`.
+- build the Docker image via `./scripts/build`
 
 ## HTTP routes
 
@@ -133,25 +132,25 @@ httpx.get(
 
 ```javascript
 [
-    {
-        "revision": 0,
-        "creation_timestamp": 1674677601.900101,
-        "measurement": {
-            "what": 42,
-            "tomorrow": true,
-            "somewhere": 347
-        }
+  {
+    revision: 0,
+    creation_timestamp: 1674677601.900101,
+    measurement: {
+      what: 42,
+      tomorrow: true,
+      somewhere: 347,
     },
-    {
-        "revision": 2,
-        "creation_timestamp": 1674677604.365664,
-        "measurement": {
-            "what": 42,
-            "tomorrow": true,
-            "somewhere": 320
-        }
-    }
-]
+  },
+  {
+    revision: 2,
+    creation_timestamp: 1674677604.365664,
+    measurement: {
+      what: 42,
+      tomorrow: true,
+      somewhere: 320,
+    },
+  },
+];
 ```
 
 **`GET /sensors/<sensor-identifier>/measurements`:**
@@ -167,21 +166,21 @@ httpx.get(
 
 ```javascript
 [
-    {
-        "revision": 0,
-        "creation_timestamp": 1674677601.900101,
-        "severity": "warning",
-        "subject": "The CPU is pretty hot",
-        "details": null
-    },
-    {
-        "revision": 2,
-        "creation_timestamp": 1674677604.365664,
-        "severity": "error",
-        "subject": "The CPU is burning",
-        "details": "Please call the fire department"
-    }
-]
+  {
+    revision: 0,
+    creation_timestamp: 1674677601.900101,
+    severity: "warning",
+    subject: "The CPU is pretty hot",
+    details: null,
+  },
+  {
+    revision: 2,
+    creation_timestamp: 1674677604.365664,
+    severity: "error",
+    subject: "The CPU is burning",
+    details: "Please call the fire department",
+  },
+];
 ```
 
 **`GET /sensors/<sensor-identifier>/logs/aggregates`:**
@@ -196,27 +195,27 @@ httpx.get(
 
 ```javascript
 [
-    {
-        "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
-        "severity": "warning",
-        "subject": "The CPU is pretty hot",
-        "min_revision": 0,
-        "max_revision": 1,
-        "min_creation_timestamp": 1674678353.210926,
-        "max_creation_timestamp": 1674678408.210929,
-        "count": 3
-    },
-    {
-        "sensor_identifier": "102ebc56-edb9-42be-aec0-15a6c1075c7e",
-        "severity": "error",
-        "subject": "The CPU is burning",
-        "min_revision": 2,
-        "max_revision": 2,
-        "min_creation_timestamp": 1674678412.210929,
-        "max_creation_timestamp": 1674678412.210929,
-        "count": 1
-    }
-]
+  {
+    sensor_identifier: "102ebc56-edb9-42be-aec0-15a6c1075c7e",
+    severity: "warning",
+    subject: "The CPU is pretty hot",
+    min_revision: 0,
+    max_revision: 1,
+    min_creation_timestamp: 1674678353.210926,
+    max_creation_timestamp: 1674678408.210929,
+    count: 3,
+  },
+  {
+    sensor_identifier: "102ebc56-edb9-42be-aec0-15a6c1075c7e",
+    severity: "error",
+    subject: "The CPU is burning",
+    min_revision: 2,
+    max_revision: 2,
+    min_creation_timestamp: 1674678412.210929,
+    max_creation_timestamp: 1674678412.210929,
+    count: 1,
+  },
+];
 ```
 
 **`GET /streams/<network-identifier>`:**

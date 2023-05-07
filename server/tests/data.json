@@ -1,0 +1,53 @@
+{
+    "users": [
+        {
+            "user_identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc",
+            "username": "ash",
+            "creation_timestamp": 0,
+            "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$JaT0nnOuVYqx9h6jtLa21g$iRkdLMm6Pigqop5+DVzLwNRIxyE2uP3ZdYKJjHo4LhM"
+        }
+    ],
+    "networks": [
+        {
+            "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
+            "network_name": "default",
+            "creation_timestamp": 0
+        }
+    ],
+    "sensors": [
+        {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "sensor_name": "bulbasaur",
+            "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
+            "creation_timestamp": 0
+        }
+    ],
+    "permissions": [
+        {
+            "user_identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc",
+            "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
+            "creation_timestamp": 0
+        }
+    ],
+    "sessions": [
+        {
+            "access_token_hash": "88a2419d0d862e44e44cdf98abda5e99b7655d12c7b7d4e8a4f3731a1095eac0709e798a75b8d669158e03e5bd13ad91e100c525ec90fb619f4b575d7f219a1a",
+            "user_identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc",
+            "creation_timestamp": 0
+        }
+    ],
+    "configurations": [
+        {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "revision": 0,
+            "creation_timestamp": 0,
+            "publication_timestamp": 0,
+            "acknowledgement_timestamp": 0,
+            "receipt_timestamp": 0,
+            "success": true,
+            "configuration": {}
+        }
+    ],
+    "measurements": [],
+    "logs": []
+}
