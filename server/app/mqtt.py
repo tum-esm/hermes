@@ -237,8 +237,7 @@ async def listen(mqttc, dbpool):
             if not isinstance(payload, dict):
                 logger.warning(f"[MQTT] Malformed message: {message.payload!r}")
                 continue
-            # Call the appropriate handler
-            matched = False
+            # Call the appropriate handler; First match wins
             for wildcard, (handler, validator) in SUBSCRIPTIONS.items():
                 if message.topic.matches(wildcard):
                     try:
@@ -246,10 +245,8 @@ async def listen(mqttc, dbpool):
                         await handler(sensor_identifier, payload, dbpool)
                     except pydantic.ValidationError:
                         logger.warning(f"[MQTT] Malformed message: {message.payload!r}")
-                        continue
                     except Exception as e:  # pragma: no cover
                         logger.error(e, exc_info=True)
-                        continue
-                    matched = True
-            if not matched:
+                    break
+            else:  # Executed if no break is called
                 logger.warning(f"[MQTT] Failed to match topic: {message.topic}")
