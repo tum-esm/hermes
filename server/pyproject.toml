@@ -34,16 +34,12 @@ preview = true
 
 [tool.ruff]
 line-length = 88
-select = ["E", "W", "F", "I"]
+select = ["E", "W", "F", "I", "N"]
 ignore = []
 target-version = "py311"
 
 [tool.ruff.isort]
 lines-after-imports = 2
-
-[tool.mypy]
-show_error_codes = true
-no_implicit_optional = true
 
 [tool.sqlfluff.core]
 dialect = "postgres"
