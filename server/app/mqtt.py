@@ -106,64 +106,17 @@ async def _handle_heartbeats(sensor_identifier, payload, dbpool):
     1. Update configuration on acknowledgement success/failure
     2. TODO Update sensor's last seen
     """
-    for i, heartbeat in enumerate(payload.heartbeats):
-        # We process each heartheat individually in separate transactions
-        async with dbpool.acquire() as connection:
-            async with connection.transaction():
-                # Write heartbeat as log in the database
-                query, arguments = database.parametrize(
-                    identifier="create-log",
-                    arguments={
-                        "sensor_identifier": sensor_identifier,
-                        "revision": heartbeat.revision,
-                        "creation_timestamp": heartbeat.timestamp,
-                        "position_in_transmission": i,
-                        "severity": "system",
-                        "subject": "Heartbeat",
-                        "details": json.dumps({"success": heartbeat.success}),
-                    },
-                )
-                try:
-                    await connection.execute(query, *arguments)
-                except asyncpg.ForeignKeyViolationError:
-                    logger.warning(
-                        "[MQTT] Failed to handle; Sensor not found:"
-                        f" {sensor_identifier}"
-                    )
-                    break
-                except Exception as e:  # pragma: no cover
-                    logger.error(e, exc_info=True)
-                # Update configuration in the database
-                query, arguments = database.parametrize(
-                    identifier="update-configuration-on-acknowledgement",
-                    arguments={
-                        "sensor_identifier": sensor_identifier,
-                        "revision": heartbeat.revision,
-                        "acknowledgement_timestamp": heartbeat.timestamp,
-                        "success": heartbeat.success,
-                    },
-                )
-                try:
-                    await connection.execute(query, *arguments)
-                except Exception as e:  # pragma: no cover
-                    logger.error(e, exc_info=True)
-        logger.info(f"[MQTT] Handled heartbeat {heartbeat} from {sensor_identifier}")
-
-
-async def _handle_logs(sensor_identifier, payload, dbpool):
+    # Update configurations in the database
     query, arguments = database.parametrize(
-        identifier="create-log",
+        identifier="update-configuration-on-acknowledgement",
         arguments=[
             {
                 "sensor_identifier": sensor_identifier,
-                "revision": log.revision,
-                "creation_timestamp": log.timestamp,
-                "position_in_transmission": i,
-                "severity": log.severity,
-                "subject": log.subject,
-                "details": log.details,
+                "revision": heartbeat.revision,
+                "acknowledgement_timestamp": heartbeat.timestamp,
+                "success": heartbeat.success,
             }
-            for i, log in enumerate(payload.logs)
+            for i, heartbeat in enumerate(payload.heartbeats)
         ],
     )
     try:
@@ -173,7 +126,27 @@ async def _handle_logs(sensor_identifier, payload, dbpool):
             f"[MQTT] Failed to handle; Sensor not found: {sensor_identifier}"
         )
     else:
-        logger.info(f"[MQTT] Handled {len(payload.logs)} logs from {sensor_identifier}")
+        logger.info(
+            f"[MQTT] Handled {len(payload.heartbeats)} system messages from"
+            f" {sensor_identifier}"
+        )
+    # Write system messages as logs into the database; Acceptable if this fails
+    query, arguments = database.parametrize(
+        identifier="create-log",
+        arguments=[
+            {
+                "sensor_identifier": sensor_identifier,
+                "revision": heartbeat.revision,
+                "creation_timestamp": heartbeat.timestamp,
+                "position_in_transmission": i,
+                "severity": "system",
+                "subject": "Heartbeat",
+                "details": json.dumps({"success": heartbeat.success}),
+            }
+            for i, heartbeat in enumerate(payload.heartbeats)
+        ],
+    )
+    await dbpool.executemany(query, arguments)
 
 
 async def _handle_measurements(sensor_identifier, payload, dbpool):
@@ -205,10 +178,36 @@ async def _handle_measurements(sensor_identifier, payload, dbpool):
     """
 
 
+async def _handle_logs(sensor_identifier, payload, dbpool):
+    query, arguments = database.parametrize(
+        identifier="create-log",
+        arguments=[
+            {
+                "sensor_identifier": sensor_identifier,
+                "revision": log.revision,
+                "creation_timestamp": log.timestamp,
+                "position_in_transmission": i,
+                "severity": log.severity,
+                "subject": log.subject,
+                "details": log.details,
+            }
+            for i, log in enumerate(payload.logs)
+        ],
+    )
+    try:
+        await dbpool.executemany(query, arguments)
+    except asyncpg.ForeignKeyViolationError:
+        logger.warning(
+            f"[MQTT] Failed to handle; Sensor not found: {sensor_identifier}"
+        )
+    else:
+        logger.info(f"[MQTT] Handled {len(payload.logs)} logs from {sensor_identifier}")
+
+
 SUBSCRIPTIONS = {
     "heartbeats/+": (_handle_heartbeats, validation.HeartbeatsMessage),
-    "logs/+": (_handle_logs, validation.LogsMessage),
     "measurements/+": (_handle_measurements, validation.MeasurementsMessage),
+    "logs/+": (_handle_logs, validation.LogsMessage),
 }
 
 
@@ -222,12 +221,13 @@ async def listen(mqttc, dbpool):
         # Loop through incoming messages
         async for message in messages:
             # TODO: Remove condition when there's no more logs limit
-            if not message.topic.matches(list(SUBSCRIPTIONS.keys())[-1]):
+            if not message.topic.matches(list(SUBSCRIPTIONS.keys())[1]):
                 logger.info(
                     f"[MQTT] Received message: {message.payload!r} on topic:"
                     f" {message.topic}"
                 )
             # Get sensor identifier from the topic and decode the payload
+            # TODO validate that identifier is a valid UUID format
             sensor_identifier = str(message.topic).split("/")[-1]
             try:
                 payload = json.loads(message.payload.decode())
@@ -243,6 +243,7 @@ async def listen(mqttc, dbpool):
                     try:
                         payload = validator(**payload)
                         await handler(sensor_identifier, payload, dbpool)
+                    # Errors are logged and ignored as we can't give feedback
                     except pydantic.ValidationError:
                         logger.warning(f"[MQTT] Malformed message: {message.payload!r}")
                     except Exception as e:  # pragma: no cover

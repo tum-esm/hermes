@@ -63,10 +63,20 @@ CREATE TABLE configurations (
     configuration JSONB NOT NULL
 );
 
--- Defining the primary key like this (setting the sort order) makes the query to get the latest revision faster
+-- Defining the primary key manually with the sort order makes the query for the latest
+-- revision faster
 CREATE UNIQUE INDEX ON configurations (sensor_identifier ASC, revision DESC);
 
 
+-- Measurements don't have a unique primary key. Enforcing that the combination of
+-- sensor_identifier and creation_timestamp is unique could filter out duplicates
+-- but could also incorrectly discard measurements that are actually different.
+-- Instead, the server should store everything it receives and duplicates should be
+-- filtered out during processing. Due to the missing primary key, the keyset pagination
+-- can result in duplicates. We accept this trade-off in favor of performance.
+-- If this ever becomes a problem, we can generate a column that reliably makes the
+-- combination unique and use that for the keyset pagination. This way, we can
+-- continue to do without an index. The same ideas apply to the logs table.
 CREATE TABLE measurements (
     sensor_identifier UUID NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
     revision INT NOT NULL,
@@ -75,8 +85,6 @@ CREATE TABLE measurements (
     position_in_transmission INT NOT NULL,
     measurement JSONB NOT NULL
 );
-
-CREATE UNIQUE INDEX ON measurements (sensor_identifier ASC, creation_timestamp DESC);
 
 SELECT create_hypertable('measurements', 'creation_timestamp');
 
@@ -110,8 +118,6 @@ CREATE TABLE logs (
     subject TEXT NOT NULL,
     details TEXT
 );
-
-CREATE UNIQUE INDEX ON logs (sensor_identifier ASC, creation_timestamp DESC);
 
 SELECT create_hypertable('logs', 'creation_timestamp');
 
