@@ -32,7 +32,7 @@ CREATE TABLE permissions (
     user_identifier UUID NOT NULL REFERENCES users (user_identifier) ON DELETE CASCADE,
     network_identifier UUID NOT NULL REFERENCES networks (network_identifier) ON DELETE CASCADE,
     creation_timestamp TIMESTAMPTZ NOT NULL,
-    -- Add permission levels here (e.g. admin, user, read-only)
+    -- Add permission levels here (e.g. owner, user, read-only)
 
     PRIMARY KEY (user_identifier, network_identifier)
 );
@@ -47,20 +47,19 @@ CREATE TABLE sessions (
 
 CREATE TABLE configurations (
     sensor_identifier UUID NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
+    configuration JSONB NOT NULL,
     revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     publication_timestamp TIMESTAMPTZ,
     acknowledgement_timestamp TIMESTAMPTZ,
     receipt_timestamp TIMESTAMPTZ,
-    success BOOLEAN,
+    success BOOLEAN
 
     -- Add more pre-defined values here (needed if we want to visualize them in the dashboard)
     -- Something like: lat/long, notes, version commit hash -> most should still be nullable
     -- lat/long and notes should be in the sensors table though, the configurations table should
     -- only contain things that are actually sent to the sensor
     -- or user-configurable "metadata" that is not sent to the sensor -> better: extra tags table?
-
-    configuration JSONB NOT NULL
 );
 
 -- Defining the primary key manually with the sort order makes the query for the latest
@@ -79,11 +78,11 @@ CREATE UNIQUE INDEX ON configurations (sensor_identifier ASC, revision DESC);
 -- continue to do without an index. The same ideas apply to the logs table.
 CREATE TABLE measurements (
     sensor_identifier UUID NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
+    measurement JSONB NOT NULL,
     revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
-    position_in_transmission INT NOT NULL,
-    measurement JSONB NOT NULL
+    position_in_transmission INT NOT NULL
 );
 
 SELECT create_hypertable('measurements', 'creation_timestamp');
@@ -110,12 +109,12 @@ SELECT add_continuous_aggregate_policy(
 
 CREATE TABLE logs (
     sensor_identifier UUID NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
+    severity TEXT NOT NULL,
+    subject TEXT NOT NULL,
     revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
     position_in_transmission INT NOT NULL,
-    severity TEXT NOT NULL,
-    subject TEXT NOT NULL,
     details TEXT
 );
 

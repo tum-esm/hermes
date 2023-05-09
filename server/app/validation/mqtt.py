@@ -19,9 +19,9 @@ class HeartbeatsMessage(types._BaseModel):
 
 class Log(types._BaseModel):
     severity: typing.Literal["info", "warning", "error"]
+    subject: pydantic.StrictStr
     revision: types.Revision
     timestamp: types.Timestamp
-    subject: pydantic.StrictStr
     details: pydantic.StrictStr | None = None
 
     @pydantic.validator("subject")

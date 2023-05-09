@@ -1,6 +1,5 @@
 -- name: aggregate-logs
 SELECT
-    sensor_identifier,
     severity,
     subject,
     first(revision, creation_timestamp) AS min_revision,
@@ -66,22 +65,22 @@ RETURNING revision;
 -- name: create-log
 INSERT INTO logs (
     sensor_identifier,
+    severity,
+    subject,
     revision,
     creation_timestamp,
     receipt_timestamp,
     position_in_transmission,
-    severity,
-    subject,
     details
 )
 VALUES (
     ${sensor_identifier},
+    ${severity},
+    ${subject},
     ${revision},
     ${creation_timestamp},
     now(),
     ${position_in_transmission},
-    ${severity},
-    ${subject},
     ${details}
 );
 
@@ -89,19 +88,19 @@ VALUES (
 -- name: create-measurement
 INSERT INTO measurements (
     sensor_identifier,
+    measurement,
     revision,
     creation_timestamp,
     receipt_timestamp,
-    position_in_transmission,
-    measurement
+    position_in_transmission
 )
 VALUES (
     ${sensor_identifier},
+    ${measurement},
     ${revision},
     ${creation_timestamp},
     now(),
-    ${position_in_transmission},
-    ${measurement}
+    ${position_in_transmission}
 );
 
 
@@ -152,9 +151,9 @@ RETURNING user_identifier;
 
 -- name: read-measurements
 SELECT
+    measurement,
     revision,
-    creation_timestamp,
-    measurement
+    creation_timestamp
 FROM measurements
 WHERE
     sensor_identifier = ${sensor_identifier}
@@ -179,10 +178,10 @@ LIMIT 64;
 
 -- name: read-logs
 SELECT
-    revision,
-    creation_timestamp,
     severity,
     subject,
+    revision,
+    creation_timestamp,
     details
 FROM logs
 WHERE

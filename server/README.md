@@ -25,12 +25,12 @@ Read the status of the server.
 httpx.get(url="http://localhost:8000/status")
 ```
 
-```javascript
+```json
 {
-    "environment": "production",
-    "commit_sha": "1a2984bf5ffda71207fb133d785eb486cb465618",
-    "branch_name": "main",
-    "start_timestamp": 1674674178.5367813
+  "environment": "production",
+  "commit_sha": "1a2984bf5ffda71207fb133d785eb486cb465618",
+  "branch_name": "main",
+  "start_timestamp": 1674674178.5367813
 }
 ```
 
@@ -45,10 +45,10 @@ httpx.post(
 )
 ```
 
-```javascript
+```json
 {
-    "access_token": "c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869",
-    "user_identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc"
+  "access_token": "c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869",
+  "user_identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc"
 }
 ```
 
@@ -63,10 +63,10 @@ httpx.post(
 )
 ```
 
-```javascript
+```json
 {
-    "access_token": "c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869",
-    "user_identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc"
+  "access_token": "c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869",
+  "user_identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc"
 }
 ```
 
@@ -80,27 +80,27 @@ httpx.get(
 )
 ```
 
-```javascript
+```json
 [
   {
-    sensor_identifier: "81bf7042-e20f-4a97-ac44-c15853e3618f",
-    sensor_name: "bulbasaur",
-    bucket_timestamps: [],
-    measurements_counts: [],
+    "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+    "sensor_name": "bulbasaur",
+    "bucket_timestamps": [],
+    "measurements_counts": []
   },
   {
-    sensor_identifier: "2d2a3794-2345-4500-8baa-493f88123087",
-    sensor_name: "charmander",
-    bucket_timestamps: [],
-    measurements_counts: [],
+    "sensor_identifier": "2d2a3794-2345-4500-8baa-493f88123087",
+    "sensor_name": "charmander",
+    "bucket_timestamps": [],
+    "measurements_counts": []
   },
   {
-    sensor_identifier: "df1ad8d1-63ea-45b6-ae42-86febb182fe8",
-    sensor_name: "squirtle",
-    bucket_timestamps: [],
-    measurements_counts: [],
-  },
-];
+    "sensor_identifier": "df1ad8d1-63ea-45b6-ae42-86febb182fe8",
+    "sensor_name": "squirtle",
+    "bucket_timestamps": [],
+    "measurements_counts": []
+  }
+]
 ```
 
 **`POST /networks/<network-identifier>/sensors`:**
@@ -110,7 +110,7 @@ Create a new sensor.
 ```python
 httpx.post(
     url="http://localhost:8000/networks/1f705cc5-4242-458b-9201-4217455ea23c/sensors",
-    headers={"authorization": "Bearer c186a32e88541b4ddb2f0bd59a68b7d68d8f8050757101fa836e2bf9b6bd04c2"},
+    headers={"authorization": "Bearer c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869"},
     json={
         "sensor_name": "bulbasaur",
         "configuration": {},
@@ -118,10 +118,10 @@ httpx.post(
 )
 ```
 
-```javascript
+```json
 {
-    "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
-    "revision": 0
+  "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+  "revision": 0
 }
 ```
 
@@ -132,7 +132,7 @@ Update the sensor's information and configuration.
 ```python
 httpx.put(
     url="http://localhost:8000/networks/1f705cc5-4242-458b-9201-4217455ea23c/sensors/102ebc56-edb9-42be-aec0-15a6c1075c7e",
-    headers={"authorization": "Bearer c186a32e88541b4ddb2f0bd59a68b7d68d8f8050757101fa836e2bf9b6bd04c2"},
+    headers={"authorization": "Bearer c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869"},
     json={
         "sensor_name": "bulbasaur",
         "configuration": {
@@ -143,10 +143,10 @@ httpx.put(
 )
 ```
 
-```javascript
+```json
 {
-    "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
-    "revision": 16
+  "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+  "revision": 16
 }
 ```
 
@@ -157,31 +157,31 @@ Read the measurements of a sensor in pages, optionally with keyset query paramet
 ```python
 httpx.get(
     url="http://localhost:8000/networks/1f705cc5-4242-458b-9201-4217455ea23c/sensors/102ebc56-edb9-42be-aec0-15a6c1075c7e/measurements",
-    params={"creation_timestamp": 1674677600.0, "direction": "next"},
+    params={"direction": "previous"},
 )
 ```
 
-```javascript
+```json
 [
   {
-    revision: 0,
-    creation_timestamp: 1674677601.900101,
-    measurement: {
-      what: 42,
-      tomorrow: true,
-      somewhere: 347,
+    "measurement": {
+      "what": 42,
+      "tomorrow": true,
+      "somewhere": 347
     },
+    "revision": 0,
+    "creation_timestamp": 1674677601.900101
   },
   {
-    revision: 2,
-    creation_timestamp: 1674677604.365664,
-    measurement: {
-      what: 42,
-      tomorrow: true,
-      somewhere: 320,
+    "measurement": {
+      "what": 42,
+      "tomorrow": true,
+      "somewhere": 320
     },
-  },
-];
+    "revision": 2,
+    "creation_timestamp": 1674677604.365664
+  }
+]
 ```
 
 **`GET /networks/<network-identifier>/sensors/<sensor-identifier>/measurements`:**
@@ -191,27 +191,27 @@ Read the logs of a sensor in pages, optionally with keyset query parameters `cre
 ```python
 httpx.get(
     url="http://localhost:8000/networks/1f705cc5-4242-458b-9201-4217455ea23c/sensors/102ebc56-edb9-42be-aec0-15a6c1075c7e/logs",
-    params={"creation_timestamp": 1674677600.0, "direction": "next"},
+    params={"direction": "previous"},
 )
 ```
 
-```javascript
+```json
 [
   {
-    severity: "warning",
-    subject: "The CPU is pretty hot",
-    details: null,
-    revision: 0,
-    creation_timestamp: 1674677601.900101,
+    "severity": "warning",
+    "subject": "The CPU is pretty hot",
+    "revision": 0,
+    "creation_timestamp": 1674677601.900101,
+    "details": null
   },
   {
-    severity: "error",
-    subject: "The CPU is burning",
-    details: "Please call the fire department",
-    revision: 2,
-    creation_timestamp: 1674677604.365664,
-  },
-];
+    "severity": "error",
+    "subject": "The CPU is burning",
+    "revision": 2,
+    "creation_timestamp": 1674677604.365664,
+    "details": "Please call the fire department"
+  }
+]
 ```
 
 **`GET /networks/<network-identifier>/sensors/<sensor-identifier>/logs/aggregates`:**
@@ -224,29 +224,27 @@ httpx.get(
 )
 ```
 
-```javascript
+```json
 [
   {
-    sensor_identifier: "102ebc56-edb9-42be-aec0-15a6c1075c7e",
-    severity: "warning",
-    subject: "The CPU is pretty hot",
-    min_revision: 0,
-    max_revision: 1,
-    min_creation_timestamp: 1674678353.210926,
-    max_creation_timestamp: 1674678408.210929,
-    count: 3,
+    "severity": "warning",
+    "subject": "The CPU is pretty hot",
+    "min_revision": 0,
+    "max_revision": 1,
+    "min_creation_timestamp": 1674678353.210926,
+    "max_creation_timestamp": 1674678408.210929,
+    "count": 3
   },
   {
-    sensor_identifier: "102ebc56-edb9-42be-aec0-15a6c1075c7e",
-    severity: "error",
-    subject: "The CPU is burning",
-    min_revision: 2,
-    max_revision: 2,
-    min_creation_timestamp: 1674678412.210929,
-    max_creation_timestamp: 1674678412.210929,
-    count: 1,
-  },
-];
+    "severity": "error",
+    "subject": "The CPU is burning",
+    "min_revision": 2,
+    "max_revision": 2,
+    "min_creation_timestamp": 1674678412.210929,
+    "max_creation_timestamp": 1674678412.210929,
+    "count": 1
+  }
+]
 ```
 
 ## MQTT
@@ -264,7 +262,7 @@ The payloads are JSON encoded and have the following structure:
 
 **`configurations/<sensor-identifier>`:**
 
-```javascript
+```json
 {
   "revision": 0,
   "configuration": {} // this can be any valid JSON
@@ -273,7 +271,7 @@ The payloads are JSON encoded and have the following structure:
 
 **`heartbeats/<sensor-identifier>`:**
 
-```javascript
+```json
 {
   // the array structure allows to batch messages
   "heartbeats": [
@@ -288,7 +286,7 @@ The payloads are JSON encoded and have the following structure:
 
 **`measurements/<sensor-identifier>`:**
 
-```javascript
+```json
 {
   // the array structure allows to batch messages
   "measurements": [
@@ -303,7 +301,7 @@ The payloads are JSON encoded and have the following structure:
 
 **`log-messages/<sensor-identifier>`:**
 
-```javascript
+```json
 {
   // the array structure allows to batch messages
   "log_messages": [
