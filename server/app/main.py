@@ -13,7 +13,6 @@ import app.database as database
 import app.errors as errors
 import app.mqtt as mqtt
 import app.settings as settings
-import app.sse as sse
 import app.validation as validation
 from app.logs import logger
 
@@ -336,44 +335,39 @@ async def read_log_message_aggregates(request):
 
 @validation.validate(schema=validation.StreamNetworkRequest)
 async def read_network(request):
-    """Stream status of sensors in a network via Server Sent Events.
+    """Read information about the network and its sensors.
 
     This includes:
-      - the number of measurements in 4 hour intervals over the last 28 days
+      - the identifiers of the sensors in the network
+      - per sensor the number of measurements in 4 hour intervals over the last 28 days
     Ideas:
-      - last sensor heartbeats
-      - last measurement timestamps
+      - metadata about the network
+        - name
+        - how many sensors are online
+        - description?
+      - move aggregation to request per sensor instead of per network
+        - last sensor heartbeats
+        - last measurement timestamps
 
     TODO offer choice between different time periods -> adapt interval accordingly (or
          better: let the frontend choose from a list of predefined intervals)
-    TODO switch to simple HTTP GET requests with polling if we're not pushing
-         based on events
     TODO use JSON array instead of nested lists, with naming of values
          [{timestamp: 123, value1: 456, value2: 252}, ...] instead of [[123, 456], ...]
     """
 
-    async def stream(request):
-        while True:
-            query, arguments = database.parametrize(
-                identifier="aggregate-network",
-                arguments={
-                    "network_identifier": request.path.network_identifier,
-                },
-            )
-            result = await dbpool.fetch(query, *arguments)
-            # TODO handle exceptions
-            yield sse.ServerSentEvent(data=database.dictify(result)).encode()
-            await asyncio.sleep(10)
-
+    query, arguments = database.parametrize(
+        identifier="aggregate-network",
+        arguments={"network_identifier": request.path.network_identifier},
+    )
+    try:
+        result = await dbpool.fetch(query, *arguments)
+    except Exception as e:  # pragma: no cover
+        logger.error(e, exc_info=True)
+        raise errors.InternalServerError()
     # Return successful response
-    return starlette.responses.StreamingResponse(
-        content=stream(request),
+    return starlette.responses.JSONResponse(
         status_code=200,
-        headers={
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-        },
+        content=database.dictify(result),
     )
 
 

@@ -1,9 +1,10 @@
 import argparse
 import asyncio
-import os
 import json
+import os
 
 import asyncpg
+
 import app.database as database
 
 

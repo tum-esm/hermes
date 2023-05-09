@@ -20,6 +20,18 @@
             "sensor_name": "bulbasaur",
             "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
             "creation_timestamp": 0
+        },
+        {
+            "sensor_identifier": "2d2a3794-2345-4500-8baa-493f88123087",
+            "sensor_name": "charmander",
+            "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
+            "creation_timestamp": 0
+        },
+        {
+            "sensor_identifier": "df1ad8d1-63ea-45b6-ae42-86febb182fe8",
+            "sensor_name": "squirtle",
+            "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
+            "creation_timestamp": 0
         }
     ],
     "permissions": [
@@ -39,6 +51,26 @@
     "configurations": [
         {
             "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "revision": 0,
+            "creation_timestamp": 0,
+            "publication_timestamp": 0,
+            "acknowledgement_timestamp": 0,
+            "receipt_timestamp": 0,
+            "success": true,
+            "configuration": {}
+        },
+        {
+            "sensor_identifier": "2d2a3794-2345-4500-8baa-493f88123087",
+            "revision": 0,
+            "creation_timestamp": 0,
+            "publication_timestamp": 0,
+            "acknowledgement_timestamp": 0,
+            "receipt_timestamp": 0,
+            "success": true,
+            "configuration": {}
+        },
+        {
+            "sensor_identifier": "df1ad8d1-63ea-45b6-ae42-86febb182fe8",
             "revision": 0,
             "creation_timestamp": 0,
             "publication_timestamp": 0,
