@@ -70,7 +70,7 @@ httpx.post(
 }
 ```
 
-**`POST /sensors`:**
+**`POST /networks/<network-identifier>/sensors`:**
 
 Create a new sensor.
 
@@ -80,7 +80,6 @@ httpx.post(
     headers={"authorization": "Bearer c186a32e88541b4ddb2f0bd59a68b7d68d8f8050757101fa836e2bf9b6bd04c2"},
     json={
         "sensor_name": "bulbasaur",
-        "network_identifier": "0a71a8d8-40c6-4086-a64e-58e38350cb53",
         "configuration": {},
     },
 )
@@ -93,9 +92,9 @@ httpx.post(
 }
 ```
 
-**`PUT /sensors/<sensor-identifier>`:**
+**`PUT /networks/<network-identifier>/sensors/<sensor-identifier>`:**
 
-Update the sensor configuration.
+Update the sensor's information and configuration.
 
 ```python
 httpx.put(
@@ -103,7 +102,6 @@ httpx.put(
     headers={"authorization": "Bearer c186a32e88541b4ddb2f0bd59a68b7d68d8f8050757101fa836e2bf9b6bd04c2"},
     json={
         "sensor_name": "bulbasaur",
-        "network_identifier": "0a71a8d8-40c6-4086-a64e-58e38350cb53",
         "configuration": {
             "value": 23,
             "something": "else",
@@ -119,7 +117,7 @@ httpx.put(
 }
 ```
 
-**`GET /sensors/<sensor-identifier>/measurements`:**
+**`GET /networks/<network-identifier>/sensors/<sensor-identifier>/measurements`:**
 
 Read the measurements of a sensor in pages, optionally with keyset query parameters `creation_timestamp` and `direction`.
 
@@ -153,7 +151,7 @@ httpx.get(
 ];
 ```
 
-**`GET /sensors/<sensor-identifier>/measurements`:**
+**`GET /networks/<network-identifier>/sensors/<sensor-identifier>/measurements`:**
 
 Read the logs of a sensor in pages, optionally with keyset query parameters `creation_timestamp` and `direction`.
 
@@ -183,7 +181,7 @@ httpx.get(
 ];
 ```
 
-**`GET /sensors/<sensor-identifier>/logs/aggregates`:**
+**`GET /networks/<network-identifier>/sensors/<sensor-identifier>/logs/aggregates`:**
 
 Read an aggregate of sensor logs with `warning` and `error` severity.
 
@@ -234,8 +232,8 @@ The communication between the sensors and the server runs over four MQTT topics:
 
 - `configurations/<sensor-identifier>` for configurations from the server
 - `heartbeats/<sensor-identifier>` for heartbeats and system messages from sensors
-- `log-messages/<sensor-identifier>` for log messages from sensors
 - `measurements/<sensor-identifier>` for measurements from sensors
+- `log-messages/<sensor-identifier>` for log messages from sensors
 
 ### Payloads
 
@@ -265,23 +263,6 @@ The payloads are JSON encoded and have the following structure:
 }
 ```
 
-**`log-messages/<sensor-identifier>`:**
-
-```javascript
-{
-  // the array structure allows to batch messages
-  "log_messages": [
-    {
-      "severity": "error", // one of debug, info, warning, error
-      "revision": 0,
-      "timestamp": 0.0,
-      "subject": "The CPU is burning",
-      "details": "Please call the fire department" // optional parameter
-    }
-  ]
-}
-```
-
 **`measurements/<sensor-identifier>`:**
 
 ```javascript
@@ -292,6 +273,23 @@ The payloads are JSON encoded and have the following structure:
       "revision": 0,
       "timestamp": 0.0,
       "value": {} // this can be any valid JSON
+    }
+  ]
+}
+```
+
+**`log-messages/<sensor-identifier>`:**
+
+```javascript
+{
+  // the array structure allows to batch messages
+  "log_messages": [
+    {
+      "severity": "error", // one of info, warning, error
+      "revision": 0,
+      "timestamp": 0.0,
+      "subject": "The CPU is burning",
+      "details": "Please call the fire department" // optional parameter
     }
   ]
 }

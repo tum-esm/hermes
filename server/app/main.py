@@ -126,7 +126,7 @@ async def create_session(request):
 async def create_sensor(request):
     """Create a new sensor and configuration."""
     user_identifier, permissions = await auth.authenticate(request, dbpool)
-    if request.body.network_identifier not in permissions:
+    if request.path.network_identifier not in permissions:
         # TODO if user is read-only, return 403 -> "Insufficient authorization"
         logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
         raise errors.NotFoundError()
@@ -136,8 +136,8 @@ async def create_sensor(request):
             query, arguments = database.parametrize(
                 identifier="create-sensor",
                 arguments={
+                    "network_identifier": request.path.network_identifier,
                     "sensor_name": request.body.sensor_name,
-                    "network_identifier": request.body.network_identifier,
                 },
             )
             try:
@@ -192,7 +192,7 @@ async def update_sensor(request):
     user_identifier, permissions = await auth.authenticate(request, dbpool)
 
     # TODO need to check if sensor is part of network, otherwise this checks nothing
-    if request.body.network_identifier not in permissions:
+    if request.path.network_identifier not in permissions:
         logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
         raise errors.NotFoundError()
 
@@ -249,11 +249,6 @@ async def update_sensor(request):
             "revision": revision,
         },
     )
-
-
-async def read_sensors(request):
-    """Return configurations of selected sensors."""
-    raise errors.NotImplementedError()
 
 
 @validation.validate(schema=validation.ReadMeasurementsRequest)
@@ -340,7 +335,7 @@ async def read_log_message_aggregates(request):
 
 
 @validation.validate(schema=validation.StreamNetworkRequest)
-async def stream_network(request):
+async def read_network(request):
     """Stream status of sensors in a network via Server Sent Events.
 
     This includes:
@@ -428,38 +423,35 @@ ROUTES = [
         methods=["POST"],
     ),
     starlette.routing.Route(
-        path="/sensors",
+        path="/networks/{network_identifier}",
+        endpoint=read_network,
+        methods=["GET"],
+    ),
+    starlette.routing.Route(
+        path="/networks/{network_identifier}/sensors",
         endpoint=create_sensor,
         methods=["POST"],
     ),
     starlette.routing.Route(
-        path="/sensors/{sensor_identifier}",
+        path="/networks/{network_identifier}/sensors/{sensor_identifier}",
         endpoint=update_sensor,
         methods=["PUT"],
     ),
     starlette.routing.Route(
-        path="/sensors",
-        endpoint=read_sensors,
-        methods=["GET"],
-    ),
-    starlette.routing.Route(
-        path="/sensors/{sensor_identifier}/measurements",
+        path="/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
         endpoint=read_measurements,
         methods=["GET"],
     ),
     starlette.routing.Route(
-        path="/sensors/{sensor_identifier}/logs",
+        path="/networks/{network_identifier}/sensors/{sensor_identifier}/logs",
         endpoint=read_logs,
         methods=["GET"],
     ),
     starlette.routing.Route(
-        path="/sensors/{sensor_identifier}/logs/aggregates",
+        path=(
+            "/networks/{network_identifier}/sensors/{sensor_identifier}/logs/aggregates"
+        ),
         endpoint=read_log_message_aggregates,
-        methods=["GET"],
-    ),
-    starlette.routing.Route(
-        path="/streams/{network_identifier}",
-        endpoint=stream_network,
         methods=["GET"],
     ),
 ]

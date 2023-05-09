@@ -59,32 +59,37 @@ class _CreateUserRequestPath(types._BaseModel):
     pass
 
 
-class _CreateSensorRequestPath(types._BaseModel):
+class _CreateSessionRequestPath(types._BaseModel):
     pass
 
 
+class _CreateSensorRequestPath(types._BaseModel):
+    network_identifier: types.Identifier
+
+
 class _UpdateSensorRequestPath(types._BaseModel):
+    network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
 class _ReadMeasurementsRequestPath(types._BaseModel):
+    network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
 class _ReadLogsRequestPath(types._BaseModel):
+    network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
 class _ReadLogsAggregatesRequestPath(types._BaseModel):
+    network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
 class _StreamNetworkRequestPath(types._BaseModel):
     network_identifier: types.Identifier
-
-
-class _CreateSessionRequestPath(types._BaseModel):
-    pass
+    network_identifier: types.Identifier
 
 
 ########################################################################################
@@ -97,6 +102,14 @@ class _ReadStatusRequestQuery(types._BaseModel):
 
 
 class _CreateUserRequestQuery(types._BaseModel):
+    pass
+
+
+class _CreateSessionRequestQuery(types._BaseModel):
+    pass
+
+
+class _StreamNetworkRequestQuery(types._BaseModel):
     pass
 
 
@@ -122,14 +135,6 @@ class _ReadLogsAggregatesRequestQuery(types._BaseModel):
     pass
 
 
-class _StreamNetworkRequestQuery(types._BaseModel):
-    pass
-
-
-class _CreateSessionRequestQuery(types._BaseModel):
-    pass
-
-
 ########################################################################################
 # Body models
 ########################################################################################
@@ -144,15 +149,22 @@ class _CreateUserRequestBody(types._BaseModel):
     password: types.Password
 
 
+class _CreateSessionRequestBody(types._BaseModel):
+    username: types.Name
+    password: types.Password
+
+
+class _StreamNetworkRequestBody(types._BaseModel):
+    pass
+
+
 class _CreateSensorRequestBody(types._BaseModel):
     sensor_name: types.Name
-    network_identifier: types.Identifier
     configuration: types.Json
 
 
 class _UpdateSensorRequestBody(types._BaseModel):
     sensor_name: types.Name
-    network_identifier: types.Identifier
     configuration: types.Json
 
 
@@ -166,15 +178,6 @@ class _ReadLogsRequestBody(types._BaseModel):
 
 class _ReadLogsAggregatesRequestBody(types._BaseModel):
     pass
-
-
-class _StreamNetworkRequestBody(types._BaseModel):
-    pass
-
-
-class _CreateSessionRequestBody(types._BaseModel):
-    username: types.Name
-    password: types.Password
 
 
 ########################################################################################
@@ -199,6 +202,24 @@ class CreateUserRequest(types._BaseModel):
     path: _CreateUserRequestPath
     query: _CreateUserRequestQuery
     body: _CreateUserRequestBody
+
+
+class CreateSessionRequest(types._BaseModel):
+    method: str
+    url: object
+    headers: dict
+    path: _CreateSessionRequestPath
+    query: _CreateSessionRequestQuery
+    body: _CreateSessionRequestBody
+
+
+class StreamNetworkRequest(types._BaseModel):
+    method: str
+    url: object
+    headers: dict
+    path: _StreamNetworkRequestPath
+    query: _StreamNetworkRequestQuery
+    body: _StreamNetworkRequestBody
 
 
 class CreateSensorRequest(types._BaseModel):
@@ -244,21 +265,3 @@ class ReadLogsAggregatesRequest(types._BaseModel):
     path: _ReadLogsAggregatesRequestPath
     query: _ReadLogsAggregatesRequestQuery
     body: _ReadLogsAggregatesRequestBody
-
-
-class StreamNetworkRequest(types._BaseModel):
-    method: str
-    url: object
-    headers: dict
-    path: _StreamNetworkRequestPath
-    query: _StreamNetworkRequestQuery
-    body: _StreamNetworkRequestBody
-
-
-class CreateSessionRequest(types._BaseModel):
-    method: str
-    url: object
-    headers: dict
-    path: _CreateSessionRequestPath
-    query: _CreateSessionRequestQuery
-    body: _CreateSessionRequestBody
