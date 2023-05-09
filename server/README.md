@@ -1,6 +1,6 @@
 ## Development Setup
 
-- install the python version noted in `.python-version` via `pyenv`
+- install the Python version noted in `.python-version` via `pyenv`
 - install the dependencies via `poetry install --with dev --sync`
 - run the tests via `./scripts/test`
 - start a development instance with pre-populated example data via `./scripts/develop`
@@ -30,7 +30,7 @@ httpx.get(url="http://localhost:8000/status")
   "environment": "production",
   "commit_sha": "1a2984bf5ffda71207fb133d785eb486cb465618",
   "branch_name": "main",
-  "start_timestamp": 1674674178.5367813
+  "start_timestamp": 1683644500.0
 }
 ```
 
@@ -165,21 +165,30 @@ httpx.get(
 [
   {
     "measurement": {
-      "what": 42,
-      "tomorrow": true,
-      "somewhere": 347
+      "what": 2.8,
+      "tomorrow": "yes",
+      "somewhere": 530
     },
     "revision": 0,
-    "creation_timestamp": 1674677601.900101
+    "creation_timestamp": 1683644500.0
   },
   {
     "measurement": {
-      "what": 42,
-      "tomorrow": true,
-      "somewhere": 320
+      "what": 1.2,
+      "tomorrow": "no",
+      "somewhere": 20
     },
-    "revision": 2,
-    "creation_timestamp": 1674677604.365664
+    "revision": 0,
+    "creation_timestamp": 1683644540.0
+  },
+  {
+    "measurement": {
+      "what": 4.0,
+      "tomorrow": "maybe",
+      "somewhere": 270
+    },
+    "revision": 0,
+    "creation_timestamp": 1683644580.0
   }
 ]
 ```
@@ -198,18 +207,32 @@ httpx.get(
 ```json
 [
   {
-    "severity": "warning",
-    "subject": "The CPU is pretty hot",
+    "severity": "info",
+    "subject": "Everything is fine",
     "revision": 0,
-    "creation_timestamp": 1674677601.900101,
+    "creation_timestamp": 1683644400.0,
     "details": null
+  },
+  {
+    "severity": "warning",
+    "subject": "The CPU is toasty",
+    "revision": 0,
+    "creation_timestamp": 1683644600.0,
+    "details": "Get the marshmallows ready!"
+  },
+  {
+    "severity": "warning",
+    "subject": "The CPU is toasty",
+    "revision": 1,
+    "creation_timestamp": 1683644800.0,
+    "details": "Get the marshmallows ready!"
   },
   {
     "severity": "error",
     "subject": "The CPU is burning",
     "revision": 2,
-    "creation_timestamp": 1674677604.365664,
-    "details": "Please call the fire department"
+    "creation_timestamp": 1683645000.0,
+    "details": "Please call the fire department."
   }
 ]
 ```
@@ -228,20 +251,20 @@ httpx.get(
 [
   {
     "severity": "warning",
-    "subject": "The CPU is pretty hot",
+    "subject": "The CPU is toasty",
     "min_revision": 0,
     "max_revision": 1,
-    "min_creation_timestamp": 1674678353.210926,
-    "max_creation_timestamp": 1674678408.210929,
-    "count": 3
+    "min_creation_timestamp": 1683644600.0,
+    "max_creation_timestamp": 1683644800.0,
+    "count": 2
   },
   {
     "severity": "error",
     "subject": "The CPU is burning",
     "min_revision": 2,
     "max_revision": 2,
-    "min_creation_timestamp": 1674678412.210929,
-    "max_creation_timestamp": 1674678412.210929,
+    "min_creation_timestamp": 1683645000.0,
+    "max_creation_timestamp": 1683645000.0,
     "count": 1
   }
 ]
@@ -277,7 +300,7 @@ The payloads are JSON encoded and have the following structure:
   "heartbeats": [
     {
       "revision": 0,
-      "timestamp": 0.0,
+      "timestamp": 1683645000.0,
       "success": true // did the sensor successfully process the configuration?
     }
   ]
@@ -292,7 +315,7 @@ The payloads are JSON encoded and have the following structure:
   "measurements": [
     {
       "revision": 0,
-      "timestamp": 0.0,
+      "timestamp": 1683645000.0,
       "value": {} // this can be any valid JSON
     }
   ]
@@ -308,7 +331,7 @@ The payloads are JSON encoded and have the following structure:
     {
       "severity": "error", // one of info, warning, error
       "revision": 0,
-      "timestamp": 0.0,
+      "timestamp": 1683645000.0,
       "subject": "The CPU is burning",
       "details": "Please call the fire department" // optional parameter
     }

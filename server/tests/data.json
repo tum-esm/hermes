@@ -80,6 +80,84 @@
             "success": true
         }
     ],
-    "measurements": [],
-    "logs": []
+    "measurements": [
+        {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "measurement": {
+                "somewhere": 530,
+                "what": 2.8,
+                "tomorrow": "yes"
+            },
+            "revision": 0,
+            "creation_timestamp": 100,
+            "receipt_timestamp": 120,
+            "position_in_transmission": 0
+        },
+        {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "measurement": {
+                "somewhere": 20,
+                "what": 1.2,
+                "tomorrow": "no"
+            },
+            "revision": 0,
+            "creation_timestamp": 140,
+            "receipt_timestamp": 200,
+            "position_in_transmission": 0
+        },
+        {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "measurement": {
+                "somewhere": 270,
+                "what": 4.0,
+                "tomorrow": "maybe"
+            },
+            "revision": 0,
+            "creation_timestamp": 180,
+            "receipt_timestamp": 200,
+            "position_in_transmission": 1
+        }
+    ],
+    "logs": [
+        {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "severity": "info",
+            "subject": "Everything is fine",
+            "revision": 0,
+            "creation_timestamp": 0,
+            "receipt_timestamp": 250,
+            "position_in_transmission": 0,
+            "details": null
+        },
+        {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "severity": "warning",
+            "subject": "The CPU is toasty",
+            "revision": 0,
+            "creation_timestamp": 200,
+            "receipt_timestamp": 250,
+            "position_in_transmission": 1,
+            "details": "Get the marshmallows ready!"
+        },
+        {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "severity": "warning",
+            "subject": "The CPU is toasty",
+            "revision": 1,
+            "creation_timestamp": 400,
+            "receipt_timestamp": 450,
+            "position_in_transmission": 0,
+            "details": "Get the marshmallows ready!"
+        },
+        {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "severity": "error",
+            "subject": "The CPU is burning",
+            "revision": 2,
+            "creation_timestamp": 600,
+            "receipt_timestamp": 650,
+            "position_in_transmission": 0,
+            "details": "Please call the fire department."
+        }
+    ]
 }

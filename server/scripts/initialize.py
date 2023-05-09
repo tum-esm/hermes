@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import json
 import os
+import time
 
 import asyncpg
 
@@ -17,10 +18,15 @@ async def _initialize(connection):
 
 async def _populate(connection):
     """Populate the database with example data."""
+    timestamp = time.time() // 3600 * 3600 - 3600
     with open("tests/data.json") as file:
         for table_name, records in json.load(file).items():
-            if not records:
-                continue
+            # Adapt example timestamps to something current
+            for record in records:
+                for key in record:
+                    if key.endswith("_timestamp"):
+                        record[key] += timestamp
+            # Insert records into the database
             identifiers = ", ".join([f"${i+1}" for i in range(len(records[0]))])
             await connection.executemany(
                 f"INSERT INTO {table_name} VALUES ({identifiers});",

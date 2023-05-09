@@ -12,7 +12,8 @@ WHERE
     sensor_identifier = ${sensor_identifier} AND severity = any(
         ARRAY['warning', 'error']
     )
-GROUP BY sensor_identifier, severity, subject;
+GROUP BY sensor_identifier, severity, subject
+ORDER BY max_creation_timestamp ASC;
 
 
 -- name: aggregate-network
