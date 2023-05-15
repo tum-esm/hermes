@@ -52,7 +52,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       console.log(`start fetching data/logs for sensor id ${sensorId}`);
 
       fetch(
-        `${SERVER_URL}/sensors/${sensorId}/measurements?direction=previous`,
+        `${SERVER_URL}/networks/1f705cc5-4242-458b-9201-4217455ea23c/sensors/${sensorId}/measurements?direction=previous`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -73,12 +73,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           console.error(`could not load sensor data for sensor id ${sensorId}`);
         });
 
-      fetch(`${SERVER_URL}/sensors/${sensorId}/logs?direction=previous`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        cache: "no-cache",
-      })
+      fetch(
+        `${SERVER_URL}/networks/1f705cc5-4242-458b-9201-4217455ea23c/sensors/${sensorId}/logs?direction=previous`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-cache",
+        }
+      )
         .then((res) => res?.json())
         .then((data) => {
           if (data === undefined) {
@@ -92,12 +95,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           console.error(`could not load sensor logs for sensor id ${sensorId}`);
         });
 
-      fetch(`${SERVER_URL}/sensors/${sensorId}/logs/aggregates`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        cache: "no-cache",
-      })
+      fetch(
+        `${SERVER_URL}/networks/1f705cc5-4242-458b-9201-4217455ea23c/sensors/${sensorId}/logs/aggregates`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-cache",
+        }
+      )
         .then((res) => res?.json())
         .then((data) => {
           if (data === undefined) {
@@ -125,7 +131,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         />
         <meta property="og:image" content="/favicon.ico" />
       </Head>
-      <div className="flex items-center justify-center w-screen h-screen text-lg xl:hidden">
+      <div className="flex h-screen w-screen items-center justify-center text-lg xl:hidden">
         Please use a larger screen
       </div>
       <div className="hidden xl:block">
@@ -135,7 +141,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <SensorList />
           </nav>
           <div
-            className="flex-grow h-full p-6 pb-32 overflow-y-scroll bg-slate-50 "
+            className="h-full flex-grow overflow-y-scroll bg-slate-50 p-6 pb-32 "
             ref={pageDivRef}
           >
             {children}
