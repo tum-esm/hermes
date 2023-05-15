@@ -138,3 +138,15 @@ pigs w 20 0
 pigs w 21 1
 pigs w 21 0
 ```
+
+<br/>
+
+## Set up LTE Hat
+
+```bash
+sudo apt-get install minicom
+
+minicom -D /dev/ttySC0
+```
+
+https://www.waveshare.com/sim7600e-h-4g-hat.htm
