@@ -146,7 +146,7 @@ class MessagingAgent:
             sent_record_count = 0
             resent_record_count = 0
             delivered_record_count = 0
-            records_to_be_archived: list[custom_types.SQLMQTTRecord] = []
+            records_ids_to_be_removed: list[int] = []
 
             try:
                 assert mqtt_client.is_connected(), "mqtt client is not connected"
@@ -162,8 +162,7 @@ class MessagingAgent:
                         if current_records[record.internal_id].is_published():
                             delivered_record_count += 1
                             del current_records[record.internal_id]
-                            record.status = "done"
-                            records_to_be_archived.append(record)
+                            records_ids_to_be_removed.append(record.internal_id)
 
                     # resending is required, when current_messages are
                     # lost due to restarting the program
@@ -171,8 +170,8 @@ class MessagingAgent:
                         _publish_record(record)
                         resent_record_count += 1
 
-                # mark successful messages in active queue
-                active_mqtt_queue.update_records(records_to_be_archived)
+                # remove successfully delivered messages from the active queue
+                active_mqtt_queue.remove_records_by_id(records_ids_to_be_removed)
 
                 # -----------------------------------------------------------------
                 # SEND PENDING MESSAGES
