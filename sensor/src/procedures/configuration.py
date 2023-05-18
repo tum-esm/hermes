@@ -19,6 +19,7 @@ import json
 import os
 import re
 import shutil
+import time
 from typing import Callable, Literal
 from src import custom_types, utils
 
@@ -65,6 +66,7 @@ class ConfigurationProcedure:
         self.logger = utils.Logger(origin="configuration-procedure")
         self.config = config
         self._remove_old_venvs()
+        self.active_mqtt_queue = utils.ActiveMQTTQueue()
 
     def run(self, config_request: custom_types.MQTTConfigurationRequest) -> None:
         new_revision = config_request.revision
@@ -132,6 +134,16 @@ class ConfigurationProcedure:
                     config=self.config,
                 )
 
+            # send UPGRADE SUCCESS message
+            self.active_mqtt_queue.enqueue_message(
+                self.config,
+                custom_types.MQTTHeartbeatMessageBody(
+                    revision=new_revision,
+                    timestamp=time.time(),
+                    success=True,
+                ),
+            )
+
             raise ConfigurationProcedure.ExitOnUpdateSuccess()
 
         except ConfigurationProcedure.ExitOnUpdateSuccess as e:
@@ -142,6 +154,16 @@ class ConfigurationProcedure:
                 e,
                 label="upgrading to revision {new_revision}: exception during upgrade",
                 config=self.config,
+            )
+
+            # send UPGRADE FAILED message
+            self.active_mqtt_queue.enqueue_message(
+                self.config,
+                custom_types.MQTTHeartbeatMessageBody(
+                    revision=new_revision,
+                    timestamp=time.time(),
+                    success=False,
+                ),
             )
 
         if has_same_directory:
