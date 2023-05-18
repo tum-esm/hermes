@@ -7,7 +7,6 @@ from .bme280_sensor import BME280SensorInterface
 from .sht45_sensor import SHT45SensorInterface
 from .pump import PumpInterface
 from .ups import UPSInterface
-from .usb_ports import USBPortInterface
 from .valves import ValveInterface
 from .wind_sensor import WindSensorInterface
 

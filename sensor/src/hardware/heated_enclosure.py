@@ -4,7 +4,6 @@ import os
 import time
 from typing import Literal, Optional
 from src import utils, custom_types
-from .usb_ports import USBPortInterface
 
 dirname = os.path.dirname
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
@@ -12,6 +11,28 @@ ARDUINO_SCRIPT_PATH = os.path.join(PROJECT_DIR, "src", "heated_enclosure")
 
 ARDUINO_CONFIG_TEMPLATE_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.template.h")
 ARDUINO_CONFIG_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.h")
+
+
+class _USBPortInterface:
+    """This interface is used to toggle the power of all USB
+    ports in case the Arduino or the LTE hat behave weird"""
+
+    @staticmethod
+    def toggle_usb_power(delay: int = 5) -> None:
+        """turn off the power on all USB ports, wait n seconds,
+        turn it on again."""
+
+        logger = utils.Logger("usb-port-interface")
+
+        logger.info("performing power toggle")
+
+        logger.debug("toggling USB hub 1")
+        utils.run_shell_command(f"sudo uhubctl -a cycle -l 1 -d {delay}")
+
+        logger.debug("toggling USB hub 2")
+        utils.run_shell_command(f"sudo uhubctl -a cycle -l 2 -d {delay}")
+
+        logger.debug("power toggle successful")
 
 
 class HeatedEnclosureInterface:
@@ -173,7 +194,7 @@ class HeatedEnclosureThread:
     def communication_loop(config: custom_types.Config) -> None:
         heated_enclosure: Optional[HeatedEnclosureInterface] = None
 
-        usb_ports = USBPortInterface()
+        usb_ports = _USBPortInterface()
         active_mqtt_queue = utils.ActiveMQTTQueue()
         logger = utils.Logger("heated-enclosure-thread")
 
