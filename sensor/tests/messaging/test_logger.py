@@ -31,7 +31,6 @@ def test_logger_with_sending(messaging_agent_with_sending: None) -> None:
 @pytest.mark.version_update
 @pytest.mark.ci
 def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None:
-
     config = utils.ConfigInterface.read()
     config.active_components.mqtt_communication = True
     active_mqtt_queue = utils.ActiveMQTTQueue()
@@ -90,7 +89,6 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     expect_log_file_contents(forbidden_content_blocks=generated_log_lines)
     assert len(active_mqtt_queue.get_rows_by_status("pending")) == 0
     assert len(active_mqtt_queue.get_rows_by_status("in-progress")) == 0
-    assert len(active_mqtt_queue.get_rows_by_status("done")) == 0
 
     TEST_MESSAGE_DATE_STRING = datetime.utcnow().strftime("%Y-%m-%d")
     MESSAGE_ARCHIVE_FILE = join(
@@ -130,8 +128,10 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
 
     active_logs_messages = [
         custom_types.MQTTLogMessage(**m.content.dict())
-        for m in active_mqtt_queue.get_rows_by_status(
-            "pending" if mqtt_communication_enabled else "done"
+        for m in (
+            active_mqtt_queue.get_rows_by_status("pending")
+            if mqtt_communication_enabled
+            else []
         )
     ]
     active_logs_messages.sort(key=lambda m: m.body.timestamp)
@@ -160,7 +160,6 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         return (
             len(active_mqtt_queue.get_rows_by_status("pending"))
             + len(active_mqtt_queue.get_rows_by_status("in-progress"))
-            + len(active_mqtt_queue.get_rows_by_status("done"))
         ) == 0
 
     wait_for_condition(

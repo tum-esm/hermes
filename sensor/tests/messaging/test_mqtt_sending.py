@@ -39,7 +39,6 @@ def _test_message_sending(mqtt_communication_enabled: bool) -> None:
 
     assert len(active_mqtt_queue.get_rows_by_status("pending")) == 0
     assert len(active_mqtt_queue.get_rows_by_status("in-progress")) == 0
-    assert len(active_mqtt_queue.get_rows_by_status("done")) == 0
 
     with open(CONFIG_PATH) as f:
         config = custom_types.Config(**json.load(f))
@@ -61,8 +60,10 @@ def _test_message_sending(mqtt_communication_enabled: bool) -> None:
     active_mqtt_queue.enqueue_message(config, dummy_data_message_body)
 
     # assert dummy message to be in active queue
-    records = active_mqtt_queue.get_rows_by_status(
-        "pending" if mqtt_communication_enabled else "done"
+    records = (
+        active_mqtt_queue.get_rows_by_status("pending")
+        if mqtt_communication_enabled
+        else []
     )
     assert len(records) == 1
     record = records[0]
@@ -77,7 +78,6 @@ def _test_message_sending(mqtt_communication_enabled: bool) -> None:
         return (
             len(active_mqtt_queue.get_rows_by_status("pending"))
             + len(active_mqtt_queue.get_rows_by_status("in-progress"))
-            + len(active_mqtt_queue.get_rows_by_status("done"))
         ) == 0
 
     # assert active queue to be empty
