@@ -1,46 +1,26 @@
-import datetime
 import json
 import queue
 import signal
 import time
 from typing import Any, Callable, Optional
 import paho.mqtt.client
-import os
-from os.path import dirname
-import pytz
 import multiprocessing
 import multiprocessing.synchronize
 from src import custom_types, utils
 
-PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
-QUEUE_ARCHIVE_DIR = os.path.join(PROJECT_DIR, "data", "archive")
-
 
 class MessagingAgent:
     communication_loop_process: Optional[multiprocessing.Process] = None
-    archiving_loop_process: Optional[multiprocessing.Process] = None
     config_request_queue: queue.Queue[
         custom_types.MQTTConfigurationRequest
     ] = multiprocessing.Queue()
 
     class CommunicationOutage(Exception):
-        """raised when the sending or the archiving loop stopped"""
+        """raised when the communication loop has stopped unexpectedly"""
 
     @staticmethod
     def init(config: custom_types.Config) -> None:
-        """start the archiving loop and the communication loop
-        in two separate processes"""
-
-        # the archiving loop takes care of moving processed
-        # messages from the active queue db to the archive
-        if MessagingAgent.archiving_loop_process is None:
-            new_process = multiprocessing.Process(
-                target=MessagingAgent.archiving_loop,
-                args=(config,),
-                daemon=True,
-            )
-            new_process.start()
-            MessagingAgent.archiving_loop_process = new_process
+        """start the the communication loop in a separate process"""
 
         # the communication loop starts a connection to the
         # mqtt broker, receives config messages and send out
@@ -63,81 +43,12 @@ class MessagingAgent:
 
     @staticmethod
     def deinit() -> None:
-        """stop the archiving loop and the communication loop"""
-
-        if MessagingAgent.archiving_loop_process is not None:
-            MessagingAgent.archiving_loop_process.terminate()
-            MessagingAgent.archiving_loop_process.join()
-            MessagingAgent.archiving_loop_process = None
+        """stop the communication loop process"""
 
         if MessagingAgent.communication_loop_process is not None:
             MessagingAgent.communication_loop_process.terminate()
             MessagingAgent.communication_loop_process.join()
             MessagingAgent.communication_loop_process = None
-
-    @staticmethod
-    def archiving_loop(config: custom_types.Config) -> None:
-        """archive all message in the active queue that have the
-        status `delivered` or `sending-skipped`; this function is
-        blocking and should be called in a thread or subprocess"""
-
-        logger = utils.Logger(origin="message-archiving")
-        logger.info("starting loop")
-
-        try:
-            active_mqtt_queue = utils.ActiveMQTTQueue()
-        except Exception as e:
-            logger.exception(e, "could not connect to active mqtt queue", config=config)
-            raise e
-
-        def graceful_teardown(*args: Any) -> None:
-            logger.info("shutting down")
-            exit(0)
-
-        signal.signal(signal.SIGINT, graceful_teardown)
-        signal.signal(signal.SIGTERM, graceful_teardown)
-        logger.info("established graceful teardown hook")
-
-        # maps date_strings to lists of messages to be archived
-        # for a particular data: 1. gather messages, 2. archive
-        # all messages date per date
-        messages_to_be_archived: dict[str, list[custom_types.MQTTMessage]] = {}
-
-        while True:
-            # DETERMINE MESSAGES TO BE ARCHIVED
-            records_to_be_archived = active_mqtt_queue.get_rows_by_status("done")
-
-            if config.verbose_logging:
-                logger.info(
-                    f"found {len(records_to_be_archived)} record(s) to be archived"
-                )
-
-            # SPLIT RECORDS BY DATE
-            messages_to_be_archived = {}
-            for record in records_to_be_archived:
-                date_string = datetime.datetime.fromtimestamp(
-                    record.content.body.timestamp, tz=pytz.timezone("UTC")
-                ).strftime("%Y-%m-%d")
-                if date_string not in messages_to_be_archived.keys():
-                    messages_to_be_archived[date_string] = []
-                messages_to_be_archived[date_string].append(record.content)
-
-            # DUMP ARCHIVE MESSAGES
-            for date_string, messages in messages_to_be_archived.items():
-                with open(
-                    os.path.join(
-                        QUEUE_ARCHIVE_DIR,
-                        f"delivered-mqtt-messages-{date_string}.json",
-                    ),
-                    "a",
-                ) as f:
-                    for m in messages:
-                        f.write(json.dumps(m.dict()) + "\n")
-
-            # DUMP REMAINING ACTIVE MESSAGES
-            active_mqtt_queue.remove_messages_by_status("done")
-
-            time.sleep(3)
 
     @staticmethod
     def communication_loop(
@@ -334,12 +245,6 @@ class MessagingAgent:
             if not MessagingAgent.communication_loop_process.is_alive():
                 raise MessagingAgent.CommunicationOutage(
                     "communication loop process is not running"
-                )
-
-        if MessagingAgent.archiving_loop_process is not None:
-            if not MessagingAgent.archiving_loop_process.is_alive():
-                raise MessagingAgent.CommunicationOutage(
-                    "archiving loop process is not running"
                 )
 
     @staticmethod
