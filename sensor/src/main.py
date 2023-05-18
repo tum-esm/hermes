@@ -141,9 +141,16 @@ def run() -> None:
 
     # tear down hardware on program termination
     def graceful_teardown(*args: Any) -> None:
-        logger.info("starting graceful shutdown")
+        def _raise_teardown_timeout(*args: Any) -> None:
+            logger.info("graceful teardown took too long")
+            raise TimeoutError("teardown took too long")
+
+        signal.signal(signal.SIGALRM, _raise_teardown_timeout)
+        signal.alarm(10)
+
+        logger.info("starting graceful teardown")
         hardware_interface.teardown()
-        logger.info("finished graceful shutdown")
+        logger.info("finished graceful teardown")
         exit(0)
 
     signal.signal(signal.SIGINT, graceful_teardown)
@@ -203,7 +210,6 @@ def run() -> None:
             logger.info("checking for new config messages")
             new_config_message = procedures.MessagingAgent.get_config_message()
             if new_config_message is not None:
-
                 try:
                     hardware_interface.teardown()
                 except Exception as e:

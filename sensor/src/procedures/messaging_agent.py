@@ -80,6 +80,13 @@ class MessagingAgent:
 
         # tear down connection on program termination
         def graceful_teardown(*args: Any) -> None:
+            def _raise_teardown_timeout(*args: Any) -> None:
+                logger.info("graceful teardown took too long")
+                raise TimeoutError("teardown took too long")
+
+            signal.signal(signal.SIGALRM, _raise_teardown_timeout)
+            signal.alarm(10)
+
             logger.info("starting graceful shutdown")
             mqtt_connection.teardown()
             logger.info("finished graceful shutdown")
