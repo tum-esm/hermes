@@ -17,17 +17,41 @@ class SystemCheckProcedure:
         self.active_mqtt_queue = utils.ActiveMQTTQueue()
 
     def run(self) -> None:
-        # evaluate system ambient conditions
-        mainboard_sensor_data = self.hardware_interface.mainboard_sensor.get_data()
+        """runs system check procedure
+
+        - log mainboard/CPU temperature
+        - log enclosure humidity and pressure
+        - check whether mainboard/CPU temperature is above 70°C
+        - log CPU/disk usage
+        - check whether CPU/disk usage is above 80%
+        - send system data via MQTT
+        - check hardware interfaces for errors
+        - check messaging agent for errors
+        """
+
+        mainboard_bme280_data = self.hardware_interface.mainboard_sensor.get_data()
+        mainboard_temperature = mainboard_bme280_data.temperature
         cpu_temperature = utils.get_cpu_temperature()
         self.logger.debug(
-            f"mainboard temp. = {mainboard_sensor_data.temperature} °C, "
+            f"mainboard temp. = {mainboard_temperature} °C, "
             + f"raspi cpu temp. = {cpu_temperature} °C"
         )
         self.logger.debug(
-            f"enclosure humidity = {mainboard_sensor_data.humidity} % rH, "
-            + f"enclosure pressure = {mainboard_sensor_data.pressure} hPa"
+            f"enclosure humidity = {mainboard_bme280_data.humidity} % rH, "
+            + f"enclosure pressure = {mainboard_bme280_data.pressure} hPa"
         )
+
+        if (mainboard_temperature is not None) and (mainboard_temperature > 70):
+            self.logger.warning(
+                f"mainboard temperature is very high ({mainboard_temperature} °C)",
+                config=self.config,
+            )
+
+        if (cpu_temperature is not None) and (cpu_temperature > 70):
+            self.logger.warning(
+                f"CPU temperature is very high ({cpu_temperature} °C)",
+                config=self.config,
+            )
 
         # evaluate disk usage
         disk_usage = psutil.disk_usage("/")
@@ -44,7 +68,7 @@ class SystemCheckProcedure:
         # evaluate CPU usage
         cpu_usage_percent = psutil.cpu_percent()
         self.logger.debug(f"{cpu_usage_percent} % total CPU usage")
-        if cpu_usage_percent > 90:
+        if cpu_usage_percent > 80:
             self.logger.warning(
                 f"CPU usage is very high ({cpu_usage_percent} %)", config=self.config
             )
@@ -57,10 +81,10 @@ class SystemCheckProcedure:
                 value=custom_types.MQTTSystemData(
                     variant="system",
                     data=custom_types.SystemData(
-                        mainboard_temperature=mainboard_sensor_data.temperature,
+                        mainboard_temperature=mainboard_temperature,
                         cpu_temperature=cpu_temperature,
-                        enclosure_humidity=mainboard_sensor_data.humidity,
-                        enclosure_pressure=mainboard_sensor_data.pressure,
+                        enclosure_humidity=mainboard_bme280_data.humidity,
+                        enclosure_pressure=mainboard_bme280_data.pressure,
                         disk_usage=round(disk_usage.percent / 100, 4),
                         cpu_usage=round(cpu_usage_percent / 100, 4),
                     ),

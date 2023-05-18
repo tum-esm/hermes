@@ -74,24 +74,12 @@ class BME280SensorInterface:
                 return output
             raise self.DeviceFailure("could not sample data")
 
-    # TODO: move these checks into syste checks module
     def check_errors(self) -> None:
-        """logs warnings when mainboard or CPU temperature are above 70°C"""
+        """Tries to fetch data, possibly raises `DeviceFailure`"""
+
         data = self.get_data()
-
-        if (data.temperature is not None) and (data.temperature > 70):
-            self.logger.warning(
-                f"mainboard temperature is very high ({data.temperature}°C)",
-                config=self.config,
-            )
-
-        # if (system_data.cpu_temperature is not None) and (
-        #     system_data.cpu_temperature > 70
-        # ):
-        #     self.logger.warning(
-        #         f"cpu temperature is very high ({system_data.cpu_temperature}°C)",
-        #         config=self.config,
-        #     )
+        if data.temperature is None:
+            raise BME280SensorInterface.DeviceFailure("could not fetch data")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
