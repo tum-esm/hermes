@@ -6,7 +6,8 @@
         "calibration_procedures": false,
         "mqtt_communication": true,
         "heated_enclosure_communication": false,
-        "pump_speed_monitoring": false
+        "pump_speed_monitoring": false,
+        "ignore_missing_air_inlet_sensor": false
     },
     "hardware": {
         "pumped_litres_per_round": 0.003,
@@ -18,9 +19,7 @@
             "seconds_per_measurement": 10
         },
         "pumped_litres_per_minute": 4,
-        "air_inlets": [
-            { "valve_number": 1, "direction": 0, "tube_length": 50 }
-        ]
+        "air_inlets": [{ "valve_number": 1, "direction": 0, "tube_length": 50 }]
     },
     "calibration": {
         "start_timestamp": 1682503200,

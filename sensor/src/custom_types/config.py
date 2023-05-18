@@ -14,6 +14,7 @@ class ActiveComponentsConfig(BaseModel):
     mqtt_communication: bool
     heated_enclosure_communication: bool
     pump_speed_monitoring: bool
+    ignore_missing_air_inlet_sensor: bool
 
     # validators
     _val_bool = validator("*", pre=True, allow_reuse=True)(
