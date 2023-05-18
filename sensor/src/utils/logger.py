@@ -1,8 +1,8 @@
-import os
-from os.path import dirname, abspath, join
 import time
 import traceback
-from datetime import datetime, timedelta
+import filelock
+from datetime import datetime
+from os.path import dirname, abspath, join
 from typing import Literal, Optional
 
 from src import custom_types
@@ -11,29 +11,20 @@ from .functions import CommandLineException
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOGS_ARCHIVE_DIR = join(PROJECT_DIR, "logs", "archive")
+FILELOCK_PATH = join(PROJECT_DIR, "logs", "archive.lock")
 
 # The logging module behaved very weird with the setup we have
 # therefore I am just formatting and appending the log lines
 # manually. Doesn't really make a performance difference
 
 
-def pad_str_right(text: str, min_width: int, fill_char: Literal["0", " "] = " ") -> str:
+def _pad_str_right(
+    text: str, min_width: int, fill_char: Literal["0", " "] = " "
+) -> str:
     if len(text) >= min_width:
         return text
     else:
         return text + (fill_char * (min_width - len(text)))
-
-
-def log_line_has_date(log_line: str) -> bool:
-    """returns true when a give log line (string) starts
-    with a valid date. This is not true for exception
-    tracebacks. This log line time is used to determine
-    which file to archive logs lines into"""
-    try:
-        datetime.strptime(log_line[:10], "%Y-%m-%d")
-        return True
-    except:
-        return False
 
 
 class Logger:
@@ -47,6 +38,7 @@ class Logger:
         self.print_to_console = print_to_console
         self.write_to_file = write_to_file
         self.active_mqtt_queue = ActiveMQTTQueue()
+        self.filelock = filelock.FileLock(FILELOCK_PATH, timeout=3)
 
     def horizontal_line(self, fill_char: Literal["-", "=", ".", "_"] = "=") -> None:
         """writes a debug log line, used for verbose output"""
@@ -183,19 +175,18 @@ class Logger:
 
         log_string = (
             f"{str(now)[:-3]} UTC{'' if utc_offset < 0 else '+'}{utc_offset} "
-            + f"- {pad_str_right(self.origin, min_width=23)} "
-            + f"- {pad_str_right(level, min_width=13)} "
+            + f"- {_pad_str_right(self.origin, min_width=23)} "
+            + f"- {_pad_str_right(level, min_width=13)} "
             + f"- {message}\n"
         )
         if self.print_to_console:
             print(log_string, end="")
         if self.write_to_file:
-            # YYYYMMDD.log
-            log_file_name = str(now)[:10].replace("-", "") + ".log"
-            with open(
-                os.path.join(LOGS_ARCHIVE_DIR, "archive", log_file_name), "a"
-            ) as f1:
-                f1.write(log_string)
+            # YYYY-MM-DD.log
+            log_file_name = str(now)[:10] + ".log"
+            with self.filelock:
+                with open(join(LOGS_ARCHIVE_DIR, "archive", log_file_name), "a") as f1:
+                    f1.write(log_string)
 
     def _write_mqtt_message(
         self,
