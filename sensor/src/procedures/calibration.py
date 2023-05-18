@@ -50,7 +50,8 @@ class CalibrationProcedure:
     def run(self) -> None:
         calibration_time = datetime.utcnow().timestamp()
         self.logger.info(
-            f"running calibration procedure at timestamp {calibration_time}"
+            f"running calibration procedure at timestamp {calibration_time}",
+            config=self.config,
         )
         result = custom_types.CalibrationProcedureData(
             gases=self.config.calibration.gases, readings=[], timestamps=[]
