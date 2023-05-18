@@ -5,6 +5,10 @@ from src import utils, custom_types
 
 
 class BME280SensorInterface:
+    @staticmethod
+    class DeviceFailure(Exception):
+        """raised when the sensor is not available"""
+
     def __init__(
         self,
         config: custom_types.Config,
@@ -12,46 +16,46 @@ class BME280SensorInterface:
         testing: bool = False,
     ) -> None:
         self.logger = utils.Logger(
-            "mainboard-sensor",
+            "mainboard-bme280" if (self.variant == "mainboard") else "air-inlet-bme280",
             print_to_console=testing,
             write_to_file=(not testing),
         )
         self.config = config
+        self.variant = variant
         self.logger.info("Starting initialization")
 
         # set up connection to BME280 sensor
         self.i2c_device = smbus2.SMBus(1)
         self.bus = smbus2.SMBus(1)
-        self.address = 0x77 if variant == "mainboard" else 0x76
+        self.address = 0x77 if (variant == "mainboard") else 0x76
         self.compensation_params: Optional[bme280.params] = None
-        self.init_sensor()
-
         self.logger.info("Finished initialization")
-
-    def init_sensor(self) -> None:
-        try:
-            self.compensation_params = bme280.load_calibration_params(
-                self.bus, self.address
-            )
-        except OSError:
-            self.logger.warning(
-                "could not fetch compensation params", config=self.config
-            )
 
     def get_data(self) -> custom_types.BME280SensorData:
         """log mainboard and cpu temperature and enclosure humidity and pressure"""
 
-        if self.compensation_params is None:
-            self.init_sensor()
-
-        bme280_data: Optional[bme280.compensated_readings] = None
         output = custom_types.BME280SensorData(
             temperature=None,
             humidity=None,
             pressure=None,
         )
+        if self.compensation_params is None:
+            try:
+                self.compensation_params = bme280.load_calibration_params(
+                    self.bus, self.address
+                )
+            except OSError:
+                self.logger.warning(
+                    "could not fetch compensation params", config=self.config
+                )
+                if (self.variant == "air-inlet") and (
+                    self.config.active_components.ignore_missing_air_inlet_sensor
+                ):
+                    return output
+                raise self.DeviceFailure("could not fetch compensation params")
+
+        bme280_data: Optional[bme280.compensated_readings] = None
         try:
-            assert self.compensation_params is not None
             bme280_data = bme280.sample(
                 self.bus,
                 self.address,
@@ -62,9 +66,13 @@ class BME280SensorInterface:
             output.pressure = round(bme280_data.pressure, 2)
 
         except (AssertionError, OSError):
+            self.compensation_params = None
             self.logger.warning("could not sample data", config=self.config)
-
-        return output
+            if (self.variant == "air-inlet") and (
+                self.config.active_components.ignore_missing_air_inlet_sensor
+            ):
+                return output
+            raise self.DeviceFailure("could not sample data")
 
     # TODO: move these checks into syste checks module
     def check_errors(self) -> None:
