@@ -1,5 +1,5 @@
+import os
 from os.path import dirname, abspath, join
-import sys
 import time
 import traceback
 from datetime import datetime, timedelta
@@ -11,7 +11,6 @@ from .functions import CommandLineException
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOGS_ARCHIVE_DIR = join(PROJECT_DIR, "logs", "archive")
-LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
 
 # The logging module behaved very weird with the setup we have
 # therefore I am just formatting and appending the log lines
@@ -38,8 +37,6 @@ def log_line_has_date(log_line: str) -> bool:
 
 
 class Logger:
-    last_archive_time = datetime.now()
-
     def __init__(
         self,
         origin: str = "insert-name-here",
@@ -193,12 +190,12 @@ class Logger:
         if self.print_to_console:
             print(log_string, end="")
         if self.write_to_file:
-            with open(LOG_FILE, "a") as f1:
+            # YYYYMMDD.log
+            log_file_name = str(now)[:10].replace("-", "") + ".log"
+            with open(
+                os.path.join(LOGS_ARCHIVE_DIR, "archive", log_file_name), "a"
+            ) as f1:
                 f1.write(log_string)
-
-            # Archive lines older than 60 minutes, every 10 minutes
-            if (now - Logger.last_archive_time).total_seconds() > 600:
-                self._archive()
 
     def _write_mqtt_message(
         self,
@@ -233,46 +230,3 @@ class Logger:
                 revision=config.revision,
             ),
         )
-
-    def _archive(self) -> None:
-        """moves old log lines in "logs/current-logs.log" into an
-        archive file "logs/archive/YYYYMMDD.log". log lines from
-        the last hour will remain"""
-
-        with open(LOG_FILE, "r") as f:
-            log_lines_in_file = f.readlines()
-        if len(log_lines_in_file) == 0:
-            return
-
-        lines_to_be_kept, lines_to_be_archived = [], []
-        latest_time = str(datetime.now() - timedelta(hours=1))
-        line_time = log_lines_in_file[0][:26]
-        for index, line in enumerate(log_lines_in_file):
-            if log_line_has_date(line):
-                line_time = line[:26]
-            if line_time > latest_time:
-                lines_to_be_archived = log_lines_in_file[:index]
-                lines_to_be_kept = log_lines_in_file[index:]
-                break
-
-        with open(LOG_FILE, "w") as f:
-            f.writelines(lines_to_be_kept)
-
-        if len(lines_to_be_archived) == 0:
-            return
-
-        archive_log_date_groups: dict[str, list[str]] = {}
-        line_date = lines_to_be_archived[0][:10].replace("-", "")
-        for line in lines_to_be_archived:
-            if log_line_has_date(line):
-                line_date = line[:10].replace("-", "")
-            if line_date not in archive_log_date_groups.keys():
-                archive_log_date_groups[line_date] = []
-            archive_log_date_groups[line_date].append(line)
-
-        for date in archive_log_date_groups.keys():
-            filename = join(LOGS_ARCHIVE_DIR, f"{date}.log")
-            with open(filename, "a") as f:
-                f.writelines(archive_log_date_groups[date] + [""])
-
-        Logger.last_archive_time = datetime.now()
