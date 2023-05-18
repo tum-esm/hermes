@@ -78,8 +78,17 @@ class MessagingAgent:
             "established connection to mqtt broker and active mqtt queue",
         )
 
+        # periodically send a heartbeat message
+        def _enqueue_heartbeat_message() -> None:
+            active_mqtt_queue.enqueue_message(
+                config,
+                custom_types.MQTTHeartbeatMessageBody(
+                    revision=config.revision, timestamp=time.time(), success=True
+                ),
+            )
+
         # tear down connection on program termination
-        def graceful_teardown(*args: Any) -> None:
+        def _graceful_teardown(*args: Any) -> None:
             def _raise_teardown_timeout(*args: Any) -> None:
                 logger.info("graceful teardown took too long")
                 raise TimeoutError("teardown took too long")
@@ -92,8 +101,8 @@ class MessagingAgent:
             logger.info("finished graceful shutdown")
             exit(0)
 
-        signal.signal(signal.SIGINT, graceful_teardown)
-        signal.signal(signal.SIGTERM, graceful_teardown)
+        signal.signal(signal.SIGINT, _graceful_teardown)
+        signal.signal(signal.SIGTERM, _graceful_teardown)
         logger.info("established graceful teardown hook")
 
         try:
@@ -155,7 +164,15 @@ class MessagingAgent:
 
         # -----------------------------------------------------------------
 
+        last_hearbeat_timestamp: float = 0
+
         while True:
+            # send heartbeat message every 5 minutes
+            now = time.time()
+            if (now - last_hearbeat_timestamp) > 300:
+                _enqueue_heartbeat_message()
+                last_hearbeat_timestamp = now
+
             sent_record_count = 0
             resent_record_count = 0
             delivered_record_count = 0
