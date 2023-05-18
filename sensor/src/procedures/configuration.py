@@ -39,17 +39,6 @@ CURRENT_TMP_CONFIG_PATH = os.path.join(
 )
 
 
-def clear_path(path: str) -> bool:
-    """remove a file or directory, returns true if it existed"""
-    if os.path.isfile(path):
-        os.remove(path)
-        return True
-    if os.path.isdir(path):
-        shutil.rmtree(path)
-        return True
-    return False
-
-
 def store_current_config() -> None:
     if os.path.isfile(CURRENT_TMP_CONFIG_PATH):
         os.remove(CURRENT_TMP_CONFIG_PATH)
@@ -80,6 +69,17 @@ class ConfigurationProcedure:
     def run(self, config_request: custom_types.MQTTConfigurationRequest) -> None:
         new_revision = config_request.revision
         new_version = config_request.configuration.version
+
+        if code_path(self.config.version) != ROOT_PATH:
+            self.logger.info(
+                "skipping upgrade because executed code is not in default directory",
+                config=self.config,
+                details=(
+                    f'current directory = "{PROJECT_DIR}, '
+                    + f'expected directory = "{code_path(self.config.version)}"'
+                ),
+            )
+            return
 
         if self.config.revision >= new_revision:
             self.logger.info(
