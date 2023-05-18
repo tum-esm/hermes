@@ -1,12 +1,17 @@
+from datetime import datetime
+import pytz
 import json
 import sqlite3
 import os
 from os.path import dirname
 from typing import Any, Literal, Optional
+import filelock
 from src import custom_types
 
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 ACTIVE_QUEUE_FILE = os.path.join(PROJECT_DIR, "data", "active-mqtt-messages.db")
+QUEUE_ARCHIVE_DIR = os.path.join(PROJECT_DIR, "data", "archive")
+ARCHIVE_FILELOCK_PATH = os.path.join(PROJECT_DIR, "data", "archive.lock")
 
 
 class ActiveMQTTQueue:
@@ -21,6 +26,7 @@ class ActiveMQTTQueue:
                 );
             """
         )
+        self.filelock = filelock.FileLock(ARCHIVE_FILELOCK_PATH, timeout=3)
 
     def __read_sql(self, sql_statement: str) -> list[Any]:
         with self.connection:
@@ -43,28 +49,45 @@ class ActiveMQTTQueue:
         message: custom_types.MQTTMessage,
         status: Literal["pending", "done"],
     ) -> None:
-        """add a new pending message to the active queue"""
-        self.__write_sql(
-            f"""
-                INSERT INTO QUEUE (status, content)
-                VALUES (
-                    ?,
-                    ?
-                );
-            """,
-            parameters=[(status, json.dumps(message.dict()))],
-        )
+        """add a new message to the active queue db and message archive"""
+
+        # add pending messages to active queue
+        if status == "pending":
+            self.__write_sql(
+                f"""
+                    INSERT INTO QUEUE (status, content)
+                    VALUES (
+                        ?,
+                        ?
+                    );
+                """,
+                parameters=[(status, json.dumps(message.dict()))],
+            )
+
+        # write all messages to archive immediately
+        date_string = datetime.fromtimestamp(
+            message.body.timestamp, tz=pytz.timezone("UTC")
+        ).strftime("%Y-%m-%d")
+        with self.filelock:
+            with open(
+                os.path.join(
+                    QUEUE_ARCHIVE_DIR,
+                    f"mqtt-messages-{date_string}.json",
+                ),
+                "a",
+            ) as f:
+                f.write(json.dumps(message.dict()) + "\n")
 
     def get_rows_by_status(
         self,
-        status: Literal["pending", "in-progress", "done"],
+        status: Literal["pending", "in-progress"],
         limit: Optional[int] = None,
     ) -> list[custom_types.SQLMQTTRecord]:
         """Used for:
         * "Which rows have to be sent out?"
         * "Which rows have been sent but not delivered"
-        * "Which rows can be archived?"
-        """
+        * "Which rows can be archived?" """
+
         records = self.__read_sql(
             f"""
             SELECT internal_id, status, content FROM QUEUE
@@ -86,18 +109,18 @@ class ActiveMQTTQueue:
     def update_records(self, records: list[custom_types.SQLMQTTRecord]) -> None:
         """Records distinguished by `interal_id`. Used for:
         * "Message has been `sent`"
-        * "Message has been `delivered`"
-        """
+        * "Message has been `delivered`" """
+
         if len(records) == 0:
             return
 
         self.__write_sql(
             f"""
-                    UPDATE QUEUE SET
-                        status = ?,
-                        content = ?
-                    WHERE internal_id = ?;
-                """,
+                UPDATE QUEUE SET
+                    status = ?,
+                    content = ?
+                WHERE internal_id = ?;
+            """,
             parameters=[
                 (
                     r.status,
@@ -108,12 +131,21 @@ class ActiveMQTTQueue:
             ],
         )
 
-    def remove_messages_by_status(
-        self,
-        status: Literal["pending", "in-progress", "done"],
-    ) -> None:
-        """delete all rows with status 'done'"""
-        self.__write_sql(f"DELETE FROM QUEUE WHERE status = '{status}';")
+    def remove_records_by_id(self, record_ids: list[int]) -> None:
+        """Records distinguished by `interal_id`. Used for:
+        * "Message has been `sent`"
+        * "Message has been `delivered`" """
+
+        if len(record_ids) == 0:
+            return
+
+        self.__write_sql(
+            f"""
+                DELETE FROM QUEUE
+                WHERE internal_id = ?;
+            """,
+            parameters=[(rid,) for rid in record_ids],
+        )
 
     def enqueue_message(
         self,
