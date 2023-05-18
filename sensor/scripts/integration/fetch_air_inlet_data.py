@@ -11,7 +11,7 @@ from src import utils, hardware
 
 config = utils.ConfigInterface.read()
 sht45 = hardware.SHT45SensorInterface(config)
-bme280 = hardware.BME280SensorInterface(config, variant="air inlet")
+bme280 = hardware.BME280SensorInterface(config, variant="air-inlet")
 
 while True:
     print("SHT45:", sht45.get_data())

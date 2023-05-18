@@ -2,7 +2,11 @@ import filelock
 from src import custom_types, utils
 
 from .co2_sensor import CO2SensorInterface
-from .heated_enclosure import HeatedEnclosureInterface, HeatedEnclosureThread
+from .heated_enclosure import (
+    HeatedEnclosureInterface,
+    HeatedEnclosureThread,
+    USBPortInterface,
+)
 from .bme280_sensor import BME280SensorInterface
 from .sht45_sensor import SHT45SensorInterface
 from .pump import PumpInterface
@@ -37,7 +41,7 @@ class HardwareInterface:
 
         # measurement sensors
         self.air_inlet_bme280_sensor = BME280SensorInterface(
-            config, variant="air inlet", testing=self.testing
+            config, variant="air-inlet", testing=self.testing
         )
         self.air_inlet_sht45_sensor = SHT45SensorInterface(config, testing=self.testing)
         self.co2_sensor = CO2SensorInterface(config, testing=self.testing)
@@ -105,7 +109,7 @@ class HardwareInterface:
 
         # measurement sensors
         self.air_inlet_bme280_sensor = BME280SensorInterface(
-            config, variant="air inlet", testing=self.testing
+            config, variant="air-inlet", testing=self.testing
         )
         self.air_inlet_sht45_sensor = SHT45SensorInterface(config, testing=self.testing)
         self.co2_sensor = CO2SensorInterface(config, testing=self.testing)

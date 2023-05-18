@@ -12,11 +12,11 @@ class BME280SensorInterface:
     def __init__(
         self,
         config: custom_types.Config,
-        variant: Literal["mainboard", "air inlet"],
+        variant: Literal["mainboard", "air-inlet"],
         testing: bool = False,
     ) -> None:
         self.logger = utils.Logger(
-            "mainboard-bme280" if (self.variant == "mainboard") else "air-inlet-bme280",
+            "mainboard-bme280" if (variant == "mainboard") else "air-inlet-bme280",
             print_to_console=testing,
             write_to_file=(not testing),
         )
@@ -64,6 +64,7 @@ class BME280SensorInterface:
             output.temperature = round(bme280_data.temperature, 2)
             output.humidity = round(bme280_data.humidity, 2)
             output.pressure = round(bme280_data.pressure, 2)
+            return output
 
         except (AssertionError, OSError):
             self.compensation_params = None

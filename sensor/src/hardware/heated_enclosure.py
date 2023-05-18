@@ -13,7 +13,7 @@ ARDUINO_CONFIG_TEMPLATE_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.templat
 ARDUINO_CONFIG_PATH = os.path.join(ARDUINO_SCRIPT_PATH, "config.h")
 
 
-class _USBPortInterface:
+class USBPortInterface:
     """This interface is used to toggle the power of all USB
     ports in case the Arduino or the LTE hat behave weird"""
 
@@ -194,7 +194,7 @@ class HeatedEnclosureThread:
     def communication_loop(config: custom_types.Config) -> None:
         heated_enclosure: Optional[HeatedEnclosureInterface] = None
 
-        usb_ports = _USBPortInterface()
+        usb_ports = USBPortInterface()
         active_mqtt_queue = utils.ActiveMQTTQueue()
         logger = utils.Logger("heated-enclosure-thread")
 

@@ -28,7 +28,7 @@ if __name__ == "__main__":
                 config, variant="mainboard"
             )
             air_inlet_bme280_sensor = hardware.BME280SensorInterface(
-                config, variant="air inlet"
+                config, variant="air-inlet"
             )
 
             print("sleeping 10 seconds to wait for data")

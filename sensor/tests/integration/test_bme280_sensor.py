@@ -15,7 +15,7 @@ def test_bme280_sensor(log_files: None) -> None:
     assert data1.temperature is not None
     s1.teardown()
 
-    s2 = hardware.BME280SensorInterface(config, variant="air inlet")
+    s2 = hardware.BME280SensorInterface(config, variant="air-inlet")
     data2 = s2.get_data()
     assert data2.temperature is not None
     s2.teardown()
