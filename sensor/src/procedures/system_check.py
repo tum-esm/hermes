@@ -22,8 +22,8 @@ class SystemCheckProcedure:
         - log mainboard/CPU temperature
         - log enclosure humidity and pressure
         - check whether mainboard/CPU temperature is above 70°C
-        - log CPU/disk usage
-        - check whether CPU/disk usage is above 80%
+        - log CPU/disk/memory usage
+        - check whether CPU/disk/memory usage is above 80%
         - send system data via MQTT
         - check hardware interfaces for errors
         - check messaging agent for errors
@@ -73,6 +73,14 @@ class SystemCheckProcedure:
                 f"CPU usage is very high ({cpu_usage_percent} %)", config=self.config
             )
 
+        memory_usage_percent = psutil.virtual_memory().percent
+        self.logger.debug(f"{memory_usage_percent} % total memory usage")
+        if memory_usage_percent > 80:
+            self.logger.warning(
+                f"memory usage is very high ({memory_usage_percent} %)",
+                config=self.config,
+            )
+
         self.active_mqtt_queue.enqueue_message(
             self.config,
             custom_types.MQTTDataMessageBody(
@@ -87,6 +95,7 @@ class SystemCheckProcedure:
                         enclosure_pressure=mainboard_bme280_data.pressure,
                         disk_usage=round(disk_usage.percent / 100, 4),
                         cpu_usage=round(cpu_usage_percent / 100, 4),
+                        memory_usage=round(memory_usage_percent / 100, 4),
                     ),
                 ),
             ),

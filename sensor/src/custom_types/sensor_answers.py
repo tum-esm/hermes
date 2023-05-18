@@ -52,6 +52,7 @@ class SystemData(BaseModel):
     enclosure_pressure: Optional[float]
     disk_usage: float
     cpu_usage: float
+    memory_usage: float
 
 
 class WindSensorData(BaseModel):
