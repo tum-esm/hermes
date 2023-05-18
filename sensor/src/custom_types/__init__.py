@@ -16,11 +16,13 @@ from .mqtt_sending import (
     # different message bodies
     MQTTLogMessageBody,
     MQTTDataMessageBody,
+    MQTTHeartbeatMessageBody,
     MQTTMessageBody,
     # message structure
     MQTTMessageHeader,
     MQTTLogMessage,
     MQTTDataMessage,
+    MQTTHeartbeatMessage,
     MQTTMessage,
 )
 from .mqtt_receiving import (

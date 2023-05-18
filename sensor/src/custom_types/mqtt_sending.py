@@ -146,6 +146,32 @@ class MQTTDataMessageBody(BaseModel):
 
 
 # -----------------------------------------------------------------------------
+# MQTT Heartbeat Message
+
+
+class MQTTHeartbeatMessageBody(BaseModel):
+    """message body which is sent to server"""
+
+    revision: int
+    timestamp: float
+    success: bool
+
+    # validators
+    _val_revision = validator("revision", pre=True, allow_reuse=True)(
+        validate_int(minimum=0, maximum=2_147_483_648),
+    )
+    _val_timestamp = validator("timestamp", pre=True, allow_reuse=True)(
+        validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
+    )
+    _val_success = validator("success", pre=True, allow_reuse=True)(
+        validate_bool(),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
+# -----------------------------------------------------------------------------
 # MQTT Message Types: Status + Data
 
 
@@ -196,8 +222,26 @@ class MQTTDataMessage(BaseModel):
         extra = "forbid"
 
 
-MQTTMessageBody = Union[MQTTLogMessageBody, MQTTDataMessageBody]
-MQTTMessage = Union[MQTTLogMessage, MQTTDataMessage]
+class MQTTHeartbeatMessage(BaseModel):
+    """element in local message queue"""
+
+    variant: Literal["heartbeat"]
+    header: MQTTMessageHeader
+    body: MQTTHeartbeatMessageBody
+
+    # validators
+    _val_variant = validator("variant", pre=True, allow_reuse=True)(
+        validate_str(allowed=["heartbeat"]),
+    )
+
+    class Config:
+        extra = "forbid"
+
+
+MQTTMessageBody = Union[
+    MQTTLogMessageBody, MQTTDataMessageBody, MQTTHeartbeatMessageBody
+]
+MQTTMessage = Union[MQTTLogMessage, MQTTDataMessage, MQTTHeartbeatMessage]
 
 # -----------------------------------------------------------------------------
 # SQL
@@ -205,14 +249,14 @@ MQTTMessage = Union[MQTTLogMessage, MQTTDataMessage]
 
 class SQLMQTTRecord(BaseModel):
     internal_id: int
-    status: Literal["pending", "in-progress", "done"]
+    status: Literal["pending", "in-progress"]
     content: MQTTMessage
 
     _val_internal_id = validator("internal_id", pre=True, allow_reuse=True)(
         validate_int(),
     )
     _val_status = validator("status", pre=True, allow_reuse=True)(
-        validate_str(allowed=["pending", "in-progress", "done"]),
+        validate_str(allowed=["pending", "in-progress"]),
     )
 
     class Config:

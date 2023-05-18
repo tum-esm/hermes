@@ -124,9 +124,13 @@ class MessagingAgent:
 
         def _publish_record(record: custom_types.SQLMQTTRecord) -> None:
             record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
-            record.content.header.mqtt_topic += (
-                "log-messages/" if record.content.variant == "logs" else "measurements/"
-            )
+
+            record.content.header.mqtt_topic += {
+                "logs": "log-messages/",
+                "data": "measurements/",
+                "heartbeat": "heartbeats/",
+            }[record.content.variant]
+
             record.content.header.mqtt_topic += mqtt_config.station_identifier
             assert mqtt_client.is_connected(), "mqtt client is not connected anymore"
 
@@ -136,8 +140,10 @@ class MessagingAgent:
                 if len(message_body["details"]) == 0:
                     del message_body["details"]
                 payload = {"log_messages": [message_body]}
-            else:
+            elif record.content.variant == "data":
                 payload = {"measurements": [record.content.body.dict()]}
+            else:
+                payload = {"heartbeats": [record.content.body.dict()]}
 
             message_info = mqtt_client.publish(
                 topic=record.content.header.mqtt_topic,

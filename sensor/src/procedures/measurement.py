@@ -4,14 +4,12 @@ from src import custom_types, utils, hardware
 
 
 class MeasurementProcedure:
-    """
-    runs every mainloop call when no configuration or calibration ran
+    """runs every mainloop call after possible configuration/calibration
 
     1. Check whether the wind and co2 sensor report any issues
     2. Check wind sensor direction and possibly change inlet
-    3. Apply calibration using SHT 21 values
-    4. Do 2 minutes of measurements
-    """
+    3. Apply calibration using SHT45/BME280 values
+    4. Do 2 minutes of measurements"""
 
     def __init__(
         self,
