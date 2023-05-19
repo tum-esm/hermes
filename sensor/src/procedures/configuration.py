@@ -133,6 +133,15 @@ class ConfigurationProcedure:
                     f"upgrading to revision {new_revision}: switched CLI pointer successfully",
                     config=self.config,
                 )
+                self.logger.debug("waiting to send out remaining messages")
+                try:
+                    self.active_mqtt_queue.wait_until_queue_is_empty(timeout=120)
+                    self.logger.debug("successfully sent out remaining messages")
+                except TimeoutError:
+                    self.logger.debug(
+                        "sending out remaining messages took more the "
+                        + "2 minutes continuing anyway",
+                    )
 
             # send UPGRADE SUCCESS message
             self.active_mqtt_queue.enqueue_message(

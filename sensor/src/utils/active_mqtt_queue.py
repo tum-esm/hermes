@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 import pytz
 import json
 import sqlite3
@@ -106,6 +107,9 @@ class ActiveMQTTQueue:
             for r in records
         ]
 
+    def get_row_count(self) -> int:
+        return len(self.__read_sql("SELECT Count(internal_id) FROM QUEUE;"))
+
     def update_records(self, records: list[custom_types.SQLMQTTRecord]) -> None:
         """Records distinguished by `interal_id`. Used for:
         * "Message has been `sent`"
@@ -171,3 +175,12 @@ class ActiveMQTTQueue:
             self.__add_row(new_message, status="pending")
         else:
             self.__add_row(new_message, status="done")
+
+    def wait_until_queue_is_empty(self, timeout: int) -> None:
+        start_time = time.time()
+        while True:
+            if self.get_row_count() == 0:
+                break
+            if (time.time() - start_time) > timeout:
+                raise TimeoutError()
+            time.sleep(1)
