@@ -22,7 +22,9 @@ def get_process_pids() -> list[int]:
     pids: list[int] = []
     for p in psutil.process_iter():
         try:
-            if SCRIPT_PATH == os.path.join(p.cwd(), p.cmdline()[-1]):
+            if (SCRIPT_PATH == os.path.join(p.cwd(), p.cmdline()[-1])) or (
+                SCRIPT_PATH == p.cmdline()[-1]
+            ):
                 pids.append(p.pid)
         except:
             pass

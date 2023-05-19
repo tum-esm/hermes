@@ -140,7 +140,7 @@ def run() -> None:
         raise e
 
     # tear down hardware on program termination
-    def graceful_teardown(*args: Any) -> None:
+    def _graceful_teardown(*args: Any) -> None:
         def _raise_teardown_timeout(*args: Any) -> None:
             logger.info("graceful teardown took too long")
             raise TimeoutError("teardown took too long")
@@ -153,8 +153,8 @@ def run() -> None:
         logger.info("finished graceful teardown")
         exit(0)
 
-    signal.signal(signal.SIGINT, graceful_teardown)
-    signal.signal(signal.SIGTERM, graceful_teardown)
+    signal.signal(signal.SIGINT, _graceful_teardown)
+    signal.signal(signal.SIGTERM, _graceful_teardown)
 
     # -------------------------------------------------------------------------
     # initialize procedures interacting with hardware
