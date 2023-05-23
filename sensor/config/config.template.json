@@ -3,31 +3,32 @@
     "revision": 0,
     "verbose_logging": false,
     "active_components": {
-        "calibration_procedures": false,
-        "mqtt_communication": true,
-        "heated_enclosure_communication": false,
-        "pump_speed_monitoring": false,
+        "run_calibration_procedures": false,
+        "send_messages_over_mqtt": true,
+        "communicate_with_heated_enclosure": false,
+        "run_pump_speed_monitoring": false,
         "ignore_missing_air_inlet_sensor": false
     },
     "hardware": {
-        "pumped_litres_per_round": 0.003,
-        "inner_tube_diameter_millimiters": 4
+        "pumped_litres_per_round": 0.003
     },
     "measurement": {
         "timing": {
             "seconds_per_measurement_interval": 120,
-            "seconds_per_measurement": 10
+            "seconds_per_measurement": 10,
+            "pumped_litres_per_minute": 4
         },
-        "pumped_litres_per_minute": 4,
         "air_inlets": [{ "valve_number": 1, "direction": 0, "tube_length": 50 }]
     },
     "calibration": {
-        "start_timestamp": 1682503200,
-        "hours_between_calibrations": 25,
-        "seconds_per_gas_bottle": 600,
+        "timing": {
+            "start_timestamp": 1682503200,
+            "hours_between_calibrations": 25,
+            "seconds_per_gas_bottle": 600
+        },
         "gases": [
-            { "valve_number": 2, "concentration": 400 },
-            { "valve_number": 3, "concentration": 800 }
+            { "valve_number": 2, "bottle_id": "1" },
+            { "valve_number": 3, "bottle_id": "2" }
         ]
     },
     "heated_enclosure": {

@@ -1,12 +1,13 @@
+from __future__ import annotations
 from typing import Literal
 import pydantic
 
 
 class ActiveComponentsConfig(pydantic.BaseModel):
-    calibration_procedures: bool
-    mqtt_communication: bool
-    heated_enclosure_communication: bool
-    pump_speed_monitoring: bool
+    run_calibration_procedures: bool
+    send_messages_over_mqtt: bool
+    communicate_with_heated_enclosure: bool
+    run_pump_speed_monitoring: bool
     ignore_missing_air_inlet_sensor: bool
 
     class Config:
@@ -18,7 +19,6 @@ class ActiveComponentsConfig(pydantic.BaseModel):
 
 class HardwareConfig(pydantic.BaseModel):
     pumped_litres_per_round: float = pydantic.field(ge=0.0001, le=1)
-    inner_tube_diameter_millimiters: float = pydantic.Field(..., ge=1, le=20)
 
     class Config:
         extra = "forbid"
@@ -30,6 +30,7 @@ class HardwareConfig(pydantic.BaseModel):
 class MeasurementTimingConfig(pydantic.BaseModel):
     seconds_per_measurement_interval: int = pydantic.Field(..., ge=10, le=7200)
     seconds_per_measurement: int = pydantic.Field(..., ge=1, le=300)
+    pumped_litres_per_minute: float = pydantic.Field(..., ge=0.1, le=30)
 
     class Config:
         extra = "forbid"
@@ -46,7 +47,6 @@ class MeasurementAirInletConfig(pydantic.BaseModel):
 
 class MeasurementConfig(pydantic.BaseModel):
     timing: MeasurementTimingConfig
-    pumped_litres_per_minute: float = pydantic.Field(..., ge=0.1, le=30)
     air_inlets: list[MeasurementAirInletConfig] = pydantic.Field(
         min_items=1, max_items=4
     )
@@ -58,18 +58,25 @@ class MeasurementConfig(pydantic.BaseModel):
 # -----------------------------------------------------------------------------
 
 
+class CalibrationTimingConfig(pydantic.BaseModel):
+    start_timestamp: int = pydantic.Field(..., ge=1672531200)  # start 2023-01-01T00:00
+    hours_between_calibrations: float = pydantic.Field(..., ge=1)
+    seconds_per_gas_bottle: int = pydantic.Field(..., ge=6, le=1800)
+
+    class Config:
+        extra = "forbid"
+
+
 class CalibrationGasConfig(pydantic.BaseModel):
     valve_number: Literal[1, 2, 3, 4]
-    concentration: float = pydantic.Field(..., ge=0, le=10000)
+    bottle_id: str
 
     class Config:
         extra = "forbid"
 
 
 class CalibrationConfig(pydantic.BaseModel):
-    start_timestamp: int = pydantic.Field(..., ge=1672531200)  # start 2023-01-01T00:00
-    hours_between_calibrations: float = pydantic.Field(..., ge=1)
-    seconds_per_gas_bottle: int = pydantic.Field(..., ge=6, le=1800)
+    timing: CalibrationTimingConfig
     gases: list[CalibrationGasConfig] = pydantic.Field(..., min_items=1, max_items=3)
 
     class Config:
