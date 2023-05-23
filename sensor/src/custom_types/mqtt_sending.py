@@ -1,7 +1,6 @@
 from typing import Literal, Optional, Union
-from pydantic import BaseModel, validator
+import pydantic
 
-from .validators import validate_bool, validate_int, validate_str, validate_float
 from .sensor_answers import (
     CO2SensorData,
     AirSensorData,
@@ -15,36 +14,16 @@ from .sensor_answers import (
 # MQTT Config (read from env variables)
 
 
-class MQTTConfig(BaseModel):
+class MQTTConfig(pydantic.BaseModel):
     """fixed params loaded from the environment"""
 
-    station_identifier: str
-    mqtt_url: str
-    mqtt_port: str
-    mqtt_username: str
-    mqtt_password: str
-    mqtt_base_topic: str
-
-    # validators
-    _val_station_identifier = validator(
-        "station_identifier", pre=True, allow_reuse=True
-    )(
-        validate_str(min_len=3, max_len=256),
-    )
-    _val_mqtt_url = validator("mqtt_url", pre=True, allow_reuse=True)(
-        validate_str(min_len=3, max_len=256),
-    )
-    _val_mqtt_port = validator("mqtt_port", pre=True, allow_reuse=True)(
-        validate_str(is_numeric=True),
-    )
-    _val_mqtt_username = validator("mqtt_username", pre=True, allow_reuse=True)(
-        validate_str(min_len=4, max_len=256),
-    )
-    _val_mqtt_password = validator("mqtt_password", pre=True, allow_reuse=True)(
-        validate_str(min_len=4, max_len=256),
-    )
-    _val_mqtt_base_topic = validator("mqtt_base_topic", pre=True, allow_reuse=True)(
-        validate_str(max_len=256, regex=r"^([a-z0-9_-]+\/)*$"),
+    station_identifier: str = pydantic.Field(..., min_length=3, max_length=256)
+    mqtt_url: str = pydantic.Field(..., min_length=3, max_length=256)
+    mqtt_port: int = pydantic.Field(..., ge=1, le=65535)
+    mqtt_username: str = pydantic.Field(..., min_length=4, max_length=256)
+    mqtt_password: str = pydantic.Field(..., min_length=4, max_length=256)
+    mqtt_base_topic: str = pydantic.Field(
+        ..., max_length=256, regex=r"^([a-z0-9_-]+\/)*$"
     )
 
     class Config:
@@ -55,31 +34,14 @@ class MQTTConfig(BaseModel):
 # MQTT Log Message
 
 
-class MQTTLogMessageBody(BaseModel):
+class MQTTLogMessageBody(pydantic.BaseModel):
     """message body which is sent to server"""
 
     severity: Literal["info", "warning", "error"]
-    revision: int
-    timestamp: float
-    subject: str
-    details: str = ""
-
-    # validators
-    _val_severity = validator("severity", pre=True, allow_reuse=True)(
-        validate_str(allowed=["info", "warning", "error"]),
-    )
-    _val_revision = validator("revision", pre=True, allow_reuse=True)(
-        validate_int(minimum=0, maximum=2_147_483_648),
-    )
-    _val_timestamp = validator("timestamp", pre=True, allow_reuse=True)(
-        validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
-    )
-    _val_subject = validator("subject", pre=True, allow_reuse=True)(
-        validate_str(min_len=1, max_len=256),
-    )
-    _val_details = validator("details", pre=True, allow_reuse=True)(
-        validate_str(min_len=0, max_len=16_384),
-    )
+    revision: int = pydantic.Field(..., ge=0)
+    timestamp: float = pydantic.Field(..., ge=1_640_991_600)
+    subject: str = pydantic.Field(..., min_length=1, max_length=256)
+    details: str = pydantic.Field(..., min_length=0, max_length=16_384)
 
     class Config:
         extra = "forbid"
@@ -89,41 +51,41 @@ class MQTTLogMessageBody(BaseModel):
 # MQTT Data Message
 
 
-class MQTTCO2Data(BaseModel):
+class MQTTCO2Data(pydantic.BaseModel):
     variant: Literal["co2"]
     data: CO2SensorData
 
 
-class MQTTCalibrationData(BaseModel):
+class MQTTCalibrationData(pydantic.BaseModel):
     variant: Literal["calibration"]
     data: CalibrationProcedureData
 
 
-class MQTTAirData(BaseModel):
+class MQTTAirData(pydantic.BaseModel):
     variant: Literal["air"]
     data: AirSensorData
 
 
-class MQTTSystemData(BaseModel):
+class MQTTSystemData(pydantic.BaseModel):
     variant: Literal["system"]
     data: SystemData
 
 
-class MQTTWindData(BaseModel):
+class MQTTWindData(pydantic.BaseModel):
     variant: Literal["wind"]
     data: WindSensorData
 
 
-class MQTTEnclosureData(BaseModel):
+class MQTTEnclosureData(pydantic.BaseModel):
     variant: Literal["enclosure"]
     data: HeatedEnclosureData
 
 
-class MQTTDataMessageBody(BaseModel):
+class MQTTDataMessageBody(pydantic.BaseModel):
     """message body which is sent to server"""
 
-    revision: int
-    timestamp: float
+    revision: int = pydantic.Field(..., ge=0)
+    timestamp: float = pydantic.Field(..., ge=1_640_991_600)
     value: Union[
         MQTTCO2Data,
         MQTTCalibrationData,
@@ -133,14 +95,6 @@ class MQTTDataMessageBody(BaseModel):
         MQTTEnclosureData,
     ]
 
-    # validators
-    _val_revision = validator("revision", pre=True, allow_reuse=True)(
-        validate_int(minimum=0, maximum=2_147_483_648),
-    )
-    _val_timestamp = validator("timestamp", pre=True, allow_reuse=True)(
-        validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
-    )
-
     class Config:
         extra = "forbid"
 
@@ -149,23 +103,12 @@ class MQTTDataMessageBody(BaseModel):
 # MQTT Heartbeat Message
 
 
-class MQTTHeartbeatMessageBody(BaseModel):
+class MQTTHeartbeatMessageBody(pydantic.BaseModel):
     """message body which is sent to server"""
 
-    revision: int
-    timestamp: float
+    revision: int = pydantic.Field(..., ge=0)
+    timestamp: float = pydantic.Field(..., ge=1_640_991_600)
     success: bool
-
-    # validators
-    _val_revision = validator("revision", pre=True, allow_reuse=True)(
-        validate_int(minimum=0, maximum=2_147_483_648),
-    )
-    _val_timestamp = validator("timestamp", pre=True, allow_reuse=True)(
-        validate_float(minimum=1_640_991_600, maximum=2_147_483_648),
-    )
-    _val_success = validator("success", pre=True, allow_reuse=True)(
-        validate_bool(),
-    )
 
     class Config:
         extra = "forbid"
@@ -175,64 +118,42 @@ class MQTTHeartbeatMessageBody(BaseModel):
 # MQTT Message Types: Status + Data
 
 
-class MQTTMessageHeader(BaseModel):
+class MQTTMessageHeader(pydantic.BaseModel):
     mqtt_topic: Optional[str]
     sending_skipped: bool
-
-    _val_mqtt_topic = validator("mqtt_topic", pre=True, allow_reuse=True)(
-        validate_str(nullable=True),
-    )
-    _val_sending_skipped = validator("sending_skipped", pre=True, allow_reuse=True)(
-        validate_bool(),
-    )
 
     class Config:
         extra = "forbid"
 
 
-class MQTTLogMessage(BaseModel):
+class MQTTLogMessage(pydantic.BaseModel):
     """element in local message queue"""
 
     variant: Literal["logs"]
     header: MQTTMessageHeader
     body: MQTTLogMessageBody
 
-    # validators
-    _val_variant = validator("variant", pre=True, allow_reuse=True)(
-        validate_str(allowed=["logs"]),
-    )
-
     class Config:
         extra = "forbid"
 
 
-class MQTTDataMessage(BaseModel):
+class MQTTDataMessage(pydantic.BaseModel):
     """element in local message queue"""
 
     variant: Literal["data"]
     header: MQTTMessageHeader
     body: MQTTDataMessageBody
 
-    # validators
-    _val_variant = validator("variant", pre=True, allow_reuse=True)(
-        validate_str(allowed=["data"]),
-    )
-
     class Config:
         extra = "forbid"
 
 
-class MQTTHeartbeatMessage(BaseModel):
+class MQTTHeartbeatMessage(pydantic.BaseModel):
     """element in local message queue"""
 
     variant: Literal["heartbeat"]
     header: MQTTMessageHeader
     body: MQTTHeartbeatMessageBody
-
-    # validators
-    _val_variant = validator("variant", pre=True, allow_reuse=True)(
-        validate_str(allowed=["heartbeat"]),
-    )
 
     class Config:
         extra = "forbid"
@@ -247,17 +168,10 @@ MQTTMessage = Union[MQTTLogMessage, MQTTDataMessage, MQTTHeartbeatMessage]
 # SQL
 
 
-class SQLMQTTRecord(BaseModel):
+class SQLMQTTRecord(pydantic.BaseModel):
     internal_id: int
     status: Literal["pending", "in-progress"]
     content: MQTTMessage
-
-    _val_internal_id = validator("internal_id", pre=True, allow_reuse=True)(
-        validate_int(),
-    )
-    _val_status = validator("status", pre=True, allow_reuse=True)(
-        validate_str(allowed=["pending", "in-progress"]),
-    )
 
     class Config:
         extra = "forbid"
