@@ -180,4 +180,38 @@ TODO: describe how to set up the LTE hat
 
 **Now, you can send new configs with that release number to the server:**
 
-The configs sent to the server should contain everything except for the `revision field`. The respective sensors will receive the new config and download the tagged release from GitHub.
+
+<br/>
+
+## How the Raspi's run this code
+
+The sensor code is located `~/Documents/hermes/0.1.0-beta.3`. Only the sensor
+directory of this repository is stored on the Pi. The _crontab_ contains a
+line that starts the version currently active every 2 minutes. The CLI will
+only start the code if it is not already running.
+
+```cron
+# start automation (if not already running)
+*/2 * * * * bash /home/pi/Documents/hermes/hermes-cli.sh start > /home/pi/Documents/hermes/hermes-cli.log
+```
+
+The file `~/Documents/hermes/hermes-cli.sh` always points to the currently
+active version of hermes.
+
+```bash
+#!/bin/bash
+
+set -o errexit
+
+/home/pi/Documents/hermes/0.1.0-beta.3/.venv/bin/python /home/pi/Documents/hermes/0.1.0-beta.3/cli/main.py $*
+```
+
+The `~/.bashrc` file contains an alias for the CLI:
+
+```bash
+alias hermes-cli="bash /home/pi/Documents/hermes/hermes-cli.sh"
+```
+
+When actively developing the code on the Raspi, you should clone this repository,
+change the `~/Documents/hermes/hermes-cli.sh` to point to the cloned repository,
+and deactivate the cronjob.
