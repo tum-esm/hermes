@@ -76,8 +76,13 @@ def log_files() -> Any:
     2. set up a new, empty log file just for the test
     3. restore the original log file after the test
     """
-    LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
-    TMP_LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.tmp.log")
+
+    LOG_FILE = join(
+        PROJECT_DIR, "logs", "archive", datetime.utcnow().strftime("%Y-%m-%d.log")
+    )
+    TMP_LOG_FILE = join(
+        PROJECT_DIR, "logs", "archive", datetime.utcnow().strftime("%Y-%m-%d.tmp.log")
+    )
 
     _save_file(LOG_FILE, TMP_LOG_FILE, "")
 
@@ -136,13 +141,13 @@ def mqtt_data_files() -> Any:
         PROJECT_DIR,
         "data",
         "archive",
-        f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
+        f"mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
     )
     TMP_MESSAGE_ARCHIVE_FILE = join(
         PROJECT_DIR,
         "data",
         "archive",
-        f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.tmp.json",
+        f"mqtt-messages-{TEST_MESSAGE_DATE_STRING}.tmp.json",
     )
 
     _save_file(ACTIVE_MESSAGES_FILE, TMP_ACTIVE_MESSAGES_FILE, None)

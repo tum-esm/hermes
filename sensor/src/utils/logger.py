@@ -185,7 +185,7 @@ class Logger:
             # YYYY-MM-DD.log
             log_file_name = str(now)[:10] + ".log"
             with self.filelock:
-                with open(join(LOGS_ARCHIVE_DIR, "archive", log_file_name), "a") as f1:
+                with open(join(LOGS_ARCHIVE_DIR, log_file_name), "a") as f1:
                     f1.write(log_string)
 
     def _write_mqtt_message(

@@ -1,15 +1,20 @@
+from datetime import datetime
+import os
 from os.path import dirname, abspath, join
 import time
 from typing import Callable
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
-LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
+LOG_FILE = join(
+    PROJECT_DIR, "logs", "archive", datetime.utcnow().strftime("%Y-%m-%d.log")
+)
 
 
 def expect_log_file_contents(
     required_content_blocks: list[str] = [],
     forbidden_content_blocks: list[str] = [],
 ) -> None:
+    assert os.path.isfile(LOG_FILE), f"log file not found at {LOG_FILE}"
     with open(LOG_FILE, "r") as f:
         file_content = f.read()
 

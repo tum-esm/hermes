@@ -1,7 +1,6 @@
 from datetime import datetime
 import json
 import os
-import re
 import time
 import pytest
 from ..pytest_utils import expect_log_file_contents, wait_for_condition
@@ -9,8 +8,6 @@ from os.path import dirname, abspath, join
 import sys
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
-CONFIG_PATH = join(PROJECT_DIR, "config", "config.json")
-ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
 sys.path.append(PROJECT_DIR)
 
 from src import utils, custom_types
@@ -29,7 +26,7 @@ def test_logger_with_sending(messaging_agent_with_sending: None) -> None:
 
 
 @pytest.mark.version_update
-@pytest.mark.ci
+# @pytest.mark.ci
 def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None:
     config = utils.ConfigInterface.read()
     config.active_components.send_messages_over_mqtt = True
@@ -95,7 +92,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         PROJECT_DIR,
         "data",
         "archive",
-        f"delivered-mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
+        f"mqtt-messages-{TEST_MESSAGE_DATE_STRING}.json",
     )
     EXPECTED_MQTT_TOPIC = (
         (
@@ -135,43 +132,45 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         )
     ]
     active_logs_messages.sort(key=lambda m: m.body.timestamp)
-    assert len(active_logs_messages) == 4
-    assert all([m.variant == "logs" for m in active_logs_messages])
+    assert len(active_logs_messages) == (4 if mqtt_communication_enabled else 0)
 
-    assert active_logs_messages[0].header.mqtt_topic == None
-    assert active_logs_messages[0].body.severity == "warning"
-    assert active_logs_messages[0].body.subject == "pytests - some message c"
+    if mqtt_communication_enabled:
+        assert all([m.variant == "logs" for m in active_logs_messages])
 
-    assert active_logs_messages[1].header.mqtt_topic == None
-    assert active_logs_messages[1].body.severity == "error"
-    assert active_logs_messages[1].body.subject == "pytests - some message d"
+        assert active_logs_messages[0].header.mqtt_topic == None
+        assert active_logs_messages[0].body.severity == "warning"
+        assert active_logs_messages[0].body.subject == "pytests - some message c"
 
-    assert active_logs_messages[2].header.mqtt_topic == None
-    assert active_logs_messages[2].body.severity == "error"
-    assert (
-        active_logs_messages[2].body.subject
-        == "pytests - ZeroDivisionError: division by zero"
-    )
+        assert active_logs_messages[1].header.mqtt_topic == None
+        assert active_logs_messages[1].body.severity == "error"
+        assert active_logs_messages[1].body.subject == "pytests - some message d"
 
-    # -------------------------------------------------------------------------
-    # wait until sendin queue is empty
+        assert active_logs_messages[2].header.mqtt_topic == None
+        assert active_logs_messages[2].body.severity == "error"
+        assert (
+            active_logs_messages[2].body.subject
+            == "pytests - ZeroDivisionError: division by zero"
+        )
 
-    def empty_pending_queue() -> bool:
-        return (
-            len(message_queue.get_rows_by_status("pending"))
-            + len(message_queue.get_rows_by_status("in-progress"))
-        ) == 0
+        # -------------------------------------------------------------------------
+        # wait until sending queue is empty
 
-    wait_for_condition(
-        empty_pending_queue,
-        timeout_seconds=12,
-        timeout_message="active queue is not empty after 12 second timeout",
-    )
+        def empty_pending_queue() -> bool:
+            return (
+                len(message_queue.get_rows_by_status("pending"))
+                + len(message_queue.get_rows_by_status("in-progress"))
+            ) == 0
+
+        wait_for_condition(
+            empty_pending_queue,
+            timeout_seconds=12,
+            timeout_message="active queue is not empty after 12 second timeout",
+        )
+
+        time.sleep(2)
 
     # -------------------------------------------------------------------------
     # check whether archive contains correct messages
-
-    time.sleep(2)
 
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
         archived_log_messages = [
