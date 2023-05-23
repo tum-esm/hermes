@@ -6,7 +6,7 @@ from os.path import dirname, abspath, join
 from typing import Literal, Optional
 
 from src import custom_types
-from .active_mqtt_queue import ActiveMQTTQueue
+from .message_queue import MessageQueue
 from .functions import CommandLineException
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
@@ -37,7 +37,7 @@ class Logger:
         self.origin: str = origin
         self.print_to_console = print_to_console
         self.write_to_file = write_to_file
-        self.active_mqtt_queue = ActiveMQTTQueue()
+        self.message_queue = MessageQueue()
         self.filelock = filelock.FileLock(FILELOCK_PATH, timeout=3)
 
     def horizontal_line(self, fill_char: Literal["-", "=", ".", "_"] = "=") -> None:
@@ -211,7 +211,7 @@ class Logger:
                 + extension_message_details
             )
 
-        self.active_mqtt_queue.enqueue_message(
+        self.message_queue.enqueue_message(
             config,
             message_body=custom_types.MQTTLogMessageBody(
                 severity=level,

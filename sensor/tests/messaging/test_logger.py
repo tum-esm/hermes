@@ -33,7 +33,7 @@ def test_logger_with_sending(messaging_agent_with_sending: None) -> None:
 def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None:
     config = utils.ConfigInterface.read()
     config.active_components.send_messages_over_mqtt = True
-    active_mqtt_queue = utils.ActiveMQTTQueue()
+    message_queue = utils.MessageQueue()
 
     logger = utils.Logger(origin="pytests")
 
@@ -51,12 +51,12 @@ def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None
     expected_mqtt_subject = f"pytests - {message[: (256 - 31)]} ... CUT (310 -> 256)"
     expected_mqtt_details = f"{details[: (16384 - 25)]} ... CUT (20249 -> 16384)"
 
-    assert len(active_mqtt_queue.get_rows_by_status("pending")) == 0
+    assert len(message_queue.get_rows_by_status("pending")) == 0
     expect_log_file_contents(forbidden_content_blocks=[expected_log_file_content])
 
     logger.error(message=message, config=config, details=details)
 
-    mqtt_messages = active_mqtt_queue.get_rows_by_status("pending")
+    mqtt_messages = message_queue.get_rows_by_status("pending")
     assert len(mqtt_messages) == 1
     mqtt_message_content = mqtt_messages[0].content
     assert mqtt_message_content.variant == "logs"
@@ -65,7 +65,7 @@ def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None
     expect_log_file_contents(required_content_blocks=[expected_log_file_content])
 
     wait_for_condition(
-        lambda: len(active_mqtt_queue.get_rows_by_status("pending")) == 0,
+        lambda: len(message_queue.get_rows_by_status("pending")) == 0,
         timeout_message="message was not sent",
         timeout_seconds=10,
     )
@@ -75,7 +75,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     config = utils.ConfigInterface.read()
     config.active_components.send_messages_over_mqtt = mqtt_communication_enabled
 
-    active_mqtt_queue = utils.ActiveMQTTQueue()
+    message_queue = utils.MessageQueue()
 
     generated_log_lines = [
         "pytests                 - DEBUG         - some message a",
@@ -87,8 +87,8 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     ]
 
     expect_log_file_contents(forbidden_content_blocks=generated_log_lines)
-    assert len(active_mqtt_queue.get_rows_by_status("pending")) == 0
-    assert len(active_mqtt_queue.get_rows_by_status("in-progress")) == 0
+    assert len(message_queue.get_rows_by_status("pending")) == 0
+    assert len(message_queue.get_rows_by_status("in-progress")) == 0
 
     TEST_MESSAGE_DATE_STRING = datetime.utcnow().strftime("%Y-%m-%d")
     MESSAGE_ARCHIVE_FILE = join(
@@ -129,7 +129,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     active_logs_messages = [
         custom_types.MQTTLogMessage(**m.content.dict())
         for m in (
-            active_mqtt_queue.get_rows_by_status("pending")
+            message_queue.get_rows_by_status("pending")
             if mqtt_communication_enabled
             else []
         )
@@ -158,8 +158,8 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
 
     def empty_pending_queue() -> bool:
         return (
-            len(active_mqtt_queue.get_rows_by_status("pending"))
-            + len(active_mqtt_queue.get_rows_by_status("in-progress"))
+            len(message_queue.get_rows_by_status("pending"))
+            + len(message_queue.get_rows_by_status("in-progress"))
         ) == 0
 
     wait_for_condition(

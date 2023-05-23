@@ -14,7 +14,7 @@ class SystemCheckProcedure:
     ) -> None:
         self.logger, self.config = utils.Logger(origin="system-check-procedure"), config
         self.hardware_interface = hardware_interface
-        self.active_mqtt_queue = utils.ActiveMQTTQueue()
+        self.message_queue = utils.MessageQueue()
 
     def run(self) -> None:
         """runs system check procedure
@@ -81,7 +81,7 @@ class SystemCheckProcedure:
                 config=self.config,
             )
 
-        self.active_mqtt_queue.enqueue_message(
+        self.message_queue.enqueue_message(
             self.config,
             custom_types.MQTTDataMessageBody(
                 revision=self.config.revision,

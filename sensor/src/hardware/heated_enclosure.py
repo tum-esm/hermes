@@ -195,7 +195,7 @@ class HeatedEnclosureThread:
         heated_enclosure: Optional[HeatedEnclosureInterface] = None
 
         usb_ports = USBPortInterface()
-        active_mqtt_queue = utils.ActiveMQTTQueue()
+        message_queue = utils.MessageQueue()
         logger = utils.Logger("heated-enclosure-thread")
 
         last_init_time: float = 0
@@ -281,7 +281,7 @@ class HeatedEnclosureThread:
                     + f"heater is {'on' if measurement.heater_is_on else 'off'}, "
                     + f"fan is {'on' if measurement.fan_is_on else 'off'}"
                 )
-                active_mqtt_queue.enqueue_message(
+                message_queue.enqueue_message(
                     config,
                     custom_types.MQTTDataMessageBody(
                         revision=config.revision,

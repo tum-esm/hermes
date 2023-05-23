@@ -15,7 +15,7 @@ QUEUE_ARCHIVE_DIR = os.path.join(PROJECT_DIR, "data", "archive")
 ARCHIVE_FILELOCK_PATH = os.path.join(PROJECT_DIR, "data", "archive.lock")
 
 
-class ActiveMQTTQueue:
+class MessageQueue:
     def __init__(self) -> None:
         self.connection = sqlite3.connect(ACTIVE_QUEUE_FILE, check_same_thread=True)
         self.__write_sql(

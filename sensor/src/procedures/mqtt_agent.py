@@ -65,7 +65,7 @@ class MQTTAgent:
             mqtt_connection = utils.MQTTConnection()
             mqtt_config = mqtt_connection.config
             mqtt_client = mqtt_connection.client
-            active_mqtt_queue = utils.ActiveMQTTQueue()
+            message_queue = utils.MessageQueue()
         except Exception as e:
             logger.exception(
                 e,
@@ -80,7 +80,7 @@ class MQTTAgent:
 
         # periodically send a heartbeat message
         def _enqueue_heartbeat_message() -> None:
-            active_mqtt_queue.enqueue_message(
+            message_queue.enqueue_message(
                 config,
                 custom_types.MQTTHeartbeatMessageBody(
                     revision=config.revision, timestamp=time.time(), success=True
@@ -182,7 +182,7 @@ class MQTTAgent:
                 # -----------------------------------------------------------------
                 # CHECK DELIVERY STATUS OF SENT MESSAGES
 
-                sent_records = active_mqtt_queue.get_rows_by_status("in-progress")
+                sent_records = message_queue.get_rows_by_status("in-progress")
 
                 for record in sent_records:
                     # normal behavior
@@ -199,7 +199,7 @@ class MQTTAgent:
                         resent_record_count += 1
 
                 # remove successfully delivered messages from the active queue
-                active_mqtt_queue.remove_records_by_id(records_ids_to_be_removed)
+                message_queue.remove_records_by_id(records_ids_to_be_removed)
 
                 # -----------------------------------------------------------------
                 # SEND PENDING MESSAGES
@@ -214,17 +214,17 @@ class MQTTAgent:
                         + "items not processed by broker yet)"
                     )
 
-                records_to_be_sent = active_mqtt_queue.get_rows_by_status(
+                records_to_be_sent = message_queue.get_rows_by_status(
                     "pending", limit=OPEN_SENDING_SLOTS
                 )
                 if len(records_to_be_sent) > 0:
-                    records_to_be_sent = active_mqtt_queue.get_rows_by_status(
+                    records_to_be_sent = message_queue.get_rows_by_status(
                         "pending", limit=OPEN_SENDING_SLOTS
                     )
                     for record in records_to_be_sent:
                         _publish_record(record)
                         sent_record_count += 1
-                    active_mqtt_queue.update_records(records_to_be_sent)
+                    message_queue.update_records(records_to_be_sent)
 
                 # -----------------------------------------------------------------
 

@@ -22,7 +22,7 @@ class MeasurementProcedure:
         # state variables
         self.active_air_inlet: Optional[custom_types.MeasurementAirInletConfig] = None
         self.last_measurement_time: float = 0
-        self.active_mqtt_queue = utils.ActiveMQTTQueue()
+        self.message_queue = utils.MessageQueue()
 
     def _get_current_wind_data(self) -> Optional[custom_types.WindSensorData]:
         """fetches the latest wind sensor data and returns None if the
@@ -49,7 +49,7 @@ class MeasurementProcedure:
                 self.config.measurement.air_inlets,
                 key=lambda x: utils.distance_between_angles(x.direction, avg_dir),
             )
-            self.active_mqtt_queue.enqueue_message(
+            self.message_queue.enqueue_message(
                 self.config,
                 custom_types.MQTTDataMessageBody(
                     revision=self.config.revision,
@@ -109,7 +109,7 @@ class MeasurementProcedure:
             pressure=air_inlet_bme280_data.pressure,
         )
 
-        self.active_mqtt_queue.enqueue_message(
+        self.message_queue.enqueue_message(
             self.config,
             custom_types.MQTTDataMessageBody(
                 revision=self.config.revision,
@@ -176,7 +176,7 @@ class MeasurementProcedure:
                 self.hardware_interface.co2_sensor.get_current_concentration()
             )
             self.logger.debug(f"new measurement")
-            self.active_mqtt_queue.enqueue_message(
+            self.message_queue.enqueue_message(
                 self.config,
                 message_body=custom_types.MQTTDataMessageBody(
                     timestamp=round(time.time(), 2),

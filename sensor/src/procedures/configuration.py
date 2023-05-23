@@ -66,7 +66,7 @@ class ConfigurationProcedure:
         self.logger = utils.Logger(origin="configuration-procedure")
         self.config = config
         self._remove_old_venvs()
-        self.active_mqtt_queue = utils.ActiveMQTTQueue()
+        self.message_queue = utils.MessageQueue()
 
     def run(self, config_request: custom_types.MQTTConfigurationRequest) -> None:
         new_revision = config_request.revision
@@ -135,7 +135,7 @@ class ConfigurationProcedure:
                 )
                 self.logger.debug("waiting to send out remaining messages")
                 try:
-                    self.active_mqtt_queue.wait_until_queue_is_empty(timeout=120)
+                    self.message_queue.wait_until_queue_is_empty(timeout=120)
                     self.logger.debug("successfully sent out remaining messages")
                 except TimeoutError:
                     self.logger.debug(
@@ -144,7 +144,7 @@ class ConfigurationProcedure:
                     )
 
             # send UPGRADE SUCCESS message
-            self.active_mqtt_queue.enqueue_message(
+            self.message_queue.enqueue_message(
                 self.config,
                 custom_types.MQTTHeartbeatMessageBody(
                     revision=new_revision,
@@ -166,7 +166,7 @@ class ConfigurationProcedure:
             )
 
             # send UPGRADE FAILED message
-            self.active_mqtt_queue.enqueue_message(
+            self.message_queue.enqueue_message(
                 self.config,
                 custom_types.MQTTHeartbeatMessageBody(
                     revision=new_revision,

@@ -45,7 +45,7 @@ class CalibrationProcedure:
         self.config = config
         self.testing = testing
         self.hardware_interface = hardware_interface
-        self.active_mqtt_queue = utils.ActiveMQTTQueue()
+        self.message_queue = utils.MessageQueue()
 
     def run(self) -> None:
         calibration_time = datetime.utcnow().timestamp()
@@ -103,7 +103,7 @@ class CalibrationProcedure:
                 details=json.dumps(result.dict(), indent=4),
             )
         else:
-            self.active_mqtt_queue.enqueue_message(
+            self.message_queue.enqueue_message(
                 self.config,
                 custom_types.MQTTDataMessageBody(
                     revision=self.config.revision,
