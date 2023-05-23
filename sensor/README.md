@@ -186,7 +186,7 @@ The configs sent to the server should contain everything except for the `revisio
 The sensor code is at `~/Documents/hermes/0.1.0-beta.3`. Only the sensor directory of this repository is stored on the Pi. The _crontab_ contains a line that starts the version currently active every 2 minutes. The CLI will only start the automation if it is not already running.
 
 ```cron
-# start automation (if not already running)
+# start automation every two minutes (if not already running)
 */2 * * * * bash /home/pi/Documents/hermes/hermes-cli.sh start > /home/pi/Documents/hermes/hermes-cli.log
 ```
 
@@ -207,3 +207,10 @@ alias hermes-cli="bash /home/pi/Documents/hermes/hermes-cli.sh"
 ```
 
 When actively developing the code on the Raspi, you should clone this repository, change the `~/Documents/hermes/hermes-cli.sh` to point to the cloned repository, and deactivate the cronjob.
+
+If you notice scaling issues with the automation (issues that only arise after running the software for a few days), you can add a restart every 3-4 days to the _crontab_:
+
+```cron
+# restart automation at midnight on mondays and thursdays
+0 0 * * 1,4 bash /home/pi/Documents/hermes/hermes-cli.sh restart > /home/pi/Documents/hermes/hermes-cli.log
+```
