@@ -13,7 +13,6 @@ sensor/data/
 data/**/*.json
 heated_enclosure.ino.*
 config.h
-.vscode/
 *.lock
 state.json
 
