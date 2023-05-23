@@ -62,6 +62,10 @@ has an alias `hermes-cli`.
 
 ## Raspberry Pi Setup (`raspi-setup-files/`)
 
+As the operating system for the Raspis we chose **Raspberry Pi OS 64-Bit** and use
+the **Raspberry Pi Imager** (https://www.raspberrypi.com/software/) to flash the SD
+cards.
+
 All files in the `raspi-setup-files/` directory should be copied to a Raspberry
 Pi's `/boot/` directory. The setup script has to be run manually after initially
 connecting the Pi using the following command:
