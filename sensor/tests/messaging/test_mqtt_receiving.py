@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import time
 import pytest
@@ -7,7 +8,9 @@ import deepdiff
 from ..pytest_utils import expect_log_file_contents, wait_for_condition
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
-LOG_FILE = join(PROJECT_DIR, "logs", "current-logs.log")
+LOG_FILE = join(
+    PROJECT_DIR, "logs", "archive", datetime.utcnow().strftime("%Y-%m-%d.log")
+)
 CONFIG_PATH = join(PROJECT_DIR, "config", "config.json")
 sys.path.append(PROJECT_DIR)
 
@@ -63,6 +66,8 @@ def test_mqtt_receiving(
     procedures.MQTTAgent.init(config)
 
     time.sleep(5)
+
+    procedures.MQTTAgent.check_errors()
 
     expect_log_file_contents(
         required_content_blocks=[

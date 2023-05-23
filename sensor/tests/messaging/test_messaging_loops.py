@@ -1,3 +1,5 @@
+import multiprocessing
+import queue
 import time
 import pytest
 from os.path import dirname, abspath
@@ -6,11 +8,29 @@ import sys
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 sys.path.append(PROJECT_DIR)
 
-from src import utils, procedures
+from src import custom_types, utils, procedures
 
 
 @pytest.mark.version_update
 @pytest.mark.ci
+def test_messaging_loops_function(
+    mqtt_client_environment: None,
+    mqtt_data_files: None,
+    log_files: None,
+    sample_config: None,
+) -> None:
+    """run the communication loop function in main thread"""
+    config = utils.ConfigInterface.read()
+    config_request_queue: queue.Queue[
+        custom_types.MQTTConfigurationRequest
+    ] = multiprocessing.Queue()
+    procedures.MQTTAgent.communication_loop(
+        config, config_request_queue, end_after_one_loop=True
+    )
+
+
+@pytest.mark.version_update
+# @pytest.mark.ci
 def test_messaging_loops_with_sending(
     mqtt_client_environment: None,
     mqtt_data_files: None,
@@ -30,7 +50,7 @@ def test_messaging_loops_with_sending(
 
 
 @pytest.mark.version_update
-@pytest.mark.ci
+# @pytest.mark.ci
 def test_messaging_loops_without_sending(
     mqtt_client_environment: None,
     mqtt_data_files: None,

@@ -166,10 +166,16 @@ class MessageQueue:
             new_message = custom_types.MQTTLogMessage(
                 variant="logs", header=new_header, body=message_body
             )
-        else:
+        elif isinstance(message_body, custom_types.MQTTDataMessageBody):
             new_message = custom_types.MQTTDataMessage(
                 variant="data", header=new_header, body=message_body
             )
+        elif isinstance(message_body, custom_types.MQTTHeartbeatMessageBody):
+            new_message = custom_types.MQTTHeartbeatMessage(
+                variant="heartbeat", header=new_header, body=message_body
+            )
+        else:
+            raise ValueError(f"Unknown message type: {message_body}")
 
         if config.active_components.send_messages_over_mqtt:
             self.__add_row(new_message, status="pending")

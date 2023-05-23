@@ -54,6 +54,7 @@ class MQTTAgent:
     def communication_loop(
         config: custom_types.Config,
         config_request_queue: queue.Queue[custom_types.MQTTConfigurationRequest],
+        end_after_one_loop: bool = False,
     ) -> None:
         """takes messages from the queue file and processes them;
         this function is blocking and should be called in a thread
@@ -246,6 +247,9 @@ class MQTTAgent:
                 logger.exception(e, label="sending loop has stopped", config=config)
                 mqtt_connection.teardown()
                 raise e
+
+            if end_after_one_loop:
+                break
 
     @staticmethod
     def get_config_message() -> Optional[custom_types.MQTTConfigurationRequest]:
