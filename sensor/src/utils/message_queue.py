@@ -66,9 +66,7 @@ class MessageQueue:
             )
 
         # write all messages to archive immediately
-        date_string = datetime.fromtimestamp(
-            message.body.timestamp, tz=pytz.timezone("UTC")
-        ).strftime("%Y-%m-%d")
+        date_string = datetime.now().strftime("%Y-%m-%d")
         with self.filelock:
             with open(
                 os.path.join(

@@ -6,7 +6,7 @@ from typing import Callable
 
 PROJECT_DIR = dirname(dirname(abspath(__file__)))
 LOG_FILE = join(
-    PROJECT_DIR, "logs", "archive", datetime.utcnow().strftime("%Y-%m-%d.log")
+    PROJECT_DIR, "logs", "archive", datetime.now().strftime("%Y-%m-%d.log")
 )
 
 

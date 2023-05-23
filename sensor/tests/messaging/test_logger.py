@@ -94,7 +94,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         ]
     ) == (1 if mqtt_communication_enabled else 0)
 
-    TEST_MESSAGE_DATE_STRING = datetime.utcnow().strftime("%Y-%m-%d")
+    TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
     MESSAGE_ARCHIVE_FILE = join(
         PROJECT_DIR,
         "data",

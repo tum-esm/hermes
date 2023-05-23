@@ -78,10 +78,10 @@ def log_files() -> Any:
     """
 
     LOG_FILE = join(
-        PROJECT_DIR, "logs", "archive", datetime.utcnow().strftime("%Y-%m-%d.log")
+        PROJECT_DIR, "logs", "archive", datetime.now().strftime("%Y-%m-%d.log")
     )
     TMP_LOG_FILE = join(
-        PROJECT_DIR, "logs", "archive", datetime.utcnow().strftime("%Y-%m-%d.tmp.log")
+        PROJECT_DIR, "logs", "archive", datetime.now().strftime("%Y-%m-%d.tmp.log")
     )
 
     _save_file(LOG_FILE, TMP_LOG_FILE, "")
@@ -137,7 +137,7 @@ def mqtt_data_files() -> Any:
     ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "active-mqtt-messages.db")
     TMP_ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "active-mqtt-messages.tmp.db")
 
-    TEST_MESSAGE_DATE_STRING = datetime.utcnow().strftime("%Y-%m-%d")
+    TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
     MESSAGE_ARCHIVE_FILE = join(
         PROJECT_DIR,
         "data",

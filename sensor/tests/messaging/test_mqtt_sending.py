@@ -13,7 +13,7 @@ sys.path.append(PROJECT_DIR)
 from src import utils, custom_types
 
 ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "incomplete-mqtt-messages.json")
-TEST_MESSAGE_DATE_STRING = datetime.utcnow().strftime("%Y-%m-%d")
+TEST_MESSAGE_DATE_STRING = datetime.now().strftime("%Y-%m-%d")
 MESSAGE_ARCHIVE_FILE = join(
     PROJECT_DIR,
     "data",
