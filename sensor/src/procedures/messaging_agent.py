@@ -26,7 +26,7 @@ class MessagingAgent:
         # mqtt broker, receives config messages and send out
         # messages from the active queue db
         if MessagingAgent.communication_loop_process is None:
-            if config.active_components.mqtt_communication:
+            if config.active_components.send_messages_over_mqtt:
                 new_process = multiprocessing.Process(
                     target=MessagingAgent.communication_loop,
                     args=(

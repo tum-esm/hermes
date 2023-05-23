@@ -25,7 +25,6 @@ def test_mqtt_receiving(
     log_files: None,
     sample_config: None,
 ) -> None:
-
     # -------------------------------------------------------------------------
     # 1. PUBLISH RETAINED CONFIG MESSAGE
 
@@ -60,7 +59,7 @@ def test_mqtt_receiving(
 
     with open(CONFIG_PATH) as f:
         config = custom_types.Config(**json.load(f))
-        config.active_components.mqtt_communication = True
+        config.active_components.send_messages_over_mqtt = True
     procedures.MessagingAgent.init(config)
 
     time.sleep(5)

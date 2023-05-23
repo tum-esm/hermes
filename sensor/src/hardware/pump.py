@@ -71,7 +71,7 @@ class PumpInterface:
                 self.rps_monitoring_exceptions,
             ),
         )
-        if self.config.active_components.pump_speed_monitoring:
+        if self.config.active_components.run_pump_speed_monitoring:
             self.rps_monitoring_process.start()
 
         # ---------------------------------------------------------------------
@@ -95,7 +95,7 @@ class PumpInterface:
     def check_errors(self) -> None:
         """checks whether the pump behaves incorrectly - Possibly
         raises the  PumpInterface.DeviceFailure exception"""
-        if self.config.active_components.pump_speed_monitoring:
+        if self.config.active_components.run_pump_speed_monitoring:
             if self.rps_monitoring_process.is_alive():
                 self.logger.info("pump doesn't report any errors")
             else:

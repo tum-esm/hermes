@@ -42,7 +42,7 @@ def _test_message_sending(mqtt_communication_enabled: bool) -> None:
 
     with open(CONFIG_PATH) as f:
         config = custom_types.Config(**json.load(f))
-        config.active_components.mqtt_communication = mqtt_communication_enabled
+        config.active_components.send_messages_over_mqtt = mqtt_communication_enabled
 
     # enqueue dummy message
     dummy_data_message_body = custom_types.MQTTDataMessageBody(

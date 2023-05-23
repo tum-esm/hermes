@@ -164,7 +164,7 @@ def messaging_agent_with_sending(
     """start and stop the background processing of messages"""
 
     config = utils.ConfigInterface.read()
-    config.active_components.mqtt_communication = True
+    config.active_components.send_messages_over_mqtt = True
 
     procedures.MessagingAgent.init(config)
     procedures.MessagingAgent.check_errors()
@@ -185,7 +185,7 @@ def messaging_agent_without_sending(
     """start and stop the background processing of messages"""
 
     config = utils.ConfigInterface.read()
-    config.active_components.mqtt_communication = False
+    config.active_components.send_messages_over_mqtt = False
 
     procedures.MessagingAgent.init(config)
     procedures.MessagingAgent.check_errors()

@@ -18,7 +18,7 @@ class ActiveComponentsConfig(pydantic.BaseModel):
 
 
 class HardwareConfig(pydantic.BaseModel):
-    pumped_litres_per_round: float = pydantic.field(ge=0.0001, le=1)
+    pumped_litres_per_round: float = pydantic.Field(ge=0.0001, le=1)
 
     class Config:
         extra = "forbid"

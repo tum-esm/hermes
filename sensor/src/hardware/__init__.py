@@ -61,7 +61,7 @@ class HardwareInterface:
         # routine is running in a separate thread
         if (
             not self.testing
-        ) and self.config.active_components.heated_enclosure_communication:
+        ) and self.config.active_components.communicate_with_heated_enclosure:
             HeatedEnclosureThread.init(config)
         else:
             self.logger.debug("skipping heated enclosure communication")
@@ -127,7 +127,7 @@ class HardwareInterface:
 
         if (
             not self.testing
-        ) and self.config.active_components.heated_enclosure_communication:
+        ) and self.config.active_components.communicate_with_heated_enclosure:
             HeatedEnclosureThread.init(config)
         else:
             self.logger.debug("skipping heated enclosure communication")

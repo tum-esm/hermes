@@ -182,7 +182,7 @@ def run() -> None:
     # define behaviour when mainloop takes too long
 
     max_calibration_time = (
-        len(config.calibration.gases) * config.calibration.seconds_per_gas_bottle
+        len(config.calibration.gases) * config.calibration.timing.seconds_per_gas_bottle
     )
     max_measurement_time = config.measurement.timing.seconds_per_measurement_interval
     max_mainloop_time = round(max_calibration_time + max_measurement_time + 120)
@@ -235,7 +235,7 @@ def run() -> None:
             # -----------------------------------------------------------------
             # CALIBRATION
 
-            if config.active_components.calibration_procedures:
+            if config.active_components.run_calibration_procedures:
                 if calibration_prodecure.is_due():
                     logger.info("running calibration procedure", config=config)
                     calibration_prodecure.run()

@@ -18,7 +18,7 @@ def test_messaging_loops_with_sending(
     sample_config: None,
 ) -> None:
     config = utils.ConfigInterface.read()
-    config.active_components.mqtt_communication = True
+    config.active_components.send_messages_over_mqtt = True
 
     procedures.MessagingAgent.init(config)
     procedures.MessagingAgent.check_errors()
@@ -38,7 +38,7 @@ def test_messaging_loops_without_sending(
     sample_config: None,
 ) -> None:
     config = utils.ConfigInterface.read()
-    config.active_components.mqtt_communication = False
+    config.active_components.send_messages_over_mqtt = False
 
     procedures.MessagingAgent.init(config)
     procedures.MessagingAgent.check_errors()

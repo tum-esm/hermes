@@ -70,7 +70,7 @@ class CalibrationProcedure:
             gas_readings: list[custom_types.CO2SensorData] = []
             timestamps: list[float] = []
             number_of_readings = (
-                math.ceil(self.config.calibration.seconds_per_gas_bottle / 6)
+                math.ceil(self.config.calibration.timing.seconds_per_gas_bottle / 6)
                 if (not self.testing)
                 else 10
             )
@@ -135,15 +135,15 @@ class CalibrationProcedure:
             return True
 
         seconds_between_calibrations = (
-            3600 * self.config.calibration.hours_between_calibrations
+            3600 * self.config.calibration.timing.hours_between_calibrations
         )
         calibrations_since_start_time = math.floor(
-            (current_utc_timestamp - self.config.calibration.start_timestamp)
+            (current_utc_timestamp - self.config.calibration.timing.start_timestamp)
             / seconds_between_calibrations
         )
         last_calibration_time = (
             calibrations_since_start_time * seconds_between_calibrations
-            + self.config.calibration.start_timestamp
+            + self.config.calibration.timing.start_timestamp
         )
 
         if state.last_calibration_time > last_calibration_time:

@@ -32,7 +32,7 @@ def test_logger_with_sending(messaging_agent_with_sending: None) -> None:
 @pytest.mark.ci
 def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None:
     config = utils.ConfigInterface.read()
-    config.active_components.mqtt_communication = True
+    config.active_components.send_messages_over_mqtt = True
     active_mqtt_queue = utils.ActiveMQTTQueue()
 
     logger = utils.Logger(origin="pytests")
@@ -73,7 +73,7 @@ def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None
 
 def _test_logger(mqtt_communication_enabled: bool) -> None:
     config = utils.ConfigInterface.read()
-    config.active_components.mqtt_communication = mqtt_communication_enabled
+    config.active_components.send_messages_over_mqtt = mqtt_communication_enabled
 
     active_mqtt_queue = utils.ActiveMQTTQueue()
 

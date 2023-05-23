@@ -29,7 +29,9 @@ def test_local_config() -> None:
 
     # check allowed pump speed
     max_litres_per_minute = MAX_PUMP_RPS * config.hardware.pumped_litres_per_round * 60
-    assert config.measurement.pumped_litres_per_minute <= max_litres_per_minute, (
+    assert (
+        config.measurement.timing.pumped_litres_per_minute <= max_litres_per_minute
+    ), (
         "config.measurement.pumped_litres_per_minute is above the maximum "
         + f"of {max_litres_per_minute} litres per minute"
     )
@@ -56,13 +58,11 @@ def test_local_config() -> None:
     ), "multiple air inlets use the same direction"
 
     # check calibration gas concentrations
-    calibration_gas_concentrations = [
-        cg.concentration for cg in config.calibration.gases
-    ]
-    unique_calibration_gas_concentrations = list(set(calibration_gas_concentrations))
-    assert len(calibration_gas_concentrations) == len(
+    calibration_gas_bottle_ids = [cg.bottle_id for cg in config.calibration.gases]
+    unique_calibration_gas_concentrations = list(set(calibration_gas_bottle_ids))
+    assert len(calibration_gas_bottle_ids) == len(
         unique_calibration_gas_concentrations
-    ), "multiple calibration gases use the same concentration"
+    ), "multiple calibration gases use the same bottle ids"
 
 
 @pytest.mark.version_update

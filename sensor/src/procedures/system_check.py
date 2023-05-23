@@ -103,5 +103,5 @@ class SystemCheckProcedure:
 
         # check for errors
         self.hardware_interface.check_errors()
-        if self.config.active_components.mqtt_communication:
+        if self.config.active_components.send_messages_over_mqtt:
             MessagingAgent.check_errors()
