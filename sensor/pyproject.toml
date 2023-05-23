@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sensor"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 description = ""
 authors = ["Moritz Makowski <moritz.makowski@tum.de>"]
 readme = "README.md"

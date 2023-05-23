@@ -93,4 +93,5 @@ def restart() -> None:
     utils.print_green("Restarting background process")
 
     _stop()
+    time.sleep(0.5)
     _start()
