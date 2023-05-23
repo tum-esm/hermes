@@ -166,13 +166,13 @@ def messaging_agent_with_sending(
     config = utils.ConfigInterface.read()
     config.active_components.send_messages_over_mqtt = True
 
-    procedures.MessagingAgent.init(config)
-    procedures.MessagingAgent.check_errors()
+    procedures.MQTTAgent.init(config)
+    procedures.MQTTAgent.check_errors()
 
     yield
 
-    procedures.MessagingAgent.check_errors()
-    procedures.MessagingAgent.deinit()
+    procedures.MQTTAgent.check_errors()
+    procedures.MQTTAgent.deinit()
 
 
 @pytest.fixture(scope="function")
@@ -187,10 +187,10 @@ def messaging_agent_without_sending(
     config = utils.ConfigInterface.read()
     config.active_components.send_messages_over_mqtt = False
 
-    procedures.MessagingAgent.init(config)
-    procedures.MessagingAgent.check_errors()
+    procedures.MQTTAgent.init(config)
+    procedures.MQTTAgent.check_errors()
 
     yield
 
-    procedures.MessagingAgent.check_errors()
-    procedures.MessagingAgent.deinit()
+    procedures.MQTTAgent.check_errors()
+    procedures.MQTTAgent.deinit()

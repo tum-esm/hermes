@@ -14,9 +14,9 @@ from src import utils, procedures
 if __name__ == "__main__":
     config = utils.ConfigInterface.read()
     utils.MQTTConnection.validate_config()
-    procedures.MessagingAgent.init(config)
+    procedures.MQTTAgent.init(config)
 
     while True:
-        procedures.MessagingAgent.check_errors()
-        print(procedures.MessagingAgent.get_config_message())
+        procedures.MQTTAgent.check_errors()
+        print(procedures.MQTTAgent.get_config_message())
         time.sleep(1)

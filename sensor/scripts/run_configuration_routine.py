@@ -54,6 +54,6 @@ config_request = custom_types.MQTTConfigurationRequest(
 if __name__ == "__main__":
     config = utils.ConfigInterface.read()
     config_procedure = procedures.ConfigurationProcedure(config)
-    procedures.MessagingAgent.init(config)
+    procedures.MQTTAgent.init(config)
 
     config_procedure.run(config_request)

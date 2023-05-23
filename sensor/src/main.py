@@ -84,7 +84,7 @@ def run() -> None:
     # initialize mqtt receiver, archiver, and sender (sending is optional)
 
     try:
-        procedures.MessagingAgent.init(config)
+        procedures.MQTTAgent.init(config)
     except Exception as e:
         logger.exception(
             e,
@@ -102,7 +102,7 @@ def run() -> None:
     logger.info("checking for new config messages", config=config)
     new_config_message: Optional[custom_types.MQTTConfigurationRequest] = None
     while (time.time() - t) < 15:
-        new_config_message = procedures.MessagingAgent.get_config_message()
+        new_config_message = procedures.MQTTAgent.get_config_message()
         if new_config_message is not None:
             break
         time.sleep(1)
@@ -208,7 +208,7 @@ def run() -> None:
             # CONFIGURATION
 
             logger.info("checking for new config messages")
-            new_config_message = procedures.MessagingAgent.get_config_message()
+            new_config_message = procedures.MQTTAgent.get_config_message()
             if new_config_message is not None:
                 try:
                     hardware_interface.teardown()
@@ -272,7 +272,7 @@ def run() -> None:
             )
             exit(1)
 
-        except procedures.MessagingAgent.CommunicationOutage as e:
+        except procedures.MQTTAgent.CommunicationOutage as e:
             logger.exception(e, label="exception in mainloop", config=config)
 
             # cancel the alarm for too long mainloops
@@ -291,9 +291,9 @@ def run() -> None:
                     f"restarting messaging agent",
                     config=config,
                 )
-                procedures.MessagingAgent.deinit()
+                procedures.MQTTAgent.deinit()
                 backoff_time_bucket_index = wait_during_repair()
-                procedures.MessagingAgent.init(config)
+                procedures.MQTTAgent.init(config)
                 logger.info(
                     f"successfully restarted messaging agent",
                     config=config,

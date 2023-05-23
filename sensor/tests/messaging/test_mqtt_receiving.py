@@ -60,7 +60,7 @@ def test_mqtt_receiving(
     with open(CONFIG_PATH) as f:
         config = custom_types.Config(**json.load(f))
         config.active_components.send_messages_over_mqtt = True
-    procedures.MessagingAgent.init(config)
+    procedures.MQTTAgent.init(config)
 
     time.sleep(5)
 
@@ -73,7 +73,7 @@ def test_mqtt_receiving(
     )
 
     # expect retained config message to be received
-    received_config_message = procedures.MessagingAgent.get_config_message()
+    received_config_message = procedures.MQTTAgent.get_config_message()
     assert received_config_message is not None
 
     differences = deepdiff.DeepDiff(

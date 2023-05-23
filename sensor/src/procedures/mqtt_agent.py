@@ -9,7 +9,7 @@ import multiprocessing.synchronize
 from src import custom_types, utils
 
 
-class MessagingAgent:
+class MQTTAgent:
     communication_loop_process: Optional[multiprocessing.Process] = None
     config_request_queue: queue.Queue[
         custom_types.MQTTConfigurationRequest
@@ -25,18 +25,18 @@ class MessagingAgent:
         # the communication loop starts a connection to the
         # mqtt broker, receives config messages and send out
         # messages from the active queue db
-        if MessagingAgent.communication_loop_process is None:
+        if MQTTAgent.communication_loop_process is None:
             if config.active_components.send_messages_over_mqtt:
                 new_process = multiprocessing.Process(
-                    target=MessagingAgent.communication_loop,
+                    target=MQTTAgent.communication_loop,
                     args=(
                         config,
-                        MessagingAgent.config_request_queue,
+                        MQTTAgent.config_request_queue,
                     ),
                     daemon=True,
                 )
                 new_process.start()
-                MessagingAgent.communication_loop_process = new_process
+                MQTTAgent.communication_loop_process = new_process
 
         # wait until messaging agent has
         time.sleep(2)
@@ -45,10 +45,10 @@ class MessagingAgent:
     def deinit() -> None:
         """stop the communication loop process"""
 
-        if MessagingAgent.communication_loop_process is not None:
-            MessagingAgent.communication_loop_process.terminate()
-            MessagingAgent.communication_loop_process.join()
-            MessagingAgent.communication_loop_process = None
+        if MQTTAgent.communication_loop_process is not None:
+            MQTTAgent.communication_loop_process.terminate()
+            MQTTAgent.communication_loop_process.join()
+            MQTTAgent.communication_loop_process = None
 
     @staticmethod
     def communication_loop(
@@ -110,9 +110,7 @@ class MessagingAgent:
                 f"{mqtt_config.mqtt_base_topic}configurations"
                 + f"/{mqtt_config.station_identifier}"
             )
-            mqtt_client.on_message = MessagingAgent.__on_config_message(
-                config_request_queue
-            )
+            mqtt_client.on_message = MQTTAgent.__on_config_message(config_request_queue)
             mqtt_client.subscribe(config_topic, qos=1)
         except Exception as e:
             logger.exception(
@@ -254,9 +252,7 @@ class MessagingAgent:
         new_config_messages: list[custom_types.MQTTConfigurationRequest] = []
         while True:
             try:
-                new_config_messages.append(
-                    MessagingAgent.config_request_queue.get_nowait()
-                )
+                new_config_messages.append(MQTTAgent.config_request_queue.get_nowait())
             except queue.Empty:
                 break
 
@@ -268,11 +264,11 @@ class MessagingAgent:
     @staticmethod
     def check_errors() -> None:
         """Checks whether the loop processes is still running. Possibly
-        raises an `MessagingAgent.CommunicationOutage` exception."""
+        raises an `MQTTAgent.CommunicationOutage` exception."""
 
-        if MessagingAgent.communication_loop_process is not None:
-            if not MessagingAgent.communication_loop_process.is_alive():
-                raise MessagingAgent.CommunicationOutage(
+        if MQTTAgent.communication_loop_process is not None:
+            if not MQTTAgent.communication_loop_process.is_alive():
+                raise MQTTAgent.CommunicationOutage(
                     "communication loop process is not running"
                 )
 

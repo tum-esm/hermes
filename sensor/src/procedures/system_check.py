@@ -1,7 +1,7 @@
 import time
 import psutil
 from src import hardware, custom_types, utils
-from .messaging_agent import MessagingAgent
+from .mqtt_agent import MQTTAgent
 
 
 class SystemCheckProcedure:
@@ -104,4 +104,4 @@ class SystemCheckProcedure:
         # check for errors
         self.hardware_interface.check_errors()
         if self.config.active_components.send_messages_over_mqtt:
-            MessagingAgent.check_errors()
+            MQTTAgent.check_errors()
