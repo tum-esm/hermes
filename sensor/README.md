@@ -143,10 +143,41 @@ pigs w 21 0
 
 ## Set up LTE Hat
 
-```bash
-sudo apt-get install minicom
+TODO: describe how to set up the LTE hat
 
-minicom -D /dev/ttySC0
-```
+<br/>
 
-https://www.waveshare.com/sim7600e-h-4g-hat.htm
+## Release cycle
+
+**For every new release of the sensor software, the following code changes should happen:**
+
+1. Update the version in `pyproject.toml`
+2. Update the version in `src/custom_types/config.py`:
+
+    ```python
+    class Config(pydantic.BaseModel):
+        """The config.json for each sensor"""
+
+        version: Literal["0.1.0-beta.3"]
+        ...
+    ```
+
+3. Update the version in `config/config.template.json` (you can keep the revision at zero since it will be set by the server)
+    ```json
+    {
+        "version": "0.1.0-beta.3",
+        "revision": 0,
+        ...
+    }
+    ```
+
+**The release process is as follows:**
+
+1. Merge the changes into the `main` branch via a PR on GitHub to let the CI run all tests
+2. Tag the commit as `v0.1.0-beta.3` (or whatever the new version is)
+3. Create a release on GitHub with the same tag (`v0.1.0-beta.3`)
+4. Follow the description structure from https://github.com/tum-esm/hermes/releases/tag/v0.1.0-beta.1
+
+**Now, you can send new configs with that release number to the server:**
+
+The configs sent to the server should contain everything except for the `revision field`. The respective sensors will receive the new config and download the tagged release from GitHub.
