@@ -54,7 +54,7 @@ jobs:
             - name: Run static type analysis
               run: |
                   source .venv/bin/activate
-                  bash scripts/testing/check_static_types.sh
+                  ./scripts/check_static_types.sh
             - name: Run ci-pytests
               env:
                   HERMES_MQTT_URL: ${{ secrets.HERMES_MQTT_URL }}
