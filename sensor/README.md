@@ -170,10 +170,11 @@ TODO: describe how to set up the LTE hat
 
 **The release process is as follows:**
 
-1. Merge the changes into the `main` branch via a PR on GitHub to let the CI run all tests
-1. Tag the commit as `v0.1.0-beta.3` (or whatever the new version is)
-1. Create a release on GitHub with the same tag (`v0.1.0-beta.3`)
-1. Follow the description structure from https://github.com/tum-esm/hermes/releases/tag/v0.1.0-beta.1
+1. Merge all changes into the `main` branch
+2. Check whether the GitHub CI tests were successful for this commit
+3. Tag the commit as `v0.1.0-beta.3` (or whatever the new version is)
+4. Create a release on GitHub with the same tag (`v0.1.0-beta.3`)
+5. Follow the description structure from https://github.com/tum-esm/hermes/releases/tag/v0.1.0-beta.1
 
 **Now, you can send new configs with that release number to the server:**
 
