@@ -30,7 +30,7 @@ def test_messaging_loops_function(
 
 
 @pytest.mark.version_update
-# @pytest.mark.ci
+@pytest.mark.ci
 def test_messaging_loops_with_sending(
     mqtt_client_environment: None,
     mqtt_data_files: None,
@@ -50,7 +50,7 @@ def test_messaging_loops_with_sending(
 
 
 @pytest.mark.version_update
-# @pytest.mark.ci
+@pytest.mark.ci
 def test_messaging_loops_without_sending(
     mqtt_client_environment: None,
     mqtt_data_files: None,

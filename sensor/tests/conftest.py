@@ -132,6 +132,7 @@ def mqtt_client_environment() -> Any:
 @pytest.fixture(scope="function")
 def mqtt_data_files() -> Any:
     """start and stop the background sending loop of the SendingMQTTClient"""
+    print("clearing mqtt data files")
 
     ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "active-mqtt-messages.db")
     TMP_ACTIVE_MESSAGES_FILE = join(PROJECT_DIR, "data", "active-mqtt-messages.tmp.db")

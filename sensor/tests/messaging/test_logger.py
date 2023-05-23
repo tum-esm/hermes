@@ -26,7 +26,7 @@ def test_logger_with_sending(messaging_agent_with_sending: None) -> None:
 
 
 @pytest.mark.version_update
-# @pytest.mark.ci
+@pytest.mark.ci
 def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None:
     config = utils.ConfigInterface.read()
     config.active_components.send_messages_over_mqtt = True
@@ -84,8 +84,15 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     ]
 
     expect_log_file_contents(forbidden_content_blocks=generated_log_lines)
-    assert len(message_queue.get_rows_by_status("pending")) == 0
-    assert len(message_queue.get_rows_by_status("in-progress")) == 0
+    assert len(
+        [
+            m
+            for m in (
+                message_queue.get_rows_by_status("in-progress")
+                + message_queue.get_rows_by_status("pending")
+            )
+        ]
+    ) == (1 if mqtt_communication_enabled else 0)
 
     TEST_MESSAGE_DATE_STRING = datetime.utcnow().strftime("%Y-%m-%d")
     MESSAGE_ARCHIVE_FILE = join(
@@ -176,18 +183,19 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         archived_log_messages = [
             custom_types.MQTTLogMessage(**m)
             for m in [json.loads(m) for m in f.read().split("\n") if len(m) > 0]
+            if m["variant"] == "logs"
         ]
     archived_log_messages.sort(key=lambda m: m.body.timestamp)
     assert len(archived_log_messages) == 4
-    assert archived_log_messages[0].header.mqtt_topic == EXPECTED_MQTT_TOPIC
+    assert archived_log_messages[0].header.mqtt_topic == None
     assert archived_log_messages[0].body.severity == "warning"
     assert archived_log_messages[0].body.subject == "pytests - some message c"
 
-    assert archived_log_messages[1].header.mqtt_topic == EXPECTED_MQTT_TOPIC
+    assert archived_log_messages[1].header.mqtt_topic == None
     assert archived_log_messages[1].body.severity == "error"
     assert archived_log_messages[1].body.subject == "pytests - some message d"
 
-    assert archived_log_messages[2].header.mqtt_topic == EXPECTED_MQTT_TOPIC
+    assert archived_log_messages[2].header.mqtt_topic == None
     assert archived_log_messages[2].body.severity == "error"
     assert (
         archived_log_messages[2].body.subject
