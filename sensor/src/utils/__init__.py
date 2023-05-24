@@ -15,4 +15,5 @@ from .functions import (
     get_gpio_pin_factory,
     get_random_string,
     get_cpu_temperature,
+    set_alarm,
 )

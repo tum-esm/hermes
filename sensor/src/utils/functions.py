@@ -1,8 +1,9 @@
 import os
 import random
+import signal
 import string
 import subprocess
-from typing import Optional
+from typing import Any, Optional
 import pigpio
 import gpiozero.pins.pigpio
 
@@ -89,3 +90,13 @@ def get_random_string(length: int, forbidden: list[str] = []) -> str:
 def get_cpu_temperature() -> Optional[float]:
     s = os.popen("vcgencmd measure_temp").readline()
     return float(s.replace("temp=", "").replace("'C\n", ""))
+
+
+def set_alarm(timeout: int, label: str) -> None:
+    """Set an alarm that will raise a `TimeoutError` after `timeout` seconds"""
+
+    def alarm_handler(*args: Any) -> None:
+        raise TimeoutError(f"{label} took too long (timed out after {timeout} seconds)")
+
+    signal.signal(signal.SIGALRM, alarm_handler)
+    signal.alarm(timeout)
