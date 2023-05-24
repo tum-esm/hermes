@@ -11,6 +11,11 @@ class ExitOnHardwareTeardownFail(Exception):
     is not able to upgrade until a reboot happens"""
 
 
+MAX_SETUP_TIME = 180
+MAX_CONFIG_UPDATE_TIME = 1200
+MAX_SYSTEM_CHECK_TIME = 180
+
+
 def run() -> None:
     """
     entry point of the mainloop running continuously on the sensor node
@@ -50,15 +55,13 @@ def run() -> None:
     # -------------------------------------------------------------------------
     # define behaviour when setup takes too long
 
-    max_setup_time = 180
-
     def raise_setup_timeout(*args: Any) -> None:
-        message = f"setup took longer than {max_setup_time} seconds"
+        message = f"setup took too long"
         logger.error(message, config=config)
         raise TimeoutError(message)
 
     signal.signal(signal.SIGALRM, raise_setup_timeout)
-    signal.alarm(max_setup_time)
+    signal.alarm(MAX_SETUP_TIME)
 
     # -------------------------------------------------------------------------
     # define incremental backoff mechanism
@@ -118,6 +121,7 @@ def run() -> None:
     else:
         try:
             logger.info("running configuration procedure", config=config)
+            signal.alarm(MAX_CONFIG_UPDATE_TIME)
             configuration_prodecure.run(new_config_message)
         except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
             logger.info(
@@ -186,14 +190,16 @@ def run() -> None:
     # -------------------------------------------------------------------------
     # define behaviour when mainloop takes too long
 
-    max_calibration_time = (
+    MAX_CALIBRATION_TIME = (
         len(config.calibration.gases) * config.calibration.timing.seconds_per_gas_bottle
+        + 180
     )
-    max_measurement_time = config.measurement.timing.seconds_per_measurement_interval
-    max_mainloop_time = round(max_calibration_time + max_measurement_time + 120)
+    MAX_MEASUREMENT_TIME = (
+        config.measurement.timing.seconds_per_measurement_interval + 180
+    )
 
     def raise_mainloop_timeout(*args: Any) -> None:
-        raise TimeoutError(f"mainloop took longer than {max_mainloop_time} seconds")
+        raise TimeoutError(f"mainloop took longer than expected")
 
     signal.signal(signal.SIGALRM, raise_mainloop_timeout)
 
@@ -203,14 +209,14 @@ def run() -> None:
     logger.info("successfully finished setup, starting mainloop", config=config)
 
     while True:
-        # raise a TimeoutError when mainloop takes too long
-        signal.alarm(max_mainloop_time)
-
         try:
             logger.info("starting mainloop iteration")
 
             # -----------------------------------------------------------------
             # CONFIGURATION
+
+            # raise a TimeoutError when procedure takes too long
+            signal.alarm(MAX_CONFIG_UPDATE_TIME)
 
             logger.info("checking for new config messages")
             new_config_message = procedures.MQTTAgent.get_config_message()
@@ -234,11 +240,17 @@ def run() -> None:
             # -----------------------------------------------------------------
             # SYSTEM CHECKS
 
+            # raise a TimeoutError when procedure takes too long
+            signal.alarm(MAX_SYSTEM_CHECK_TIME)
+
             logger.info("running system checks")
             system_check_prodecure.run()
 
             # -----------------------------------------------------------------
             # CALIBRATION
+
+            # raise a TimeoutError when procedure takes too long
+            signal.alarm(MAX_CALIBRATION_TIME)
 
             if config.active_components.run_calibration_procedures:
                 if calibration_prodecure.is_due():
@@ -251,6 +263,9 @@ def run() -> None:
 
             # -----------------------------------------------------------------
             # MEASUREMENTS
+
+            # raise a TimeoutError when procedure takes too long
+            signal.alarm(MAX_MEASUREMENT_TIME)
 
             # if messages are empty, run regular measurements
             logger.info("running measurements")
