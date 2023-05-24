@@ -82,3 +82,12 @@ def test_local_env_vars() -> None:
         mqtt_password=os.environ.get("HERMES_MQTT_PASSWORD"),
         mqtt_base_topic=os.environ.get("HERMES_MQTT_BASE_TOPIC"),
     )
+
+
+@pytest.mark.version_update
+@pytest.mark.integration
+def test_local_libraries() -> None:
+    """checks whether the raspberry pi specific libraries can be loaded"""
+
+    import board
+    import RPi.GPIO
