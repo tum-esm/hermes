@@ -72,12 +72,12 @@ class ConfigurationProcedure:
         new_revision = config_request.revision
         new_version = config_request.configuration.version
 
-        if code_path(self.config.version) != ROOT_PATH:
+        if code_path(self.config.version) != PROJECT_DIR:
             self.logger.info(
                 "skipping upgrade because executed code is not in default directory",
                 config=self.config,
                 details=(
-                    f'current directory = "{PROJECT_DIR}, '
+                    f'current directory = "{PROJECT_DIR}", '
                     + f'expected directory = "{code_path(self.config.version)}"'
                 ),
             )
