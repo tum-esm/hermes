@@ -90,12 +90,7 @@ class MQTTAgent:
 
         # tear down connection on program termination
         def _graceful_teardown(*args: Any) -> None:
-            def _raise_teardown_timeout(*args: Any) -> None:
-                logger.info("graceful teardown took too long")
-                raise TimeoutError("teardown took too long")
-
-            signal.signal(signal.SIGALRM, _raise_teardown_timeout)
-            signal.alarm(10)
+            utils.set_alarm(10, "graceful teardown")
 
             logger.info("starting graceful shutdown")
             mqtt_connection.teardown()

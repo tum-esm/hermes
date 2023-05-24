@@ -11,11 +11,6 @@ class ExitOnHardwareTeardownFail(Exception):
     is not able to upgrade until a reboot happens"""
 
 
-MAX_SETUP_TIME = 180
-MAX_CONFIG_UPDATE_TIME = 1200
-MAX_SYSTEM_CHECK_TIME = 180
-
-
 def run() -> None:
     """
     entry point of the mainloop running continuously on the sensor node
@@ -53,15 +48,19 @@ def run() -> None:
     utils.StateInterface.init()
 
     # -------------------------------------------------------------------------
-    # define behaviour when setup takes too long
+    # define timeouts for parts of the automation
 
-    def raise_setup_timeout(*args: Any) -> None:
-        message = f"setup took too long"
-        logger.error(message, config=config)
-        raise TimeoutError(message)
-
-    signal.signal(signal.SIGALRM, raise_setup_timeout)
-    signal.alarm(MAX_SETUP_TIME)
+    MAX_SETUP_TIME = 180
+    MAX_CONFIG_UPDATE_TIME = 1200
+    MAX_SYSTEM_CHECK_TIME = 180
+    MAX_CALIBRATION_TIME = (
+        len(config.calibration.gases) * config.calibration.timing.seconds_per_gas_bottle
+        + 180
+    )
+    MAX_MEASUREMENT_TIME = (
+        config.measurement.timing.seconds_per_measurement_interval + 180
+    )
+    utils.set_alarm(MAX_SETUP_TIME, "setup")
 
     # -------------------------------------------------------------------------
     # define incremental backoff mechanism
@@ -121,7 +120,7 @@ def run() -> None:
     else:
         try:
             logger.info("running configuration procedure", config=config)
-            signal.alarm(MAX_CONFIG_UPDATE_TIME)
+            utils.set_alarm(MAX_CONFIG_UPDATE_TIME, "config update")
             configuration_prodecure.run(new_config_message)
         except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
             logger.info(
@@ -150,12 +149,7 @@ def run() -> None:
 
     # tear down hardware on program termination
     def _graceful_teardown(*args: Any) -> None:
-        def _raise_teardown_timeout(*args: Any) -> None:
-            logger.info("graceful teardown took too long")
-            raise TimeoutError("teardown took too long")
-
-        signal.signal(signal.SIGALRM, _raise_teardown_timeout)
-        signal.alarm(10)
+        utils.set_alarm(10, "graceful teardown")
 
         logger.info("starting graceful teardown")
         hardware_interface.teardown()
@@ -188,22 +182,6 @@ def run() -> None:
         raise e
 
     # -------------------------------------------------------------------------
-    # define behaviour when mainloop takes too long
-
-    MAX_CALIBRATION_TIME = (
-        len(config.calibration.gases) * config.calibration.timing.seconds_per_gas_bottle
-        + 180
-    )
-    MAX_MEASUREMENT_TIME = (
-        config.measurement.timing.seconds_per_measurement_interval + 180
-    )
-
-    def raise_mainloop_timeout(*args: Any) -> None:
-        raise TimeoutError(f"mainloop took longer than expected")
-
-    signal.signal(signal.SIGALRM, raise_mainloop_timeout)
-
-    # -------------------------------------------------------------------------
     # infinite mainloop
 
     logger.info("successfully finished setup, starting mainloop", config=config)
@@ -215,8 +193,7 @@ def run() -> None:
             # -----------------------------------------------------------------
             # CONFIGURATION
 
-            # raise a TimeoutError when procedure takes too long
-            signal.alarm(MAX_CONFIG_UPDATE_TIME)
+            utils.set_alarm(MAX_CONFIG_UPDATE_TIME, "config update")
 
             logger.info("checking for new config messages")
             new_config_message = procedures.MQTTAgent.get_config_message()
@@ -240,8 +217,7 @@ def run() -> None:
             # -----------------------------------------------------------------
             # SYSTEM CHECKS
 
-            # raise a TimeoutError when procedure takes too long
-            signal.alarm(MAX_SYSTEM_CHECK_TIME)
+            utils.set_alarm(MAX_SYSTEM_CHECK_TIME, "system check")
 
             logger.info("running system checks")
             system_check_prodecure.run()
@@ -249,8 +225,7 @@ def run() -> None:
             # -----------------------------------------------------------------
             # CALIBRATION
 
-            # raise a TimeoutError when procedure takes too long
-            signal.alarm(MAX_CALIBRATION_TIME)
+            utils.set_alarm(MAX_CALIBRATION_TIME, "calibration")
 
             if config.active_components.run_calibration_procedures:
                 if calibration_prodecure.is_due():
@@ -264,8 +239,7 @@ def run() -> None:
             # -----------------------------------------------------------------
             # MEASUREMENTS
 
-            # raise a TimeoutError when procedure takes too long
-            signal.alarm(MAX_MEASUREMENT_TIME)
+            utils.set_alarm(MAX_MEASUREMENT_TIME, "measurement")
 
             # if messages are empty, run regular measurements
             logger.info("running measurements")
