@@ -43,6 +43,11 @@ def run() -> None:
     )
 
     # -------------------------------------------------------------------------
+    # create state file if it does not exist yet, add upgrade time if missing
+
+    utils.StateInterface.init()
+
+    # -------------------------------------------------------------------------
     # define behaviour when setup takes too long
 
     max_setup_time = 180

@@ -254,6 +254,12 @@ class ConfigurationProcedure:
         if not os.path.isfile(dst):
             shutil.copy(src, dst)
 
+        self.logger.info("copying state.json file")
+        src = f"{PROJECT_DIR}/config/state.json"
+        dst = f"{code_path(config_request.configuration.version)}/config/state.json"
+        if os.path.isfile(src) and (not os.path.isfile(dst)):
+            shutil.copy(src, dst)
+
     def _run_pytests(
         self,
         version: str,
