@@ -121,6 +121,44 @@ async def create_session(request):
     )
 
 
+@validation.validate(schema=validation.StreamNetworkRequest)
+async def read_network(request):
+    """Read information about the network and its sensors.
+
+    This includes:
+      - the identifiers of the sensors in the network
+      - per sensor the number of measurements in 4 hour intervals over the last 28 days
+    Ideas:
+      - metadata about the network
+        - name
+        - how many sensors are online
+        - description?
+      - move aggregation to request per sensor instead of per network
+        - last sensor heartbeats
+        - last measurement timestamps
+
+    TODO offer choice between different time periods -> adapt interval accordingly (or
+         better: let the frontend choose from a list of predefined intervals)
+    TODO use JSON array instead of nested lists, with naming of values
+         [{timestamp: 123, value1: 456, value2: 252}, ...] instead of [[123, 456], ...]
+    """
+
+    query, arguments = database.parametrize(
+        identifier="aggregate-network",
+        arguments={"network_identifier": request.path.network_identifier},
+    )
+    try:
+        result = await dbpool.fetch(query, *arguments)
+    except Exception as e:  # pragma: no cover
+        logger.error(e, exc_info=True)
+        raise errors.InternalServerError()
+    # Return successful response
+    return starlette.responses.JSONResponse(
+        status_code=200,
+        content=database.dictify(result),
+    )
+
+
 @validation.validate(schema=validation.CreateSensorRequest)
 async def create_sensor(request):
     """Create a new sensor and configuration."""
@@ -320,44 +358,6 @@ async def read_log_message_aggregates(request):
     query, arguments = database.parametrize(
         identifier="aggregate-logs",
         arguments={"sensor_identifier": request.path.sensor_identifier},
-    )
-    try:
-        result = await dbpool.fetch(query, *arguments)
-    except Exception as e:  # pragma: no cover
-        logger.error(e, exc_info=True)
-        raise errors.InternalServerError()
-    # Return successful response
-    return starlette.responses.JSONResponse(
-        status_code=200,
-        content=database.dictify(result),
-    )
-
-
-@validation.validate(schema=validation.StreamNetworkRequest)
-async def read_network(request):
-    """Read information about the network and its sensors.
-
-    This includes:
-      - the identifiers of the sensors in the network
-      - per sensor the number of measurements in 4 hour intervals over the last 28 days
-    Ideas:
-      - metadata about the network
-        - name
-        - how many sensors are online
-        - description?
-      - move aggregation to request per sensor instead of per network
-        - last sensor heartbeats
-        - last measurement timestamps
-
-    TODO offer choice between different time periods -> adapt interval accordingly (or
-         better: let the frontend choose from a list of predefined intervals)
-    TODO use JSON array instead of nested lists, with naming of values
-         [{timestamp: 123, value1: 456, value2: 252}, ...] instead of [[123, 456], ...]
-    """
-
-    query, arguments = database.parametrize(
-        identifier="aggregate-network",
-        arguments={"network_identifier": request.path.network_identifier},
     )
     try:
         result = await dbpool.fetch(query, *arguments)

@@ -95,28 +95,17 @@ async def publish_configuration(
     task.add_done_callback(task_references.remove)
 
 
-async def _handle_heartbeats(sensor_identifier, payload, dbpool):
-    """Process incoming sensor heartbeats.
-
-    Heartbeat messages are critical to the system working correctly. This is in
-    contrast to logs, which only fulfill a logging functionality
-    that allows us to see errors on the sensors straight from the dashboard.
-    On receival of a heartbeat, we:
-
-    1. Update configuration on acknowledgement success/failure
-    2. TODO Update sensor's last seen
-    """
-    # Update configurations in the database
+async def _handle_acknowledgements(sensor_identifier, payload, dbpool):
     query, arguments = database.parametrize(
         identifier="update-configuration-on-acknowledgement",
         arguments=[
             {
                 "sensor_identifier": sensor_identifier,
-                "revision": heartbeat.revision,
-                "acknowledgement_timestamp": heartbeat.timestamp,
-                "success": heartbeat.success,
+                "revision": acknowledgment.revision,
+                "acknowledgement_timestamp": acknowledgment.timestamp,
+                "success": acknowledgment.success,
             }
-            for i, heartbeat in enumerate(payload.heartbeats)
+            for i, acknowledgment in enumerate(payload.heartbeats)
         ],
     )
     try:
@@ -127,26 +116,9 @@ async def _handle_heartbeats(sensor_identifier, payload, dbpool):
         )
     else:
         logger.info(
-            f"[MQTT] Handled {len(payload.heartbeats)} system messages from"
+            f"[MQTT] Handled {len(payload.heartbeats)} acknowledgements from"
             f" {sensor_identifier}"
         )
-    # Write system messages as logs into the database; Acceptable if this fails
-    query, arguments = database.parametrize(
-        identifier="create-log",
-        arguments=[
-            {
-                "sensor_identifier": sensor_identifier,
-                "revision": heartbeat.revision,
-                "creation_timestamp": heartbeat.timestamp,
-                "position_in_transmission": i,
-                "severity": "system",
-                "subject": "Heartbeat",
-                "details": json.dumps({"success": heartbeat.success}),
-            }
-            for i, heartbeat in enumerate(payload.heartbeats)
-        ],
-    )
-    await dbpool.executemany(query, arguments)
 
 
 async def _handle_measurements(sensor_identifier, payload, dbpool):
@@ -205,7 +177,7 @@ async def _handle_logs(sensor_identifier, payload, dbpool):
 
 
 SUBSCRIPTIONS = {
-    "heartbeats/+": (_handle_heartbeats, validation.HeartbeatsMessage),
+    "heartbeats/+": (_handle_acknowledgements, validation.AcknowledgementsMessage),
     "measurements/+": (_handle_measurements, validation.MeasurementsMessage),
     "logs/+": (_handle_logs, validation.LogsMessage),
 }

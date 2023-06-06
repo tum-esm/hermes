@@ -6,15 +6,15 @@ import app.validation.constants as constants
 import app.validation.types as types
 
 
-class Heartbeat(types._BaseModel):
+class Acknowledgement(types._BaseModel):
     revision: types.Revision
     timestamp: types.Timestamp
-    # Did the sensor successfully process the configuration?
-    success: pydantic.StrictBool
+    success: pydantic.StrictBool  # Was the configuration processed successfully?
 
 
-class HeartbeatsMessage(types._BaseModel):
-    heartbeats: pydantic.conlist(item_type=Heartbeat, min_items=1)
+class AcknowledgementsMessage(types._BaseModel):
+    # TODO: Rename to acknowledgements on refactor
+    heartbeats: pydantic.conlist(item_type=Acknowledgement, min_items=1)
 
 
 class Log(types._BaseModel):
