@@ -14,6 +14,6 @@ async def cleanup():
     yield
     async with main.dbpool.acquire() as connection:
         async with connection.transaction():
-            await connection.execute("DELETE FROM users;")
-            await connection.execute("DELETE FROM networks;")
-            await connection.execute("DELETE FROM sensors;")
+            await connection.execute('DELETE FROM "user";')
+            await connection.execute("DELETE FROM network;")
+            await connection.execute("DELETE FROM sensor;")

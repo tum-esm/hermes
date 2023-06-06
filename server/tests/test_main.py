@@ -55,7 +55,7 @@ async def test_creating_user(http_client, cleanup):
     """Test creating a user."""
     response = await http_client.post(
         url="/users",
-        json={"username": "squirtle", "password": "12345678"},
+        json={"user_name": "squirtle", "password": "12345678"},
     )
     assert returns(response, 201)
     assert set(response.json().keys()) == {"user_identifier", "access_token"}
@@ -66,11 +66,11 @@ async def test_creating_user_with_duplicate(http_client, cleanup):
     """Test creating a user when it already exists."""
     response = await http_client.post(
         url="/users",
-        json={"username": "squirtle", "password": "12345678"},
+        json={"user_name": "squirtle", "password": "12345678"},
     )
     response = await http_client.post(
         url="/users",
-        json={"username": "squirtle", "password": "12345678"},
+        json={"user_name": "squirtle", "password": "12345678"},
     )
     assert returns(response, errors.ConflictError)
 
@@ -222,6 +222,6 @@ async def test_creating_session_with_not_exists(http_client, cleanup):
     """Test authenticating a user that doesn't exist."""
     response = await http_client.post(
         url="/authentication",
-        json={"username": "magnemite", "password": "12345678"},
+        json={"user_name": "magnemite", "password": "12345678"},
     )
     assert returns(response, errors.NotFoundError)

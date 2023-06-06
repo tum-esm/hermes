@@ -145,12 +145,12 @@ class _ReadStatusRequestBody(types._BaseModel):
 
 
 class _CreateUserRequestBody(types._BaseModel):
-    username: types.Name
+    user_name: types.Name
     password: types.Password
 
 
 class _CreateSessionRequestBody(types._BaseModel):
-    username: types.Name
+    user_name: types.Name
     password: types.Password
 
 

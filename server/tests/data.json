@@ -1,57 +1,57 @@
 {
-    "users": [
+    "user": [
         {
-            "user_identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc",
-            "username": "ash",
+            "identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc",
+            "name": "ash",
             "creation_timestamp": 0,
             "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$JaT0nnOuVYqx9h6jtLa21g$iRkdLMm6Pigqop5+DVzLwNRIxyE2uP3ZdYKJjHo4LhM"
         }
     ],
-    "networks": [
+    "network": [
         {
-            "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
-            "network_name": "default",
+            "identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
+            "name": "default",
             "creation_timestamp": 0
         }
     ],
-    "sensors": [
+    "sensor": [
         {
-            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
-            "sensor_name": "bulbasaur",
+            "identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "name": "bulbasaur",
             "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
             "creation_timestamp": 0
         },
         {
-            "sensor_identifier": "2d2a3794-2345-4500-8baa-493f88123087",
-            "sensor_name": "charmander",
+            "identifier": "2d2a3794-2345-4500-8baa-493f88123087",
+            "name": "charmander",
             "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
             "creation_timestamp": 0
         },
         {
-            "sensor_identifier": "df1ad8d1-63ea-45b6-ae42-86febb182fe8",
-            "sensor_name": "squirtle",
+            "identifier": "df1ad8d1-63ea-45b6-ae42-86febb182fe8",
+            "name": "squirtle",
             "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
             "creation_timestamp": 0
         }
     ],
-    "permissions": [
+    "permission": [
         {
             "user_identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc",
             "network_identifier": "1f705cc5-4242-458b-9201-4217455ea23c",
             "creation_timestamp": 0
         }
     ],
-    "sessions": [
+    "session": [
         {
             "access_token_hash": "88a2419d0d862e44e44cdf98abda5e99b7655d12c7b7d4e8a4f3731a1095eac0709e798a75b8d669158e03e5bd13ad91e100c525ec90fb619f4b575d7f219a1a",
             "user_identifier": "575a7328-4e2e-4b88-afcc-e0b5ed3920cc",
             "creation_timestamp": 0
         }
     ],
-    "configurations": [
+    "configuration": [
         {
             "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
-            "configuration": {},
+            "value": {},
             "revision": 0,
             "creation_timestamp": 0,
             "publication_timestamp": 0,
@@ -61,7 +61,7 @@
         },
         {
             "sensor_identifier": "2d2a3794-2345-4500-8baa-493f88123087",
-            "configuration": {},
+            "value": {},
             "revision": 0,
             "creation_timestamp": 0,
             "publication_timestamp": 0,
@@ -80,10 +80,10 @@
             "success": true
         }
     ],
-    "measurements": [
+    "measurement": [
         {
             "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
-            "measurement": {
+            "value": {
                 "somewhere": 530,
                 "what": 2.8,
                 "tomorrow": "yes"
@@ -91,11 +91,11 @@
             "revision": 0,
             "creation_timestamp": 100,
             "receipt_timestamp": 120,
-            "position_in_transmission": 0
+            "index": 0
         },
         {
             "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
-            "measurement": {
+            "value": {
                 "somewhere": 20,
                 "what": 1.2,
                 "tomorrow": "no"
@@ -103,11 +103,11 @@
             "revision": 0,
             "creation_timestamp": 140,
             "receipt_timestamp": 200,
-            "position_in_transmission": 0
+            "index": 0
         },
         {
             "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
-            "measurement": {
+            "value": {
                 "somewhere": 270,
                 "what": 4.0,
                 "tomorrow": "maybe"
@@ -115,10 +115,10 @@
             "revision": 0,
             "creation_timestamp": 180,
             "receipt_timestamp": 200,
-            "position_in_transmission": 1
+            "index": 1
         }
     ],
-    "logs": [
+    "log": [
         {
             "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
             "severity": "info",
@@ -126,7 +126,7 @@
             "revision": 0,
             "creation_timestamp": 0,
             "receipt_timestamp": 250,
-            "position_in_transmission": 0,
+            "index": 0,
             "details": null
         },
         {
@@ -136,7 +136,7 @@
             "revision": 0,
             "creation_timestamp": 200,
             "receipt_timestamp": 250,
-            "position_in_transmission": 1,
+            "index": 1,
             "details": "Get the marshmallows ready!"
         },
         {
@@ -146,7 +146,7 @@
             "revision": 1,
             "creation_timestamp": 400,
             "receipt_timestamp": 450,
-            "position_in_transmission": 0,
+            "index": 0,
             "details": "Get the marshmallows ready!"
         },
         {
@@ -156,7 +156,7 @@
             "revision": 2,
             "creation_timestamp": 600,
             "receipt_timestamp": 650,
-            "position_in_transmission": 0,
+            "index": 0,
             "details": "Please call the fire department."
         }
     ]

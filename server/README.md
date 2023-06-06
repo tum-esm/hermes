@@ -41,7 +41,7 @@ Create a new user.
 ```python
 httpx.post(
     url="http://localhost:8000/users",
-    json={"username": "ash", "password": "12345678"},
+    json={"user_name": "ash", "password": "12345678"},
 )
 ```
 
@@ -59,7 +59,7 @@ Log in.
 ```python
 httpx.post(
     url="http://localhost:8000/authentication",
-    json={"username": "ash", "password": "12345678"},
+    json={"user_name": "ash", "password": "12345678"},
 )
 ```
 
@@ -86,19 +86,19 @@ httpx.get(
     "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
     "sensor_name": "bulbasaur",
     "bucket_timestamps": [],
-    "measurements_counts": []
+    "measurement_counts": []
   },
   {
     "sensor_identifier": "2d2a3794-2345-4500-8baa-493f88123087",
     "sensor_name": "charmander",
     "bucket_timestamps": [],
-    "measurements_counts": []
+    "measurement_counts": []
   },
   {
     "sensor_identifier": "df1ad8d1-63ea-45b6-ae42-86febb182fe8",
     "sensor_name": "squirtle",
     "bucket_timestamps": [],
-    "measurements_counts": []
+    "measurement_counts": []
   }
 ]
 ```

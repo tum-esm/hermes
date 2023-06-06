@@ -43,7 +43,7 @@ async def create_user(request):
             query, arguments = database.parametrize(
                 identifier="create-user",
                 arguments={
-                    "username": request.body.username,
+                    "user_name": request.body.user_name,
                     "password_hash": password_hash,
                 },
             )
@@ -51,7 +51,7 @@ async def create_user(request):
                 result = await connection.fetch(query, *arguments)
             except asyncpg.exceptions.UniqueViolationError:
                 logger.warning(
-                    f"{request.method} {request.url.path} -- Uniqueness violated"
+                    f"{request.method} {request.url.path} -- Uniqueness violation"
                 )
                 raise errors.ConflictError()
             except Exception as e:  # pragma: no cover
@@ -83,7 +83,7 @@ async def create_session(request):
     """Authenticate a user from username and password and return access token."""
     # Read user
     query, arguments = database.parametrize(
-        identifier="read-user", arguments={"username": request.body.username}
+        identifier="read-user", arguments={"user_name": request.body.user_name}
     )
     try:
         result = await dbpool.fetch(query, *arguments)

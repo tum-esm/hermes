@@ -29,7 +29,7 @@ async def _populate(connection):
             # Insert records into the database
             identifiers = ", ".join([f"${i+1}" for i in range(len(records[0]))])
             await connection.executemany(
-                f"INSERT INTO {table_name} VALUES ({identifiers});",
+                f'INSERT INTO "{table_name}" VALUES ({identifiers});',
                 [tuple(record.values()) for record in records],
             )
 

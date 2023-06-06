@@ -129,10 +129,10 @@ async def _handle_measurements(sensor_identifier, payload, dbpool):
                 "sensor_identifier": sensor_identifier,
                 "revision": measurement.revision,
                 "creation_timestamp": measurement.timestamp,
-                "position_in_transmission": i,
+                "index": index,
                 "measurement": measurement.value,
             }
-            for i, measurement in enumerate(payload.measurements)
+            for index, measurement in enumerate(payload.measurements)
         ],
     )
     try:
@@ -158,12 +158,12 @@ async def _handle_logs(sensor_identifier, payload, dbpool):
                 "sensor_identifier": sensor_identifier,
                 "revision": log.revision,
                 "creation_timestamp": log.timestamp,
-                "position_in_transmission": i,
+                "index": index,
                 "severity": log.severity,
                 "subject": log.subject,
                 "details": log.details,
             }
-            for i, log in enumerate(payload.logs)
+            for index, log in enumerate(payload.logs)
         ],
     )
     try:

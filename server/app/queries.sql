@@ -7,7 +7,7 @@ SELECT
     min(creation_timestamp) AS min_creation_timestamp,
     max(creation_timestamp) AS max_creation_timestamp,
     count(*) AS count
-FROM logs
+FROM log
 WHERE
     sensor_identifier = ${sensor_identifier} AND severity = any(
         ARRAY['warning', 'error']
@@ -22,40 +22,40 @@ WITH aggregation AS (
     SELECT
         sensor_identifier,
         array_agg(bucket_timestamp) AS bucket_timestamps,
-        array_agg(measurements_count) AS measurements_counts
-    FROM measurements_aggregation_4_hours
+        array_agg(measurement_count) AS measurement_counts
+    FROM measurement_aggregation_4_hours
     WHERE bucket_timestamp > now() - INTERVAL '28 days'
     GROUP BY sensor_identifier
 )
 
 -- Filter by sensors belonging to the given network
 SELECT
-    sensor_identifier,
-    sensors.sensor_name,
+    sensor.identifier AS sensor_identifier,
+    sensor.name AS sensor_name,
     coalesce(
         aggregation.bucket_timestamps, ARRAY[]::TIMESTAMPTZ []
     ) AS bucket_timestamps,
     coalesce(
-        aggregation.measurements_counts, ARRAY[]::INT []
-    ) AS measurements_counts
-FROM networks
-INNER JOIN sensors USING (network_identifier)
-LEFT JOIN aggregation USING (sensor_identifier)
-WHERE network_identifier = ${network_identifier};
+        aggregation.measurement_counts, ARRAY[]::INT []
+    ) AS measurement_counts
+FROM network
+INNER JOIN sensor ON network.identifier = sensor.network_identifier
+LEFT JOIN aggregation ON sensor.identifier = aggregation.sensor_identifier
+WHERE network.identifier = ${network_identifier};
 
 
 -- name: create-configuration
-INSERT INTO configurations (
+INSERT INTO configuration (
     sensor_identifier,
     revision,
     creation_timestamp,
-    configuration
+    value
 )
 VALUES (
     ${sensor_identifier},
     (
         SELECT coalesce(max(revision) + 1, 0)
-        FROM configurations WHERE sensor_identifier = ${sensor_identifier}
+        FROM configuration WHERE sensor_identifier = ${sensor_identifier}
     ),
     now(),
     ${configuration}
@@ -64,14 +64,14 @@ RETURNING revision;
 
 
 -- name: create-log
-INSERT INTO logs (
+INSERT INTO log (
     sensor_identifier,
     severity,
     subject,
     revision,
     creation_timestamp,
     receipt_timestamp,
-    position_in_transmission,
+    index,
     details
 )
 VALUES (
@@ -81,19 +81,19 @@ VALUES (
     ${revision},
     ${creation_timestamp},
     now(),
-    ${position_in_transmission},
+    ${index},
     ${details}
 );
 
 
 -- name: create-measurement
-INSERT INTO measurements (
+INSERT INTO measurement (
     sensor_identifier,
-    measurement,
+    value,
     revision,
     creation_timestamp,
     receipt_timestamp,
-    position_in_transmission
+    index
 )
 VALUES (
     ${sensor_identifier},
@@ -101,14 +101,14 @@ VALUES (
     ${revision},
     ${creation_timestamp},
     now(),
-    ${position_in_transmission}
+    ${index}
 );
 
 
 -- name: create-sensor
-INSERT INTO sensors (
-    sensor_identifier,
-    sensor_name,
+INSERT INTO sensor (
+    identifier,
+    name,
     network_identifier,
     creation_timestamp
 )
@@ -118,11 +118,11 @@ VALUES (
     ${network_identifier},
     now()
 )
-RETURNING sensor_identifier;
+RETURNING identifier AS sensor_identifier;
 
 
 -- name: create-session
-INSERT INTO sessions (
+INSERT INTO session (
     access_token_hash,
     user_identifier,
     creation_timestamp
@@ -135,27 +135,27 @@ VALUES (
 
 
 -- name: create-user
-INSERT INTO users (
-    user_identifier,
-    username,
+INSERT INTO "user" (
+    identifier,
+    name,
     creation_timestamp,
     password_hash
 )
 VALUES (
     uuid_generate_v4(),
-    ${username},
+    ${user_name},
     now(),
     ${password_hash}
 )
-RETURNING user_identifier;
+RETURNING identifier AS user_identifier;
 
 
 -- name: read-measurements
 SELECT
-    measurement,
+    value AS measurement,  -- TODO: Remove alias for consistency with MQTT interface
     revision,
     creation_timestamp
-FROM measurements
+FROM measurement
 WHERE
     sensor_identifier = ${sensor_identifier}
     AND CASE
@@ -184,7 +184,7 @@ SELECT
     revision,
     creation_timestamp,
     details
-FROM logs
+FROM log
 WHERE
     sensor_identifier = ${sensor_identifier}
     AND CASE
@@ -208,24 +208,33 @@ LIMIT 64;
 
 -- name: read-user
 SELECT
-    user_identifier,
+    identifier AS user_identifier,
     password_hash
-FROM users
-WHERE username = ${username};
+FROM "user"
+WHERE name = ${user_name};
 
 
 -- name: read-permissions
 -- Could be extended to support finer grained permissions
 SELECT
     user_identifier,
-    permissions.network_identifier
-FROM sessions
-LEFT JOIN permissions USING (user_identifier)
-WHERE sessions.access_token_hash = ${access_token_hash};
+    permission.network_identifier
+FROM session
+LEFT JOIN permission USING (user_identifier)
+WHERE session.access_token_hash = ${access_token_hash};
+
+
+-- name: update-configuration-on-publication
+UPDATE configuration
+SET publication_timestamp = now()
+WHERE
+    sensor_identifier = ${sensor_identifier}
+    AND revision = ${revision}
+    AND publication_timestamp IS NULL;
 
 
 -- name: update-configuration-on-acknowledgement
-UPDATE configurations
+UPDATE configuration
 SET
     acknowledgement_timestamp = ${acknowledgement_timestamp},
     receipt_timestamp = now(),
@@ -236,17 +245,8 @@ WHERE
     AND acknowledgement_timestamp IS NULL;
 
 
--- name: update-configuration-on-publication
-UPDATE configurations
-SET publication_timestamp = now()
-WHERE
-    sensor_identifier = ${sensor_identifier}
-    AND revision = ${revision}
-    AND publication_timestamp IS NULL;
-
-
 -- name: update-sensor
 -- Update general sensor information that is not relayed to the sensor
-UPDATE sensors
-SET sensor_name = ${sensor_name}
-WHERE sensor_identifier = ${sensor_identifier};
+UPDATE sensor
+SET name = ${sensor_name}
+WHERE identifier = ${sensor_identifier};

@@ -3,34 +3,34 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "timescaledb";
 
 
-CREATE TABLE users (
-    user_identifier UUID PRIMARY KEY,
-    username TEXT UNIQUE NOT NULL,
+CREATE TABLE "user" (
+    identifier UUID PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     password_hash TEXT NOT NULL
 );
 
 
-CREATE TABLE networks (
-    network_identifier UUID PRIMARY KEY,
-    network_name TEXT UNIQUE NOT NULL,
+CREATE TABLE network (
+    identifier UUID PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL
 );
 
 
-CREATE TABLE sensors (
-    sensor_identifier UUID PRIMARY KEY,
-    sensor_name TEXT NOT NULL,
-    network_identifier UUID NOT NULL REFERENCES networks (network_identifier) ON DELETE CASCADE,
+CREATE TABLE sensor (
+    identifier UUID PRIMARY KEY,
+    name TEXT NOT NULL,
+    network_identifier UUID NOT NULL REFERENCES network (identifier) ON DELETE CASCADE,
     creation_timestamp TIMESTAMPTZ NOT NULL,
 
-    UNIQUE (network_identifier, sensor_name)
+    UNIQUE (network_identifier, name)
 );
 
 
-CREATE TABLE permissions (
-    user_identifier UUID NOT NULL REFERENCES users (user_identifier) ON DELETE CASCADE,
-    network_identifier UUID NOT NULL REFERENCES networks (network_identifier) ON DELETE CASCADE,
+CREATE TABLE permission (
+    user_identifier UUID NOT NULL REFERENCES "user" (identifier) ON DELETE CASCADE,
+    network_identifier UUID NOT NULL REFERENCES network (identifier) ON DELETE CASCADE,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     -- Add permission levels here (e.g. owner, user, read-only)
 
@@ -38,16 +38,16 @@ CREATE TABLE permissions (
 );
 
 
-CREATE TABLE sessions (
+CREATE TABLE session (
     access_token_hash TEXT PRIMARY KEY,
-    user_identifier UUID NOT NULL REFERENCES users (user_identifier) ON DELETE CASCADE,
+    user_identifier UUID NOT NULL REFERENCES "user" (identifier) ON DELETE CASCADE,
     creation_timestamp TIMESTAMPTZ NOT NULL
 );
 
 
-CREATE TABLE configurations (
-    sensor_identifier UUID NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
-    configuration JSONB NOT NULL,
+CREATE TABLE configuration (
+    sensor_identifier UUID NOT NULL REFERENCES sensor (identifier) ON DELETE CASCADE,
+    value JSONB NOT NULL,
     revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     publication_timestamp TIMESTAMPTZ,
@@ -64,7 +64,7 @@ CREATE TABLE configurations (
 
 -- Defining the primary key manually with the sort order makes the query for the latest
 -- revision faster
-CREATE UNIQUE INDEX ON configurations (sensor_identifier ASC, revision DESC);
+CREATE UNIQUE INDEX ON configuration (sensor_identifier ASC, revision DESC);
 
 
 -- Measurements don't have a unique primary key. Enforcing that the combination of
@@ -76,51 +76,51 @@ CREATE UNIQUE INDEX ON configurations (sensor_identifier ASC, revision DESC);
 -- If this ever becomes a problem, we can generate a column that reliably makes the
 -- combination unique and use that for the keyset pagination. This way, we can
 -- continue to do without an index. The same ideas apply to the logs table.
-CREATE TABLE measurements (
-    sensor_identifier UUID NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
-    measurement JSONB NOT NULL,
+CREATE TABLE measurement (
+    sensor_identifier UUID NOT NULL REFERENCES sensor (identifier) ON DELETE CASCADE,
+    value JSONB NOT NULL,
     revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
-    position_in_transmission INT NOT NULL
+    index INT NOT NULL
 );
 
-SELECT create_hypertable('measurements', 'creation_timestamp');
+SELECT create_hypertable('measurement', 'creation_timestamp');
 
 
-CREATE MATERIALIZED VIEW measurements_aggregation_4_hours
+CREATE MATERIALIZED VIEW measurement_aggregation_4_hours
 WITH (timescaledb.continuous, timescaledb.materialized_only = true) AS
     SELECT
         sensor_identifier,
         time_bucket('4 hours', creation_timestamp) AS bucket_timestamp,
-        COUNT(*) AS measurements_count
-    FROM measurements
+        COUNT(*) AS measurement_count
+    FROM measurement
     GROUP BY sensor_identifier, bucket_timestamp
 WITH DATA;
 
 
 SELECT add_continuous_aggregate_policy(
-    continuous_aggregate => 'measurements_aggregation_4_hours',
+    continuous_aggregate => 'measurement_aggregation_4_hours',
     start_offset => '10 days',
     end_offset => '4 hours',
     schedule_interval => '2 hours'
 );
 
 
-CREATE TABLE logs (
-    sensor_identifier UUID NOT NULL REFERENCES sensors (sensor_identifier) ON DELETE CASCADE,
+CREATE TABLE log (
+    sensor_identifier UUID NOT NULL REFERENCES sensor (identifier) ON DELETE CASCADE,
     severity TEXT NOT NULL,
     subject TEXT NOT NULL,
     revision INT NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
-    position_in_transmission INT NOT NULL,
+    index INT NOT NULL,
     details TEXT
 );
 
-SELECT create_hypertable('logs', 'creation_timestamp');
+SELECT create_hypertable('log', 'creation_timestamp');
 
 SELECT add_retention_policy(
-    relation => 'logs',
+    relation => 'log',
     drop_after => INTERVAL '8 weeks'
 );
