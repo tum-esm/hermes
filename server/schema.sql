@@ -13,7 +13,7 @@ CREATE TABLE users (
 
 CREATE TABLE networks (
     network_identifier UUID PRIMARY KEY,
-    network_name TEXT NOT NULL,
+    network_name TEXT UNIQUE NOT NULL,
     creation_timestamp TIMESTAMPTZ NOT NULL
 );
 

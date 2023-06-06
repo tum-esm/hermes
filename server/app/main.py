@@ -51,7 +51,7 @@ async def create_user(request):
                 result = await connection.fetch(query, *arguments)
             except asyncpg.exceptions.UniqueViolationError:
                 logger.warning(
-                    f"{request.method} {request.url.path} -- User already exists"
+                    f"{request.method} {request.url.path} -- Uniqueness violated"
                 )
                 raise errors.ConflictError()
             except Exception as e:  # pragma: no cover
