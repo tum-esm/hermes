@@ -193,7 +193,7 @@ httpx.get(
 ]
 ```
 
-**`GET /networks/<network-identifier>/sensors/<sensor-identifier>/measurements`:**
+**`GET /networks/<network-identifier>/sensors/<sensor-identifier>/logs`:**
 
 Read the logs of a sensor in pages, optionally with keyset query parameters `creation_timestamp` and `direction`.
 
