@@ -164,7 +164,7 @@ httpx.get(
 ```json
 [
   {
-    "measurement": {
+    "value": {
       "what": 2.8,
       "tomorrow": "yes",
       "somewhere": 530
@@ -173,7 +173,7 @@ httpx.get(
     "creation_timestamp": 1683644500.0
   },
   {
-    "measurement": {
+    "value": {
       "what": 1.2,
       "tomorrow": "no",
       "somewhere": 20
@@ -182,7 +182,7 @@ httpx.get(
     "creation_timestamp": 1683644540.0
   },
   {
-    "measurement": {
+    "value": {
       "what": 4.0,
       "tomorrow": "maybe",
       "somewhere": 270

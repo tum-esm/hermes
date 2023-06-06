@@ -152,7 +152,7 @@ RETURNING identifier AS user_identifier;
 
 -- name: read-measurements
 SELECT
-    value AS measurement,  -- TODO: Remove alias for consistency with MQTT interface
+    value,
     revision,
     creation_timestamp
 FROM measurement
