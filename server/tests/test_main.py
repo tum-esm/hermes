@@ -169,6 +169,19 @@ async def test_create_sensor_with_duplicate(
     assert returns(response, errors.ConflictError)
 
 
+@pytest.mark.anyio
+async def test_create_sensor_with_network_not_exists(
+    setup, http_client, identifier, access_token
+):
+    """Test creating a sensor in a network that does not exist."""
+    response = await http_client.post(
+        url=f"/networks/{identifier}/sensors",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"sensor_name": "rattata", "configuration": {}},
+    )
+    assert returns(response, errors.NotFoundError)
+
+
 ########################################################################################
 # Route: PUT /networks/<network_identifier>/sensors/<sensor_identifier>
 ########################################################################################
@@ -273,5 +286,5 @@ async def test_read_measurements_with_latest(
 
 # TODO check logs
 # TODO check log aggregation
-# TODO create sensor with missing network
-# TODO missing/wrong authentication
+# TODO check create sensor when network exists but user does not have permission
+# TODO check missing/wrong authentication

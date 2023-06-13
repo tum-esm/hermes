@@ -48,7 +48,7 @@ async def create_user(request):
                 },
             )
             try:
-                result = await connection.fetch(query, *arguments)
+                elements = await connection.fetch(query, *arguments)
             except asyncpg.exceptions.UniqueViolationError:
                 logger.warning(
                     f"{request.method} {request.url.path} -- Uniqueness violation"
@@ -57,7 +57,7 @@ async def create_user(request):
             except Exception as e:  # pragma: no cover
                 logger.error(e, exc_info=True)
                 raise errors.InternalServerError()
-            user_identifier = database.dictify(result)[0]["user_identifier"]
+            user_identifier = database.dictify(elements)[0]["user_identifier"]
             # Create new session
             query, arguments = database.parametrize(
                 identifier="create-session",
@@ -86,16 +86,16 @@ async def create_session(request):
         identifier="read-user", arguments={"user_name": request.body.user_name}
     )
     try:
-        result = await dbpool.fetch(query, *arguments)
+        elements = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
-    result = database.dictify(result)
-    if len(result) == 0:
+    elements = database.dictify(elements)
+    if len(elements) == 0:
         logger.warning(f"{request.method} {request.url.path} -- User not found")
         raise errors.NotFoundError()
-    user_identifier = result[0]["user_identifier"]
-    password_hash = result[0]["password_hash"]
+    user_identifier = elements[0]["user_identifier"]
+    password_hash = elements[0]["password_hash"]
     # Check if password hashes match
     if not auth.verify_password(request.body.password, password_hash):
         logger.warning(f"{request.method} {request.url.path} -- Invalid password")
@@ -148,14 +148,14 @@ async def read_network(request):
         arguments={"network_identifier": request.path.network_identifier},
     )
     try:
-        result = await dbpool.fetch(query, *arguments)
+        elements = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=200,
-        content=database.dictify(result),
+        content=database.dictify(elements),
     )
 
 
@@ -178,8 +178,9 @@ async def create_sensor(request):
                 },
             )
             try:
-                result = await connection.fetch(query, *arguments)
+                elements = await connection.fetch(query, *arguments)
             except asyncpg.ForeignKeyViolationError:
+                # This can happen if we delete the network after the permissions check
                 logger.warning(
                     f"{request.method} {request.url.path} -- Network not found"
                 )
@@ -190,7 +191,7 @@ async def create_sensor(request):
             except Exception as e:  # pragma: no cover
                 logger.error(e, exc_info=True)
                 raise errors.InternalServerError()
-            sensor_identifier = database.dictify(result)[0]["sensor_identifier"]
+            sensor_identifier = database.dictify(elements)[0]["sensor_identifier"]
             # Create new configuration
             query, arguments = database.parametrize(
                 identifier="create-configuration",
@@ -200,11 +201,11 @@ async def create_sensor(request):
                 },
             )
             try:
-                result = await connection.fetch(query, *arguments)
+                elements = await connection.fetch(query, *arguments)
             except Exception as e:  # pragma: no cover
                 logger.error(e, exc_info=True)
                 raise errors.InternalServerError()
-            revision = database.dictify(result)[0]["revision"]
+            revision = database.dictify(elements)[0]["revision"]
     # Send MQTT message with configuration
     await mqtt.publish_configuration(
         sensor_identifier=sensor_identifier,
@@ -244,14 +245,14 @@ async def update_sensor(request):
                 },
             )
             try:
-                result = await connection.execute(query, *arguments)
+                elements = await connection.execute(query, *arguments)
 
             # TODO catch asyncpg.UniqueViolationError
 
             except Exception as e:  # pragma: no cover
                 logger.error(e, exc_info=True)
                 raise errors.InternalServerError()
-            if result != "UPDATE 1":
+            if elements != "UPDATE 1":
                 logger.warning(
                     f"{request.method} {request.url.path} -- Sensor doesn't exist"
                 )
@@ -265,11 +266,11 @@ async def update_sensor(request):
                 },
             )
             try:
-                result = await connection.fetch(query, *arguments)
+                elements = await connection.fetch(query, *arguments)
             except Exception as e:  # pragma: no cover
                 logger.error(e, exc_info=True)
                 raise errors.InternalServerError()
-            revision = database.dictify(result)[0]["revision"]
+            revision = database.dictify(elements)[0]["revision"]
     # Send MQTT message with configuration
     await mqtt.publish_configuration(
         sensor_identifier=request.path.sensor_identifier,
@@ -307,7 +308,7 @@ async def read_measurements(request):
         },
     )
     try:
-        result = await dbpool.fetch(query, *arguments)
+        elements = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
@@ -315,7 +316,7 @@ async def read_measurements(request):
     return starlette.responses.JSONResponse(
         status_code=200,
         content=database.dictify(
-            result if request.query.direction == "next" else result[::-1]
+            elements if request.query.direction == "next" else elements[::-1]
         ),
     )
 
@@ -339,7 +340,7 @@ async def read_logs(request):
         },
     )
     try:
-        result = await dbpool.fetch(query, *arguments)
+        elements = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
@@ -347,7 +348,7 @@ async def read_logs(request):
     return starlette.responses.JSONResponse(
         status_code=200,
         content=database.dictify(
-            result if request.query.direction == "next" else result[::-1]
+            elements if request.query.direction == "next" else elements[::-1]
         ),
     )
 
@@ -360,14 +361,14 @@ async def read_log_message_aggregates(request):
         arguments={"sensor_identifier": request.path.sensor_identifier},
     )
     try:
-        result = await dbpool.fetch(query, *arguments)
+        elements = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=200,
-        content=database.dictify(result),
+        content=database.dictify(elements),
     )
 
 
@@ -377,7 +378,7 @@ mqttc = None  # MQTT client
 
 @contextlib.asynccontextmanager
 async def lifespan(app):
-    """Manage lifetime of database client and MQTT client."""
+    """Manage the lifetime of the database client and the MQTT client."""
     global dbpool
     global mqttc
     async with database.pool() as x:

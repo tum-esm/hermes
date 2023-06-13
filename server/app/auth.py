@@ -63,20 +63,20 @@ async def authenticate(request, dbpool):
             identifier="read-permissions",
             arguments={"access_token_hash": hash_token(access_token)},
         )
-        result = await dbpool.fetch(query, *arguments)
+        elements = await dbpool.fetch(query, *arguments)
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
-    result = database.dictify(result)
+    elements = database.dictify(elements)
     # If the result is empty the access token is invalid
-    if len(result) == 0:
+    if len(elements) == 0:
         logger.warning(f"{request.method} {request.url.path} -- Invalid access token")
         raise errors.UnauthorizedError()
-    user_identifier = result[0]["user_identifier"]
+    user_identifier = elements[0]["user_identifier"]
     # A user can have multiple permissions, the query's LEFT JOIN can produce None
     permissions = [
         entry["network_identifier"]
-        for entry in result
+        for entry in elements
         if entry["network_identifier"] is not None
     ]
     return user_identifier, permissions

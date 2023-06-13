@@ -45,11 +45,11 @@ def parametrize(identifier, arguments):
     return query, arguments
 
 
-def dictify(result):
+def dictify(elements):
     """Cast a asyncpg SELECT query result into a list of dictionaries."""
     # TODO: implement this as a custom asyncpg record_class on pool?
     # see https://magicstack.github.io/asyncpg/current/api/index.html#connection-pools
-    return [dict(record) for record in result]
+    return [dict(record) for record in elements]
 
 
 async def initialize(connection):
