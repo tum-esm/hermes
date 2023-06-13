@@ -212,12 +212,66 @@ async def test_update_sensor_with_not_exists(
 async def test_read_measurements(
     setup, http_client, network_identifier, sensor_identifier
 ):
-    """Test reading latest measurements."""
+    """Test reading the latest measurements."""
     response = await http_client.get(
         url=f"/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
         params={"direction": "previous"},
     )
     assert returns(response, 200)
+    assert isinstance(response.json(), list)
+    assert len(response.json()) == 3
+    assert [
+        set(element.keys()) == {"value", "revision", "creation_timestamp"}
+        for element in response.json()
+    ]
+    assert response.json() == sorted(
+        response.json(), key=lambda x: x["creation_timestamp"]
+    )
 
 
-# TODO: check result, check different parameters, check logs, check log aggregation
+@pytest.mark.anyio
+async def test_read_measurements(
+    setup, http_client, network_identifier, sensor_identifier
+):
+    """Test reading measurements before a given timestamp."""
+    response = await http_client.get(
+        url=f"/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
+        params={"direction": "previous", "creation_timestamp": 180},
+    )
+    assert returns(response, 200)
+    assert isinstance(response.json(), list)
+    assert len(response.json()) == 2
+    assert [
+        set(element.keys()) == {"value", "revision", "creation_timestamp"}
+        for element in response.json()
+    ]
+    assert response.json() == sorted(
+        response.json(), key=lambda x: x["creation_timestamp"]
+    )
+
+
+@pytest.mark.anyio
+async def test_read_measurements_with_latest(
+    setup, http_client, network_identifier, sensor_identifier
+):
+    """Test reading measurements after a given timestamp."""
+    response = await http_client.get(
+        url=f"/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
+        params={"direction": "next", "creation_timestamp": 110},
+    )
+    assert returns(response, 200)
+    assert isinstance(response.json(), list)
+    assert len(response.json()) == 2
+    assert [
+        set(element.keys()) == {"value", "revision", "creation_timestamp"}
+        for element in response.json()
+    ]
+    assert response.json() == sorted(
+        response.json(), key=lambda x: x["creation_timestamp"]
+    )
+
+
+# TODO check logs
+# TODO check log aggregation
+# TODO create sensor with missing network
+# TODO missing/wrong authentication

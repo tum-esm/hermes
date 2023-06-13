@@ -68,7 +68,7 @@ async def create_user(request):
             )
             try:
                 await connection.execute(query, *arguments)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 logger.error(e, exc_info=True)
                 raise errors.InternalServerError()
     # Return successful response
