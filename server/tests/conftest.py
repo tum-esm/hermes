@@ -35,7 +35,7 @@ async def _populate(connection, timestamp=None):
 
 
 @pytest.fixture(scope="function")
-async def cleanup():
+async def setup():
     """Reset the database to contain the initial test data for each test."""
     async with main.dbpool.acquire() as connection:
         async with connection.transaction():

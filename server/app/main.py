@@ -74,7 +74,7 @@ async def create_user(request):
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=201,
-        content={"access_token": access_token, "user_identifier": user_identifier},
+        content={"user_identifier": user_identifier, "access_token": access_token},
     )
 
 
@@ -116,8 +116,8 @@ async def create_session(request):
         raise errors.InternalServerError()
     # Return successful response
     return starlette.responses.JSONResponse(
-        status_code=200,
-        content={"access_token": access_token, "user_identifier": user_identifier},
+        status_code=201,
+        content={"user_identifier": user_identifier, "access_token": access_token},
     )
 
 

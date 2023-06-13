@@ -20,17 +20,46 @@ async def http_client(app):
         yield http_client
 
 
-@pytest.fixture(scope="session")
-def access_token():
-    """Provide valid access token that coincides with the example hash."""
-    return "c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869"
-
-
 def returns(response, check):
     """Check that a httpx request returns with a specific status code or error."""
     if isinstance(check, int):
         return response.status_code == check
     return response.status_code == check.STATUS_CODE and response.text == check.DETAIL
+
+
+def keys(response, keys):
+    """Check that a httpx request body contains a specific set of keys."""
+    return set(response.json().keys()) == set(keys)
+
+
+########################################################################################
+# Test data
+########################################################################################
+
+
+@pytest.fixture(scope="session")
+def identifier():
+    return "00000000-0000-4000-8000-000000000000"
+
+
+@pytest.fixture(scope="session")
+def user_identifier():
+    return "575a7328-4e2e-4b88-afcc-e0b5ed3920cc"
+
+
+@pytest.fixture(scope="session")
+def network_identifier():
+    return "1f705cc5-4242-458b-9201-4217455ea23c"
+
+
+@pytest.fixture(scope="session")
+def sensor_identifier():
+    return "81bf7042-e20f-4a97-ac44-c15853e3618f"
+
+
+@pytest.fixture(scope="session")
+def access_token():
+    return "c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869"
 
 
 ########################################################################################
@@ -39,16 +68,13 @@ def returns(response, check):
 
 
 @pytest.mark.anyio
-async def test_reading_status(http_client):
+async def test_read_status(http_client):
     """Test reading the server status."""
     response = await http_client.get("/status")
     assert returns(response, 200)
-    assert set(response.json().keys()) == {
-        "environment",
-        "commit_sha",
-        "branch_name",
-        "start_timestamp",
-    }
+    assert keys(
+        response, {"environment", "commit_sha", "branch_name", "start_timestamp"}
+    )
 
 
 ########################################################################################
@@ -57,153 +83,22 @@ async def test_reading_status(http_client):
 
 
 @pytest.mark.anyio
-async def test_creating_user(http_client, cleanup):
+async def test_create_user(setup, http_client):
     """Test creating a user."""
     response = await http_client.post(
-        url="/users",
-        json={"user_name": "squirtle", "password": "12345678"},
+        url="/users", json={"user_name": "red", "password": "12345678"}
     )
     assert returns(response, 201)
-    assert set(response.json().keys()) == {"user_identifier", "access_token"}
+    assert keys(response, {"user_identifier", "access_token"})
 
 
 @pytest.mark.anyio
-async def test_creating_user_with_duplicate(http_client, cleanup):
-    """Test creating a user when it already exists."""
+async def test_create_user_with_duplicate(setup, http_client):
+    """Test creating a user that already exists."""
     response = await http_client.post(
-        url="/users",
-        json={"user_name": "squirtle", "password": "12345678"},
-    )
-    response = await http_client.post(
-        url="/users",
-        json={"user_name": "squirtle", "password": "12345678"},
+        url="/users", json={"user_name": "ash", "password": "12345678"}
     )
     assert returns(response, errors.ConflictError)
-
-
-########################################################################################
-# Route: POST /sensors
-########################################################################################
-
-
-@pytest.mark.anyio
-async def test_creating_sensors(http_client, cleanup):
-    """Test creating a sensor."""
-    # TODO create user
-    # TODO create network
-    response = await http_client.post(
-        url="/sensors",
-        # TODO add missing network identifier
-        json={"sensor_name": "rattata", "configuration": {}},
-    )
-    assert returns(response, 201)
-
-
-@pytest.mark.anyio
-async def test_creating_sensors_with_duplicate(http_client, cleanup):
-    """Test creating a sensor that already exists."""
-    response = await http_client.post(
-        url="/sensors",
-        json={"sensor_name": "rattata", "configuration": {}},
-    )
-    assert returns(response, 201)
-    response = await http_client.post(
-        url="/sensors",
-        json={"sensor_name": "rattata", "configuration": {}},
-    )
-    assert returns(response, 409)
-
-
-########################################################################################
-# Route: PUT /sensors
-########################################################################################
-
-
-@pytest.mark.anyio
-async def test_updating_sensors(http_client, cleanup):
-    """Test updating a sensor."""
-    # TODO create user
-    # TODO create network
-    response = await http_client.post(
-        url="/sensors",
-        json={"sensor_name": "rattata", "configuration": {}},
-    )
-    assert returns(response, 201)
-    response = await http_client.put(
-        url="/sensors/rattata",
-        # TODO add missing network identifier
-        json={"sensor_name": "rattata", "configuration": {"int": 7}},
-    )
-    assert returns(response, 204)
-
-
-@pytest.mark.anyio
-async def test_updating_sensors_with_not_exists(http_client, cleanup):
-    """Test updating a sensor that does not exist."""
-    response = await http_client.put(
-        url="/sensors/rattata",
-        json={"sensor_name": "rattata", "configuration": {}},
-    )
-    assert returns(response, 404)
-
-
-@pytest.mark.anyio
-async def test_updating_sensors_with_name_change(http_client, cleanup):
-    """Test updating a sensor together with a name change."""
-    response = await http_client.post(
-        url="/sensors",
-        json={"sensor_name": "rattata", "configuration": {}},
-    )
-    assert returns(response, 201)
-    response = await http_client.put(
-        url="/sensors/rattata",
-        json={"sensor_name": "squirtle", "configuration": {}},
-    )
-    assert returns(response, 204)
-    response = await http_client.put(
-        url="/sensors/squirtle",
-        json={"sensor_name": "squirtle", "configuration": {}},
-    )
-    assert returns(response, 204)
-
-
-########################################################################################
-# Route: GET /sensors
-#
-# We don't test a lot here, only a successful response code, because this will change
-# a lot in the future.
-#
-# TODO add default data that is reset before every test
-########################################################################################
-
-
-@pytest.mark.anyio
-async def test_reading_sensors(http_client, cleanup):
-    """Test reading sensors."""
-    response = await http_client.get("/sensors")
-    assert returns(response, 200)
-
-
-@pytest.mark.anyio
-async def test_reading_sensors_with_filters(http_client, cleanup):
-    """Test reading only specific sensors."""
-    response = await http_client.get("/sensors", params={"sensors": "pikachu,squirtle"})
-    assert returns(response, 200)
-
-
-########################################################################################
-# Route: GET /measurements
-#
-# # We don't test a lot here, only a successful response code, because this will change
-# a lot in the future.
-########################################################################################
-
-
-@pytest.mark.anyio
-async def test_reading_measurements(http_client, cleanup):
-    """Test reading measurements."""
-    response = await http_client.get("/measurements")
-    assert returns(response, 200)
 
 
 ########################################################################################
@@ -212,22 +107,95 @@ async def test_reading_measurements(http_client, cleanup):
 
 
 @pytest.mark.anyio
-async def test_creating_session(http_client, cleanup):
-    """Test authenticating an existing user with a valid password."""
-    pass
-
-
-@pytest.mark.anyio
-async def test_creating_session_with_invalid_password(http_client, cleanup):
-    """Test authenticating an existing user with an invalid password."""
-    pass
-
-
-@pytest.mark.anyio
-async def test_creating_session_with_not_exists(http_client, cleanup):
+async def test_create_session_with_not_exists(setup, http_client):
     """Test authenticating a user that doesn't exist."""
     response = await http_client.post(
         url="/authentication",
-        json={"user_name": "magnemite", "password": "12345678"},
+        json={"user_name": "red", "password": "12345678"},
     )
     assert returns(response, errors.NotFoundError)
+
+
+########################################################################################
+# Route: POST /networks/<network_identifier>/sensors
+########################################################################################
+
+
+@pytest.mark.anyio
+async def test_create_sensor(setup, http_client, network_identifier, access_token):
+    """Test creating a sensor."""
+    response = await http_client.post(
+        url=f"/networks/{network_identifier}/sensors",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"sensor_name": "rattata", "configuration": {}},
+    )
+    assert returns(response, 201)
+    assert keys(response, {"sensor_identifier", "revision"})
+    assert response.json()["revision"] == 0
+
+
+@pytest.mark.anyio
+async def test_create_sensor_with_duplicate(
+    setup, http_client, network_identifier, access_token
+):
+    """Test creating a sensor that already exists."""
+    response = await http_client.post(
+        url=f"/networks/{network_identifier}/sensors",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"sensor_name": "bulbasaur", "configuration": {}},
+    )
+    assert returns(response, errors.ConflictError)
+
+
+########################################################################################
+# Route: PUT /networks/<network_identifier>/sensors/<sensor_identifier>
+########################################################################################
+
+
+@pytest.mark.anyio
+async def test_update_sensor(
+    setup, http_client, network_identifier, sensor_identifier, access_token
+):
+    """Test updating a sensor's name and configuration."""
+    response = await http_client.put(
+        url=f"/networks/{network_identifier}/sensors/{sensor_identifier}",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"sensor_name": "rattata", "configuration": {"value": 42}},
+    )
+    assert returns(response, 200)
+    assert keys(response, {"sensor_identifier", "revision"})
+    assert response.json()["sensor_identifier"] == sensor_identifier
+    assert response.json()["revision"] == 1
+
+
+@pytest.mark.anyio
+async def test_update_sensor_with_not_exists(
+    setup, http_client, network_identifier, identifier, access_token
+):
+    """Test updating a sensor that does not exist."""
+    response = await http_client.put(
+        url=f"/networks/{network_identifier}/sensors/{identifier}",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"sensor_name": "rattata", "configuration": {"value": 42}},
+    )
+    assert returns(response, errors.NotFoundError)
+
+
+########################################################################################
+# Route: GET /networks/<network_identifier>/sensors/<sensor_identifier>/measurements
+########################################################################################
+
+
+@pytest.mark.anyio
+async def test_read_measurements(
+    setup, http_client, network_identifier, sensor_identifier
+):
+    """Test reading latest measurements."""
+    response = await http_client.get(
+        url=f"/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
+        params={"direction": "previous"},
+    )
+    assert returns(response, 200)
+
+
+# TODO: check result, check different parameters, check logs, check log aggregation
