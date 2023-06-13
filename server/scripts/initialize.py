@@ -1,12 +1,12 @@
 import argparse
 import asyncio
-import json
 import os
 import time
 
 import asyncpg
 
 import app.database as database
+import tests.conftest
 
 
 async def _initialize(connection):
@@ -14,24 +14,6 @@ async def _initialize(connection):
     with open("schema.sql") as file:
         for statement in file.read().split("\n\n\n"):
             await connection.execute(statement)
-
-
-async def _populate(connection):
-    """Populate the database with example data."""
-    timestamp = time.time() // 3600 * 3600 - 3600
-    with open("tests/data.json") as file:
-        for table_name, records in json.load(file).items():
-            # Adapt example timestamps to something current
-            for record in records:
-                for key in record:
-                    if key.endswith("_timestamp"):
-                        record[key] += timestamp
-            # Insert records into the database
-            identifiers = ", ".join([f"${i+1}" for i in range(len(records[0]))])
-            await connection.executemany(
-                f'INSERT INTO "{table_name}" VALUES ({identifiers});',
-                [tuple(record.values()) for record in records],
-            )
 
 
 async def initialize(populate=False):
@@ -47,7 +29,9 @@ async def initialize(populate=False):
         await database.initialize(connection)
         await _initialize(connection)
         if populate:
-            await _populate(connection)
+            await tests.conftest._populate(
+                connection, timestamp=time.time() // 3600 * 3600 - 3600
+            )
     finally:
         await connection.close()
 

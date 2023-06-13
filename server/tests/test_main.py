@@ -20,6 +20,12 @@ async def http_client(app):
         yield http_client
 
 
+@pytest.fixture(scope="session")
+def access_token():
+    """Provide valid access token that coincides with the example hash."""
+    return "c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869"
+
+
 def returns(response, check):
     """Check that a httpx request returns with a specific status code or error."""
     if isinstance(check, int):
