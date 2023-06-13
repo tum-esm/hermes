@@ -107,6 +107,28 @@ async def test_create_user_with_duplicate(setup, http_client):
 
 
 @pytest.mark.anyio
+async def test_create_session(setup, http_client, user_identifier):
+    """Test authenticating an existing user with a valid password."""
+    response = await http_client.post(
+        url="/authentication",
+        json={"user_name": "ash", "password": "12345678"},
+    )
+    assert returns(response, 201)
+    assert keys(response, {"user_identifier", "access_token"})
+    assert response.json()["user_identifier"] == user_identifier
+
+
+@pytest.mark.anyio
+async def test_create_session_with_invalid_password(setup, http_client):
+    """Test authenticating an existing user with an invalid password."""
+    response = await http_client.post(
+        url="/authentication",
+        json={"user_name": "ash", "password": "00000000"},
+    )
+    assert returns(response, errors.UnauthorizedError)
+
+
+@pytest.mark.anyio
 async def test_create_session_with_not_exists(setup, http_client):
     """Test authenticating a user that doesn't exist."""
     response = await http_client.post(
