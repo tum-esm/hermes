@@ -27,6 +27,7 @@ def run() -> None:
         * continue
     4. run measurement procedure
     """
+    # TODO: Update the run description with more details
 
     logger = utils.Logger(origin="main")
     logger.horizontal_line()
@@ -149,6 +150,7 @@ def run() -> None:
 
     signal.signal(signal.SIGINT, _graceful_teardown)
     signal.signal(signal.SIGTERM, _graceful_teardown)
+    logger.info("established graceful teardown hook")
 
     # -------------------------------------------------------------------------
     # initialize procedures interacting with hardware
@@ -196,7 +198,9 @@ def run() -> None:
                 # stopping this script inside the procedure if successful
                 logger.info("running configuration procedure", config=config)
                 configuration_prodecure.run(new_config_message)
-
+                # Either raises an exception here if configuration was successful
+                # Or reinitialized hardware if configuration failed
+                # TODO: Ask why the exception is needed here
                 hardware_interface.reinitialize(config)
 
             # -----------------------------------------------------------------

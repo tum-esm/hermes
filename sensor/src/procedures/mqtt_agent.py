@@ -39,6 +39,7 @@ class MQTTAgent:
                 MQTTAgent.communication_loop_process = new_process
 
         # wait until messaging agent has
+        # TOOO: finish sentence
         time.sleep(2)
 
     @staticmethod
@@ -224,9 +225,7 @@ class MQTTAgent:
 
                 # -----------------------------------------------------------------
 
-                if any(
-                    [sent_record_count, resent_record_count, delivered_record_count]
-                ):
+                if any([sent_record_count, resent_record_count, delivered_record_count]):
                     if config.verbose_logging:
                         logger.info(
                             f"{sent_record_count}/{resent_record_count}/{delivered_record_count} "
@@ -267,9 +266,7 @@ class MQTTAgent:
 
         if MQTTAgent.communication_loop_process is not None:
             if not MQTTAgent.communication_loop_process.is_alive():
-                raise MQTTAgent.CommunicationOutage(
-                    "communication loop process is not running"
-                )
+                raise MQTTAgent.CommunicationOutage("communication loop process is not running")
 
     @staticmethod
     def __on_config_message(
@@ -285,9 +282,7 @@ class MQTTAgent:
             logger.info(f"received message on config topic: {msg.payload.decode()}")
             try:
                 config_request_queue.put(
-                    custom_types.MQTTConfigurationRequest(
-                        **json.loads(msg.payload.decode())
-                    )
+                    custom_types.MQTTConfigurationRequest(**json.loads(msg.payload.decode()))
                 )
                 logger.debug(f"put config message into the message queue")
             except json.JSONDecodeError:

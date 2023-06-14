@@ -35,9 +35,7 @@ venv_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}/.venv"
 dirname = os.path.dirname
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 CURRENT_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.json")
-CURRENT_TMP_CONFIG_PATH = os.path.join(
-    PROJECT_DIR, "config", "config.param-change-tmp.json"
-)
+CURRENT_TMP_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.param-change-tmp.json")
 
 
 def store_current_config() -> None:
@@ -47,9 +45,7 @@ def store_current_config() -> None:
 
 
 def restore_current_config() -> None:
-    assert os.path.isfile(
-        CURRENT_TMP_CONFIG_PATH
-    ), f"{CURRENT_TMP_CONFIG_PATH} does not exist"
+    assert os.path.isfile(CURRENT_TMP_CONFIG_PATH), f"{CURRENT_TMP_CONFIG_PATH} does not exist"
     if os.path.isfile(CURRENT_CONFIG_PATH):
         os.remove(CURRENT_CONFIG_PATH)
     os.rename(CURRENT_TMP_CONFIG_PATH, CURRENT_CONFIG_PATH)
@@ -117,9 +113,7 @@ class ConfigurationProcedure:
 
             self._run_pytests(
                 new_version,
-                scope=(
-                    "parameter-change" if (has_same_directory) else "version-change"
-                ),
+                scope=("parameter-change" if (has_same_directory) else "version-change"),
             )
 
             self.logger.info(
@@ -155,9 +149,12 @@ class ConfigurationProcedure:
 
             raise ConfigurationProcedure.ExitOnUpdateSuccess()
 
+        # This raises an error to the calling function on success
         except ConfigurationProcedure.ExitOnUpdateSuccess as e:
             raise e
 
+        # This exception is reached if the config update fails and returns
+        # to calling function
         except Exception as e:
             self.logger.exception(
                 e,
