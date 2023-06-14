@@ -65,7 +65,7 @@ def run() -> None:
     # will be used for rebooting when errors persist for more than 24 hours
     last_successful_mainloop_iteration_time = time.time()
 
-    # incremental backoff times on exceptions (15s, 30s, 1m, 2min, 4min, 8m)
+    # incremental backoff times on exceptions (15s, 30s, 1m, 2m, 4m, 8m)
     backoff_time_bucket_index = 0
     backoff_time_buckets = [15, 30, 60, 120, 240, 480]
 
