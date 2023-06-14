@@ -54,12 +54,9 @@ def run() -> None:
     MAX_CONFIG_UPDATE_TIME = 1200
     MAX_SYSTEM_CHECK_TIME = 180
     MAX_CALIBRATION_TIME = (
-        len(config.calibration.gases) * config.calibration.timing.seconds_per_gas_bottle
-        + 180
+        len(config.calibration.gases) * config.calibration.timing.seconds_per_gas_bottle + 180
     )
-    MAX_MEASUREMENT_TIME = (
-        config.measurement.timing.seconds_per_measurement_interval + 180
-    )
+    MAX_MEASUREMENT_TIME = config.measurement.timing.seconds_per_measurement_interval + 180
     utils.set_alarm(MAX_SETUP_TIME, "setup")
 
     # -------------------------------------------------------------------------
@@ -68,9 +65,9 @@ def run() -> None:
     # will be used for rebooting when errors persist for more than 24 hours
     last_successful_mainloop_iteration_time = time.time()
 
-    # incremental backoff times on exceptions (15s, 1m, 5m, 20m)
+    # incremental backoff times on exceptions (15s, 30s, 1m, 2min, 4min, 8m)
     backoff_time_bucket_index = 0
-    backoff_time_buckets = [15, 60, 300, 1200]
+    backoff_time_buckets = [15, 30, 60, 120, 240, 480]
 
     def wait_during_repair() -> int:
         """Wait for the current backoff time and increase backoff time
@@ -123,14 +120,10 @@ def run() -> None:
             utils.set_alarm(MAX_CONFIG_UPDATE_TIME, "config update")
             configuration_prodecure.run(new_config_message)
         except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
-            logger.info(
-                "shutting down mainloop due to successful update", config=config
-            )
+            logger.info("shutting down mainloop due to successful update", config=config)
             exit(0)
         except Exception as e:
-            logger.exception(
-                e, label="error during configuration procedure", config=config
-            )
+            logger.exception(e, label="error during configuration procedure", config=config)
             raise e
 
     # -------------------------------------------------------------------------
@@ -142,9 +135,7 @@ def run() -> None:
     try:
         hardware_interface = hardware.HardwareInterface(config)
     except Exception as e:
-        logger.exception(
-            e, label="could not initialize hardware interface", config=config
-        )
+        logger.exception(e, label="could not initialize hardware interface", config=config)
         raise e
 
     # tear down hardware on program termination
@@ -168,15 +159,9 @@ def run() -> None:
     logger.info("initializing procedures", config=config)
 
     try:
-        system_check_prodecure = procedures.SystemCheckProcedure(
-            config, hardware_interface
-        )
-        calibration_prodecure = procedures.CalibrationProcedure(
-            config, hardware_interface
-        )
-        measurement_prodecure = procedures.MeasurementProcedure(
-            config, hardware_interface
-        )
+        system_check_prodecure = procedures.SystemCheckProcedure(config, hardware_interface)
+        calibration_prodecure = procedures.CalibrationProcedure(config, hardware_interface)
+        measurement_prodecure = procedures.MeasurementProcedure(config, hardware_interface)
     except Exception as e:
         logger.exception(e, label="could not initialize procedures", config=config)
         raise e
@@ -322,7 +307,5 @@ def run() -> None:
                 logger.info("hard reset was successful", config=config)
 
             except Exception as e:
-                logger.exception(
-                    e, label="exception during hard reset of hardware", config=config
-                )
+                logger.exception(e, label="exception during hard reset of hardware", config=config)
                 raise e
