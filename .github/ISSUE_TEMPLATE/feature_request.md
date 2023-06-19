@@ -3,8 +3,7 @@ name: Feature request
 about: Suggest an idea for this project
 title: "<add title here>"
 labels: needs-triage, type:feature
-assignees: dostuffthatmatters
-
+assignees: patrickjaigner
 ---
 
 **Is your feature request related to a problem? Please describe.**
