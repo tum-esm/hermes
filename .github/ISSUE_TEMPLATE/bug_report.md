@@ -3,8 +3,7 @@ name: Bug report
 about: Create a report to help us improve
 title: "<add title here>"
 labels: needs-triage, type:bug
-assignees: dostuffthatmatters
-
+assignees: patrickjaigner
 ---
 
 **Describe the bug**
