@@ -1,0 +1,367 @@
+openapi: 3.1.0
+info:
+  title: Hermes
+  version: "0.1"
+  contact: {}
+servers:
+  - url: "https://sea-turtle-app-38sco.ondigitalocean.app"
+paths:
+  /status:
+    get:
+      operationId: get-status
+      summary: Status
+      description: Read the status of the server.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  environment:
+                    type: string
+                    example: production
+                  commit_sha:
+                    type: string
+                    example: 1a2984bf5ffda71207fb133d785eb486cb465618
+                  branch_name:
+                    type: string
+                    example: main
+                  start_timestamp:
+                    $ref: "#/components/schemas/timestamp"
+  /users:
+    post:
+      operationId: post-users
+      summary: Users
+      description: Create a new user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_name:
+                  $ref: "#/components/schemas/name"
+                password:
+                  $ref: "#/components/schemas/password"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    $ref: "#/components/schemas/token"
+                  user_identifier:
+                    $ref: "#/components/schemas/identifier"
+        "409":
+          description: Conflict
+  /authentication:
+    post:
+      operationId: post-authentication
+      summary: Authentication
+      description: Log in.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_name:
+                  $ref: "#/components/schemas/name"
+                password:
+                  $ref: "#/components/schemas/password"
+          application/xml:
+            schema:
+              type: object
+              properties: {}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    $ref: "#/components/schemas/token"
+                  user_identifier:
+                    $ref: "#/components/schemas/identifier"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+  "/networks/{network_identifier}":
+    parameters:
+      - $ref: "#/components/parameters/network_identifier"
+    get:
+      operationId: get-networks-network_identifier
+      summary: Network
+      description: Read information about the network and its sensors.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    sensor_identifier:
+                      $ref: "#/components/schemas/identifier"
+                    sensor_name:
+                      $ref: "#/components/schemas/name"
+                    bucket_timestamps:
+                      type: array
+                      items:
+                        $ref: "#/components/schemas/timestamp"
+                    measurement_counts:
+                      type: array
+                      items:
+                        type: integer
+  "/networks/{network_identifier}/sensors":
+    parameters:
+      - $ref: "#/components/parameters/network_identifier"
+    post:
+      operationId: post-networks-network_identifier-sensors
+      summary: Create sensor
+      description: Create a new sensor.
+      parameters:
+        - $ref: "#/components/parameters/authorization"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sensor_name:
+                  $ref: "#/components/schemas/name"
+                configuration:
+                  type: object
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sensor_identifier:
+                    $ref: "#/components/schemas/identifier"
+                  revision:
+                    $ref: "#/components/schemas/revision"
+        "404":
+          description: Not Found
+  "/networks/{network_identifier}/sensors/{sensor_identifier}":
+    parameters:
+      - $ref: "#/components/parameters/network_identifier"
+      - $ref: "#/components/parameters/sensor_identifier"
+    put:
+      operationId: put-networks-network_identifier-sensors-sensor_identifier
+      summary: Update sensor
+      description: Update the sensor's information and configuration.
+      parameters:
+        - $ref: "#/components/parameters/authorization"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sensor_name:
+                  $ref: "#/components/schemas/name"
+                configuration:
+                  type: object
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sensor_identifier:
+                    $ref: "#/components/schemas/identifier"
+                  revision:
+                    $ref: "#/components/schemas/revision"
+        "404":
+          description: Not Found
+  "/networks/{network_identifier}/sensors/{sensor_identifier}/measurements":
+    parameters:
+      - $ref: "#/components/parameters/network_identifier"
+      - $ref: "#/components/parameters/sensor_identifier"
+    get:
+      operationId: get-networks-network_identifier-sensors-sensor_identifier-measurements
+      summary: Measurements
+      description: Read the measurements of a sensor in pages.
+      parameters:
+        - $ref: "#/components/parameters/direction"
+        - $ref: "#/components/parameters/creation_timestamp"
+      requestBody:
+        content: {}
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      type: object
+                    revision:
+                      $ref: "#/components/schemas/revision"
+                    creation_timestamp:
+                      $ref: "#/components/schemas/timestamp"
+  "/networks/{network_identifier}/sensors/{sensor_identifier}/logs":
+    parameters:
+      - $ref: "#/components/parameters/network_identifier"
+      - $ref: "#/components/parameters/sensor_identifier"
+    get:
+      operationId: get-networks-network_identifier-sensors-sensor_identifier-logs
+      summary: Logs
+      description: Read the logs of a sensor in pages.
+      parameters:
+        - $ref: "#/components/parameters/direction"
+        - $ref: "#/components/parameters/creation_timestamp"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    severity:
+                      $ref: "#/components/schemas/severity"
+                    subject:
+                      type: string
+                    revision:
+                      $ref: "#/components/schemas/revision"
+                    creation_timestamp:
+                      $ref: "#/components/schemas/timestamp"
+                    details:
+                      type: string
+  "/networks/{network_identifier}/sensors/{sensor_identifier}/logs/aggregates":
+    parameters:
+      - $ref: "#/components/parameters/network_identifier"
+      - $ref: "#/components/parameters/sensor_identifier"
+    get:
+      operationId: get-networks-network_identifier-sensors-sensor_identifier-logs-aggregates
+      summary: Log Aggregates
+      description: Read an aggregate of sensor logs with warning and error severity.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    severity:
+                      $ref: "#/components/schemas/severity"
+                    subject:
+                      type: string
+                    min_revision:
+                      $ref: "#/components/schemas/revision"
+                    max_revision:
+                      $ref: "#/components/schemas/revision"
+                    min_creation_timestamp:
+                      $ref: "#/components/schemas/timestamp"
+                    max_creation_timestamp:
+                      $ref: "#/components/schemas/timestamp"
+                    count:
+                      $ref: "#/components/schemas/count"
+components:
+  schemas:
+    identifier:
+      title: identifier
+      type: string
+      example: 575a7328-4e2e-4b88-afcc-e0b5ed3920cc
+      pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+    timestamp:
+      title: timestamp
+      type: number
+      example: 1683644500.3
+    name:
+      title: name
+      type: string
+      example: example
+      pattern: "^(?!-)(?!.*--)[a-z0-9-]{1,64}(?<!-)$"
+    password:
+      title: password
+      type: string
+      example: "12345678"
+      minLength: 8
+      maxLength: 256
+    token:
+      title: token
+      type: string
+      example: c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869
+      pattern: "^[0-9a-f]{64}$"
+    revision:
+      title: revision
+      type: integer
+      minimum: 0
+    direction:
+      title: direction
+      type: string
+      enum:
+        - previous
+        - next
+    severity:
+      title: severity
+      type: string
+      enum:
+        - info
+        - warning
+        - error
+    count:
+      title: count
+      type: integer
+      minimum: 0
+    authorization:
+      title: authorization
+      type: string
+      example: Bearer c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869
+      pattern: "^Bearer [0-9a-f]{64}$"
+  examples: {}
+  parameters:
+    network_identifier:
+      name: network_identifier
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/identifier"
+    sensor_identifier:
+      name: sensor_identifier
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/identifier"
+    direction:
+      name: direction
+      in: query
+      schema:
+        $ref: "#/components/schemas/direction"
+    creation_timestamp:
+      name: creation_timestamp
+      in: query
+      schema:
+        $ref: "#/components/schemas/timestamp"
+    authorization:
+      name: authorization
+      in: header
+      required: true
+      schema:
+        $ref: "#/components/schemas/authorization"
