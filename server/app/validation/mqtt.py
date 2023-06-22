@@ -26,15 +26,11 @@ class Log(types._BaseModel):
 
     @pydantic.validator("subject")
     def trim_subject(cls, v):
-        if len(v) >= constants.Limit.MEDIUM:
-            return v[: constants.Limit.MEDIUM - 1]
-        return v
+        return v[: constants.Limit.MEDIUM]
 
     @pydantic.validator("details")
     def trim_details(cls, v):
-        if len(v) >= constants.Limit.LARGE:
-            return v[: constants.Limit.LARGE - 1]
-        return v
+        return v[: constants.Limit.LARGE]
 
 
 class LogsMessage(types._BaseModel):

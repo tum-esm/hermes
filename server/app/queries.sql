@@ -55,7 +55,8 @@ VALUES (
     ${sensor_identifier},
     (
         SELECT coalesce(max(revision) + 1, 0)
-        FROM configuration WHERE sensor_identifier = ${sensor_identifier}
+        FROM configuration
+        WHERE sensor_identifier = ${sensor_identifier}
     ),
     now(),
     ${configuration}

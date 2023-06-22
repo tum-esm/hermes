@@ -245,14 +245,14 @@ async def update_sensor(request):
                 },
             )
             try:
-                elements = await connection.execute(query, *arguments)
+                response = await connection.execute(query, *arguments)
 
             # TODO catch asyncpg.UniqueViolationError
 
             except Exception as e:  # pragma: no cover
                 logger.error(e, exc_info=True)
                 raise errors.InternalServerError()
-            if elements != "UPDATE 1":
+            if response != "UPDATE 1":
                 logger.warning(
                     f"{request.method} {request.url.path} -- Sensor doesn't exist"
                 )
