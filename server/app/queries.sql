@@ -151,6 +151,37 @@ VALUES (
 RETURNING identifier AS user_identifier;
 
 
+-- name: read-configurations
+SELECT
+    value,
+    revision,
+    creation_timestamp,
+    publication_timestamp,
+    acknowledgement_timestamp,
+    receipt_timestamp,
+    success
+FROM configuration
+WHERE
+    sensor_identifier = ${sensor_identifier}
+    AND CASE
+        WHEN ${revision}::INT IS NOT NULL
+            THEN (
+                CASE
+                    WHEN ${direction} = 'next'
+                        THEN revision > ${revision}
+                    WHEN ${direction} = 'previous'
+                        THEN revision < ${revision}
+                    ELSE TRUE
+                END
+            )
+        ELSE TRUE
+    END
+ORDER BY
+    CASE WHEN ${direction} = 'next' THEN revision END ASC,
+    CASE WHEN ${direction} = 'previous' THEN revision END DESC
+LIMIT 64;
+
+
 -- name: read-measurements
 SELECT
     value,

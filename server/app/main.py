@@ -289,6 +289,31 @@ async def update_sensor(request):
     )
 
 
+@validation.validate(schema=validation.ReadConfigurationsRequest)
+async def read_configurations(request):
+    """Return pages of configurations sorted ascendingly by revision."""
+    query, arguments = database.parametrize(
+        identifier="read-configurations",
+        arguments={
+            "sensor_identifier": request.path.sensor_identifier,
+            "revision": request.query.revision,
+            "direction": request.query.direction,
+        },
+    )
+    try:
+        elements = await dbpool.fetch(query, *arguments)
+    except Exception as e:  # pragma: no cover
+        logger.error(e, exc_info=True)
+        raise errors.InternalServerError()
+    # Return successful response
+    return starlette.responses.JSONResponse(
+        status_code=200,
+        content=database.dictify(
+            elements if request.query.direction == "next" else reversed(elements)
+        ),
+    )
+
+
 @validation.validate(schema=validation.ReadMeasurementsRequest)
 async def read_measurements(request):
     """Return pages of measurements sorted ascendingly by creation timestamp.
@@ -316,7 +341,7 @@ async def read_measurements(request):
     return starlette.responses.JSONResponse(
         status_code=200,
         content=database.dictify(
-            elements if request.query.direction == "next" else elements[::-1]
+            elements if request.query.direction == "next" else reversed(elements)
         ),
     )
 
@@ -348,7 +373,7 @@ async def read_logs(request):
     return starlette.responses.JSONResponse(
         status_code=200,
         content=database.dictify(
-            elements if request.query.direction == "next" else elements[::-1]
+            elements if request.query.direction == "next" else reversed(elements)
         ),
     )
 
@@ -402,6 +427,7 @@ async def lifespan(app):
 
 
 ROUTES = [
+    # fmt: off
     starlette.routing.Route(
         path="/status",
         endpoint=read_status,
@@ -433,6 +459,11 @@ ROUTES = [
         methods=["PUT"],
     ),
     starlette.routing.Route(
+        path="/networks/{network_identifier}/sensors/{sensor_identifier}/configurations",
+        endpoint=read_configurations,
+        methods=["GET"],
+    ),
+    starlette.routing.Route(
         path="/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
         endpoint=read_measurements,
         methods=["GET"],
@@ -443,12 +474,11 @@ ROUTES = [
         methods=["GET"],
     ),
     starlette.routing.Route(
-        path=(
-            "/networks/{network_identifier}/sensors/{sensor_identifier}/logs/aggregates"
-        ),
+        path="/networks/{network_identifier}/sensors/{sensor_identifier}/logs/aggregates",
         endpoint=read_log_message_aggregates,
         methods=["GET"],
     ),
+    # fmt: on
 ]
 
 
