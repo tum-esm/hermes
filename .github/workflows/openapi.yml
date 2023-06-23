@@ -9,6 +9,9 @@ on:
     paths:
       - server/openapi.yml
       - .github/workflows/openapi.yml
+permissions:
+  contents: read
+  pull-requests: write
 jobs:
   deploy:
     if: ${{ github.event_name == 'push' }}
