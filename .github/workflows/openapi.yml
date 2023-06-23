@@ -5,16 +5,8 @@ on:
     paths:
       - server/openapi.yml
       - .github/workflows/openapi.yml
-  pull_request:
-    paths:
-      - server/openapi.yml
-      - .github/workflows/openapi.yml
-permissions:
-  contents: read
-  pull-requests: write
 jobs:
   deploy:
-    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -25,18 +17,3 @@ jobs:
           file: server/openapi.yml
           doc: 24616c25-ad93-410b-8a2f-d3a9b96c04c6
           token: ${{ secrets.BUMP_TOKEN }}
-  diff:
-    if: ${{ github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Check difference
-        uses: bump-sh/github-action@v1
-        with:
-          file: server/openapi.yml
-          doc: 24616c25-ad93-410b-8a2f-d3a9b96c04c6
-          token: ${{ secrets.BUMP_TOKEN }}
-          command: diff
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
