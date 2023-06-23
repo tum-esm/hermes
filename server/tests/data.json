@@ -60,6 +60,26 @@
             "success": true
         },
         {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "value": {},
+            "revision": 1,
+            "creation_timestamp": 100,
+            "publication_timestamp": 110,
+            "acknowledgement_timestamp": 200,
+            "receipt_timestamp": 210,
+            "success": false
+        },
+        {
+            "sensor_identifier": "81bf7042-e20f-4a97-ac44-c15853e3618f",
+            "value": {},
+            "revision": 2,
+            "creation_timestamp": 300,
+            "publication_timestamp": 310,
+            "acknowledgement_timestamp": null,
+            "receipt_timestamp": null,
+            "success": null
+        },
+        {
             "sensor_identifier": "2d2a3794-2345-4500-8baa-493f88123087",
             "value": {},
             "revision": 0,

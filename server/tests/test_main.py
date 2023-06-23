@@ -27,9 +27,19 @@ def returns(response, check):
     return response.status_code == check.STATUS_CODE and response.text == check.DETAIL
 
 
+def sorts(response, key):
+    """Check that a https request body array is sorted by the given key."""
+    return response.json() == sorted(response.json(), key=key)
+
+
 def keys(response, keys):
-    """Check that a httpx request body contains a specific set of keys."""
-    return set(response.json().keys()) == set(keys)
+    """Check that a httpx request body contains a specific set of keys.
+
+    If the request body is an array, check that each element contains the keys.
+    """
+    if isinstance(response.json(), dict):
+        return set(response.json().keys()) == set(keys)
+    return all([set(element.keys()) == set(keys) for element in response.json()])
 
 
 ########################################################################################
@@ -200,7 +210,7 @@ async def test_update_sensor(
     assert returns(response, 200)
     assert keys(response, {"sensor_identifier", "revision"})
     assert response.json()["sensor_identifier"] == sensor_identifier
-    assert response.json()["revision"] == 1
+    assert response.json()["revision"] == 3
 
 
 @pytest.mark.anyio
@@ -233,38 +243,12 @@ async def test_read_measurements(
     assert returns(response, 200)
     assert isinstance(response.json(), list)
     assert len(response.json()) == 3
-    assert [
-        set(element.keys()) == {"value", "revision", "creation_timestamp"}
-        for element in response.json()
-    ]
-    assert response.json() == sorted(
-        response.json(), key=lambda x: x["creation_timestamp"]
-    )
+    assert keys(response, {"value", "revision", "creation_timestamp"})
+    assert sorts(response, lambda x: x["creation_timestamp"])
 
 
 @pytest.mark.anyio
-async def test_read_measurements(
-    setup, http_client, network_identifier, sensor_identifier
-):
-    """Test reading measurements before a given timestamp."""
-    response = await http_client.get(
-        url=f"/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
-        params={"direction": "previous", "creation_timestamp": 180},
-    )
-    assert returns(response, 200)
-    assert isinstance(response.json(), list)
-    assert len(response.json()) == 2
-    assert [
-        set(element.keys()) == {"value", "revision", "creation_timestamp"}
-        for element in response.json()
-    ]
-    assert response.json() == sorted(
-        response.json(), key=lambda x: x["creation_timestamp"]
-    )
-
-
-@pytest.mark.anyio
-async def test_read_measurements_with_latest(
+async def test_read_measurements_with_next_page(
     setup, http_client, network_identifier, sensor_identifier
 ):
     """Test reading measurements after a given timestamp."""
@@ -275,13 +259,24 @@ async def test_read_measurements_with_latest(
     assert returns(response, 200)
     assert isinstance(response.json(), list)
     assert len(response.json()) == 2
-    assert [
-        set(element.keys()) == {"value", "revision", "creation_timestamp"}
-        for element in response.json()
-    ]
-    assert response.json() == sorted(
-        response.json(), key=lambda x: x["creation_timestamp"]
+    assert keys(response, {"value", "revision", "creation_timestamp"})
+    assert sorts(response, lambda x: x["creation_timestamp"])
+
+
+@pytest.mark.anyio
+async def test_read_measurements_with_previous_page(
+    setup, http_client, network_identifier, sensor_identifier
+):
+    """Test reading measurements before a given timestamp."""
+    response = await http_client.get(
+        url=f"/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
+        params={"direction": "previous", "creation_timestamp": 180},
     )
+    assert returns(response, 200)
+    assert isinstance(response.json(), list)
+    assert len(response.json()) == 2
+    assert keys(response, {"value", "revision", "creation_timestamp"})
+    assert sorts(response, lambda x: x["creation_timestamp"])
 
 
 # TODO check logs
