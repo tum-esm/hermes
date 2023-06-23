@@ -7,7 +7,8 @@ servers:
 paths:
   "/status":
     get:
-      summary: Read status
+      tags: [Status]
+      summary: Read the server's status
       description: Read the status of the server.
       responses:
         "200":
@@ -30,6 +31,7 @@ paths:
                     $ref: "#/components/schemas/timestamp"
   "/users":
     post:
+      tags: [Users]
       summary: Create user
       description: Create a new user.
       requestBody:
@@ -58,6 +60,7 @@ paths:
           description: Conflict
   "/authentication":
     post:
+      tags: [Users]
       summary: Create authentication
       description: Log in.
       requestBody:
@@ -94,6 +97,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/network_identifier"
     get:
+      tags: [Networks]
       summary: Read network
       description: Read information about the network and its sensors.
       responses:
@@ -122,6 +126,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/network_identifier"
     post:
+      tags: [Sensors]
       summary: Create sensor
       description: Create a new sensor.
       parameters:
@@ -155,6 +160,7 @@ paths:
       - $ref: "#/components/parameters/network_identifier"
       - $ref: "#/components/parameters/sensor_identifier"
     put:
+      tags: [Sensors]
       summary: Update sensor
       description: Update the sensor's information and configuration.
       parameters:
@@ -183,18 +189,52 @@ paths:
                     $ref: "#/components/schemas/revision"
         "404":
           description: Not Found
+  "/networks/{network_identifier}/sensors/{sensor_identifier}/configurations":
+    parameters:
+      - $ref: "#/components/parameters/network_identifier"
+      - $ref: "#/components/parameters/sensor_identifier"
+    get:
+      tags: [Sensors]
+      summary: Page through a sensor's configurations
+      description: "Read the configurations of a sensor in pages."
+      parameters:
+        - $ref: "#/components/parameters/direction"
+        - $ref: "#/components/parameters/revision"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      type: object
+                    revision:
+                      $ref: "#/components/schemas/revision"
+                    creation_timestamp:
+                      $ref: "#/components/schemas/timestamp"
+                    publication_timestamp:
+                      $ref: "#/components/schemas/timestamp"
+                    acknowledgement_timestamp:
+                      $ref: "#/components/schemas/timestamp"
+                    receipt_timestamp:
+                      $ref: "#/components/schemas/timestamp"
+                    success:
+                      type: boolean
   "/networks/{network_identifier}/sensors/{sensor_identifier}/measurements":
     parameters:
       - $ref: "#/components/parameters/network_identifier"
       - $ref: "#/components/parameters/sensor_identifier"
     get:
-      summary: Read measurements
+      tags: [Measurements]
+      summary: Page through a sensor's measurements
       description: Read the measurements of a sensor in pages.
       parameters:
         - $ref: "#/components/parameters/direction"
         - $ref: "#/components/parameters/creation_timestamp"
-      requestBody:
-        content: {}
       responses:
         "200":
           description: OK
@@ -216,7 +256,8 @@ paths:
       - $ref: "#/components/parameters/network_identifier"
       - $ref: "#/components/parameters/sensor_identifier"
     get:
-      summary: Read logs
+      tags: [Logs]
+      summary: Page through a sensor's logs
       description: Read the logs of a sensor in pages.
       parameters:
         - $ref: "#/components/parameters/direction"
@@ -246,6 +287,7 @@ paths:
       - $ref: "#/components/parameters/network_identifier"
       - $ref: "#/components/parameters/sensor_identifier"
     get:
+      tags: [Logs]
       summary: Read logs aggregation
       description: Read an aggregation of sensor logs with warning and error severity.
       responses:
@@ -319,6 +361,16 @@ components:
       required: true
       schema:
         $ref: "#/components/schemas/identifier"
+    revision:
+      name: revision
+      in: query
+      schema:
+        $ref: "#/components/schemas/revision"
+    creation_timestamp:
+      name: creation_timestamp
+      in: query
+      schema:
+        $ref: "#/components/schemas/timestamp"
     direction:
       name: direction
       in: query
@@ -327,11 +379,6 @@ components:
         type: string
         enum: [next, previous]
         default: next
-    creation_timestamp:
-      name: creation_timestamp
-      in: query
-      schema:
-        $ref: "#/components/schemas/timestamp"
     authorization:
       name: authorization
       in: header
