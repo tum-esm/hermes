@@ -227,6 +227,68 @@ async def test_update_sensor_with_not_exists(
 
 
 ########################################################################################
+# Route: GET /networks/<network_identifier>/sensors/<sensor_identifier>/configurations
+########################################################################################
+
+
+@pytest.mark.anyio
+async def test_read_configurations(
+    setup, http_client, network_identifier, sensor_identifier
+):
+    """Test reading the oldest configurations."""
+    response = await http_client.get(
+        url=(
+            f"/networks/{network_identifier}/sensors/{sensor_identifier}/configurations"
+        ),
+    )
+    assert returns(response, 200)
+    assert isinstance(response.json(), list)
+    assert len(response.json()) == 3
+    assert keys(
+        response,
+        {
+            "value",
+            "revision",
+            "creation_timestamp",
+            "publication_timestamp",
+            "acknowledgement_timestamp",
+            "receipt_timestamp",
+            "success",
+        },
+    )
+    assert sorts(response, lambda x: x["revision"])
+
+
+@pytest.mark.anyio
+async def test_read_configurations_with_next_page(
+    setup, http_client, network_identifier, sensor_identifier
+):
+    """Test reading configurations after a given timestamp."""
+    response = await http_client.get(
+        url=(
+            f"/networks/{network_identifier}/sensors/{sensor_identifier}/configurations"
+        ),
+        params={"direction": "next", "revision": 0},
+    )
+    assert returns(response, 200)
+    assert isinstance(response.json(), list)
+    assert len(response.json()) == 2
+    assert keys(
+        response,
+        {
+            "value",
+            "revision",
+            "creation_timestamp",
+            "publication_timestamp",
+            "acknowledgement_timestamp",
+            "receipt_timestamp",
+            "success",
+        },
+    )
+    assert sorts(response, lambda x: x["revision"])
+
+
+########################################################################################
 # Route: GET /networks/<network_identifier>/sensors/<sensor_identifier>/measurements
 ########################################################################################
 
@@ -235,10 +297,9 @@ async def test_update_sensor_with_not_exists(
 async def test_read_measurements(
     setup, http_client, network_identifier, sensor_identifier
 ):
-    """Test reading the latest measurements."""
+    """Test reading the oldest measurements."""
     response = await http_client.get(
         url=f"/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
-        params={"direction": "previous"},
     )
     assert returns(response, 200)
     assert isinstance(response.json(), list)
