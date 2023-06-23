@@ -35,7 +35,7 @@ preview = true
 [tool.ruff]
 line-length = 88
 select = ["E", "W", "F", "I", "N"]
-ignore = []
+ignore = ["E501"]
 target-version = "py311"
 
 [tool.ruff.isort]
