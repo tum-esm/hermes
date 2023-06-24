@@ -4,12 +4,18 @@ info:
   version: "0.1"
 servers:
   - url: "https://sea-turtle-app-38sco.ondigitalocean.app"
+tags:
+  - name: Status
+  - name: Users
+  - name: Networks
+  - name: Sensors
+  - name: Measurements
+  - name: Logs
 paths:
   "/status":
     get:
       tags: [Status]
-      summary: Read the server's status
-      description: Read the status of the server.
+      summary: Read server status
       responses:
         "200":
           description: OK
@@ -33,7 +39,6 @@ paths:
     post:
       tags: [Users]
       summary: Create user
-      description: Create a new user.
       requestBody:
         content:
           application/json:
@@ -61,8 +66,8 @@ paths:
   "/authentication":
     post:
       tags: [Users]
-      summary: Create authentication
-      description: Log in.
+      summary: Authenticate
+      description: "Authenticate a user from a username and password and return an access token. The access token is valid indefinitely."
       requestBody:
         content:
           application/json:
@@ -99,7 +104,6 @@ paths:
     get:
       tags: [Networks]
       summary: Read network
-      description: Read information about the network and its sensors.
       responses:
         "200":
           description: OK
@@ -128,7 +132,6 @@ paths:
     post:
       tags: [Sensors]
       summary: Create sensor
-      description: Create a new sensor.
       parameters:
         - $ref: "#/components/parameters/authorization"
       requestBody:
@@ -162,7 +165,6 @@ paths:
     put:
       tags: [Sensors]
       summary: Update sensor
-      description: Update the sensor's information and configuration.
       parameters:
         - $ref: "#/components/parameters/authorization"
       requestBody:
@@ -195,8 +197,8 @@ paths:
       - $ref: "#/components/parameters/sensor_identifier"
     get:
       tags: [Sensors]
-      summary: Page through a sensor's configurations
-      description: "Read the configurations of a sensor in pages."
+      summary: Read configurations
+      description: "Return a sensor's configurations in pages of 64 elements sorted ascendingly by `revision`. The query parameter `revision` sets the cursor of the query. Depending on the value of the query parameter `direction`, the request returns the `next` or `previous` 64 elements. If `revision` is not set, the request returns the first 64 elements if `direction` is `next` and the last 64 elements if `direction` is `previous`."
       parameters:
         - $ref: "#/components/parameters/direction"
         - $ref: "#/components/parameters/revision"
@@ -230,8 +232,8 @@ paths:
       - $ref: "#/components/parameters/sensor_identifier"
     get:
       tags: [Measurements]
-      summary: Page through a sensor's measurements
-      description: Read the measurements of a sensor in pages.
+      summary: Read measurements
+      description: "Return a sensor's measurements in pages of 64 elements sorted ascendingly by `creation_timestamp`. The query parameter `creation_timestamp` sets the cursor of the query. Depending on the value of the query parameter `direction`, the request returns the `next` or `previous` 64 elements. If `creation_timestamp` is not set, the request returns the first 64 elements if `direction` is `next` and the last 64 elements if `direction` is `previous`."
       parameters:
         - $ref: "#/components/parameters/direction"
         - $ref: "#/components/parameters/creation_timestamp"
@@ -257,8 +259,8 @@ paths:
       - $ref: "#/components/parameters/sensor_identifier"
     get:
       tags: [Logs]
-      summary: Page through a sensor's logs
-      description: Read the logs of a sensor in pages.
+      summary: Read logs
+      description: "Return a sensor's logs in pages of 64 elements sorted ascendingly by `creation_timestamp`. The query parameter `creation_timestamp` sets the cursor of the query. Depending on the value of the query parameter `direction`, the request returns the `next` or `previous` 64 elements. If `creation_timestamp` is not set, the request returns the first 64 elements if `direction` is `next` and the last 64 elements if `direction` is `previous`."
       parameters:
         - $ref: "#/components/parameters/direction"
         - $ref: "#/components/parameters/creation_timestamp"
@@ -289,7 +291,7 @@ paths:
     get:
       tags: [Logs]
       summary: Read logs aggregation
-      description: Read an aggregation of sensor logs with warning and error severity.
+      description: "Read an aggregation of a sensor's logs that have a severity of warning or error."
       responses:
         "200":
           description: OK
@@ -324,6 +326,7 @@ components:
       type: number
       example: 1683644500.3
     name:
+      description: "The complicated regex means: lowercase letters and numbers, separated by dashes, with no leading, trailing, or double dashes."
       type: string
       example: example
       pattern: "^(?!-)(?!.*--)[a-z0-9-]{1,64}(?<!-)$"
@@ -337,6 +340,7 @@ components:
       example: c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869
       pattern: "^[0-9a-f]{64}$"
     revision:
+      description: "Each configuration is assigned an incrementing revision number. This revision is used as an identifier in the communication with the sensors and lets us clearly match configurations to measurements and logs."
       type: integer
     severity:
       type: string
@@ -373,9 +377,9 @@ components:
         $ref: "#/components/schemas/timestamp"
     direction:
       name: direction
+      description: "The direction of the page based on the cursor. If no cursor is provided, `next` returns the first page and `previous` returns the last page."
       in: query
       schema:
-        description: "The direction of the page based on the cursor. If no cursor is provided, `next` returns the first page and `previous` returns the last page."
         type: string
         enum: [next, previous]
         default: next
