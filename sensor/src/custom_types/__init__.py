@@ -5,6 +5,7 @@ from .mqtt_sending import (
     MQTTConfig,
     SQLMQTTRecord,
     # data types
+    MQTTMeasurementData,
     MQTTCO2Data,
     MQTTCalibrationData,
     MQTTAirData,

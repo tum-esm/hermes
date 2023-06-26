@@ -7,9 +7,8 @@ class MeasurementProcedure:
     """runs every mainloop call after possible configuration/calibration
 
     1. Check whether the wind and co2 sensor report any issues
-    2. Check wind sensor direction and possibly change inlet
-    3. Apply calibration using SHT45/BME280 values
-    4. Do 2 minutes of measurements"""
+    3. Read inlet pressure and humidity
+    4. Perform measurements"""
 
     def __init__(
         self,
@@ -24,125 +23,6 @@ class MeasurementProcedure:
         self.last_measurement_time: float = 0
         self.message_queue = utils.MessageQueue()
 
-    def _get_current_wind_data(self) -> Optional[custom_types.WindSensorData]:
-        """fetches the latest wind sensor data and returns None if the
-        wind sensor doesn't respond with any data"""
-        wind_data = self.hardware_interface.wind_sensor.get_current_wind_measurement()
-        if wind_data is None:
-            self.logger.warning("no current wind data, waiting 2 seconds")
-        return wind_data
-
-    def _update_input_valve(self) -> None:
-        """
-        1. fetches the current wind data from the wind sensor
-        2. calculates which air inlet direction is the closest one
-        3. possibly performs the switch between air inlets
-        """
-
-        # fetch wind data
-        wind_data = self._get_current_wind_data()
-
-        # determine new valve
-        if wind_data is not None:
-            avg_dir = wind_data.direction_avg
-            new_air_inlet = min(
-                self.config.measurement.air_inlets,
-                key=lambda x: utils.distance_between_angles(x.direction, avg_dir),
-            )
-            self.message_queue.enqueue_message(
-                self.config,
-                custom_types.MQTTDataMessageBody(
-                    revision=self.config.revision,
-                    timestamp=round(time.time(), 2),
-                    value=custom_types.MQTTWindData(
-                        variant="wind",
-                        data=wind_data,
-                    ),
-                ),
-            )
-
-        else:
-            new_air_inlet = list(
-                filter(
-                    lambda x: x.valve_number == 1,
-                    self.config.measurement.air_inlets,
-                )
-            )[0]
-
-        # perform switch
-        if self.active_air_inlet is None:
-            self.logger.info(f"enabeling air inlet {new_air_inlet.dict()}")
-            self.hardware_interface.valves.set_active_input(new_air_inlet.valve_number)
-            self.active_air_inlet = new_air_inlet
-
-        else:
-            if (wind_data is not None) and (wind_data.speed_avg < 0.2):
-                self.logger.debug(f"wind speed very low ({wind_data.speed_avg} m/s)")
-                self.logger.info(f"staying at air inlet {self.active_air_inlet.dict()}")
-            else:
-                if self.active_air_inlet.valve_number != new_air_inlet.valve_number:
-                    self.logger.info(f"switching to air inlet {new_air_inlet.dict()}")
-                    self.hardware_interface.valves.set_active_input(
-                        new_air_inlet.valve_number
-                    )
-                    self.active_air_inlet = new_air_inlet
-
-                else:
-                    self.logger.info(f"staying at air inlet {new_air_inlet.dict()}")
-
-    def _update_input_air_calibration(self) -> None:
-        """
-        1. fetches the latest temperature and pressure data at air inlet
-        2. sends these values to the CO2 sensor
-        """
-
-        air_inlet_bme280_data = (
-            self.hardware_interface.air_inlet_bme280_sensor.get_data()
-        )
-        air_inlet_sht45_data = self.hardware_interface.air_inlet_sht45_sensor.get_data()
-        chamber_temperature = (
-            self.hardware_interface.co2_sensor.get_current_chamber_temperature()
-        )
-
-        self.hardware_interface.co2_sensor.set_compensation_values(
-            humidity=air_inlet_sht45_data.humidity,
-            pressure=air_inlet_bme280_data.pressure,
-        )
-
-        self.message_queue.enqueue_message(
-            self.config,
-            custom_types.MQTTDataMessageBody(
-                revision=self.config.revision,
-                timestamp=round(time.time(), 2),
-                value=custom_types.MQTTAirData(
-                    variant="air",
-                    data=custom_types.AirSensorData(
-                        bme280_temperature=air_inlet_bme280_data.temperature,
-                        bme280_humidity=air_inlet_bme280_data.humidity,
-                        bme280_pressure=air_inlet_bme280_data.pressure,
-                        sht45_temperature=air_inlet_sht45_data.temperature,
-                        sht45_humidity=air_inlet_sht45_data.humidity,
-                        chamber_temperature=chamber_temperature,
-                    ),
-                ),
-            ),
-        )
-
-    def run(self) -> None:
-        """
-        1. checks wind and co2 sensor for errors
-        2. switches between input valves
-        3. starts pumping
-        4. calibrates co2 sensor with input air
-        5. collects measurements for 2 minutes
-        6. stops pumping
-
-        the measurements will be sent to the MQTT client right
-        during the collection (2 minutes)
-        """
-        self.logger.info(f"starting measurement interval")
-        measurement_procedure_start_time = time.time()
-
         # set up pump to run continuously
         self.hardware_interface.pump.set_desired_pump_speed(
             unit="litres_per_minute",
@@ -150,40 +30,81 @@ class MeasurementProcedure:
         )
         time.sleep(0.5)
 
+    def _update_air_inlet_parameters(self) -> None:
+        """
+        1. fetches the latest temperature and pressure data at air inlet
+        2. sends these values to the CO2 sensor
+        """
+
+        self.air_inlet_bme280_data = self.hardware_interface.air_inlet_bme280_sensor.get_data()
+        self.air_inlet_sht45_data = self.hardware_interface.air_inlet_sht45_sensor.get_data()
+        self.chamber_temperature = (
+            self.hardware_interface.co2_sensor.get_current_chamber_temperature()
+        )
+
+        # update CO2 sensor compenstation info
+        self.hardware_interface.co2_sensor.set_compensation_values(
+            humidity=self.air_inlet_sht45_data.humidity,
+            pressure=self.air_inlet_bme280_data.pressure,
+        )
+
+    def run(self) -> None:
+        """
+        1. checks wind and co2 sensor for errors
+        2. switches between input valves
+        4. sends air parameters to co2 sensor for compensation
+        5. collects measurements for 2 minutes
+
+        the measurements will be sent to the MQTT client right
+        during the collection (2 minutes)
+        """
+        self.logger.info(f"starting 2 minute measurement interval")
+        measurement_procedure_start_time = time.time()
+
         # set averaging time to time between datapoints
         self.hardware_interface.co2_sensor.set_filter_setting(
             average=self.config.measurement.timing.seconds_per_measurement
         )
 
-        # possibly switches valve every two minutes
-        self._update_input_valve()
-        self._update_input_air_calibration()
-
         # do regular measurements for about 2 minutes
         while True:
+            # idle until next measurement period
             seconds_to_wait_for_next_measurement = max(
                 self.config.measurement.timing.seconds_per_measurement
                 - (time.time() - self.last_measurement_time),
                 0,
             )
-            self.logger.debug(
-                f"sleeping {round(seconds_to_wait_for_next_measurement, 3)} seconds"
-            )
+            self.logger.debug(f"sleeping {round(seconds_to_wait_for_next_measurement, 3)} seconds")
             time.sleep(seconds_to_wait_for_next_measurement)
             self.last_measurement_time = time.time()
 
-            current_sensor_data = (
-                self.hardware_interface.co2_sensor.get_current_concentration()
-            )
+            # update air inlet parameters
+            self._update_air_inlet_parameters()
+
+            # perform a CO2 measurement
+            current_sensor_data = self.hardware_interface.co2_sensor.get_current_concentration()
             self.logger.debug(f"new measurement")
+
+            # send out MQTT measurement message
             self.message_queue.enqueue_message(
                 self.config,
-                message_body=custom_types.MQTTDataMessageBody(
-                    timestamp=round(time.time(), 2),
-                    value=custom_types.MQTTCO2Data(
-                        variant="co2", data=current_sensor_data
-                    ),
+                custom_types.MQTTDataMessageBody(
                     revision=self.config.revision,
+                    timestamp=round(time.time(), 2),
+                    value=custom_types.MQTTMeasurementData(
+                        variant="measurement",
+                        data=custom_types.MeasurementData(
+                            raw=current_sensor_data[0],
+                            compensated=current_sensor_data[1],
+                            filtered=current_sensor_data[2],
+                            bme280_temperature=self.air_inlet_bme280_data.temperature,
+                            bme280_humidity=self.air_inlet_bme280_data.humidity,
+                            bme280_pressure=self.air_inlet_bme280_data.pressure,
+                            sht45_temperature=self.air_inlet_sht45_data.temperature,
+                            sht45_humidity=self.air_inlet_sht45_data.humidity,
+                            chamber_temperature=self.chamber_temperature,
+                        ),
+                    ),
                 ),
             )
 
