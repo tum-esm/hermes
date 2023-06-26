@@ -49,20 +49,22 @@ class MQTTLogMessageBody(pydantic.BaseModel):
 # -----------------------------------------------------------------------------
 # MQTT Data Message
 
+# TODO: remove MQTTCO2Data and MQTTAirData
+
 
 class MQTTMeasurementData(pydantic.BaseModel):
     variant: Literal["measurement"]
     data: MeasurementData
 
 
-class MQTTCO2Data(pydantic.BaseModel):
-    variant: Literal["co2"]
-    data: CO2SensorData
-
-
 class MQTTCalibrationData(pydantic.BaseModel):
     variant: Literal["calibration"]
     data: CalibrationProcedureData
+
+
+class MQTTCO2Data(pydantic.BaseModel):
+    variant: Literal["co2"]
+    data: CO2SensorData
 
 
 class MQTTAirData(pydantic.BaseModel):
