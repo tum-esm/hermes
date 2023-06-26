@@ -33,6 +33,9 @@ run_shell_command(
     + "exa "
     + "uhubctl "
     + "screen "
+    + "p7zip-full"
+    + "minicom"
+    + "udhcpc"
 )
 
 print("INSTALLING PYTHON3.9 WITH APT")
@@ -50,7 +53,7 @@ run_shell_command("apt install code -y")
 # =============================================================================
 # CONFIGURE THE SSH DAEMON
 
-print("ALLOWING SSH ACCESS WITH PASWORD")
+print("ALLOWING SSH ACCESS WITH PASSWORD")
 
 with open("/etc/ssh/sshd_config", "r") as f:
     sshd_config_content = f.read()
