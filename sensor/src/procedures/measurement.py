@@ -93,7 +93,7 @@ class MeasurementProcedure:
                     timestamp=round(time.time(), 2),
                     value=custom_types.MQTTMeasurementData(
                         variant="measurement",
-                        data=custom_types.MeasurementData(
+                        data=custom_types.MeasurementProcedureData(
                             raw=current_sensor_data.raw,
                             compensated=current_sensor_data.compensated,
                             filtered=current_sensor_data.filtered,

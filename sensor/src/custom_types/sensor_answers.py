@@ -21,7 +21,7 @@ class CO2SensorData(pydantic.BaseModel):
     filtered: float
 
 
-class MeasurementData(pydantic.BaseModel):
+class MeasurementProcedureData(pydantic.BaseModel):
     raw: float
     compensated: float
     filtered: float
@@ -34,7 +34,7 @@ class MeasurementData(pydantic.BaseModel):
 
 
 class CalibrationProcedureData(pydantic.BaseModel):
-    gas_bottle_id: CalibrationGasConfig
+    gas_bottle_id: str
     raw: float
     compensated: float
     filtered: float
