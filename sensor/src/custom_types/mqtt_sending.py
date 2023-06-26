@@ -93,6 +93,7 @@ class MQTTDataMessageBody(pydantic.BaseModel):
     revision: int = pydantic.Field(..., ge=0)
     timestamp: float = pydantic.Field(..., ge=1_640_991_600)
     value: Union[
+        MQTTMeasurementData,
         MQTTCO2Data,
         MQTTCalibrationData,
         MQTTAirData,
