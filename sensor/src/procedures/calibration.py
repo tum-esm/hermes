@@ -80,7 +80,7 @@ class CalibrationProcedure:
                         timestamp=round(time.time(), 2),
                         value=custom_types.MQTTCalibrationData(
                             variant="calibration",
-                            data=custom_types.CalibrationData(
+                            data=custom_types.CalibrationProcedureData(
                                 gas_bottle_id=gas.bottle_id,
                                 raw=current_sensor_data.raw,
                                 compensated=current_sensor_data.compensated,
