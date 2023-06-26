@@ -61,7 +61,7 @@ class MeasurementProcedure:
         self.logger.info(f"starting 2 minute measurement interval")
         measurement_procedure_start_time = time.time()
 
-        # set averaging time to time between datapoints
+        # set averaging time to measurement frequency
         self.hardware_interface.co2_sensor.set_filter_setting(
             average=self.config.measurement.timing.seconds_per_measurement
         )
@@ -108,6 +108,7 @@ class MeasurementProcedure:
                 ),
             )
 
+            # stop loop after defined measurement interval
             if (
                 self.last_measurement_time - measurement_procedure_start_time
             ) >= self.config.measurement.timing.seconds_per_measurement_interval:
