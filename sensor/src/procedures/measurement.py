@@ -94,9 +94,9 @@ class MeasurementProcedure:
                     value=custom_types.MQTTMeasurementData(
                         variant="measurement",
                         data=custom_types.MeasurementData(
-                            raw=current_sensor_data[0],
-                            compensated=current_sensor_data[1],
-                            filtered=current_sensor_data[2],
+                            raw=current_sensor_data.raw,
+                            compensated=current_sensor_data.compensated,
+                            filtered=current_sensor_data.filtered,
                             bme280_temperature=self.air_inlet_bme280_data.temperature,
                             bme280_humidity=self.air_inlet_bme280_data.humidity,
                             bme280_pressure=self.air_inlet_bme280_data.pressure,
