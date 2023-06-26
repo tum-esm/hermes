@@ -2,7 +2,7 @@ from typing import Literal, Optional, Union
 import pydantic
 
 from .sensor_answers import (
-    MeasurementData,
+    MeasurementProcedureData,
     CO2SensorData,
     AirSensorData,
     CalibrationProcedureData,
@@ -54,7 +54,7 @@ class MQTTLogMessageBody(pydantic.BaseModel):
 
 class MQTTMeasurementData(pydantic.BaseModel):
     variant: Literal["measurement"]
-    data: MeasurementData
+    data: MeasurementProcedureData
 
 
 class MQTTCalibrationData(pydantic.BaseModel):
