@@ -6,116 +6,106 @@ from typing import Generator
 from src import custom_types, utils, hardware
 from contextlib import contextmanager
 
-
-@contextmanager
-def _ensure_section_duration(duration: float) -> Generator[None, None, None]:
-    """Make sure that the duration of the section is at least
-    the given duration.
-
-    Usage:
-
-    ```python
-    # do one measurement every 6 seconds
-    with ensure_section_duration(6):
-        do_measurement()
-    ```
-    """
-
-    start_time = time.time()
-    yield
-    remaining_loop_time = start_time + duration - time.time()
-    if remaining_loop_time > 0:
-        time.sleep(remaining_loop_time)
+# TODO: refactor calibration and measurement procedure to use same base class
 
 
 class CalibrationProcedure:
     """runs when a calibration is due"""
 
     def __init__(
-        self,
-        config: custom_types.Config,
-        hardware_interface: hardware.HardwareInterface,
-        testing: bool = False,
+        self, config: custom_types.Config, hardware_interface: hardware.HardwareInterface
     ) -> None:
-        self.logger = utils.Logger(
-            origin="calibration-procedure",
-            print_to_console=testing,
-            write_to_file=(not testing),
-        )
-        self.config = config
-        self.testing = testing
+        self.logger, self.config = utils.Logger(origin="calibration-procedure"), config
         self.hardware_interface = hardware_interface
+
+        # state variables
+        self.last_measurement_time: float = 0
         self.message_queue = utils.MessageQueue()
+
+    def _update_air_inlet_parameters(self) -> None:
+        """
+        1. fetches the latest temperature and pressure data at air inlet
+        2. sends these values to the CO2 sensor
+        """
+
+        self.air_inlet_bme280_data = self.hardware_interface.air_inlet_bme280_sensor.get_data()
+        self.air_inlet_sht45_data = self.hardware_interface.air_inlet_sht45_sensor.get_data()
+        self.chamber_temperature = (
+            self.hardware_interface.co2_sensor.get_current_chamber_temperature()
+        )
+
+        # update CO2 sensor compenstation info
+        self.hardware_interface.co2_sensor.set_compensation_values(
+            humidity=self.air_inlet_sht45_data.humidity,
+            pressure=self.air_inlet_bme280_data.pressure,
+        )
 
     def run(self) -> None:
         calibration_time = datetime.utcnow().timestamp()
         self.logger.info(
-            f"running calibration procedure at timestamp {calibration_time}",
+            f"starting calibration procedure at timestamp {calibration_time}",
             config=self.config,
-        )
-        result = custom_types.CalibrationProcedureData(
-            gases=self.config.calibration.gases, readings=[], timestamps=[]
-        )
-        previous_measurement_valve_input = self.hardware_interface.valves.active_input
-
-        self.logger.debug("setting the CO2 sensor to calibration mode")
-        self.hardware_interface.co2_sensor.set_filter_setting(average=6)
-        self.hardware_interface.pump.set_desired_pump_speed(
-            unit="litres_per_minute", value=0.5
         )
 
         for gas in self.config.calibration.gases:
+            # switch to each calibration valve
             self.hardware_interface.valves.set_active_input(gas.valve_number)
+            calibration_procedure_start_time = time.time()
 
-            gas_readings: list[custom_types.CO2SensorData] = []
-            timestamps: list[float] = []
-            number_of_readings = (
-                math.ceil(self.config.calibration.timing.seconds_per_gas_bottle / 6)
-                if (not self.testing)
-                else 10
-            )
-            self.logger.debug(f"collecting {number_of_readings} readings")
-            for _ in range(number_of_readings):
-                with _ensure_section_duration(6):
-                    t1 = datetime.utcnow().timestamp()
-                    gas_readings.append(
-                        self.hardware_interface.co2_sensor.get_current_concentration()
-                    )
-                    t2 = datetime.utcnow().timestamp()
-                    timestamps.append((t1 + t2) / 2)
-                    self.logger.debug("new reading")
+            while True:
+                # idle until next measurement period
+                seconds_to_wait_for_next_measurement = max(
+                    self.config.measurement.timing.seconds_per_measurement
+                    - (time.time() - self.last_measurement_time),
+                    0,
+                )
+                self.logger.debug(
+                    f"sleeping {round(seconds_to_wait_for_next_measurement, 3)} seconds"
+                )
+                time.sleep(seconds_to_wait_for_next_measurement)
+                self.last_measurement_time = time.time()
 
-            result.readings.append(gas_readings)
-            result.timestamps.append(timestamps)
+                # update air inlet parameters
+                self._update_air_inlet_parameters()
 
-        # start the calibration sampling, reset CO2 sensor to default filters
-        self.hardware_interface.co2_sensor.set_filter_setting()
+                # perform a CO2 measurement
+                current_sensor_data = self.hardware_interface.co2_sensor.get_current_concentration()
+                self.logger.debug(f"new calibration measurement")
 
-        # clean up tube again
-        self.hardware_interface.valves.set_active_input(
-            previous_measurement_valve_input
-        )
-
-        # send calibration result via mqtt
-        if self.testing:
-            self.logger.info(
-                f"calibration result is available",
-                details=json.dumps(result.dict(), indent=4),
-            )
-        else:
-            self.message_queue.enqueue_message(
-                self.config,
-                custom_types.MQTTDataMessageBody(
-                    revision=self.config.revision,
-                    timestamp=round(time.time(), 2),
-                    value=custom_types.MQTTCalibrationData(
-                        variant="calibration", data=result
+                # send out MQTT measurement message
+                self.message_queue.enqueue_message(
+                    self.config,
+                    custom_types.MQTTDataMessageBody(
+                        revision=self.config.revision,
+                        timestamp=round(time.time(), 2),
+                        value=custom_types.MQTTCalibrationData(
+                            variant="calibration",
+                            data=custom_types.CalibrationData(
+                                gas_bottle_id=gas.bottle_id,
+                                raw=current_sensor_data[0],
+                                compensated=current_sensor_data[1],
+                                filtered=current_sensor_data[2],
+                                bme280_temperature=self.air_inlet_bme280_data.temperature,
+                                bme280_humidity=self.air_inlet_bme280_data.humidity,
+                                bme280_pressure=self.air_inlet_bme280_data.pressure,
+                                sht45_temperature=self.air_inlet_sht45_data.temperature,
+                                sht45_humidity=self.air_inlet_sht45_data.humidity,
+                                chamber_temperature=self.chamber_temperature,
+                            ),
+                        ),
                     ),
-                ),
-            )
+                )
+
+                if (
+                    self.last_measurement_time - calibration_procedure_start_time
+                ) >= self.config.calibration.timing.seconds_per_gas_bottle:
+                    break
+
+        # switch back to measurement inlet
+        self.hardware_interface.valves.set_active_input(self.hardware_interface.valves.active_input)
 
         # save last calibration time
-        self.logger.debug("updating state")
+        self.logger.debug("finished calibration: updating state")
         state = utils.StateInterface.read()
         state.last_calibration_time = calibration_time
         utils.StateInterface.write(state)
