@@ -2,6 +2,7 @@ from typing import Literal, Optional, Union
 import pydantic
 
 from .sensor_answers import (
+    MeasurementData,
     CO2SensorData,
     AirSensorData,
     CalibrationProcedureData,
@@ -22,9 +23,7 @@ class MQTTConfig(pydantic.BaseModel):
     mqtt_port: int = pydantic.Field(..., ge=1, le=65535)
     mqtt_username: str = pydantic.Field(..., min_length=4, max_length=256)
     mqtt_password: str = pydantic.Field(..., min_length=4, max_length=256)
-    mqtt_base_topic: str = pydantic.Field(
-        ..., max_length=256, regex=r"^([a-z0-9_-]+\/)*$"
-    )
+    mqtt_base_topic: str = pydantic.Field(..., max_length=256, regex=r"^([a-z0-9_-]+\/)*$")
 
     class Config:
         extra = "forbid"
@@ -49,6 +48,11 @@ class MQTTLogMessageBody(pydantic.BaseModel):
 
 # -----------------------------------------------------------------------------
 # MQTT Data Message
+
+
+class MQTTMeasurementData(pydantic.BaseModel):
+    variant: Literal["measurement"]
+    data: MeasurementData
 
 
 class MQTTCO2Data(pydantic.BaseModel):
@@ -159,9 +163,7 @@ class MQTTHeartbeatMessage(pydantic.BaseModel):
         extra = "forbid"
 
 
-MQTTMessageBody = Union[
-    MQTTLogMessageBody, MQTTDataMessageBody, MQTTHeartbeatMessageBody
-]
+MQTTMessageBody = Union[MQTTLogMessageBody, MQTTDataMessageBody, MQTTHeartbeatMessageBody]
 MQTTMessage = Union[MQTTLogMessage, MQTTDataMessage, MQTTHeartbeatMessage]
 
 # -----------------------------------------------------------------------------

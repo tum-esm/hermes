@@ -21,6 +21,18 @@ class CO2SensorData(pydantic.BaseModel):
     filtered: float
 
 
+class MeasurementData(pydantic.BaseModel):
+    raw: float
+    compensated: float
+    filtered: float
+    bme280_temperature: Optional[float]
+    bme280_humidity: Optional[float]
+    bme280_pressure: Optional[float]
+    sht45_temperature: Optional[float]
+    sht45_humidity: Optional[float]
+    chamber_temperature: Optional[float]
+
+
 class CalibrationProcedureData(pydantic.BaseModel):
     gases: list[CalibrationGasConfig]
     readings: list[list[CO2SensorData]]
