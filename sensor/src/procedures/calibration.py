@@ -1,10 +1,8 @@
 from datetime import datetime
-import json
 import math
 import time
-from typing import Generator
 from src import custom_types, utils, hardware
-from contextlib import contextmanager
+
 
 # TODO: refactor calibration and measurement procedure to use same base class
 
@@ -40,6 +38,24 @@ class CalibrationProcedure:
             pressure=self.air_inlet_bme280_data.pressure,
         )
 
+    def _alternate_bottle_for_drying(self) -> None:
+        """1. sets time for drying the air chamber with first calibration bottle
+        2. switches order of calibration bottles every other day"""
+
+        # set time extension for first bottle
+        self.seconds_drying_with_first_bottle = (
+            self.config.calibration.timing.seconds_per_gas_bottle
+        )
+
+        # alternate order every other day
+        days_since_unix = (datetime.now().date() - datetime(1970, 1, 1).date()).days
+        alternate_order = days_since_unix % 2 == 1
+
+        if alternate_order:
+            self.sequence_calibration_bottle = self.config.calibration.gases[::-1]
+        else:
+            self.sequence_calibration_bottle = self.config.calibration.gases
+
     def run(self) -> None:
         calibration_time = datetime.utcnow().timestamp()
         self.logger.info(
@@ -47,7 +63,11 @@ class CalibrationProcedure:
             config=self.config,
         )
 
-        for gas in self.config.calibration.gases:
+        # alternate calibration bottle order every other day
+        # first bottle receives additional time to dry air chamber
+        self._alternate_bottle_for_drying()
+
+        for gas in self.sequence_calibration_bottle:
             # switch to each calibration valve
             self.hardware_interface.valves.set_active_input(gas.valve_number)
             calibration_procedure_start_time = time.time()
@@ -97,9 +117,14 @@ class CalibrationProcedure:
                 )
 
                 if (
-                    self.last_measurement_time - calibration_procedure_start_time
-                ) >= self.config.calibration.timing.seconds_per_gas_bottle:
+                    (self.last_measurement_time - calibration_procedure_start_time)
+                    >= self.config.calibration.timing.seconds_per_gas_bottle
+                    + self.seconds_drying_with_first_bottle
+                ):
                     break
+
+            # reset drying time extension for following bottles
+            self.seconds_drying_with_first_bottle = 0
 
         # switch back to measurement inlet
         self.hardware_interface.valves.set_active_input(self.hardware_interface.valves.active_input)
