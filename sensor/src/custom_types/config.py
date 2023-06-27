@@ -47,9 +47,7 @@ class MeasurementAirInletConfig(pydantic.BaseModel):
 
 class MeasurementConfig(pydantic.BaseModel):
     timing: MeasurementTimingConfig
-    air_inlets: list[MeasurementAirInletConfig] = pydantic.Field(
-        min_items=1, max_items=4
-    )
+    air_inlets: list[MeasurementAirInletConfig] = pydantic.Field(min_items=1, max_items=4)
 
     class Config:
         extra = "forbid"
@@ -101,7 +99,7 @@ class HeatedEnclosureConfig(pydantic.BaseModel):
 class Config(pydantic.BaseModel):
     """The config.json for each sensor"""
 
-    version: Literal["0.1.0-beta.2"]
+    version: Literal["0.1.0-beta.3"]
     revision: int = pydantic.Field(..., ge=0)
     verbose_logging: bool
     active_components: ActiveComponentsConfig
