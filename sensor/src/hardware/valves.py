@@ -39,7 +39,7 @@ class ValveInterface:
     def set_active_input(self, no: Literal[1, 2, 3, 4]) -> None:
         """first opens the new valve, then closes the old valve"""
         self.valves[no].on()
-        time.sleep(0.02)
+        time.sleep(0.5)
         self.valves[self.active_input].off()
         self.active_input = no
         self.logger.info(f"switched to valve {no}")
