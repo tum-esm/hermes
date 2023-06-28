@@ -23,13 +23,6 @@ class MeasurementProcedure:
         self.last_measurement_time: float = 0
         self.message_queue = utils.MessageQueue()
 
-        # set up pump to run continuously
-        self.hardware_interface.pump.set_desired_pump_speed(
-            unit="litres_per_minute",
-            value=self.config.measurement.timing.pumped_litres_per_minute,
-        )
-        time.sleep(0.5)
-
     def _update_air_inlet_parameters(self) -> None:
         """
         1. fetches the latest temperature and pressure data at air inlet
