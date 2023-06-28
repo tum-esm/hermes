@@ -127,7 +127,10 @@ class CalibrationProcedure:
             self.seconds_drying_with_first_bottle = 0
 
         # switch back to measurement inlet
-        self.hardware_interface.valves.set_active_input(self.hardware_interface.valves.active_input)
+        # TODO: clean up the hard coded first measurement inlet
+        self.hardware_interface.valves.set_active_input(
+            self.config.measurement.air_inlets[0].valve_number
+        )
 
         # save last calibration time
         self.logger.debug("finished calibration: updating state")
