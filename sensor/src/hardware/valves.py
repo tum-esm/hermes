@@ -32,17 +32,43 @@ class ValveInterface:
             4: gpiozero.OutputDevice(VALVE_PIN_4_OUT, pin_factory=self.pin_factory),
         }
         self.active_input: Literal[1, 2, 3, 4] = 1
+        self.logger.info("Initialized with switching to valve: 1")
         self.set_active_input(1)
 
         self.logger.info("Finished initialization")
 
     def set_active_input(self, no: Literal[1, 2, 3, 4]) -> None:
-        """first opens the new valve, then closes the old valve"""
-        self.valves[no].on()
-        time.sleep(0.5)
-        self.valves[self.active_input].off()
+        """Allows flow through selected valve.
+        Permits flow through all other valves.
+
+        Waits shortly after closing input valve 1 before opening calibration valves."""
+
+        if no == 1:
+            self.valves[1].off()
+            self.valves[2].off()
+            self.valves[3].off()
+            self.valves[4].off()
+        if no == 2:
+            self.valves[1].on()
+            time.sleep(0.5)
+            self.valves[2].on()
+            self.valves[3].off()
+            self.valves[4].off()
+        if no == 3:
+            self.valves[1].on()
+            time.sleep(0.5)
+            self.valves[2].off()
+            self.valves[3].on()
+            self.valves[4].off()
+        if no == 4:
+            self.valves[1].on()
+            time.sleep(0.5)
+            self.valves[2].off()
+            self.valves[3].off()
+            self.valves[4].on()
+
         self.active_input = no
-        self.logger.info(f"switched to valve {no}")
+        self.logger.info(f"switched to valve {self.active_input}")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
