@@ -75,6 +75,15 @@ class PumpInterface:
             self.rps_monitoring_process.start()
 
         # ---------------------------------------------------------------------
+        # start pump to run continuously
+        
+        self.set_desired_pump_speed(
+            unit="litres_per_minute",
+            value=self.config.measurement.timing.pumped_litres_per_minute,
+        )
+        time.sleep(0.5)
+        
+        # ---------------------------------------------------------------------
 
         self.logger.info("Finished initialization")
 
