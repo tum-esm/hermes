@@ -44,7 +44,7 @@ The payloads are JSON encoded and have the following structure:
   // the array structure allows to batch messages
   "measurements": [
     {
-      "revision": 0,
+      "revision": 0, // optional parameter
       "timestamp": 1683645000.0,
       "value": {} // this can be any valid JSON
     }
@@ -60,7 +60,7 @@ The payloads are JSON encoded and have the following structure:
   "log_messages": [
     {
       "severity": "error", // one of info, warning, error
-      "revision": 0,
+      "revision": 0, // optional parameter
       "timestamp": 1683645000.0,
       "subject": "The CPU is burning",
       "details": "Please call the fire department" // optional parameter
