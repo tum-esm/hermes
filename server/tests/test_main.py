@@ -159,11 +159,10 @@ async def test_create_sensor(setup, http_client, network_identifier, access_toke
     response = await http_client.post(
         url=f"/networks/{network_identifier}/sensors",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"sensor_name": "rattata", "configuration": {}},
+        json={"sensor_name": "rattata"},
     )
     assert returns(response, 201)
-    assert keys(response, {"sensor_identifier", "revision"})
-    assert response.json()["revision"] == 0
+    assert keys(response, {"sensor_identifier"})
 
 
 @pytest.mark.anyio
@@ -174,7 +173,7 @@ async def test_create_sensor_with_duplicate(
     response = await http_client.post(
         url=f"/networks/{network_identifier}/sensors",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"sensor_name": "bulbasaur", "configuration": {}},
+        json={"sensor_name": "bulbasaur"},
     )
     assert returns(response, errors.ConflictError)
 
@@ -187,7 +186,7 @@ async def test_create_sensor_with_network_not_exists(
     response = await http_client.post(
         url=f"/networks/{identifier}/sensors",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"sensor_name": "rattata", "configuration": {}},
+        json={"sensor_name": "rattata"},
     )
     assert returns(response, errors.NotFoundError)
 
@@ -205,12 +204,11 @@ async def test_update_sensor(
     response = await http_client.put(
         url=f"/networks/{network_identifier}/sensors/{sensor_identifier}",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"sensor_name": "rattata", "configuration": {"value": 42}},
+        json={"sensor_name": "rattata"},
     )
     assert returns(response, 200)
-    assert keys(response, {"sensor_identifier", "revision"})
+    assert keys(response, {"sensor_identifier"})
     assert response.json()["sensor_identifier"] == sensor_identifier
-    assert response.json()["revision"] == 3
 
 
 @pytest.mark.anyio
@@ -221,7 +219,7 @@ async def test_update_sensor_with_not_exists(
     response = await http_client.put(
         url=f"/networks/{network_identifier}/sensors/{identifier}",
         headers={"Authorization": f"Bearer {access_token}"},
-        json={"sensor_name": "rattata", "configuration": {"value": 42}},
+        json={"sensor_name": "rattata"},
     )
     assert returns(response, errors.NotFoundError)
 
