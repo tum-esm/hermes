@@ -71,10 +71,11 @@ The payloads are JSON encoded and have the following structure:
 
 ## Development Setup
 
-- install the Python version noted in `.python-version` via `pyenv`
-- install the dependencies via `poetry install --with dev --sync`
-- run the tests via `./scripts/test`
-- start a development instance with pre-populated example data via `./scripts/develop`
+- Install the Python version noted in `.python-version` via `pyenv`
+- Install the dependencies via `./scripts/setup`
+- Run the tests via `./scripts/test`
+- Format and lint the code via `./scripts/check`
+- Start a development instance with pre-populated example data via `./scripts/develop`
 
 ## Deployment
 

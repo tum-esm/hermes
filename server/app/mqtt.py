@@ -3,7 +3,7 @@ import contextlib
 import json
 import ssl
 
-import asyncio_mqtt as aiomqtt
+import aiomqtt
 import asyncpg
 import pydantic
 

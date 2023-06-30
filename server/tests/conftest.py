@@ -17,17 +17,10 @@ async def _reset(connection):
     await connection.execute("DELETE FROM sensor;")
 
 
-async def _populate(connection, timestamp=None):
+async def _populate(connection):
     """Populate the database with example data."""
     with open("tests/data.json") as file:
         for table_name, records in json.load(file).items():
-            # Adapt example timestamps to something current
-            if timestamp is not None:
-                for record in records:
-                    for key in record:
-                        if key.endswith("_timestamp"):
-                            record[key] += timestamp
-            # Insert records into the database
             identifiers = ", ".join([f"${i+1}" for i in range(len(records[0]))])
             await connection.executemany(
                 f'INSERT INTO "{table_name}" VALUES ({identifiers});',

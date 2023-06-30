@@ -1,4 +1,4 @@
-import asyncio_mqtt as aiomqtt
+import aiomqtt
 import pytest
 
 import app.mqtt as mqtt

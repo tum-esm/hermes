@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 import os
-import time
 
 import asyncpg
 
@@ -29,9 +28,7 @@ async def initialize(populate=False):
         await database.initialize(connection)
         await _initialize(connection)
         if populate:
-            await tests.conftest._populate(
-                connection, timestamp=time.time() // 3600 * 3600 - 3600
-            )
+            await tests.conftest._populate(connection)
     finally:
         await connection.close()
 
