@@ -177,7 +177,7 @@ async def create_sensor(request):
         logger.warning(f"{request.method} {request.url.path} -- Network not found")
         raise errors.NotFoundError()
     except asyncpg.exceptions.UniqueViolationError:
-        logger.warning(f"{request.method} {request.url.path} -- Sensor exists")
+        logger.warning(f"{request.method} {request.url.path} -- Uniqueness violation")
         raise errors.ConflictError()
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
@@ -209,9 +209,9 @@ async def update_sensor(request):
     )
     try:
         response = await dbpool.execute(query, *arguments)
-
-    # TODO catch asyncpg.UniqueViolationError
-
+    except asyncpg.exceptions.UniqueViolationError:
+        logger.warning(f"{request.method} {request.url.path} -- Uniqueness violation")
+        raise errors.ConflictError()
     except Exception as e:  # pragma: no cover
         logger.error(e, exc_info=True)
         raise errors.InternalServerError()
