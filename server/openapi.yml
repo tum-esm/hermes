@@ -62,7 +62,7 @@ paths:
                   user_identifier:
                     $ref: "#/components/schemas/identifier"
         "409":
-          description: Conflict
+          $ref: "#/components/responses/409"
   "/authentication":
     post:
       tags: [Users]
@@ -98,9 +98,9 @@ paths:
                   user_identifier:
                     $ref: "#/components/schemas/identifier"
         "401":
-          description: Unauthorized
+          $ref: "#/components/responses/401"
         "404":
-          description: Not Found
+          $ref: "#/components/responses/404"
   "/networks/{network_identifier}":
     parameters:
       - $ref: "#/components/parameters/network_identifier"
@@ -156,9 +156,9 @@ paths:
                   sensor_identifier:
                     $ref: "#/components/schemas/identifier"
         "404":
-          description: Not Found
+          $ref: "#/components/responses/404"
         "409":
-          description: Conflict
+          $ref: "#/components/responses/409"
   "/networks/{network_identifier}/sensors/{sensor_identifier}":
     parameters:
       - $ref: "#/components/parameters/network_identifier"
@@ -187,9 +187,9 @@ paths:
                   sensor_identifier:
                     $ref: "#/components/schemas/identifier"
         "404":
-          description: Not Found
+          $ref: "#/components/responses/404"
         "409":
-          description: Conflict
+          $ref: "#/components/responses/409"
   "/networks/{network_identifier}/sensors/{sensor_identifier}/configurations":
     parameters:
       - $ref: "#/components/parameters/network_identifier"
@@ -219,7 +219,7 @@ paths:
                   revision:
                     $ref: "#/components/schemas/revision"
         "404":
-          description: Not Found
+          $ref: "#/components/responses/404"
     get:
       tags: [Sensors]
       summary: Read configurations
@@ -346,6 +346,13 @@ components:
     "Bearer token":
       type: http
       scheme: bearer
+  responses:
+    401:
+      description: Unauthorized
+    404:
+      description: Not Found
+    409:
+      description: Conflict
   schemas:
     identifier:
       type: string
