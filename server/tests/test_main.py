@@ -139,7 +139,7 @@ async def test_create_session_with_invalid_password(setup, http_client):
 
 
 @pytest.mark.anyio
-async def test_create_session_with_not_exists(setup, http_client):
+async def test_create_session_with_nonexistent_user(setup, http_client):
     """Test authenticating a user that doesn't exist."""
     response = await http_client.post(
         url="/authentication",
@@ -179,7 +179,7 @@ async def test_create_sensor_with_duplicate(
 
 
 @pytest.mark.anyio
-async def test_create_sensor_with_network_not_exists(
+async def test_create_sensor_with_nonexistent_network(
     setup, http_client, identifier, access_token
 ):
     """Test creating a sensor in a network that does not exist."""
@@ -212,7 +212,7 @@ async def test_update_sensor(
 
 
 @pytest.mark.anyio
-async def test_update_sensor_with_not_exists(
+async def test_update_sensor_with_nonexistent_sensor(
     setup, http_client, network_identifier, identifier, access_token
 ):
     """Test updating a sensor that does not exist."""
@@ -246,7 +246,7 @@ async def test_create_configuration(
 
 
 @pytest.mark.anyio
-async def test_create_configuration_with_empty(
+async def test_create_configuration_with_no_values(
     setup, http_client, network_identifier, sensor_identifier, access_token
 ):
     """Test creating a configuration that contains no values."""
@@ -259,6 +259,19 @@ async def test_create_configuration_with_empty(
     )
     assert returns(response, 201)
     assert keys(response, {"revision"})
+
+
+@pytest.mark.anyio
+async def test_create_configuration_with_nonexistent_sensor(
+    setup, http_client, network_identifier, identifier, access_token
+):
+    """Test creating a configuration for a sensor that does not exist."""
+    response = await http_client.post(
+        url=f"/networks/{network_identifier}/sensors/{identifier}/configurations",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={},
+    )
+    assert returns(response, errors.NotFoundError)
 
 
 ########################################################################################
@@ -338,7 +351,7 @@ async def test_read_measurements(
     )
     assert returns(response, 200)
     assert isinstance(response.json(), list)
-    assert len(response.json()) == 3
+    assert len(response.json()) == 4
     assert keys(response, {"value", "revision", "creation_timestamp"})
     assert sorts(response, lambda x: x["creation_timestamp"])
 
@@ -350,7 +363,7 @@ async def test_read_measurements_with_next_page(
     """Test reading measurements after a given timestamp."""
     response = await http_client.get(
         url=f"/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
-        params={"direction": "next", "creation_timestamp": 110},
+        params={"direction": "next", "creation_timestamp": 100},
     )
     assert returns(response, 200)
     assert isinstance(response.json(), list)
@@ -366,7 +379,7 @@ async def test_read_measurements_with_previous_page(
     """Test reading measurements before a given timestamp."""
     response = await http_client.get(
         url=f"/networks/{network_identifier}/sensors/{sensor_identifier}/measurements",
-        params={"direction": "previous", "creation_timestamp": 180},
+        params={"direction": "previous", "creation_timestamp": 200},
     )
     assert returns(response, 200)
     assert isinstance(response.json(), list)
