@@ -103,7 +103,7 @@ async def test_create_user(setup, http_client):
 
 
 @pytest.mark.anyio
-async def test_create_user_with_duplicate(setup, http_client):
+async def test_create_user_with_existent_user_name(setup, http_client):
     """Test creating a user that already exists."""
     response = await http_client.post(
         url="/users", json={"user_name": "ash", "password": "12345678"}
@@ -166,7 +166,7 @@ async def test_create_sensor(setup, http_client, network_identifier, access_toke
 
 
 @pytest.mark.anyio
-async def test_create_sensor_with_duplicate(
+async def test_create_sensor_with_existent_sensor_name(
     setup, http_client, network_identifier, access_token
 ):
     """Test creating a sensor that already exists."""
@@ -222,6 +222,19 @@ async def test_update_sensor_with_nonexistent_sensor(
         json={"sensor_name": "rattata"},
     )
     assert returns(response, errors.NotFoundError)
+
+
+@pytest.mark.anyio
+async def test_update_sensor_with_existent_sensor_name(
+    setup, http_client, network_identifier, sensor_identifier, access_token
+):
+    """Test updating a sensor to a name that is already taken in that network."""
+    response = await http_client.put(
+        url=f"/networks/{network_identifier}/sensors/{sensor_identifier}",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"sensor_name": "charmander"},
+    )
+    assert returns(response, errors.ConflictError)
 
 
 ########################################################################################
