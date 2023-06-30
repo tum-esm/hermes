@@ -67,7 +67,10 @@ paths:
     post:
       tags: [Users]
       summary: Authenticate
-      description: "Authenticate a user from a username and password and return an access token. The access token is valid indefinitely."
+      description: |
+        Authenticate a user from a username and password and return an access token. Use this access token in all requests to protected routes.
+
+        The access token is valid indefinitely.
       requestBody:
         content:
           application/json:
@@ -132,8 +135,8 @@ paths:
     post:
       tags: [Sensors]
       summary: Create sensor
-      parameters:
-        - $ref: "#/components/parameters/authorization"
+      security:
+        - "Bearer token": []
       requestBody:
         content:
           application/json:
@@ -163,8 +166,8 @@ paths:
     put:
       tags: [Sensors]
       summary: Update sensor
-      parameters:
-        - $ref: "#/components/parameters/authorization"
+      security:
+        - "Bearer token": []
       requestBody:
         content:
           application/json:
@@ -198,8 +201,8 @@ paths:
         Create or update a sensor's configuration. Each configuration is assigned a monotonically increasing `revision` number. The new configuration is stored in the database and relayed to the sensor over MQTT.
 
         Configurations are an optional feature. Sensors don't need to implement configuration updates and can nevertheless send measurements and logs unidirectionally to the server.
-      parameters:
-        - $ref: "#/components/parameters/authorization"
+      security:
+        - "Bearer token": []
       requestBody:
         content:
           application/json:
@@ -339,6 +342,10 @@ paths:
                     count:
                       $ref: "#/components/schemas/count"
 components:
+  securitySchemes:
+    "Bearer token":
+      type: http
+      scheme: bearer
   schemas:
     identifier:
       type: string
@@ -362,7 +369,7 @@ components:
       example: c59805ae394cceea937163877ca31375183650586137170a69652b6d8543e869
       pattern: "^[0-9a-f]{64}$"
     revision:
-      description: "Configurations are assigned incrementing revision numbers. The revision is used as an identifier in the communication with the sensors and can clearly match configurations to measurements and logs."
+      description: "Configurations are assigned monotonically increasing revision numbers. The revision is used as an identifier in the communication with the sensors and can clearly match configurations to measurements and logs."
       type: integer
     severity:
       type: string
@@ -389,6 +396,7 @@ components:
         $ref: "#/components/schemas/identifier"
     revision:
       name: revision
+      description: "The cursor of the query. Depending on the direction, the request returns the next or previous elements. The cursor is excluded from the result."
       in: query
       schema:
         $ref: "#/components/schemas/revision"
@@ -406,9 +414,3 @@ components:
         type: string
         enum: [next, previous]
         default: next
-    authorization:
-      name: authorization
-      in: header
-      required: true
-      schema:
-        $ref: "#/components/schemas/authorization"
