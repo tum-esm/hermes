@@ -227,6 +227,43 @@ async def test_update_sensor_with_not_exists(
 
 
 ########################################################################################
+# Route: POST /networks/<network_identifier>/sensors/<sensor_identifier>/configurations
+########################################################################################
+
+
+@pytest.mark.anyio
+async def test_create_configuration(
+    setup, http_client, network_identifier, sensor_identifier, access_token
+):
+    """Test creating a configuration."""
+    response = await http_client.post(
+        url=(
+            f"/networks/{network_identifier}/sensors/{sensor_identifier}/configurations"
+        ),
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"something": 42, "else": {}, "entirely": "", "further": 1.23},
+    )
+    assert returns(response, 201)
+    assert keys(response, {"revision"})
+
+
+@pytest.mark.anyio
+async def test_create_configuration_with_empty(
+    setup, http_client, network_identifier, sensor_identifier, access_token
+):
+    """Test creating a configuration that contains no values."""
+    response = await http_client.post(
+        url=(
+            f"/networks/{network_identifier}/sensors/{sensor_identifier}/configurations"
+        ),
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={},
+    )
+    assert returns(response, 201)
+    assert keys(response, {"revision"})
+
+
+########################################################################################
 # Route: GET /networks/<network_identifier>/sensors/<sensor_identifier>/configurations
 ########################################################################################
 
