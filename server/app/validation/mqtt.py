@@ -40,9 +40,9 @@ class LogsMessage(types._BaseModel):
 
 
 class Measurement(types._BaseModel):
-    revision: types.Revision
+    revision: types.Revision | None = None
     timestamp: types.Timestamp
-    value: types.Json
+    value: types.Measurement
 
 
 class MeasurementsMessage(types._BaseModel):

@@ -72,6 +72,11 @@ class _UpdateSensorRequestPath(types._BaseModel):
     sensor_identifier: types.Identifier
 
 
+class _CreateConfigurationRequestPath(types._BaseModel):
+    network_identifier: types.Identifier
+    sensor_identifier: types.Identifier
+
+
 class _ReadConfigurationsRequestPath(types._BaseModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
@@ -126,6 +131,10 @@ class _UpdateSensorRequestQuery(types._BaseModel):
     pass
 
 
+class _CreateConfigurationRequestQuery(types._BaseModel):
+    pass
+
+
 class _ReadConfigurationsRequestQuery(types._BaseModel):
     revision: types.Revision = None
     direction: typing.Literal["next", "previous"] = "next"
@@ -170,12 +179,14 @@ class _StreamNetworkRequestBody(types._BaseModel):
 
 class _CreateSensorRequestBody(types._BaseModel):
     sensor_name: types.Name
-    configuration: types.Json
 
 
 class _UpdateSensorRequestBody(types._BaseModel):
     sensor_name: types.Name
-    configuration: types.Json
+
+
+class _CreateConfigurationRequestBody(types._Configuration):
+    pass
 
 
 class _ReadConfigurationsRequestBody(types._BaseModel):
@@ -252,6 +263,15 @@ class UpdateSensorRequest(types._BaseModel):
     path: _UpdateSensorRequestPath
     query: _UpdateSensorRequestQuery
     body: _UpdateSensorRequestBody
+
+
+class CreateConfigurationRequest(types._BaseModel):
+    method: str
+    url: object
+    headers: dict
+    path: _CreateConfigurationRequestPath
+    query: _CreateConfigurationRequestQuery
+    body: _CreateConfigurationRequestBody
 
 
 class ReadConfigurationsRequest(types._BaseModel):

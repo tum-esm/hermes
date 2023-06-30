@@ -19,7 +19,6 @@ from app.logs import logger
 
 @validation.validate(schema=validation.ReadStatusRequest)
 async def read_status(request):
-    """Return some status information about the server."""
     return starlette.responses.JSONResponse(
         status_code=200,
         content={
@@ -33,7 +32,6 @@ async def read_status(request):
 
 @validation.validate(schema=validation.CreateUserRequest)
 async def create_user(request):
-    """Create a new user from the given account data."""
     password_hash = auth.hash_password(request.body.password)
     access_token = auth.generate_token()
     access_token_hash = auth.hash_token(access_token)
@@ -80,8 +78,7 @@ async def create_user(request):
 
 @validation.validate(schema=validation.CreateSessionRequest)
 async def create_session(request):
-    """Authenticate a user from username and password and return access token."""
-    # Read user
+    # Read the user
     query, arguments = database.parametrize(
         identifier="read-user", arguments={"user_name": request.body.user_name}
     )
@@ -161,137 +158,116 @@ async def read_network(request):
 
 @validation.validate(schema=validation.CreateSensorRequest)
 async def create_sensor(request):
-    """Create a new sensor and configuration."""
     user_identifier, permissions = await auth.authenticate(request, dbpool)
     if request.path.network_identifier not in permissions:
         # TODO if user is read-only, return 403 -> "Insufficient authorization"
         logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
         raise errors.NotFoundError()
-    async with dbpool.acquire() as connection:
-        async with connection.transaction():
-            # Create new sensor
-            query, arguments = database.parametrize(
-                identifier="create-sensor",
-                arguments={
-                    "network_identifier": request.path.network_identifier,
-                    "sensor_name": request.body.sensor_name,
-                },
-            )
-            try:
-                elements = await connection.fetch(query, *arguments)
-            except asyncpg.ForeignKeyViolationError:
-                # This can happen if we delete the network after the permissions check
-                logger.warning(
-                    f"{request.method} {request.url.path} -- Network not found"
-                )
-                raise errors.NotFoundError()
-            except asyncpg.exceptions.UniqueViolationError:
-                logger.warning(f"{request.method} {request.url.path} -- Sensor exists")
-                raise errors.ConflictError()
-            except Exception as e:  # pragma: no cover
-                logger.error(e, exc_info=True)
-                raise errors.InternalServerError()
-            sensor_identifier = database.dictify(elements)[0]["sensor_identifier"]
-            # Create new configuration
-            query, arguments = database.parametrize(
-                identifier="create-configuration",
-                arguments={
-                    "sensor_identifier": sensor_identifier,
-                    "configuration": request.body.configuration,
-                },
-            )
-            try:
-                elements = await connection.fetch(query, *arguments)
-            except Exception as e:  # pragma: no cover
-                logger.error(e, exc_info=True)
-                raise errors.InternalServerError()
-            revision = database.dictify(elements)[0]["revision"]
+    query, arguments = database.parametrize(
+        identifier="create-sensor",
+        arguments={
+            "network_identifier": request.path.network_identifier,
+            "sensor_name": request.body.sensor_name,
+        },
+    )
+    try:
+        elements = await dbpool.fetch(query, *arguments)
+    except asyncpg.ForeignKeyViolationError:
+        # This can happen if the network is deleted after the permissions check
+        logger.warning(f"{request.method} {request.url.path} -- Network not found")
+        raise errors.NotFoundError()
+    except asyncpg.exceptions.UniqueViolationError:
+        logger.warning(f"{request.method} {request.url.path} -- Sensor exists")
+        raise errors.ConflictError()
+    except Exception as e:  # pragma: no cover
+        logger.error(e, exc_info=True)
+        raise errors.InternalServerError()
+    sensor_identifier = database.dictify(elements)[0]["sensor_identifier"]
+    # Return successful response
+    return starlette.responses.JSONResponse(
+        status_code=201,
+        content={"sensor_identifier": sensor_identifier},
+    )
+
+
+@validation.validate(schema=validation.UpdateSensorRequest)
+async def update_sensor(request):
+    user_identifier, permissions = await auth.authenticate(request, dbpool)
+
+    # TODO need to check if sensor is part of network, otherwise this checks nothing
+    # TODO move logic into own module
+    if request.path.network_identifier not in permissions:
+        logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
+        raise errors.NotFoundError()
+
+    query, arguments = database.parametrize(
+        identifier="update-sensor",
+        arguments={
+            "sensor_identifier": request.path.sensor_identifier,
+            "sensor_name": request.body.sensor_name,
+        },
+    )
+    try:
+        response = await dbpool.execute(query, *arguments)
+
+    # TODO catch asyncpg.UniqueViolationError
+
+    except Exception as e:  # pragma: no cover
+        logger.error(e, exc_info=True)
+        raise errors.InternalServerError()
+    if response != "UPDATE 1":
+        logger.warning(f"{request.method} {request.url.path} -- Sensor not found")
+        raise errors.NotFoundError()
+    # Return successful response
+    return starlette.responses.JSONResponse(
+        status_code=200,
+        content={"sensor_identifier": request.path.sensor_identifier},
+    )
+
+
+@validation.validate(schema=validation.CreateConfigurationRequest)
+async def create_configuration(request):
+    user_identifier, permissions = await auth.authenticate(request, dbpool)
+
+    # TODO need to check if sensor is part of network, otherwise this checks nothing
+    # TODO move logic into own module
+    if request.path.network_identifier not in permissions:
+        logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
+        raise errors.NotFoundError()
+
+    query, arguments = database.parametrize(
+        identifier="create-configuration",
+        arguments={
+            "sensor_identifier": request.path.sensor_identifier,
+            "configuration": request.body.dict(),
+        },
+    )
+    try:
+        elements = await dbpool.fetch(query, *arguments)
+    except asyncpg.ForeignKeyViolationError:
+        logger.warning(f"{request.method} {request.url.path} -- Sensor not found")
+        raise errors.NotFoundError()
+    except Exception as e:  # pragma: no cover
+        logger.error(e, exc_info=True)
+        raise errors.InternalServerError()
+    revision = database.dictify(elements)[0]["revision"]
     # Send MQTT message with configuration
     await mqtt.publish_configuration(
-        sensor_identifier=sensor_identifier,
+        sensor_identifier=request.path.sensor_identifier,
         revision=revision,
-        configuration=request.body.configuration,
+        configuration=request.body.dict(),
         mqttc=mqttc,
         dbpool=dbpool,
     )
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=201,
-        content={"sensor_identifier": sensor_identifier, "revision": revision},
-    )
-
-
-@validation.validate(schema=validation.UpdateSensorRequest)
-async def update_sensor(request):
-    """Update an existing sensor's configuration.
-
-    TODO split in two: update sensor and update configuration
-    """
-    user_identifier, permissions = await auth.authenticate(request, dbpool)
-
-    # TODO need to check if sensor is part of network, otherwise this checks nothing
-    if request.path.network_identifier not in permissions:
-        logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
-        raise errors.NotFoundError()
-
-    async with dbpool.acquire() as connection:
-        async with connection.transaction():
-            # Update sensor
-            query, arguments = database.parametrize(
-                identifier="update-sensor",
-                arguments={
-                    "sensor_identifier": request.path.sensor_identifier,
-                    "sensor_name": request.body.sensor_name,
-                },
-            )
-            try:
-                response = await connection.execute(query, *arguments)
-
-            # TODO catch asyncpg.UniqueViolationError
-
-            except Exception as e:  # pragma: no cover
-                logger.error(e, exc_info=True)
-                raise errors.InternalServerError()
-            if response != "UPDATE 1":
-                logger.warning(
-                    f"{request.method} {request.url.path} -- Sensor doesn't exist"
-                )
-                raise errors.NotFoundError()
-            # Create new configuration
-            query, arguments = database.parametrize(
-                identifier="create-configuration",
-                arguments={
-                    "sensor_identifier": request.path.sensor_identifier,
-                    "configuration": request.body.configuration,
-                },
-            )
-            try:
-                elements = await connection.fetch(query, *arguments)
-            except Exception as e:  # pragma: no cover
-                logger.error(e, exc_info=True)
-                raise errors.InternalServerError()
-            revision = database.dictify(elements)[0]["revision"]
-    # Send MQTT message with configuration
-    await mqtt.publish_configuration(
-        sensor_identifier=request.path.sensor_identifier,
-        revision=revision,
-        configuration=request.body.configuration,
-        mqttc=mqttc,
-        dbpool=dbpool,
-    )
-    # Return successful response
-    return starlette.responses.JSONResponse(
-        status_code=200,
-        content={
-            "sensor_identifier": request.path.sensor_identifier,
-            "revision": revision,
-        },
+        content={"revision": revision},
     )
 
 
 @validation.validate(schema=validation.ReadConfigurationsRequest)
 async def read_configurations(request):
-    """Return pages of configurations sorted ascendingly by revision."""
     query, arguments = database.parametrize(
         identifier="read-configurations",
         arguments={
@@ -316,14 +292,6 @@ async def read_configurations(request):
 
 @validation.validate(schema=validation.ReadMeasurementsRequest)
 async def read_measurements(request):
-    """Return pages of measurements sorted ascendingly by creation timestamp.
-
-    The query parameter `creation_timestamp` defines the base timestamp for the query.
-    Depending on the value of the query parameter `direction`, the request returns
-    the "next" or "previous" N records. If `direction` is not set, it defaults to
-    "next". If `creation_timestamp` is not set, the request returns the first N records
-    if `direction` is "next" and the latest N records if `direction` is "previous".
-    """
     query, arguments = database.parametrize(
         identifier="read-measurements",
         arguments={
@@ -348,14 +316,6 @@ async def read_measurements(request):
 
 @validation.validate(schema=validation.ReadLogsRequest)
 async def read_logs(request):
-    """Return pages of logs sorted ascendingly by creation timestamp.
-
-    The query parameter `creation_timestamp` defines the base timestamp for the query.
-    Depending on the value of the query parameter `direction`, the request returns
-    the "next" or "previous" N records. If `direction` is not set, it defaults to
-    "next". If `creation_timestamp` is not set, the request returns the first N records
-    if `direction` is "next" and the latest N records if `direction` is "previous".
-    """
     query, arguments = database.parametrize(
         identifier="read-logs",
         arguments={
@@ -380,7 +340,6 @@ async def read_logs(request):
 
 @validation.validate(schema=validation.ReadLogsAggregatesRequest)
 async def read_log_message_aggregates(request):
-    """Return aggregation of sensor log messages."""
     query, arguments = database.parametrize(
         identifier="aggregate-logs",
         arguments={"sensor_identifier": request.path.sensor_identifier},
@@ -457,6 +416,11 @@ ROUTES = [
         path="/networks/{network_identifier}/sensors/{sensor_identifier}",
         endpoint=update_sensor,
         methods=["PUT"],
+    ),
+    starlette.routing.Route(
+        path="/networks/{network_identifier}/sensors/{sensor_identifier}/configurations",
+        endpoint=create_configuration,
+        methods=["POST"],
     ),
     starlette.routing.Route(
         path="/networks/{network_identifier}/sensors/{sensor_identifier}/configurations",

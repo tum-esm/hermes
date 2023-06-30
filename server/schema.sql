@@ -79,7 +79,7 @@ CREATE UNIQUE INDEX ON configuration (sensor_identifier ASC, revision DESC);
 CREATE TABLE measurement (
     sensor_identifier UUID NOT NULL REFERENCES sensor (identifier) ON DELETE CASCADE,
     value JSONB NOT NULL,
-    revision INT NOT NULL,
+    revision INT,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
     index INT NOT NULL
@@ -111,7 +111,7 @@ CREATE TABLE log (
     sensor_identifier UUID NOT NULL REFERENCES sensor (identifier) ON DELETE CASCADE,
     severity TEXT NOT NULL,
     subject TEXT NOT NULL,
-    revision INT NOT NULL,
+    revision INT,
     creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
     index INT NOT NULL,
