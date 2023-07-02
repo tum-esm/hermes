@@ -8,31 +8,31 @@ import app.validation.constants as constants
 ########################################################################################
 
 
-class _BaseModel(pydantic.BaseModel):
-    class Config:
-        extra = pydantic.Extra.forbid
-        frozen = True
+class Model(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
-class _Configuration(pydantic.BaseModel):
+class Configuration(Model, extra="allow"):
     # TODO Validate the values more thoroughly for min and max limits/lengths
     # number of JSON fields or nesting depth could be interesting as well
     # Or, check the actual size of the JSON / length of the JSON string
-    class Config:
-        extra = pydantic.Extra.allow
-        frozen = True
+    pass
 
 
 ########################################################################################
 # Types
 ########################################################################################
 
-Name = pydantic.constr(strict=True, regex=constants.Pattern.NAME.value)
-Identifier = pydantic.constr(strict=True, regex=constants.Pattern.IDENTIFIER.value)
-Password = pydantic.constr(strict=True, min_length=8, max_length=constants.Limit.MEDIUM)
-Revision = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
+Name = pydantic.constr(pattern=constants.Pattern.NAME.value)
+Identifier = pydantic.constr(pattern=constants.Pattern.IDENTIFIER.value)
+Password = pydantic.constr(min_length=8, max_length=constants.Limit.MEDIUM)
 
-Key = pydantic.constr(strict=True, regex=constants.Pattern.KEY.value)
+# TODO what are the real min/max values here? How do we handle overflow?
+# During validation somehow, or by handling the database error?
+Revision = pydantic.conint(ge=0, lt=constants.Limit.MAXINT4)
+Timestamp = pydantic.confloat(ge=0, lt=constants.Limit.MAXINT4)
+
+Key = pydantic.constr(pattern=constants.Pattern.KEY.value)
 # TODO Validate the values more thoroughly for min and max limits/lengths
 # number of JSON fields or nesting depth could be interesting as well
 # Or, check the actual size of the JSON / length of the JSON string
@@ -46,8 +46,3 @@ Value = (
     | dict
 )
 Measurement = dict[Key, Value]
-
-# TODO what are the real min/max values here? How do we handle overflow?
-# During validation somehow, or by handling the database error?
-# TODO Make strict when pydantic v2 is released
-Timestamp = pydantic.confloat(ge=0, lt=constants.Limit.MAXINT4)

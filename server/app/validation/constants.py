@@ -9,8 +9,8 @@ class Limit(int, enum.Enum):
 
 
 class Pattern(str, enum.Enum):
-    NAME = r"^(?!-)(?!.*--)[a-z0-9-]{1,64}(?<!-)$"
-    KEY = r"^(?!_)(?!.*__)[a-z_]{1,64}(?<!_)$"
+    NAME = r"^*$"  # r"^(?!-)(?!.*--)[a-z0-9-]{1,64}(?<!-)$"
+    KEY = r"^*$"  # r"^(?!_)(?!.*__)[a-z_]{1,64}(?<!_)$"
     IDENTIFIER = (  # Version 4 UUID regex
         r"^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
     )

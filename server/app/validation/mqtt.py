@@ -6,23 +6,24 @@ import app.validation.constants as constants
 import app.validation.types as types
 
 
-class Acknowledgement(types._BaseModel):
-    revision: types.Revision
+class Acknowledgement(types.Model):
     timestamp: types.Timestamp
-    success: pydantic.StrictBool  # Was the configuration processed successfully?
+    revision: types.Revision
+    success: bool  # Records if the configuration was processed successfully
 
 
-class AcknowledgementsMessage(types._BaseModel):
-    # TODO: Rename to acknowledgements on refactor
-    heartbeats: pydantic.conlist(item_type=Acknowledgement, min_items=1)
+class AcknowledgementsMessage(types.Model):
+    values: pydantic.conlist(item_type=Acknowledgement, min_length=1) = pydantic.Field(
+        ..., alias="heartbeats"
+    )
 
 
-class Log(types._BaseModel):
+class Log(types.Model):
+    timestamp: types.Timestamp
+    revision: types.Revision | None = None
     severity: typing.Literal["info", "warning", "error"]
-    subject: pydantic.StrictStr
-    revision: types.Revision
-    timestamp: types.Timestamp
-    details: pydantic.StrictStr | None = None
+    subject: str
+    details: str | None = None
 
     @pydantic.validator("subject")
     def trim_subject(cls, v):
@@ -33,17 +34,19 @@ class Log(types._BaseModel):
         return v[: constants.Limit.LARGE]
 
 
-class LogsMessage(types._BaseModel):
-    logs: pydantic.conlist(item_type=Log, min_items=1) = pydantic.Field(
+class LogsMessage(types.Model):
+    values: pydantic.conlist(item_type=Log, min_length=1) = pydantic.Field(
         ..., alias="log_messages"
     )
 
 
-class Measurement(types._BaseModel):
-    revision: types.Revision | None = None
+class Measurement(types.Model):
     timestamp: types.Timestamp
+    revision: types.Revision | None = None
     value: types.Measurement
 
 
-class MeasurementsMessage(types._BaseModel):
-    measurements: pydantic.conlist(item_type=Measurement, min_items=1)
+class MeasurementsMessage(types.Model):
+    values: pydantic.conlist(item_type=Measurement, min_length=1) = pydantic.Field(
+        ..., alias="measurements"
+    )
