@@ -95,91 +95,93 @@ async def publish_configuration(
     task.add_done_callback(task_references.remove)
 
 
-async def _handle_acknowledgements(sensor_identifier, payload, dbpool):
+async def _process_acknowledgements(sensor_identifier, payload, dbpool):
     query, arguments = database.parametrize(
         identifier="update-configuration-on-acknowledgement",
         arguments=[
             {
                 "sensor_identifier": sensor_identifier,
-                "revision": acknowledgment.revision,
-                "acknowledgement_timestamp": acknowledgment.timestamp,
-                "success": acknowledgment.success,
+                "revision": value.revision,
+                "acknowledgement_timestamp": value.timestamp,
+                "success": value.success,
             }
-            for i, acknowledgment in enumerate(payload.heartbeats)
+            for value in payload.values
         ],
     )
     try:
         await dbpool.executemany(query, arguments)
     except asyncpg.ForeignKeyViolationError:
         logger.warning(
-            f"[MQTT] Failed to handle; Sensor not found: {sensor_identifier}"
+            f"[MQTT] Failed to process; Sensor not found: {sensor_identifier}"
         )
     else:
         logger.info(
-            f"[MQTT] Handled {len(payload.heartbeats)} acknowledgements from"
+            f"[MQTT] Processed {len(payload.values)} acknowledgements from"
             f" {sensor_identifier}"
         )
 
 
-async def _handle_measurements(sensor_identifier, payload, dbpool):
+async def _process_measurements(sensor_identifier, payload, dbpool):
     query, arguments = database.parametrize(
         identifier="create-measurement",
         arguments=[
             {
                 "sensor_identifier": sensor_identifier,
-                "revision": measurement.revision,
-                "creation_timestamp": measurement.timestamp,
+                "revision": value.revision,
+                "creation_timestamp": value.timestamp,
                 "index": index,
-                "measurement": measurement.value,
+                "measurement": value.value,
             }
-            for index, measurement in enumerate(payload.measurements)
+            for index, value in enumerate(payload.values)
         ],
     )
     try:
         await dbpool.executemany(query, arguments)
     except asyncpg.ForeignKeyViolationError:
         logger.warning(
-            f"[MQTT] Failed to handle; Sensor not found: {sensor_identifier}"
+            f"[MQTT] Failed to process; Sensor not found: {sensor_identifier}"
         )
     """
     else:
         logger.info(
-            f"[MQTT] Handled {len(payload.measurements)} measurements from"
+            f"[MQTT] Processed {len(payload.values)} measurements from"
             f" {sensor_identifier}"
         )
     """
 
 
-async def _handle_logs(sensor_identifier, payload, dbpool):
+async def _process_logs(sensor_identifier, payload, dbpool):
     query, arguments = database.parametrize(
         identifier="create-log",
         arguments=[
             {
                 "sensor_identifier": sensor_identifier,
-                "revision": log.revision,
-                "creation_timestamp": log.timestamp,
+                "revision": value.revision,
+                "creation_timestamp": value.timestamp,
                 "index": index,
-                "severity": log.severity,
-                "subject": log.subject,
-                "details": log.details,
+                "severity": value.severity,
+                "subject": value.subject,
+                "details": value.details,
             }
-            for index, log in enumerate(payload.logs)
+            for index, value in enumerate(payload.values)
         ],
     )
     try:
         await dbpool.executemany(query, arguments)
     except asyncpg.ForeignKeyViolationError:
         logger.warning(
-            f"[MQTT] Failed to handle; Sensor not found: {sensor_identifier}"
+            f"[MQTT] Failed to process; Sensor not found: {sensor_identifier}"
         )
     else:
-        logger.info(f"[MQTT] Handled {len(payload.logs)} logs from {sensor_identifier}")
+        logger.info(
+            f"[MQTT] Processed {len(payload.values)} logs from {sensor_identifier}"
+        )
 
 
 SUBSCRIPTIONS = {
-    "heartbeats/+": (_handle_acknowledgements, validation.AcknowledgementsMessage),
-    "measurements/+": (_handle_measurements, validation.MeasurementsMessage),
-    "logs/+": (_handle_logs, validation.LogsMessage),
+    "heartbeats/+": (_process_acknowledgements, validation.AcknowledgementsMessage),
+    "measurements/+": (_process_measurements, validation.MeasurementsMessage),
+    "logs/+": (_process_logs, validation.LogsMessage),
 }
 
 
@@ -209,12 +211,12 @@ async def listen(mqttc, dbpool):
             if not isinstance(payload, dict):
                 logger.warning(f"[MQTT] Malformed message: {message.payload!r}")
                 continue
-            # Call the appropriate handler; First match wins
-            for wildcard, (handler, validator) in SUBSCRIPTIONS.items():
+            # Call the appropriate processor; First match wins
+            for wildcard, (processor, validator) in SUBSCRIPTIONS.items():
                 if message.topic.matches(wildcard):
                     try:
                         payload = validator(**payload)
-                        await handler(sensor_identifier, payload, dbpool)
+                        await processor(sensor_identifier, payload, dbpool)
                     # Errors are logged and ignored as we can't give feedback
                     except pydantic.ValidationError:
                         logger.warning(f"[MQTT] Malformed message: {message.payload!r}")
