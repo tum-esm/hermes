@@ -41,6 +41,26 @@ class MeasurementProcedure:
             pressure=self.air_inlet_bme280_data.pressure,
         )
 
+    def _send_latest_wind_data(self) -> None:
+        # wind measurement
+        wind_data = self.hardware_interface.wind_sensor.get_current_wind_measurement()
+
+        # determine new valve
+        if wind_data is not None:
+            self.logger.info(f"sending latest wind data: {wind_data}")
+
+            self.message_queue.enqueue_message(
+                self.config,
+                custom_types.MQTTDataMessageBody(
+                    revision=self.config.revision,
+                    timestamp=round(time.time(), 2),
+                    value=custom_types.MQTTWindData(
+                        variant="wind",
+                        data=wind_data,
+                    ),
+                ),
+            )
+
     def run(self) -> None:
         """
         1. checks wind and co2 sensor for errors
@@ -58,6 +78,9 @@ class MeasurementProcedure:
         self.hardware_interface.co2_sensor.set_filter_setting(
             average=self.config.measurement.timing.seconds_per_measurement
         )
+
+        # Send wind data
+        self._send_latest_wind_data()
 
         # do regular measurements for about 2 minutes
         while True:
