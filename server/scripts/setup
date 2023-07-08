@@ -6,4 +6,4 @@ set -o errexit -o pipefail -o nounset
 cd "$(dirname "$0")/.."
 
 # Install the dependencies
-poetry install --with dev --sync
+poetry install --with dev --sync --no-root

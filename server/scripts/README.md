@@ -8,4 +8,4 @@
 - `setup`: Setup or update the dependencies after a `git clone` or `git pull`
 - `test`: Run the tests
 
-Styled after GitHub's [Scripts to Rule Them All](https://github.com/github/scripts-to-rule-them-all).
+Styled after GitHub's ["Scripts to Rule Them All"](https://github.com/github/scripts-to-rule-them-all).
