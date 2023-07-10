@@ -85,8 +85,10 @@ class CO2SensorInterface:
             self.rs232_interface.send_command(default_setting)
             self.rs232_interface.wait_for_answer()
 
-        # set default filters
-        self.set_filter_setting(average=6)
+        # set filter setting
+        self.set_filter_setting(
+            average=self.config.measurement.timing.seconds_per_measurement
+        )
 
     def set_filter_setting(
         self,
