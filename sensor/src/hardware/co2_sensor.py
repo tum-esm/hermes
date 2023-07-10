@@ -175,9 +175,7 @@ class CO2SensorInterface:
             self.rs232_interface.send_command(f"oc off")
             self.rs232_interface.wait_for_answer()
         else:
-            assert (
-                0 <= oxygen <= 100
-            ), f"invalid oxygen ({oxygen} not in [0, 100])"
+            assert 0 <= oxygen <= 100, f"invalid oxygen ({oxygen} not in [0, 100])"
             self.rs232_interface.send_command(f"oc on")
             self.rs232_interface.wait_for_answer()
             self.rs232_interface.send_command(f"o {round(oxygen, 2)}")
@@ -207,9 +205,13 @@ class CO2SensorInterface:
         xs = [s for s in answer.replace("\t", " ").split(" ") if len(s) > 0]
         return float(xs[0]), float(xs[1]), float(xs[2]), float(xs[3])
 
-    def get_current_concentration(self) -> custom_types.CO2SensorData:
+    def get_current_concentration(
+        self, humidity: Optional[float] = None, pressure: Optional[float] = None
+    ) -> custom_types.CO2SensorData:
         """get the current concentration value from the CO2 probe"""
         try:
+            if humidity or pressure is not None:
+                self.set_compensation_values(humidity, pressure)
             sensor_data = self._get_current_sensor_data()
         except:
             self.logger.warning(

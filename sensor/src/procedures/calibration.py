@@ -11,7 +11,9 @@ class CalibrationProcedure:
     """runs when a calibration is due"""
 
     def __init__(
-        self, config: custom_types.Config, hardware_interface: hardware.HardwareInterface
+        self,
+        config: custom_types.Config,
+        hardware_interface: hardware.HardwareInterface,
     ) -> None:
         self.logger, self.config = utils.Logger(origin="calibration-procedure"), config
         self.hardware_interface = hardware_interface
@@ -22,20 +24,17 @@ class CalibrationProcedure:
 
     def _update_air_inlet_parameters(self) -> None:
         """
-        1. fetches the latest temperature and pressure data at air inlet
-        2. sends these values to the CO2 sensor
+        fetches the latest temperature and pressure data at air inlet
         """
 
-        self.air_inlet_bme280_data = self.hardware_interface.air_inlet_bme280_sensor.get_data()
-        self.air_inlet_sht45_data = self.hardware_interface.air_inlet_sht45_sensor.get_data()
+        self.air_inlet_bme280_data = (
+            self.hardware_interface.air_inlet_bme280_sensor.get_data()
+        )
+        self.air_inlet_sht45_data = (
+            self.hardware_interface.air_inlet_sht45_sensor.get_data()
+        )
         self.chamber_temperature = (
             self.hardware_interface.co2_sensor.get_current_chamber_temperature()
-        )
-
-        # update CO2 sensor compenstation info
-        self.hardware_interface.co2_sensor.set_compensation_values(
-            humidity=self.air_inlet_sht45_data.humidity,
-            pressure=self.air_inlet_bme280_data.pressure,
         )
 
     def _alternate_bottle_for_drying(self) -> None:
@@ -89,8 +88,13 @@ class CalibrationProcedure:
                 self._update_air_inlet_parameters()
 
                 # perform a CO2 measurement
-                current_sensor_data = self.hardware_interface.co2_sensor.get_current_concentration()
-                self.logger.debug(f"new calibration measurement")
+                current_sensor_data = (
+                    self.hardware_interface.co2_sensor.get_current_concentration(
+                        humidity=self.air_inlet_sht45_data.humidity,
+                        pressure=self.air_inlet_bme280_data.pressure,
+                    )
+                )
+                self.logger.debug(f"new calibration measurement: {current_sensor_data}")
 
                 # send out MQTT measurement message
                 self.message_queue.enqueue_message(
