@@ -25,20 +25,17 @@ class MeasurementProcedure:
 
     def _update_air_inlet_parameters(self) -> None:
         """
-        1. fetches the latest temperature and pressure data at air inlet
-        2. sends these values to the CO2 sensor
+        fetches the latest temperature and pressure data at air inlet
         """
 
-        self.air_inlet_bme280_data = self.hardware_interface.air_inlet_bme280_sensor.get_data()
-        self.air_inlet_sht45_data = self.hardware_interface.air_inlet_sht45_sensor.get_data()
+        self.air_inlet_bme280_data = (
+            self.hardware_interface.air_inlet_bme280_sensor.get_data()
+        )
+        self.air_inlet_sht45_data = (
+            self.hardware_interface.air_inlet_sht45_sensor.get_data()
+        )
         self.chamber_temperature = (
             self.hardware_interface.co2_sensor.get_current_chamber_temperature()
-        )
-
-        # update CO2 sensor compenstation info
-        self.hardware_interface.co2_sensor.set_compensation_values(
-            humidity=self.air_inlet_sht45_data.humidity,
-            pressure=self.air_inlet_bme280_data.pressure,
         )
 
     def _send_latest_wind_data(self) -> None:
@@ -90,16 +87,23 @@ class MeasurementProcedure:
                 - (time.time() - self.last_measurement_time),
                 0,
             )
-            self.logger.debug(f"sleeping {round(seconds_to_wait_for_next_measurement, 3)} seconds")
+            self.logger.debug(
+                f"sleeping {round(seconds_to_wait_for_next_measurement, 3)} seconds"
+            )
             time.sleep(seconds_to_wait_for_next_measurement)
             self.last_measurement_time = time.time()
 
-            # update air inlet parameters
+            # Get latest auxilliary sensor data information
             self._update_air_inlet_parameters()
 
             # perform a CO2 measurement
-            current_sensor_data = self.hardware_interface.co2_sensor.get_current_concentration()
-            self.logger.debug(f"new measurement")
+            current_sensor_data = (
+                self.hardware_interface.co2_sensor.get_current_concentration(
+                    humidity=self.air_inlet_sht45_data.humidity,
+                    pressure=self.air_inlet_bme280_data.pressure,
+                )
+            )
+            self.logger.debug(f"new measurement: {current_sensor_data}")
 
             # send out MQTT measurement message
             self.message_queue.enqueue_message(
