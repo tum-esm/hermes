@@ -321,6 +321,8 @@ def run() -> None:
             try:
                 logger.info("performing hard reset", config=config)
                 hardware_interface.teardown()
+                # TODO: check for all possible places where the CO2 sensor could raise an error outside of the try-except read measurement call.
+                hardware_interface.co2_sensor_teardown()
                 backoff_time_bucket_index = wait_during_repair()
                 hardware_interface.reinitialize(config)
                 logger.info("hard reset was successful", config=config)
