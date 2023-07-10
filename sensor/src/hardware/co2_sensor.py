@@ -197,6 +197,10 @@ class CO2SensorInterface:
         try:
             sensor_data = self._get_current_sensor_data()
         except:
+            self.logger.warning(
+                "Sensor did not answer correctly. Performing restart.",
+                config=self.config,
+            )
             self._reset_sensor()
             sensor_data = (0.0, 0.0, 0.0, 0.0)
 
