@@ -6,7 +6,8 @@ import gpiozero.pins.pigpio
 
 NUMBER_REGEX = r"\d+\.\d+"
 STARTUP_REGEX = (
-    f"GMP343 - Version STD {NUMBER_REGEX}\\r\\n" + f"Copyright: Vaisala Oyj \\d{{4}} - \\d{{4}}"
+    f"GMP343 - Version STD {NUMBER_REGEX}\\r\\n"
+    + f"Copyright: Vaisala Oyj \\d{{4}} - \\d{{4}}"
 )
 MEASUREMENT_REGEX = (
     r"\d+\.\d+\s+"  # raw
@@ -98,9 +99,15 @@ class CO2SensorInterface:
 
         # TODO: construct a few opinionated measurement setups
 
-        assert average >= 0 and average <= 60, "invalid calibration setting, average not in [0, 60]"
-        assert smooth >= 0 and smooth <= 255, "invalid calibration setting, smooth not in [0, 255]"
-        assert median >= 0 and median <= 13, "invalid calibration setting, median not in [0, 13]"
+        assert (
+            average >= 0 and average <= 60
+        ), "invalid calibration setting, average not in [0, 60]"
+        assert (
+            smooth >= 0 and smooth <= 255
+        ), "invalid calibration setting, smooth not in [0, 255]"
+        assert (
+            median >= 0 and median <= 13
+        ), "invalid calibration setting, median not in [0, 13]"
 
         self.rs232_interface.flush_receiver_stream()
 
@@ -144,7 +151,9 @@ class CO2SensorInterface:
             self.rs232_interface.send_command(f"pc off")
             self.rs232_interface.wait_for_answer()
         else:
-            assert 700 <= pressure <= 1300, f"invalid pressure ({pressure} not in [700, 1300])"
+            assert (
+                700 <= pressure <= 1300
+            ), f"invalid pressure ({pressure} not in [700, 1300])"
             self.rs232_interface.send_command(f"pc on")
             self.rs232_interface.wait_for_answer()
             self.rs232_interface.send_command(f"p {round(pressure, 2)}")
@@ -154,7 +163,9 @@ class CO2SensorInterface:
             self.rs232_interface.send_command(f"rhc off")
             self.rs232_interface.wait_for_answer()
         else:
-            assert 0 <= humidity <= 100, f"invalid humidity ({humidity} not in [0, 100])"
+            assert (
+                0 <= humidity <= 100
+            ), f"invalid humidity ({humidity} not in [0, 100])"
             self.rs232_interface.send_command(f"rhc on")
             self.rs232_interface.wait_for_answer()
             self.rs232_interface.send_command(f"rh {round(humidity, 2)}")
@@ -164,7 +175,9 @@ class CO2SensorInterface:
             self.rs232_interface.send_command(f"oc off")
             self.rs232_interface.wait_for_answer()
         else:
-            assert 0 <= oxygen <= 100, f"invalid oxygen ({oxygen} not in [0, 100])"
+            assert (
+                0 <= oxygen <= 100
+            ), f"invalid oxygen ({oxygen} not in [0, 100])"
             self.rs232_interface.send_command(f"oc on")
             self.rs232_interface.wait_for_answer()
             self.rs232_interface.send_command(f"o {round(oxygen, 2)}")
@@ -182,7 +195,9 @@ class CO2SensorInterface:
 
         request_time = time.time()
         self.rs232_interface.send_command("send")
-        answer = self.rs232_interface.wait_for_answer(expected_regex=MEASUREMENT_REGEX, timeout=30)
+        answer = self.rs232_interface.wait_for_answer(
+            expected_regex=MEASUREMENT_REGEX, timeout=30
+        )
         answer_delay = round(time.time() - request_time, 3)
         if answer_delay > 6:
             self.logger.warning(
@@ -205,7 +220,9 @@ class CO2SensorInterface:
             sensor_data = (0.0, 0.0, 0.0, 0.0)
 
         return custom_types.CO2SensorData(
-            raw=sensor_data[0], compensated=sensor_data[1], filtered=sensor_data[2]
+            raw=sensor_data[0],
+            compensated=sensor_data[1],
+            filtered=sensor_data[2],
         )
 
     def get_current_chamber_temperature(self) -> float:
