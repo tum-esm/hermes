@@ -20,9 +20,14 @@ jobs:
       run:
         working-directory: sensor
     steps:
-      # check-out repo
+      # check-out repo and install python 3.9.16
       - name: Check out repository
         uses: actions/checkout@v3
+      - name: Set up Python 3.9.16
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9.16"
 
       # load cached venv if cache exists
       - name: Load cached venv
@@ -32,7 +37,7 @@ jobs:
           path: sensor/.venv
           key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('sensor/poetry.lock') }}
 
-      # install poetry and python if venv not in cache
+      # install poetry if venv not in cache
       - name: Install Poetry
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
@@ -41,12 +46,6 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
-      - name: Set up Python 3.9.16
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.9.16"
-          cache: "poetry"
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --with=dev
