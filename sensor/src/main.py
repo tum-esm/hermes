@@ -12,8 +12,7 @@ class ExitOnHardwareTeardownFail(Exception):
 
 
 def run() -> None:
-    """
-    entry point of the mainloop running continuously on the sensor node
+    """Entry point of the mainloop running continuously on the sensor node
 
     0. system checks
     1. read mqtt messages
@@ -180,9 +179,7 @@ def run() -> None:
             config, hardware_interface
         )
     except Exception as e:
-        logger.exception(
-            e, label="could not initialize procedures", config=config
-        )
+        logger.exception(e, label="could not initialize procedures", config=config)
         raise e
 
     # -------------------------------------------------------------------------
