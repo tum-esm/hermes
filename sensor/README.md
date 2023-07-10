@@ -21,7 +21,11 @@ pytest -m "ci" --cov=src --cov=cli tests/
 
 # only integration tests
 pytest -m "integration" --cov=src --cov=cli tests/
+
+#test static types
+bash ./scripts/check_static_types.sh
 ```
+
 
 <br/>
 <br/>

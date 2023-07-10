@@ -198,7 +198,7 @@ class CO2SensorInterface:
             sensor_data = self._get_current_sensor_data()
         except:
             self._reset_sensor()
-            sensor_data = [0.0, 0.0, 0.0]
+            sensor_data = (0.0, 0.0, 0.0, 0.0)
 
         return custom_types.CO2SensorData(
             raw=sensor_data[0], compensated=sensor_data[1], filtered=sensor_data[2]

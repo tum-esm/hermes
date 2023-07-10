@@ -188,7 +188,7 @@ def run() -> None:
             if new_config_message is not None:
                 try:
                     hardware_interface.teardown()
-                    hardware_interface.co2_sensor()
+                    hardware_interface.co2_sensor_teardown()
                 except Exception as e:
                     logger.exception(
                         e,
