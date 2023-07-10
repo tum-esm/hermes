@@ -1,9 +1,9 @@
-from app.validation.mqtt import (
+from .mqtt import (
     AcknowledgementsMessage,
     LogsMessage,
     MeasurementsMessage,
 )
-from app.validation.routes import (
+from .routes import (
     CreateConfigurationRequest,
     CreateSensorRequest,
     CreateSessionRequest,

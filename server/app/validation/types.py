@@ -19,6 +19,7 @@ class _Configuration(pydantic.BaseModel):
     # number of JSON fields or nesting depth could be interesting as well
     # Or, check the actual size of the JSON / length of the JSON string
     class Config:
+        extra = pydantic.Extra.allow
         frozen = True
 
 
