@@ -3,6 +3,7 @@ import queue
 import signal
 import time
 from typing import Any, Callable, Optional
+import pydantic
 import paho.mqtt.client
 import multiprocessing
 import multiprocessing.synchronize
@@ -282,10 +283,12 @@ class MQTTAgent:
             logger.info(f"received message on config topic: {msg.payload.decode()}")
             try:
                 config_request_queue.put(
-                    custom_types.MQTTConfigurationRequest(**json.loads(msg.payload.decode()))
+                    custom_types.MQTTConfigurationRequest(
+                        **json.loads(msg.payload.decode())
+                    )
                 )
                 logger.debug(f"put config message into the message queue")
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, pydantic.ValidationError):
                 logger.warning(f"could not decode message payload on message: {msg}")
 
         return _f
