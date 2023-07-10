@@ -145,6 +145,7 @@ def run() -> None:
 
         logger.info("starting graceful teardown")
         hardware_interface.teardown()
+        hardware_interface.co2_sensor_teardown()
         logger.info("finished graceful teardown")
         exit(0)
 
@@ -187,6 +188,7 @@ def run() -> None:
             if new_config_message is not None:
                 try:
                     hardware_interface.teardown()
+                    hardware_interface.co2_sensor()
                 except Exception as e:
                     logger.exception(
                         e,
