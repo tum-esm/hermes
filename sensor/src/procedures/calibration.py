@@ -33,6 +33,7 @@ class CalibrationProcedure:
         self.air_inlet_sht45_data = (
             self.hardware_interface.air_inlet_sht45_sensor.get_data()
         )
+        # TODO: Add method to prevent main loop exception
         self.chamber_temperature = (
             self.hardware_interface.co2_sensor.get_current_chamber_temperature()
         )
