@@ -90,8 +90,8 @@ class CalibrationProcedure:
                 # perform a CO2 measurement
                 current_sensor_data = (
                     self.hardware_interface.co2_sensor.get_current_concentration(
-                        humidity=self.air_inlet_sht45_data.humidity,
                         pressure=self.air_inlet_bme280_data.pressure,
+                        humidity=self.air_inlet_sht45_data.humidity,
                     )
                 )
                 self.logger.debug(f"new calibration measurement: {current_sensor_data}")

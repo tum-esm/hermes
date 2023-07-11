@@ -208,12 +208,12 @@ class CO2SensorInterface:
         return float(xs[0]), float(xs[1]), float(xs[2]), float(xs[3])
 
     def get_current_concentration(
-        self, humidity: Optional[float] = None, pressure: Optional[float] = None
+        self, pressure: Optional[float] = None, humidity: Optional[float] = None
     ) -> custom_types.CO2SensorData:
         """get the current concentration value from the CO2 probe"""
         try:
             if humidity or pressure is not None:
-                self.set_compensation_values(humidity, pressure)
+                self.set_compensation_values(pressure=pressure, humidity=humidity)
             sensor_data = self._get_current_sensor_data()
         except:
             self.logger.warning(
