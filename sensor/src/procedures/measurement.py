@@ -34,10 +34,6 @@ class MeasurementProcedure:
         self.air_inlet_sht45_data = (
             self.hardware_interface.air_inlet_sht45_sensor.get_data()
         )
-        # TODO: Add method to prevent main loop exception
-        self.chamber_temperature = (
-            self.hardware_interface.co2_sensor.get_current_chamber_temperature()
-        )
 
     def _send_latest_wind_data(self) -> None:
         # wind measurement
@@ -118,7 +114,7 @@ class MeasurementProcedure:
                             bme280_pressure=self.air_inlet_bme280_data.pressure,
                             sht45_temperature=self.air_inlet_sht45_data.temperature,
                             sht45_humidity=self.air_inlet_sht45_data.humidity,
-                            chamber_temperature=self.chamber_temperature,
+                            chamber_temperature=current_sensor_data.temperature,
                         ),
                     ),
                 ),

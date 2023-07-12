@@ -19,6 +19,7 @@ class CO2SensorData(pydantic.BaseModel):
     raw: float
     compensated: float
     filtered: float
+    temperature: float
 
 
 class MeasurementProcedureData(pydantic.BaseModel):
