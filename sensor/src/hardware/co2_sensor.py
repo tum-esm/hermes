@@ -231,7 +231,16 @@ class CO2SensorInterface:
 
     def get_current_chamber_temperature(self) -> float:
         """get the current concentration value from the CO2 probe"""
-        sensor_data = self._get_current_sensor_data()
+        try:
+            sensor_data = self._get_current_sensor_data()
+        except:
+            self.logger.warning(
+                "Sensor did not answer correctly. Performing restart.",
+                config=self.config,
+            )
+            self._reset_sensor()
+            sensor_data = (0.0, 0.0, 0.0, 0.0)
+
         return sensor_data[3]
 
     def _format_raw_answer(self, raw: str) -> str:
@@ -277,9 +286,13 @@ class CO2SensorInterface:
         answer = self._format_raw_answer(self.rs232_interface.wait_for_answer())
 
         if not ("OK: No errors detected" in answer):
-            raise CO2SensorInterface.DeviceFailure(answer)
+            # raise CO2SensorInterface.DeviceFailure(answer)
+            self.logger.info(
+                "Sensor doesn't report error free operation. Performing restart."
+            )
+            self._reset_sensor()
 
-        self.logger.info("sensor doesn't report any errors")
+        self.logger.info("Sensor doesn't report any errors")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
