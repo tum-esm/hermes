@@ -58,9 +58,7 @@ def _test_message_sending(mqtt_communication_enabled: bool) -> None:
         value=custom_types.MQTTCO2Data(
             variant="co2",
             data=custom_types.CO2SensorData(
-                raw=0.0,
-                compensated=0.0,
-                filtered=0.0,
+                raw=0.0, compensated=0.0, filtered=0.0, temperature=0.0
             ),
         ),
     )

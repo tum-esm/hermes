@@ -227,6 +227,7 @@ class CO2SensorInterface:
             raw=sensor_data[0],
             compensated=sensor_data[1],
             filtered=sensor_data[2],
+            temperature=sensor_data[3],
         )
 
     def get_current_chamber_temperature(self) -> float:
