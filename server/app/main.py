@@ -239,7 +239,7 @@ async def create_configuration(request):
         identifier="create-configuration",
         arguments={
             "sensor_identifier": request.path.sensor_identifier,
-            "configuration": request.body.dict(),
+            "configuration": request.body.model_dump(),
         },
     )
     try:
@@ -255,7 +255,7 @@ async def create_configuration(request):
     await mqtt.publish_configuration(
         sensor_identifier=request.path.sensor_identifier,
         revision=revision,
-        configuration=request.body.dict(),
+        configuration=request.body.model_dump(),
         mqttc=mqttc,
         dbpool=dbpool,
     )

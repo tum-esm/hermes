@@ -29,7 +29,7 @@ def validate(schema):
                     url=request.url,
                     headers=request.headers,
                     path=request.path_params,
-                    query=request.query_params,
+                    query=dict(request.query_params),
                     body=body,
                 )
             except (TypeError, ValueError) as e:
@@ -51,53 +51,53 @@ def validate(schema):
 ########################################################################################
 
 
-class _ReadStatusRequestPath(types.Model):
+class _ReadStatusRequestPath(types.LooseModel):
     pass
 
 
-class _CreateUserRequestPath(types.Model):
+class _CreateUserRequestPath(types.LooseModel):
     pass
 
 
-class _CreateSessionRequestPath(types.Model):
+class _CreateSessionRequestPath(types.LooseModel):
     pass
 
 
-class _CreateSensorRequestPath(types.Model):
+class _CreateSensorRequestPath(types.LooseModel):
     network_identifier: types.Identifier
 
 
-class _UpdateSensorRequestPath(types.Model):
-    network_identifier: types.Identifier
-    sensor_identifier: types.Identifier
-
-
-class _CreateConfigurationRequestPath(types.Model):
+class _UpdateSensorRequestPath(types.LooseModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
-class _ReadConfigurationsRequestPath(types.Model):
+class _CreateConfigurationRequestPath(types.LooseModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
-class _ReadMeasurementsRequestPath(types.Model):
+class _ReadConfigurationsRequestPath(types.LooseModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
-class _ReadLogsRequestPath(types.Model):
+class _ReadMeasurementsRequestPath(types.LooseModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
-class _ReadLogsAggregatesRequestPath(types.Model):
+class _ReadLogsRequestPath(types.LooseModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
-class _StreamNetworkRequestPath(types.Model):
+class _ReadLogsAggregatesRequestPath(types.LooseModel):
+    network_identifier: types.Identifier
+    sensor_identifier: types.Identifier
+
+
+class _StreamNetworkRequestPath(types.LooseModel):
     network_identifier: types.Identifier
     network_identifier: types.Identifier
 
@@ -107,50 +107,50 @@ class _StreamNetworkRequestPath(types.Model):
 ########################################################################################
 
 
-class _ReadStatusRequestQuery(types.Model):
+class _ReadStatusRequestQuery(types.LooseModel):
     pass
 
 
-class _CreateUserRequestQuery(types.Model):
+class _CreateUserRequestQuery(types.LooseModel):
     pass
 
 
-class _CreateSessionRequestQuery(types.Model):
+class _CreateSessionRequestQuery(types.LooseModel):
     pass
 
 
-class _StreamNetworkRequestQuery(types.Model):
+class _StreamNetworkRequestQuery(types.LooseModel):
     pass
 
 
-class _CreateSensorRequestQuery(types.Model):
+class _CreateSensorRequestQuery(types.LooseModel):
     pass
 
 
-class _UpdateSensorRequestQuery(types.Model):
+class _UpdateSensorRequestQuery(types.LooseModel):
     pass
 
 
-class _CreateConfigurationRequestQuery(types.Model):
+class _CreateConfigurationRequestQuery(types.LooseModel):
     pass
 
 
-class _ReadConfigurationsRequestQuery(types.Model):
+class _ReadConfigurationsRequestQuery(types.LooseModel):
     revision: types.Revision = None
     direction: typing.Literal["next", "previous"] = "next"
 
 
-class _ReadMeasurementsRequestQuery(types.Model):
+class _ReadMeasurementsRequestQuery(types.LooseModel):
     creation_timestamp: types.Timestamp = None
     direction: typing.Literal["next", "previous"] = "next"
 
 
-class _ReadLogsRequestQuery(types.Model):
+class _ReadLogsRequestQuery(types.LooseModel):
     creation_timestamp: types.Timestamp = None
     direction: typing.Literal["next", "previous"] = "next"
 
 
-class _ReadLogsAggregatesRequestQuery(types.Model):
+class _ReadLogsAggregatesRequestQuery(types.LooseModel):
     pass
 
 
@@ -159,29 +159,29 @@ class _ReadLogsAggregatesRequestQuery(types.Model):
 ########################################################################################
 
 
-class _ReadStatusRequestBody(types.Model):
+class _ReadStatusRequestBody(types.StrictModel):
     pass
 
 
-class _CreateUserRequestBody(types.Model):
+class _CreateUserRequestBody(types.StrictModel):
     user_name: types.Name
     password: types.Password
 
 
-class _CreateSessionRequestBody(types.Model):
+class _CreateSessionRequestBody(types.StrictModel):
     user_name: types.Name
     password: types.Password
 
 
-class _StreamNetworkRequestBody(types.Model):
+class _StreamNetworkRequestBody(types.StrictModel):
     pass
 
 
-class _CreateSensorRequestBody(types.Model):
+class _CreateSensorRequestBody(types.StrictModel):
     sensor_name: types.Name
 
 
-class _UpdateSensorRequestBody(types.Model):
+class _UpdateSensorRequestBody(types.StrictModel):
     sensor_name: types.Name
 
 
@@ -189,19 +189,19 @@ class _CreateConfigurationRequestBody(types.Configuration):
     pass
 
 
-class _ReadConfigurationsRequestBody(types.Model):
+class _ReadConfigurationsRequestBody(types.StrictModel):
     pass
 
 
-class _ReadMeasurementsRequestBody(types.Model):
+class _ReadMeasurementsRequestBody(types.StrictModel):
     pass
 
 
-class _ReadLogsRequestBody(types.Model):
+class _ReadLogsRequestBody(types.StrictModel):
     pass
 
 
-class _ReadLogsAggregatesRequestBody(types.Model):
+class _ReadLogsAggregatesRequestBody(types.StrictModel):
     pass
 
 
@@ -211,7 +211,7 @@ class _ReadLogsAggregatesRequestBody(types.Model):
 ########################################################################################
 
 
-class ReadStatusRequest(types.Model):
+class ReadStatusRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
@@ -220,7 +220,7 @@ class ReadStatusRequest(types.Model):
     body: _ReadStatusRequestBody
 
 
-class CreateUserRequest(types.Model):
+class CreateUserRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
@@ -229,7 +229,7 @@ class CreateUserRequest(types.Model):
     body: _CreateUserRequestBody
 
 
-class CreateSessionRequest(types.Model):
+class CreateSessionRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
@@ -238,7 +238,7 @@ class CreateSessionRequest(types.Model):
     body: _CreateSessionRequestBody
 
 
-class StreamNetworkRequest(types.Model):
+class StreamNetworkRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
@@ -247,7 +247,7 @@ class StreamNetworkRequest(types.Model):
     body: _StreamNetworkRequestBody
 
 
-class CreateSensorRequest(types.Model):
+class CreateSensorRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
@@ -256,7 +256,7 @@ class CreateSensorRequest(types.Model):
     body: _CreateSensorRequestBody
 
 
-class UpdateSensorRequest(types.Model):
+class UpdateSensorRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
@@ -265,7 +265,7 @@ class UpdateSensorRequest(types.Model):
     body: _UpdateSensorRequestBody
 
 
-class CreateConfigurationRequest(types.Model):
+class CreateConfigurationRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
@@ -274,7 +274,7 @@ class CreateConfigurationRequest(types.Model):
     body: _CreateConfigurationRequestBody
 
 
-class ReadConfigurationsRequest(types.Model):
+class ReadConfigurationsRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
@@ -283,7 +283,7 @@ class ReadConfigurationsRequest(types.Model):
     body: _ReadConfigurationsRequestBody
 
 
-class ReadMeasurementsRequest(types.Model):
+class ReadMeasurementsRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
@@ -292,7 +292,7 @@ class ReadMeasurementsRequest(types.Model):
     body: _ReadMeasurementsRequestBody
 
 
-class ReadLogsRequest(types.Model):
+class ReadLogsRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
@@ -301,7 +301,7 @@ class ReadLogsRequest(types.Model):
     body: _ReadLogsRequestBody
 
 
-class ReadLogsAggregatesRequest(types.Model):
+class ReadLogsAggregatesRequest(types.StrictModel):
     method: str
     url: object
     headers: dict
