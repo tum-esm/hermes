@@ -29,7 +29,7 @@ docker run -td --rm --name mosquitto -p 127.0.0.1:1883:1883 -v "${MOSQUITTO_CONF
 # Wait for services to be ready
 sleep 4
 # Run the database initialization script
-./scripts/initialize
+./scripts/initialize ||:
 # Run the tests
 poetry run pytest --cov=app --cov-report=term-missing tests "$@" || status=$?
 # Stop and remove the Mosquitto docker container
