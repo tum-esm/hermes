@@ -21,8 +21,8 @@ def validate(schema):
 
     def decorator(func):
         async def wrapper(request):
+            body = await request.body()
             try:
-                body = await request.body()
                 body = {} if len(body) == 0 else json.loads(body.decode())
                 request = schema(
                     method=request.method,
