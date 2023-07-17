@@ -242,12 +242,22 @@ FROM session
 WHERE access_token_hash = ${access_token_hash};
 
 
--- name: authorize
+-- name: authorize-resource-network
 SELECT 1
 FROM permission
 WHERE
     user_identifier = ${user_identifier}
     AND network_identifier = ${network_identifier};
+
+
+-- name: authorize-resource-sensor
+SELECT 1
+FROM permission
+INNER JOIN sensor USING (network_identifier)
+WHERE
+    user_identifier = ${user_identifier}
+    AND network_identifier = ${network_identifier}
+    AND sensor.identifier = ${sensor_identifier};
 
 
 -- name: create-configuration

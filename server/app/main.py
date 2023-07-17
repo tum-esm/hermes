@@ -158,12 +158,13 @@ async def read_network(request):
 
 @validation.validate(schema=validation.CreateSensorRequest)
 async def create_sensor(request, values):
-    user_identifier, permissions = await auth.authenticate(
-        request, request.state.dbpool
+    relationship = await auth.authorize(
+        request, auth.Network(values.path["network_identifier"])
     )
-    if values.path["network_identifier"] not in permissions:
-        # TODO if user is read-only, return 403 -> "Insufficient authorization"
-        logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
+    if relationship != "default":
+        logger.warning(
+            f"{request.method} {request.url.path} -- Insufficient authorization"
+        )
         raise errors.NotFoundError()
     query, arguments = database.parametrize(
         identifier="create-sensor",
@@ -194,6 +195,20 @@ async def create_sensor(request, values):
 
 @validation.validate(schema=validation.UpdateSensorRequest)
 async def update_sensor(request, values):
+    relationship = await auth.authorize(
+        request,
+        auth.Sensor(
+            {
+                "network_identifier": values.path["network_identifier"],
+                "sensor_identifier": values.path["sensor_identifier"],
+            }
+        ),
+    )
+    if relationship != "default":
+        logger.warning(
+            f"{request.method} {request.url.path} -- Insufficient authorization"
+        )
+        raise errors.NotFoundError()
     query, arguments = database.parametrize(
         identifier="update-sensor",
         arguments={
@@ -221,16 +236,20 @@ async def update_sensor(request, values):
 
 @validation.validate(schema=validation.CreateConfigurationRequest)
 async def create_configuration(request, values):
-    user_identifier, permissions = await auth.authenticate(
-        request, request.state.dbpool
+    relationship = await auth.authorize(
+        request,
+        auth.Sensor(
+            {
+                "network_identifier": values.path["network_identifier"],
+                "sensor_identifier": values.path["sensor_identifier"],
+            }
+        ),
     )
-
-    # TODO need to check if sensor is part of network, otherwise this checks nothing
-    # TODO move logic into own module
-    if values.path["network_identifier"] not in permissions:
-        logger.warning(f"{request.method} {request.url.path} -- Missing authorization")
+    if relationship != "default":
+        logger.warning(
+            f"{request.method} {request.url.path} -- Insufficient authorization"
+        )
         raise errors.NotFoundError()
-
     query, arguments = database.parametrize(
         identifier="create-configuration",
         arguments={

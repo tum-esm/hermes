@@ -37,7 +37,7 @@ def validate(schema):
                 )
                 raise errors.BadRequestError()
             # TODO Requests are immutable, so we modify the scope and recreate one
-            # TODO Integrate into request instead
+            # TODO Integrate into request instead + remove frozen=False from StrictModel
             values.path = values.path.model_dump()
             values.query = values.query.model_dump()
             values.body = values.body.model_dump()
