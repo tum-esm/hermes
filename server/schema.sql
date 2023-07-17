@@ -24,6 +24,8 @@ CREATE TABLE sensor (
     network_identifier UUID NOT NULL REFERENCES network (identifier) ON DELETE CASCADE,
     creation_timestamp TIMESTAMPTZ NOT NULL,
 
+    -- Add more parameters here? e.g. description (that do not get relayed to the sensor)
+
     UNIQUE (network_identifier, name)
 );
 
@@ -45,6 +47,7 @@ CREATE TABLE session (
 );
 
 
+-- Should only contain things that are actually sent to the sensor, not metadata
 CREATE TABLE configuration (
     sensor_identifier UUID NOT NULL REFERENCES sensor (identifier) ON DELETE CASCADE,
     value JSONB NOT NULL,
@@ -55,11 +58,8 @@ CREATE TABLE configuration (
     receipt_timestamp TIMESTAMPTZ,
     success BOOLEAN
 
-    -- Add more pre-defined values here (needed if we want to visualize them in the dashboard)
-    -- Something like: lat/long, notes, version commit hash -> most should still be nullable
-    -- lat/long and notes should be in the sensors table though, the configurations table should
-    -- only contain things that are actually sent to the sensor
-    -- or user-configurable "metadata" that is not sent to the sensor -> better: extra tags table?
+    -- Add new tag table for metadata? with start, end, and string value
+    -- Timestamps should be nullable here, to represent open intervals
 );
 
 -- Defining the primary key manually with the sort order makes the query for the latest
@@ -83,6 +83,8 @@ CREATE TABLE measurement (
     creation_timestamp TIMESTAMPTZ NOT NULL,
     receipt_timestamp TIMESTAMPTZ NOT NULL,
     index INT NOT NULL
+
+    -- Add lat/long parameters here? -> could then be visualized in the dashboard (in a map)
 );
 
 SELECT create_hypertable('measurement', 'creation_timestamp');
