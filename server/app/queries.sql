@@ -44,26 +44,6 @@ LEFT JOIN aggregation ON sensor.identifier = aggregation.sensor_identifier
 WHERE network.identifier = ${network_identifier};
 
 
--- name: create-configuration
-INSERT INTO configuration (
-    sensor_identifier,
-    revision,
-    creation_timestamp,
-    value
-)
-VALUES (
-    ${sensor_identifier},
-    (
-        SELECT coalesce(max(revision) + 1, 0)
-        FROM configuration
-        WHERE sensor_identifier = ${sensor_identifier}
-    ),
-    now(),
-    ${configuration}
-)
-RETURNING revision;
-
-
 -- name: create-log
 INSERT INTO log (
     sensor_identifier,
@@ -256,6 +236,40 @@ LEFT JOIN permission USING (user_identifier)
 WHERE session.access_token_hash = ${access_token_hash};
 
 
+-- name: authenticate
+SELECT user_identifier
+FROM session
+WHERE access_token_hash = ${access_token_hash};
+
+
+-- name: authorize
+SELECT 1
+FROM permission
+WHERE
+    user_identifier = ${user_identifier}
+    AND network_identifier = ${network_identifier};
+
+
+-- name: create-configuration
+INSERT INTO configuration (
+    sensor_identifier,
+    revision,
+    creation_timestamp,
+    value
+)
+VALUES (
+    ${sensor_identifier},
+    (
+        SELECT coalesce(max(revision) + 1, 0)
+        FROM configuration
+        WHERE sensor_identifier = ${sensor_identifier}
+    ),
+    now(),
+    ${configuration}
+)
+RETURNING revision;
+
+
 -- name: update-configuration-on-publication
 UPDATE configuration
 SET publication_timestamp = now()
@@ -278,7 +292,6 @@ WHERE
 
 
 -- name: update-sensor
--- Update general sensor information that is not relayed to the sensor
 UPDATE sensor
 SET name = ${sensor_name}
 WHERE identifier = ${sensor_identifier};

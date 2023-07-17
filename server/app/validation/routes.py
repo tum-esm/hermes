@@ -1,3 +1,4 @@
+import functools
 import json
 import typing
 
@@ -17,20 +18,17 @@ from app.logs import logger
 
 
 def validate(schema):
-    """Decorator to enforce proper validation for the given starlette route."""
+    """Enforce request validation on a given starlette route."""
 
     def decorator(func):
+        @functools.wraps(func)
         async def wrapper(request):
             body = await request.body()
             try:
-                body = {} if len(body) == 0 else json.loads(body.decode())
-                request = schema(
-                    method=request.method,
-                    url=request.url,
-                    headers=request.headers,
+                values = schema(
                     path=request.path_params,
                     query=dict(request.query_params),
-                    body=body,
+                    body={} if len(body) == 0 else json.loads(body.decode()),
                 )
             except (TypeError, ValueError) as e:
                 logger.warning(
@@ -38,8 +36,12 @@ def validate(schema):
                     f" {repr(e)}"
                 )
                 raise errors.BadRequestError()
-
-            return await func(request)
+            # TODO Requests are immutable, so we modify the scope and recreate one
+            # TODO Integrate into request instead
+            values.path = values.path.model_dump()
+            values.query = values.query.model_dump()
+            values.body = values.body.model_dump()
+            return await func(request, values)
 
         return wrapper
 
@@ -51,53 +53,53 @@ def validate(schema):
 ########################################################################################
 
 
-class _ReadStatusRequestPath(types.LooseModel):
+class _ReadStatusRequestPath(types.StrictModel):
     pass
 
 
-class _CreateUserRequestPath(types.LooseModel):
+class _CreateUserRequestPath(types.StrictModel):
     pass
 
 
-class _CreateSessionRequestPath(types.LooseModel):
+class _CreateSessionRequestPath(types.StrictModel):
     pass
 
 
-class _CreateSensorRequestPath(types.LooseModel):
+class _CreateSensorRequestPath(types.StrictModel):
     network_identifier: types.Identifier
 
 
-class _UpdateSensorRequestPath(types.LooseModel):
-    network_identifier: types.Identifier
-    sensor_identifier: types.Identifier
-
-
-class _CreateConfigurationRequestPath(types.LooseModel):
+class _UpdateSensorRequestPath(types.StrictModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
-class _ReadConfigurationsRequestPath(types.LooseModel):
+class _CreateConfigurationRequestPath(types.StrictModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
-class _ReadMeasurementsRequestPath(types.LooseModel):
+class _ReadConfigurationsRequestPath(types.StrictModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
-class _ReadLogsRequestPath(types.LooseModel):
+class _ReadMeasurementsRequestPath(types.StrictModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
-class _ReadLogsAggregatesRequestPath(types.LooseModel):
+class _ReadLogsRequestPath(types.StrictModel):
     network_identifier: types.Identifier
     sensor_identifier: types.Identifier
 
 
-class _StreamNetworkRequestPath(types.LooseModel):
+class _ReadLogsAggregatesRequestPath(types.StrictModel):
+    network_identifier: types.Identifier
+    sensor_identifier: types.Identifier
+
+
+class _StreamNetworkRequestPath(types.StrictModel):
     network_identifier: types.Identifier
     network_identifier: types.Identifier
 
@@ -212,99 +214,66 @@ class _ReadLogsAggregatesRequestBody(types.StrictModel):
 
 
 class ReadStatusRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _ReadStatusRequestPath
     query: _ReadStatusRequestQuery
     body: _ReadStatusRequestBody
 
 
 class CreateUserRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _CreateUserRequestPath
     query: _CreateUserRequestQuery
     body: _CreateUserRequestBody
 
 
 class CreateSessionRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _CreateSessionRequestPath
     query: _CreateSessionRequestQuery
     body: _CreateSessionRequestBody
 
 
 class StreamNetworkRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _StreamNetworkRequestPath
     query: _StreamNetworkRequestQuery
     body: _StreamNetworkRequestBody
 
 
 class CreateSensorRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _CreateSensorRequestPath
     query: _CreateSensorRequestQuery
     body: _CreateSensorRequestBody
 
 
 class UpdateSensorRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _UpdateSensorRequestPath
     query: _UpdateSensorRequestQuery
     body: _UpdateSensorRequestBody
 
 
 class CreateConfigurationRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _CreateConfigurationRequestPath
     query: _CreateConfigurationRequestQuery
     body: _CreateConfigurationRequestBody
 
 
 class ReadConfigurationsRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _ReadConfigurationsRequestPath
     query: _ReadConfigurationsRequestQuery
     body: _ReadConfigurationsRequestBody
 
 
 class ReadMeasurementsRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _ReadMeasurementsRequestPath
     query: _ReadMeasurementsRequestQuery
     body: _ReadMeasurementsRequestBody
 
 
 class ReadLogsRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _ReadLogsRequestPath
     query: _ReadLogsRequestQuery
     body: _ReadLogsRequestBody
 
 
 class ReadLogsAggregatesRequest(types.StrictModel):
-    method: str
-    url: object
-    headers: dict
     path: _ReadLogsAggregatesRequestPath
     query: _ReadLogsAggregatesRequestQuery
     body: _ReadLogsAggregatesRequestBody

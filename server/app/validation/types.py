@@ -9,7 +9,8 @@ import app.validation.constants as constants
 
 
 class StrictModel(pydantic.BaseModel):
-    model_config = pydantic.ConfigDict(strict=True, frozen=True, extra="forbid")
+    # TODO Set frozen=True
+    model_config = pydantic.ConfigDict(strict=True, frozen=False, extra="forbid")
 
 
 class LooseModel(pydantic.BaseModel):

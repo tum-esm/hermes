@@ -2,6 +2,8 @@ import hashlib
 import secrets
 
 import passlib.context
+import starlette.authentication
+import starlette.middleware.authentication
 
 import app.database as database
 import app.errors as errors
@@ -42,8 +44,78 @@ def hash_token(token):
 
 
 ########################################################################################
-# Access Token Flow
+# Authentication middleware
 ########################################################################################
+
+
+class AuthenticationMiddleware:
+    """Simple route-level RBAC middleware. Structure adapted from Starlette's own."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def _read_role_over_user(self, request):
+        raise NotImplementedError()
+
+    async def _read_role_over_network(self, request, user_identifier):
+        # TODO Extract identifier from request, maybe reuse code from starlette?
+        network_identifier = "81bf7042-e20f-4a97-ac44-c15853e3618f"
+        # network_identifier = request.path_params["network_identifier"]
+        query, arguments = database.parametrize(
+            identifier="authorize",
+            arguments={
+                "user_identifier": user_identifier,
+                "network_identifier": network_identifier,
+            },
+        )
+        elements = await request.state.dbpool.fetch(query, *arguments)
+        elements = database.dictify(elements)
+        return None if len(elements) == 0 else "default"
+
+    async def _read_role_over_sensor(self, request):
+        raise NotImplementedError
+
+    async def _authenticate(self, request):
+        # Extract the access token from the authorization header
+        if "authorization" not in request.headers:
+            return None
+        try:
+            scheme, access_token = request.headers["authorization"].split()
+        except ValueError:
+            logger.warning("[auth] Malformed authorization header")
+            return None
+        if scheme.lower() != "bearer":
+            logger.warning("[auth] Malformed authorization header")
+            return None
+        # Check if we have the access token in the database
+        query, arguments = database.parametrize(
+            identifier="authenticate",
+            arguments={"access_token_hash": hash_token(access_token)},
+        )
+        elements = await request.state.dbpool.fetch(query, *arguments)
+        elements = database.dictify(elements)
+        # If the result set is empty, the access token is invalid
+        if len(elements) == 0:
+            logger.warning("[auth] Invalid access token")
+            raise None
+        # Read the user's permissions TODO Think about how to structure this
+        user_identifier = elements[0]["user_identifier"]
+        role = await self._read_role_over_network(request, user_identifier)
+        return user_identifier, role
+
+    async def __call__(self, scope, receive, send):
+        # Only process HTTP requests, not websockets
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        # Instantiate request from scope to more easily access parameters
+        request = starlette.requests.Request(scope)
+        # Authenticate and pass the result through to the routes
+        result = await self._authenticate(request)
+        if result is None:
+            result = None, []
+        scope["auth"] = dict(zip(["user", "role"], result))
+        await self.app(scope, receive, send)
 
 
 async def authenticate(request, dbpool):
