@@ -119,7 +119,7 @@ async def create_session(request, values):
 
 
 @validation.validate(schema=validation.StreamNetworkRequest)
-async def read_network(request):
+async def read_network(request, values):
     """Read information about the network and its sensors.
 
     This includes:
@@ -254,7 +254,7 @@ async def create_configuration(request, values):
         identifier="create-configuration",
         arguments={
             "sensor_identifier": values.path["sensor_identifier"],
-            "configuration": values.body.model_dump(),
+            "configuration": values.body,
         },
     )
     try:
@@ -270,7 +270,7 @@ async def create_configuration(request, values):
     await mqtt.publish_configuration(
         sensor_identifier=values.path["sensor_identifier"],
         revision=revision,
-        configuration=values.body.model_dump(),
+        configuration=values.body,
         mqttc=request.state.mqttc,
         dbpool=request.state.dbpool,
     )

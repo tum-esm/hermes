@@ -1,8 +1,11 @@
+import contextlib
 import json
+import os
 
+import asyncpg
 import pytest
 
-import app.main as main
+import app.database as database
 
 
 @pytest.fixture(scope="session")
@@ -10,11 +13,28 @@ def anyio_backend():
     return "asyncio"
 
 
-async def _reset(connection):
-    """Delete all the data in the database but keep the structure."""
-    await connection.execute('DELETE FROM "user";')
-    await connection.execute("DELETE FROM network;")
-    await connection.execute("DELETE FROM sensor;")
+@contextlib.asynccontextmanager
+async def _connection():
+    """Provide a connection to the database that's properly closed afterwards."""
+    try:
+        connection = await asyncpg.connect(
+            host=os.environ["POSTGRESQL_URL"],
+            port=os.environ["POSTGRESQL_PORT"],
+            user=os.environ["POSTGRESQL_IDENTIFIER"],
+            password=os.environ["POSTGRESQL_PASSWORD"],
+            database=os.environ["POSTGRESQL_DATABASE"],
+        )
+        await database.initialize(connection)
+        yield connection
+    finally:
+        await connection.close()
+
+
+@pytest.fixture(scope="session")
+async def connection():
+    """Provide a database connection is persistent across tests."""
+    async with _connection() as connection:
+        yield connection
 
 
 async def _populate(connection):
@@ -29,9 +49,12 @@ async def _populate(connection):
 
 
 @pytest.fixture(scope="function")
-async def setup():
+async def setup(connection):
     """Reset the database to contain the initial test data for each test."""
-    async with main.dbpool.acquire() as connection:
-        async with connection.transaction():
-            await _reset(connection)
-            await _populate(connection)
+    async with connection.transaction():
+        # Delete all the data in the database but keep the structure
+        await connection.execute('DELETE FROM "user";')
+        await connection.execute("DELETE FROM network;")
+        await connection.execute("DELETE FROM sensor;")
+        # Populate with the initial test data again
+        await _populate(connection)

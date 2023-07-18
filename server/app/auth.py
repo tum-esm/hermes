@@ -1,12 +1,11 @@
 import hashlib
 import secrets
-import dataclasses
+
 import passlib.context
 import starlette.authentication
 import starlette.requests
 
 import app.database as database
-import app.errors as errors
 from app.logs import logger
 
 
