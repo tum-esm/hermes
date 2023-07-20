@@ -435,19 +435,18 @@ ROUTES = [
 @contextlib.asynccontextmanager
 async def lifespan(app):
     """Manage the lifetime of the database client and the MQTT client."""
-    async with database.pool() as dbpool:
-        async with mqtt.client() as mqttc:
-            # Start MQTT listener in (unawaited) asyncio task
-            loop = asyncio.get_event_loop()
-            task = loop.create_task(mqtt.listen(mqttc, dbpool))
-            # Yield clients to application state
-            yield {"dbpool": dbpool, "mqttc": mqttc}
-            # Wait for the MQTT listener task to be cancelled
-            task.cancel()
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
+    async with database.pool() as dbpool, mqtt.client() as mqttc:
+        # Start MQTT listener in (unawaited) asyncio task
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(mqtt.listen(mqttc, dbpool))
+        # Yield clients to application state
+        yield {"dbpool": dbpool, "mqttc": mqttc}
+        # Wait for the MQTT listener task to be cancelled
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 
 app = starlette.applications.Starlette(

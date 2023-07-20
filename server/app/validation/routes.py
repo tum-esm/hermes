@@ -7,11 +7,6 @@ import app.validation.types as types
 from app.logs import logger
 
 
-# Guidelines for syntactically correct, but otherwise somehow invalid values:
-# - When lists of values are passed, ignore any invalid ones
-# - When a single value is passed, raise an error
-
-
 ########################################################################################
 # Route validation decorator
 ########################################################################################
