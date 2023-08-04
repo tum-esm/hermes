@@ -210,8 +210,11 @@ ping -I wwan0 www.google.de
 
 # add lines to rc.local
 sudo nano /etc/rc.local
-# sudo /home/pi/SIM8200_for_RPI/Goonline/simcom-cm &
-# sudo udhcpc -i wwan0
+```
+
+```bash
+sudo /home/pi/SIM8200_for_RPI/Goonline/simcom-cm &
+sudo udhcpc -i wwan0
 ```
 
 <br/>
