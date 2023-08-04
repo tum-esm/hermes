@@ -144,7 +144,71 @@ pigs w 21 0
 
 ## Set up LTE Hat
 
-TODO: describe how to set up the LTE hat
+### Install apps
+
+```bash
+sudo apt-get install minicom
+sudo apt-get install p7zip-full
+sudo apt-get install udhcpc
+```
+
+### Configure modem
+
+Activate SIM in Kite Platform
+
+
+```bash
+# open modem interface
+sudo minicom -D /dev/ttyS0
+# check modem functionality
+AT 
+# see terminal input
+ATE1 
+# switch to RNDIS
+AT+CUSBPIDSWITCH=9001,1,1
+
+# Wait for a possible modem restart
+
+# set SIM APN
+AT+CGDCONT=1,"IP","[iotde.telefonica.com](http://iotde.telefonica.com/)"
+# set network registration to automatic
+AT+COPS=0
+# set LTE only
+AT+CNMP=38
+
+# Wait for a few minutes for the first dial into the mobile network
+sudo minicom -D /dev/ttyUSB2
+
+# commands to check modem status
+AT+CSQ # antenna signal strength
+AT+CPIN?
+AT+COPS? 
+AT+CGREG?  
+AT+CPSI? #return IMEI
+```
+
+```bash
+# download and install driver
+wget https://www.waveshare.net/w/upload/8/89/SIM8200_for_RPI.7z
+7z x SIM8200_for_RPI.7z -r -o./SIM8200_for_RPI
+sudo chmod 777 -R SIM8200_for_RPI
+cd SIM8200_for_RPI/Goonline
+make clean
+make
+
+# Set DNS
+sudo ./simcom-cm &
+sudo udhcpc -i wwan0
+sudo route add -net 0.0.0.0 wwan0
+
+# test connection
+ping -I wwan0 www.google.de
+
+# add lines to rc.local
+sudo nano /etc/rc.local
+# sudo /home/pi/SIM8200_for_RPI/Goonline/simcom-cm &
+# sudo udhcpc -i wwan0
+```
 
 <br/>
 
