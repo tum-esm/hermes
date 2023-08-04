@@ -167,7 +167,7 @@ AT+CUSBPIDSWITCH=9001,1,1
 # Wait for a possible modem restart
 
 # set SIM APN
-AT+CGDCONT=1,"IP","[iotde.telefonica.com](http://iotde.telefonica.com/)"
+AT+CGDCONT=1,"IP","iotde.telefonica.com"
 # set network registration to automatic
 AT+COPS=0
 # set LTE only
