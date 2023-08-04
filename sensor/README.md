@@ -144,7 +144,7 @@ pigs w 21 0
 
 ## Set up LTE Hat
 
-### Install apps
+### Install software on RaspberryPi
 
 ```bash
 sudo apt-get install minicom
@@ -153,9 +153,6 @@ sudo apt-get install udhcpc
 ```
 
 ### Configure modem
-
-Activate SIM in Kite Platform
-
 
 ```bash
 # open modem interface
@@ -177,6 +174,11 @@ AT+COPS=0
 AT+CNMP=38
 
 # Wait for a few minutes for the first dial into the mobile network
+# Exit modem interface
+```
+
+```bash
+# check if modem is properly setup for driver installation
 sudo minicom -D /dev/ttyUSB2
 
 # commands to check modem status
@@ -186,6 +188,8 @@ AT+COPS?
 AT+CGREG?  
 AT+CPSI? #return IMEI
 ```
+
+## Install Driver 
 
 ```bash
 # download and install driver
