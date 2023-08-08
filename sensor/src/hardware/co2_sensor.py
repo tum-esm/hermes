@@ -215,7 +215,12 @@ class CO2SensorInterface:
             if humidity or pressure is not None:
                 self.set_compensation_values(pressure=pressure, humidity=humidity)
             sensor_data = self._get_current_sensor_data()
-        except:
+        except Exception as e:
+            self.logger.exception(
+                e,
+                label="exception during hard reset of hardware",
+                config=self.config,
+            )
             self.logger.warning(
                 "Sensor did not answer correctly. Performing restart.",
                 config=self.config,
@@ -234,7 +239,12 @@ class CO2SensorInterface:
         """get the current concentration value from the CO2 probe"""
         try:
             sensor_data = self._get_current_sensor_data()
-        except:
+        except Exception as e:
+            self.logger.exception(
+                e,
+                label="exception during hard reset of hardware",
+                config=self.config,
+            )
             self.logger.warning(
                 "Sensor did not answer correctly. Performing restart.",
                 config=self.config,

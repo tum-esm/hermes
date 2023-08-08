@@ -20,7 +20,7 @@ bool fan_is_on = false;
 
 void setup(void)
 {
-  // Serial.begin(9600);
+  Serial.begin(9600);
   sensors.begin();
 
   pinMode(HEATER, OUTPUT);
@@ -49,7 +49,8 @@ void loop(void)
     // there can be more than one temperature sensor on the databus
     sensors.requestTemperatures();
     measured_temperature = sensors.getTempCByIndex(0);
-    // Serial.print(measured_temperature);
+    Serial.print(measured_temperature);
+    Serial.print(" ");
 
     if (measured_temperature < (TARGET_TEMPERATURE - ALLOWED_TEMPERATURE_DEVIATION))
     {
