@@ -1,4 +1,6 @@
+import enum
 import hashlib
+import logging
 import secrets
 
 import passlib.context
@@ -6,7 +8,10 @@ import starlette.authentication
 import starlette.requests
 
 import app.database as database
-from app.logs import logger
+import app.errors as errors
+
+
+logger = logging.getLogger(__name__)
 
 
 ########################################################################################
@@ -63,10 +68,10 @@ class AuthenticationMiddleware:
         try:
             scheme, access_token = request.headers["authorization"].split()
         except ValueError:
-            logger.warning("[auth] Malformed authorization header")
+            logger.warning("Malformed authorization header")
             return None
         if scheme.lower() != "bearer":
-            logger.warning("[auth] Malformed authorization header")
+            logger.warning("Malformed authorization header")
             return None
         # Check if we have the access token in the database
         query, arguments = database.parametrize(
@@ -77,7 +82,7 @@ class AuthenticationMiddleware:
         elements = database.dictify(elements)
         # If the result set is empty, the access token is invalid
         if len(elements) == 0:
-            logger.warning("[auth] Invalid access token")
+            logger.warning("Invalid access token")
             return None
         # Return the requester's identity
         return elements[0]["user_identifier"]
@@ -98,6 +103,13 @@ class AuthenticationMiddleware:
 ########################################################################################
 
 
+@enum.unique
+class Relationship(enum.IntEnum):
+    NONE = 0  # The requester is not authenticated
+    DEFAULT = 1  # The requester is authenticated, but no relationship exists
+    OWNER = 2
+
+
 class Resource:
     """Base class for resources that need authorization checks."""
 
@@ -105,13 +117,23 @@ class Resource:
         self.identifier = identifier
 
     async def _authorize(self, request):
-        raise NotImplementedError()
+        """Return the relationship between the requester and the resource."""
+        raise NotImplementedError
+
+
+class User(Resource):
+    async def _authorize(self, request):
+        if request.state.identity is None:
+            return Relationship.NONE
+        if request.state.identity == self.identifier:
+            return Relationship.OWNER
+        return Relationship.DEFAULT
 
 
 class Network(Resource):
     async def _authorize(self, request):
         if request.state.identity is None:
-            return None
+            return Relationship.NONE
         query, arguments = database.parametrize(
             identifier="authorize-resource-network",
             arguments={
@@ -121,13 +143,19 @@ class Network(Resource):
         )
         elements = await request.state.dbpool.fetch(query, *arguments)
         elements = database.dictify(elements)
-        return None if len(elements) == 0 else "default"
+        if len(elements) == 0:
+            raise errors.NotFoundError
+        return (
+            Relationship.DEFAULT
+            if elements[0]["user_identifier"] is None
+            else Relationship.OWNER
+        )
 
 
 class Sensor(Resource):
     async def _authorize(self, request):
         if request.state.identity is None:
-            return None
+            return Relationship.NONE
         query, arguments = database.parametrize(
             identifier="authorize-resource-sensor",
             arguments={
@@ -138,9 +166,17 @@ class Sensor(Resource):
         )
         elements = await request.state.dbpool.fetch(query, *arguments)
         elements = database.dictify(elements)
-        return None if len(elements) == 0 else "default"
+        if len(elements) == 0:
+            raise errors.NotFoundError
+        return (
+            Relationship.DEFAULT
+            if elements[0]["user_identifier"] is None
+            else Relationship.OWNER
+        )
 
 
 async def authorize(request, resource):
     """Check what relationship (ReBAC) the requester has with the resource."""
-    return await resource._authorize(request)
+    relationship = await resource._authorize(request)
+    logger.debug(f"Requester has {relationship.name} relationship")
+    return relationship
