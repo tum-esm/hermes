@@ -1,10 +1,13 @@
 import functools
 import json
+import logging
 import typing
 
 import app.errors as errors
 import app.validation.types as types
-from app.logs import logger
+
+
+logger = logging.getLogger(__name__)
 
 
 ########################################################################################
@@ -60,7 +63,19 @@ class _CreateSessionRequestPath(types.StrictModel):
     pass
 
 
+class _CreateNetworkRequestPath(types.StrictModel):
+    pass
+
+
+class _ReadNetworksRequestPath(types.StrictModel):
+    pass
+
+
 class _CreateSensorRequestPath(types.StrictModel):
+    network_identifier: types.Identifier
+
+
+class _ReadSensorsRequestPath(types.StrictModel):
     network_identifier: types.Identifier
 
 
@@ -94,11 +109,6 @@ class _ReadLogsAggregatesRequestPath(types.StrictModel):
     sensor_identifier: types.Identifier
 
 
-class _StreamNetworkRequestPath(types.StrictModel):
-    network_identifier: types.Identifier
-    network_identifier: types.Identifier
-
-
 ########################################################################################
 # Query models
 ########################################################################################
@@ -116,11 +126,19 @@ class _CreateSessionRequestQuery(types.LooseModel):
     pass
 
 
-class _StreamNetworkRequestQuery(types.LooseModel):
+class _CreateNetworkRequestQuery(types.LooseModel):
+    pass
+
+
+class _ReadNetworksRequestQuery(types.LooseModel):
     pass
 
 
 class _CreateSensorRequestQuery(types.LooseModel):
+    pass
+
+
+class _ReadSensorsRequestQuery(types.LooseModel):
     pass
 
 
@@ -140,6 +158,7 @@ class _ReadConfigurationsRequestQuery(types.LooseModel):
 class _ReadMeasurementsRequestQuery(types.LooseModel):
     creation_timestamp: types.Timestamp = None
     direction: typing.Literal["next", "previous"] = "next"
+    aggregate: bool = False
 
 
 class _ReadLogsRequestQuery(types.LooseModel):
@@ -170,12 +189,20 @@ class _CreateSessionRequestBody(types.StrictModel):
     password: types.Password
 
 
-class _StreamNetworkRequestBody(types.StrictModel):
+class _CreateNetworkRequestBody(types.StrictModel):
+    network_name: types.Name
+
+
+class _ReadNetworksRequestBody(types.StrictModel):
     pass
 
 
 class _CreateSensorRequestBody(types.StrictModel):
     sensor_name: types.Name
+
+
+class _ReadSensorsRequestBody(types.StrictModel):
+    pass
 
 
 class _UpdateSensorRequestBody(types.StrictModel):
@@ -226,16 +253,28 @@ class CreateSessionRequest(types.StrictModel):
     body: _CreateSessionRequestBody
 
 
-class StreamNetworkRequest(types.StrictModel):
-    path: _StreamNetworkRequestPath
-    query: _StreamNetworkRequestQuery
-    body: _StreamNetworkRequestBody
+class CreateNetworkRequest(types.StrictModel):
+    path: _CreateNetworkRequestPath
+    query: _CreateNetworkRequestQuery
+    body: _CreateNetworkRequestBody
+
+
+class ReadNetworksRequest(types.StrictModel):
+    path: _ReadNetworksRequestPath
+    query: _ReadNetworksRequestQuery
+    body: _ReadNetworksRequestBody
 
 
 class CreateSensorRequest(types.StrictModel):
     path: _CreateSensorRequestPath
     query: _CreateSensorRequestQuery
     body: _CreateSensorRequestBody
+
+
+class ReadSensorsRequest(types.StrictModel):
+    path: _ReadSensorsRequestPath
+    query: _ReadSensorsRequestQuery
+    body: _ReadSensorsRequestBody
 
 
 class UpdateSensorRequest(types.StrictModel):

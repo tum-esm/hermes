@@ -1,13 +1,13 @@
-The server exposes a REST API. You can find the documentation at [https://bump.sh/empicano/doc/server](https://bump.sh/empicano/doc/server).
+The server exposes a REST API. You can find the documentation at [https://bump.sh/empicano/doc/tenta](https://bump.sh/empicano/doc/tenta).
 
 ## MQTT communication
 
 The communication between the sensors and the server runs over four MQTT topics:
 
-- `configurations/<sensor-identifier>` for configurations from the server
-- `heartbeats/<sensor-identifier>` for heartbeats and system messages from sensors
-- `measurements/<sensor-identifier>` for measurements from sensors
-- `log-messages/<sensor-identifier>` for log messages from sensors
+- `configurations/<sensor-identifier>`: Configurations **to** sensors
+- `acknowledgments/<sensor-identifier>`: Configuration acknowledgments **from** sensors
+- `measurements/<sensor-identifier>`: Measurements **from** sensors
+- `logs/<sensor-identifier>`: Logs **from** sensors
 
 ### Payloads
 
@@ -18,55 +18,52 @@ The payloads are JSON encoded and have the following structure:
 ```json
 {
   "revision": 0,
-  "configuration": {} // this can be any valid JSON
+  "configuration": {} // Can be any valid JSON object
 }
 ```
 
-**`heartbeats/<sensor-identifier>`:**
+**`acknowledgments/<sensor-identifier>`:**
 
 ```json
-{
-  // the array structure allows to batch messages
-  "heartbeats": [
-    {
-      "revision": 0,
-      "timestamp": 1683645000.0,
-      "success": true // did the sensor successfully process the configuration?
-    }
-  ]
-}
+// Array structure allows to batch messages
+[
+  {
+    "revision": 0,
+    "timestamp": 1683645000.0,
+    "success": true // Did the sensor successfully process the configuration?
+  }
+]
 ```
 
 **`measurements/<sensor-identifier>`:**
 
 ```json
-{
-  // the array structure allows to batch messages
-  "measurements": [
-    {
-      "revision": 0, // optional parameter
-      "timestamp": 1683645000.0,
-      "value": {} // this can be any valid JSON
+// Array structure allows to batch messages
+[
+  {
+    "revision": 0, // Optional
+    "timestamp": 1683645000.0,
+    "value": {
+      // Data points have type double
+      "temperature": 23.1,
+      "humidity": 0.62
     }
-  ]
-}
+  }
+]
 ```
 
-**`log-messages/<sensor-identifier>`:**
+**`logs/<sensor-identifier>`:**
 
 ```json
-{
-  // the array structure allows to batch messages
-  "log_messages": [
-    {
-      "severity": "error", // one of info, warning, error
-      "revision": 0, // optional parameter
-      "timestamp": 1683645000.0,
-      "subject": "The CPU is burning",
-      "details": "Please call the fire department" // optional parameter
-    }
-  ]
-}
+// Array structure allows to batch messages
+[
+  {
+    "severity": "error", // One of: info, warning, error
+    "revision": 0, // Optional
+    "timestamp": 1683645000.0,
+    "message": "The CPU is burning; Please call the fire department."
+  }
+]
 ```
 
 ## Development Setup

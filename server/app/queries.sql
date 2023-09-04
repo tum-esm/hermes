@@ -1,7 +1,21 @@
+-- name: aggregate-measurements
+SELECT
+    attribute,
+    array_agg(
+        jsonb_build_object('bucket_timestamp', bucket_timestamp, 'average', average)
+        ORDER BY bucket_timestamp ASC
+    ) AS values
+FROM measurement_aggregation_1_hour
+WHERE
+    sensor_identifier = ${sensor_identifier}
+    AND bucket_timestamp > now() - INTERVAL '4 weeks'
+GROUP BY attribute;
+
+
 -- name: aggregate-logs
 SELECT
     severity,
-    subject,
+    message,
     first(revision, creation_timestamp) AS min_revision,
     last(revision, creation_timestamp) AS max_revision,
     min(creation_timestamp) AS min_creation_timestamp,
@@ -9,80 +23,91 @@ SELECT
     count(*) AS count
 FROM log
 WHERE
-    sensor_identifier = ${sensor_identifier} AND severity = any(
-        ARRAY['warning', 'error']
-    )
-GROUP BY sensor_identifier, severity, subject
+    sensor_identifier = ${sensor_identifier}
+    AND severity = any(ARRAY['warning', 'error'])
+GROUP BY sensor_identifier, severity, message
 ORDER BY max_creation_timestamp ASC;
 
 
--- name: aggregate-network
--- Aggregate information about sensors
-WITH aggregation AS (
-    SELECT
-        sensor_identifier,
-        array_agg(bucket_timestamp) AS bucket_timestamps,
-        array_agg(measurement_count) AS measurement_counts
-    FROM measurement_aggregation_4_hours
-    WHERE bucket_timestamp > now() - INTERVAL '28 days'
-    GROUP BY sensor_identifier
-)
-
--- Filter by sensors belonging to the given network
+-- name: read-sensors
 SELECT
     sensor.identifier AS sensor_identifier,
-    sensor.name AS sensor_name,
-    coalesce(
-        aggregation.bucket_timestamps, ARRAY[]::TIMESTAMPTZ []
-    ) AS bucket_timestamps,
-    coalesce(
-        aggregation.measurement_counts, ARRAY[]::INT []
-    ) AS measurement_counts
-FROM network
-INNER JOIN sensor ON network.identifier = sensor.network_identifier
-LEFT JOIN aggregation ON sensor.identifier = aggregation.sensor_identifier
-WHERE network.identifier = ${network_identifier};
+    sensor.name AS sensor_name
+FROM sensor
+WHERE sensor.network_identifier = ${network_identifier};
+
+
+-- name: create-network
+INSERT INTO network (
+    identifier,
+    name,
+    creation_timestamp
+)
+VALUES (
+    uuid_generate_v4(),
+    ${network_name},
+    now()
+)
+RETURNING identifier AS network_identifier;
+
+
+-- name: read-networks
+SELECT
+    network.identifier AS network_identifier,
+    network.name AS network_name
+FROM permission
+INNER JOIN network ON permission.network_identifier = network.identifier
+WHERE permission.user_identifier = ${user_identifier};
+
+
+-- name: create-permission
+INSERT INTO permission (
+    user_identifier,
+    network_identifier,
+    creation_timestamp
+)
+VALUES (
+    ${user_identifier},
+    ${network_identifier},
+    now()
+);
 
 
 -- name: create-log
 INSERT INTO log (
     sensor_identifier,
     severity,
-    subject,
+    message,
     revision,
     creation_timestamp,
-    receipt_timestamp,
-    index,
-    details
+    receipt_timestamp
 )
 VALUES (
     ${sensor_identifier},
     ${severity},
-    ${subject},
+    ${message},
     ${revision},
     ${creation_timestamp},
-    now(),
-    ${index},
-    ${details}
+    now()
 );
 
 
 -- name: create-measurement
 INSERT INTO measurement (
     sensor_identifier,
+    attribute,
     value,
     revision,
     creation_timestamp,
-    receipt_timestamp,
-    index
+    receipt_timestamp
 )
 VALUES (
     ${sensor_identifier},
-    ${measurement},
+    ${attribute},
+    ${value},
     ${revision},
     ${creation_timestamp},
-    now(),
-    ${index}
+    now()
 );
 
 
@@ -137,7 +162,7 @@ SELECT
     revision,
     creation_timestamp,
     publication_timestamp,
-    acknowledgement_timestamp,
+    acknowledgment_timestamp,
     receipt_timestamp,
     success
 FROM configuration
@@ -163,10 +188,12 @@ LIMIT 64;
 
 
 -- name: read-measurements
+-- Assemble data points that have the same timestamp and revision
+-- back into measurements, then sort and paginate
 SELECT
-    value,
     revision,
-    creation_timestamp
+    creation_timestamp,
+    jsonb_object_agg(attribute, value) AS value
 FROM measurement
 WHERE
     sensor_identifier = ${sensor_identifier}
@@ -183,6 +210,7 @@ WHERE
             )
         ELSE TRUE
     END
+GROUP BY revision, creation_timestamp
 ORDER BY
     CASE WHEN ${direction} = 'next' THEN creation_timestamp END ASC,
     CASE WHEN ${direction} = 'previous' THEN creation_timestamp END DESC
@@ -192,10 +220,9 @@ LIMIT 64;
 -- name: read-logs
 SELECT
     severity,
-    subject,
+    message,
     revision,
-    creation_timestamp,
-    details
+    creation_timestamp
 FROM log
 WHERE
     sensor_identifier = ${sensor_identifier}
@@ -226,16 +253,6 @@ FROM "user"
 WHERE name = ${user_name};
 
 
--- name: read-permissions
--- Could be extended to support finer grained permissions
-SELECT
-    user_identifier,
-    permission.network_identifier
-FROM session
-LEFT JOIN permission USING (user_identifier)
-WHERE session.access_token_hash = ${access_token_hash};
-
-
 -- name: authenticate
 SELECT user_identifier
 FROM session
@@ -243,20 +260,38 @@ WHERE access_token_hash = ${access_token_hash};
 
 
 -- name: authorize-resource-network
-SELECT 1
-FROM permission
-WHERE
-    user_identifier = ${user_identifier}
-    AND network_identifier = ${network_identifier};
+-- Return no elements if the network doesn't exist and NULL if permissions are missing
+-- Could be extended to support finer grained permission relationships
+WITH interim AS (
+    SELECT
+        user_identifier,
+        network_identifier
+    FROM permission
+    WHERE user_identifier = ${user_identifier}
+)
+
+SELECT interim.user_identifier
+FROM network
+LEFT JOIN interim ON network.identifier = interim.network_identifier
+WHERE network.identifier = ${network_identifier};
 
 
 -- name: authorize-resource-sensor
-SELECT 1
-FROM permission
-INNER JOIN sensor USING (network_identifier)
+-- Return no elements if the network or sensor doesn't exist and NULL if permissions are missing
+-- Could be extended to support finer grained permission relationships
+WITH interim AS (
+    SELECT
+        user_identifier,
+        network_identifier
+    FROM permission
+    WHERE user_identifier = ${user_identifier}
+)
+
+SELECT interim.user_identifier
+FROM sensor
+LEFT JOIN interim USING (network_identifier)
 WHERE
-    user_identifier = ${user_identifier}
-    AND network_identifier = ${network_identifier}
+    sensor.network_identifier = ${network_identifier}
     AND sensor.identifier = ${sensor_identifier};
 
 
@@ -289,16 +324,16 @@ WHERE
     AND publication_timestamp IS NULL;
 
 
--- name: update-configuration-on-acknowledgement
+-- name: update-configuration-on-acknowledgment
 UPDATE configuration
 SET
-    acknowledgement_timestamp = ${acknowledgement_timestamp},
+    acknowledgment_timestamp = ${acknowledgment_timestamp},
     receipt_timestamp = now(),
     success = ${success}
 WHERE
     sensor_identifier = ${sensor_identifier}
     AND revision = ${revision}
-    AND acknowledgement_timestamp IS NULL;
+    AND acknowledgment_timestamp IS NULL;
 
 
 -- name: update-sensor
