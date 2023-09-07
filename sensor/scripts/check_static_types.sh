@@ -23,9 +23,6 @@ mypy raspi-setup-files/midcost-init-files/run_node_tests.py
 echo "Checking run_automation.py"
 mypy run_automation.py
 
-echo "Checking run_headless_enclosure.py"
-mypy run_headless_enclosure.py
-
 echo "Checking run_headless_wind_sensor.py"
 mypy run_headless_wind_sensor.py
 

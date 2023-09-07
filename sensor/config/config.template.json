@@ -5,7 +5,6 @@
     "active_components": {
         "run_calibration_procedures": false,
         "send_messages_over_mqtt": true,
-        "communicate_with_heated_enclosure": false,
         "run_pump_speed_monitoring": false,
         "ignore_missing_air_inlet_sensor": false
     },
@@ -30,10 +29,5 @@
             { "valve_number": 2, "bottle_id": "1" },
             { "valve_number": 3, "bottle_id": "2" }
         ]
-    },
-    "heated_enclosure": {
-        "target_temperature": 25,
-        "allowed_deviation": 3,
-        "seconds_per_stored_datapoint": 60
     }
 }

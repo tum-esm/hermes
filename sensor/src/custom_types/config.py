@@ -6,7 +6,6 @@ import pydantic
 class ActiveComponentsConfig(pydantic.BaseModel):
     run_calibration_procedures: bool
     send_messages_over_mqtt: bool
-    communicate_with_heated_enclosure: bool
     run_pump_speed_monitoring: bool
     ignore_missing_air_inlet_sensor: bool
 
@@ -86,18 +85,6 @@ class CalibrationConfig(pydantic.BaseModel):
 # -----------------------------------------------------------------------------
 
 
-class HeatedEnclosureConfig(pydantic.BaseModel):
-    target_temperature: float = pydantic.Field(..., ge=0, le=50)
-    allowed_deviation: float = pydantic.Field(..., ge=0, le=10)
-    seconds_per_stored_datapoint: int = pydantic.Field(..., ge=5)
-
-    class Config:
-        extra = "forbid"
-
-
-# -----------------------------------------------------------------------------
-
-
 class Config(pydantic.BaseModel):
     """The config.json for each sensor"""
 
@@ -108,7 +95,6 @@ class Config(pydantic.BaseModel):
     hardware: HardwareConfig
     measurement: MeasurementConfig
     calibration: CalibrationConfig
-    heated_enclosure: HeatedEnclosureConfig
 
     class Config:
         extra = "forbid"
