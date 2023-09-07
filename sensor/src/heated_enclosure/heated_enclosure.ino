@@ -29,15 +29,6 @@ void setup(void)
 
 void loop(void)
 {
-  // print out all params for validation by the raspi
-  // Serial.print("{\"version\": \"");
-  // Serial.print(CODEBASE_VERSION);
-  // Serial.print("\", \"target\": ");
-  // Serial.print(TARGET_TEMPERATURE);
-  // Serial.print(", \"allowed_deviation\": ");
-  // Serial.print(ALLOWED_TEMPERATURE_DEVIATION);
-  // Serial.print(", \"measured\": ");
-
   if (sensors.getDS18Count() == 0)
   {
     // Serial.print("null");
@@ -68,16 +59,9 @@ void loop(void)
     {
       fan_is_on = false;
     }
+    
   }
 
-  // Serial.print(", \"heater\": ");
-  // Serial.print(heater_is_on ? "\"on\"" : "\"off\"");
-  // Serial.print(", \"fan\": ");
-  // Serial.print(fan_is_on ? "\"on\"" : "\"off\"");
-  // Serial.println("}");
-
-  // the relaise are currently reversed (HIGH = no current)
-  // TODO: will this be switched?
   digitalWrite(HEATER, heater_is_on ? LOW : HIGH);
   digitalWrite(FAN, fan_is_on ? LOW : HIGH);
 
