@@ -1,51 +1,16 @@
 from typing import Literal, Optional
 import pydantic
-from .config import CalibrationGasConfig
 
 # validation is only necessary for external sources
 # internal source will be covered by mypy
 
-
-class AirSensorData(pydantic.BaseModel):
-    bme280_temperature: Optional[float]
-    bme280_humidity: Optional[float]
-    bme280_pressure: Optional[float]
-    sht45_temperature: Optional[float]
-    sht45_humidity: Optional[float]
-    chamber_temperature: Optional[float]
-
+# Sensor data
 
 class CO2SensorData(pydantic.BaseModel):
     raw: float
     compensated: float
     filtered: float
     temperature: float
-
-
-class MeasurementProcedureData(pydantic.BaseModel):
-    raw: float
-    compensated: float
-    filtered: float
-    bme280_temperature: Optional[float]
-    bme280_humidity: Optional[float]
-    bme280_pressure: Optional[float]
-    sht45_temperature: Optional[float]
-    sht45_humidity: Optional[float]
-    chamber_temperature: Optional[float]
-
-
-class CalibrationProcedureData(pydantic.BaseModel):
-    gas_bottle_id: str
-    raw: float
-    compensated: float
-    filtered: float
-    bme280_temperature: Optional[float]
-    bme280_humidity: Optional[float]
-    bme280_pressure: Optional[float]
-    sht45_temperature: Optional[float]
-    sht45_humidity: Optional[float]
-    chamber_temperature: Optional[float]
-
 
 class BME280SensorData(pydantic.BaseModel):
     """units: °C for temperature, rH for humidity, hPa for pressure"""
@@ -60,20 +25,7 @@ class SHT45SensorData(pydantic.BaseModel):
 
     temperature: Optional[float]
     humidity: Optional[float]
-
-
-class SystemData(pydantic.BaseModel):
-    """fractional values from 0 to 1"""
-
-    mainboard_temperature: Optional[float]
-    cpu_temperature: Optional[float]
-    enclosure_humidity: Optional[float]
-    enclosure_pressure: Optional[float]
-    disk_usage: float
-    cpu_usage: float
-    memory_usage: float
-
-
+    
 class WindSensorData(pydantic.BaseModel):
     direction_min: float
     direction_avg: float
@@ -91,24 +43,3 @@ class WindSensorStatus(pydantic.BaseModel):
     reference_voltage: float
     sensor_id: str
     last_update_time: float
-
-
-class HeatedEnclosureData(pydantic.BaseModel):
-    target: float
-    allowed_deviation: float
-    measured: Optional[float]
-    heater_is_on: bool
-    fan_is_on: bool
-    last_update_time: float
-
-
-class RawHeatedEnclosureData(pydantic.BaseModel):
-    version: str = pydantic.Field(..., regex=r"^\d+\.\d+\.\d+(-(alpha|beta|rc)\.\d+)?$")
-    target: float
-    allowed_deviation: float
-    measured: Optional[float]
-    heater: Literal["on", "off"]
-    fan: Literal["on", "off"]
-
-    class Config:
-        extra = "forbid"
