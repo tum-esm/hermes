@@ -13,8 +13,6 @@ import commands
 def cli() -> None:
     pass
 
-
-cli.add_command(commands.enclosure, name="enclosure")
 cli.add_command(commands.info, name="info")
 cli.add_command(commands.start, name="start")
 cli.add_command(commands.is_running, name="is-running")

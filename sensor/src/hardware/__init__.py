@@ -2,11 +2,6 @@ import filelock
 from src import custom_types, utils
 
 from .co2_sensor import CO2SensorInterface
-from .heated_enclosure import (
-    HeatedEnclosureInterface,
-    HeatedEnclosureThread,
-    USBPortInterface,
-)
 from .bme280_sensor import BME280SensorInterface
 from .sht45_sensor import SHT45SensorInterface
 from .pump import PumpInterface
@@ -57,15 +52,6 @@ class HardwareInterface:
         )
         self.ups = UPSInterface(config, testing=self.testing)
 
-        # heated enclosure communication with repairing
-        # routine is running in a separate thread
-        if (
-            not self.testing
-        ) and self.config.active_components.communicate_with_heated_enclosure:
-            HeatedEnclosureThread.init(config)
-        else:
-            self.logger.debug("skipping heated enclosure communication")
-
     def check_errors(self) -> None:
         """checks for detectable hardware errors"""
         self.logger.info("checking for hardware errors")
@@ -74,7 +60,6 @@ class HardwareInterface:
         self.pump.check_errors()
         self.air_inlet_bme280_sensor.check_errors()
         self.mainboard_sensor.check_errors()
-        HeatedEnclosureThread.check_errors()
 
     def teardown(self) -> None:
         """ends all hardware/system connections excluding the CO2 sensor"""
@@ -96,7 +81,6 @@ class HardwareInterface:
         # enclosure controls
         self.mainboard_sensor.teardown()
         self.ups.teardown()
-        HeatedEnclosureThread.deinit()
 
         # release lock
         hardware_lock.release()
@@ -124,13 +108,6 @@ class HardwareInterface:
             config, variant="mainboard", testing=self.testing
         )
         self.ups = UPSInterface(config, testing=self.testing)
-
-        if (
-            not self.testing
-        ) and self.config.active_components.communicate_with_heated_enclosure:
-            HeatedEnclosureThread.init(config)
-        else:
-            self.logger.debug("skipping heated enclosure communication")
 
     def acquire_hardare_lock(self) -> None:
         """make sure that there is only one initialized hardware connection"""
