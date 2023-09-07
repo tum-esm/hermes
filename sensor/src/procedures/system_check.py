@@ -87,16 +87,13 @@ class SystemCheckProcedure:
                 revision=self.config.revision,
                 timestamp=round(time.time(), 2),
                 value=custom_types.MQTTSystemData(
-                    variant="system",
-                    data=custom_types.SystemData(
-                        mainboard_temperature=mainboard_temperature,
-                        cpu_temperature=cpu_temperature,
-                        enclosure_humidity=mainboard_bme280_data.humidity,
-                        enclosure_pressure=mainboard_bme280_data.pressure,
-                        disk_usage=round(disk_usage.percent / 100, 4),
-                        cpu_usage=round(cpu_usage_percent / 100, 4),
-                        memory_usage=round(memory_usage_percent / 100, 4),
-                    ),
+                    mainboard_temperature=mainboard_temperature,
+                    cpu_temperature=cpu_temperature,
+                    enclosure_humidity=mainboard_bme280_data.humidity,
+                    enclosure_pressure=mainboard_bme280_data.pressure,
+                    disk_usage=round(disk_usage.percent / 100, 4),
+                    cpu_usage=round(cpu_usage_percent / 100, 4),
+                    memory_usage=round(memory_usage_percent / 100, 4),
                 ),
             ),
         )

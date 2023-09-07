@@ -1,16 +1,6 @@
 from typing import Literal, Optional, Union
 import pydantic
 
-from .sensor_answers import (
-    MeasurementProcedureData,
-    CO2SensorData,
-    AirSensorData,
-    CalibrationProcedureData,
-    SystemData,
-    WindSensorData,
-    HeatedEnclosureData,
-)
-
 # -----------------------------------------------------------------------------
 # MQTT Config (read from env variables)
 
@@ -49,42 +39,49 @@ class MQTTLogMessageBody(pydantic.BaseModel):
 # -----------------------------------------------------------------------------
 # MQTT Data Message
 
-# TODO: remove MQTTCO2Data and MQTTAirData
-
-
 class MQTTMeasurementData(pydantic.BaseModel):
-    variant: Literal["measurement"]
-    data: MeasurementProcedureData
+    raw: float
+    compensated: float
+    filtered: float
+    bme280_temperature: Optional[float]
+    bme280_humidity: Optional[float]
+    bme280_pressure: Optional[float]
+    sht45_temperature: Optional[float]
+    sht45_humidity: Optional[float]
+    chamber_temperature: Optional[float]
 
 
 class MQTTCalibrationData(pydantic.BaseModel):
-    variant: Literal["calibration"]
-    data: CalibrationProcedureData
-
-
-class MQTTCO2Data(pydantic.BaseModel):
-    variant: Literal["co2"]
-    data: CO2SensorData
-
-
-class MQTTAirData(pydantic.BaseModel):
-    variant: Literal["air"]
-    data: AirSensorData
+    gas_bottle_id: float
+    raw: float
+    compensated: float
+    filtered: float
+    bme280_temperature: Optional[float]
+    bme280_humidity: Optional[float]
+    bme280_pressure: Optional[float]
+    sht45_temperature: Optional[float]
+    sht45_humidity: Optional[float]
+    chamber_temperature: Optional[float]
 
 
 class MQTTSystemData(pydantic.BaseModel):
-    variant: Literal["system"]
-    data: SystemData
+    mainboard_temperature: Optional[float]
+    cpu_temperature: Optional[float]
+    enclosure_humidity: Optional[float]
+    enclosure_pressure: Optional[float]
+    disk_usage: float
+    cpu_usage: float
+    memory_usage: float
 
 
 class MQTTWindData(pydantic.BaseModel):
-    variant: Literal["wind"]
-    data: WindSensorData
-
-
-class MQTTEnclosureData(pydantic.BaseModel):
-    variant: Literal["enclosure"]
-    data: HeatedEnclosureData
+    direction_min: float
+    direction_avg: float
+    direction_max: float
+    speed_min: float
+    speed_avg: float
+    speed_max: float
+    last_update_time: float
 
 
 class MQTTDataMessageBody(pydantic.BaseModel):
@@ -94,12 +91,9 @@ class MQTTDataMessageBody(pydantic.BaseModel):
     timestamp: float = pydantic.Field(..., ge=1_640_991_600)
     value: Union[
         MQTTMeasurementData,
-        MQTTCO2Data,
         MQTTCalibrationData,
-        MQTTAirData,
         MQTTSystemData,
         MQTTWindData,
-        MQTTEnclosureData,
     ]
 
     class Config:

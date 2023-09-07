@@ -5,6 +5,7 @@ from os.path import dirname, abspath, join
 import sys
 import deepdiff
 from ..pytest_utils import wait_for_condition
+import time
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 CONFIG_PATH = join(PROJECT_DIR, "config", "config.json")
@@ -53,16 +54,25 @@ def _test_message_sending(mqtt_communication_enabled: bool) -> None:
 
     # enqueue dummy message
     dummy_data_message_body = custom_types.MQTTDataMessageBody(
-        revision=config.revision,
-        timestamp=datetime.utcnow().timestamp(),
-        value=custom_types.MQTTCO2Data(
-            variant="co2",
-            data=custom_types.CO2SensorData(
-                raw=0.0, compensated=0.0, filtered=0.0, temperature=0.0
-            ),
-        ),
-    )
-    message_queue.enqueue_message(config, dummy_data_message_body)
+                    revision=config.revision,
+                    timestamp=round(time.time(), 2),
+                    value=custom_types.MQTTMeasurementData(
+                        raw=0.0,
+                        compensated=0.0,
+                        filtered=0.0,
+                        bme280_temperature=0.0,
+                        bme280_humidity=0.0,
+                        bme280_pressure=0.0,
+                        sht45_temperature=0.0,
+                        sht45_humidity=0.0,
+                        chamber_temperature=0.0,
+                    )
+                )
+    
+    message_queue.enqueue_message(
+                config,
+                dummy_data_message_body
+            )
 
     # assert dummy message to be in active queue
     records = (
