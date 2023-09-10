@@ -339,19 +339,6 @@ async def read_configurations(request, values):
 
 @validation.validate(schema=validation.ReadMeasurementsRequest)
 async def read_measurements(request, values):
-    relationship = await auth.authorize(
-        request,
-        auth.Sensor(
-            {
-                "network_identifier": values.path["network_identifier"],
-                "sensor_identifier": values.path["sensor_identifier"],
-            }
-        ),
-    )
-    if relationship < auth.Relationship.DEFAULT:
-        raise errors.UnauthorizedError
-    if relationship < auth.Relationship.OWNER:
-        raise errors.ForbiddenError
     # Aggregate measurements
     if values.query["aggregate"]:
         query, arguments = database.parametrize(
@@ -388,19 +375,6 @@ async def read_measurements(request, values):
 
 @validation.validate(schema=validation.ReadLogsRequest)
 async def read_logs(request, values):
-    relationship = await auth.authorize(
-        request,
-        auth.Sensor(
-            {
-                "network_identifier": values.path["network_identifier"],
-                "sensor_identifier": values.path["sensor_identifier"],
-            }
-        ),
-    )
-    if relationship < auth.Relationship.DEFAULT:
-        raise errors.UnauthorizedError
-    if relationship < auth.Relationship.OWNER:
-        raise errors.ForbiddenError
     query, arguments = database.parametrize(
         identifier="read-logs",
         arguments={
@@ -421,19 +395,6 @@ async def read_logs(request, values):
 
 @validation.validate(schema=validation.ReadLogsAggregatesRequest)
 async def read_logs_aggregates(request, values):
-    relationship = await auth.authorize(
-        request,
-        auth.Sensor(
-            {
-                "network_identifier": values.path["network_identifier"],
-                "sensor_identifier": values.path["sensor_identifier"],
-            }
-        ),
-    )
-    if relationship < auth.Relationship.DEFAULT:
-        raise errors.UnauthorizedError
-    if relationship < auth.Relationship.OWNER:
-        raise errors.ForbiddenError
     query, arguments = database.parametrize(
         identifier="aggregate-logs",
         arguments={"sensor_identifier": values.path["sensor_identifier"]},
