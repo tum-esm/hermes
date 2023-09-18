@@ -160,17 +160,18 @@ class MessageQueue:
         )
         new_message: custom_types.MQTTMessage
 
+        #TODO: refactor
         if isinstance(message_body, custom_types.MQTTLogMessageBody):
             new_message = custom_types.MQTTLogMessage(
-                variant="logs", header=new_header, body=message_body
+                header=new_header, body=message_body
             )
         elif isinstance(message_body, custom_types.MQTTMeasurementMessageBody):
             new_message = custom_types.MQTTDataMessage(
-                variant="measurements", header=new_header, body=message_body
+                header=new_header, body=message_body
             )
         elif isinstance(message_body, custom_types.MQTTAcknowledgmentMessageBody):
             new_message = custom_types.MQTTHeartbeatMessage(
-                variant="acknowledgments", header=new_header, body=message_body
+                header=new_header, body=message_body
             )
         else:
             raise ValueError(f"Unknown message type: {message_body}")
