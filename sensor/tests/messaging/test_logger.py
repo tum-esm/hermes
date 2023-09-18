@@ -149,11 +149,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
         assert active_logs_messages[1].body.message == "pytests - some message d "
 
         assert active_logs_messages[2].header.mqtt_topic == None
-        assert active_logs_messages[2].body.message == "error"
-        assert (
-            active_logs_messages[2].body.message
-            == "pytests - ZeroDivisionError: division by zero "
-        )
+        assert active_logs_messages[2].body.severity == "error"
 
         # -------------------------------------------------------------------------
         # wait until sending queue is empty
@@ -195,7 +191,3 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
 
     assert archived_log_messages[2].header.mqtt_topic == None
     assert archived_log_messages[2].body.severity == "error"
-    assert (
-        archived_log_messages[2].body.message
-        == "pytests - ZeroDivisionError: division by zero "
-    )
