@@ -29,8 +29,7 @@ class MQTTLogMessageBody(pydantic.BaseModel):
     severity: Literal["info", "warning", "error"]
     revision: int = pydantic.Field(..., ge=0)
     timestamp: float = pydantic.Field(..., ge=1_640_991_600)
-    subject: str = pydantic.Field(..., min_length=1, max_length=256)
-    details: str = pydantic.Field(..., min_length=0, max_length=16_384)
+    message: str = pydantic.Field(..., min_length=0)
 
     class Config:
         extra = "forbid"
@@ -40,48 +39,47 @@ class MQTTLogMessageBody(pydantic.BaseModel):
 # MQTT Data Message
 
 class MQTTMeasurementData(pydantic.BaseModel):
-    raw: float
-    compensated: float
-    filtered: float
+    gmp343_raw: float
+    gmp343_compensated: float
+    gmp343_filtered: float
     bme280_temperature: Optional[float]
     bme280_humidity: Optional[float]
     bme280_pressure: Optional[float]
     sht45_temperature: Optional[float]
     sht45_humidity: Optional[float]
-    chamber_temperature: Optional[float]
-
+    gmp343_temperature: Optional[float]
 
 class MQTTCalibrationData(pydantic.BaseModel):
-    gas_bottle_id: float
-    raw: float
-    compensated: float
-    filtered: float
-    bme280_temperature: Optional[float]
-    bme280_humidity: Optional[float]
-    bme280_pressure: Optional[float]
-    sht45_temperature: Optional[float]
-    sht45_humidity: Optional[float]
-    chamber_temperature: Optional[float]
+    cal_bottle_id: float
+    cal_gmp343_raw: float
+    cal_gmp343_compensated: float
+    cal_gmp343_filtered: float
+    cal_bme280_temperature: Optional[float]
+    cal_bme280_humidity: Optional[float]
+    cal_bme280_pressure: Optional[float]
+    cal_sht45_temperature: Optional[float]
+    cal_sht45_humidity: Optional[float]
+    cal_gmp343_temperature: Optional[float]
 
 
 class MQTTSystemData(pydantic.BaseModel):
-    mainboard_temperature: Optional[float]
-    cpu_temperature: Optional[float]
-    enclosure_humidity: Optional[float]
-    enclosure_pressure: Optional[float]
-    disk_usage: float
-    cpu_usage: float
-    memory_usage: float
+    enclosure_bme280_temperature: Optional[float]
+    enclosure_bme280_humidity: Optional[float]
+    enclosure_bme280_pressure: Optional[float]
+    raspi_cpu_temperature: Optional[float]
+    raspi_disk_usage: float
+    raspi_cpu_usage: float
+    raspi_memory_usage: float
 
 
 class MQTTWindData(pydantic.BaseModel):
-    direction_min: float
-    direction_avg: float
-    direction_max: float
-    speed_min: float
-    speed_avg: float
-    speed_max: float
-    last_update_time: float
+    wxt532_direction_min: float
+    wxt532_direction_avg: float
+    wxt532_direction_max: float
+    wxt532_speed_min: float
+    wxt532_speed_avg: float
+    wxt532_speed_max: float
+    wxt532_last_update_time: float
 
 
 class MQTTMeasurementMessageBody(pydantic.BaseModel):
@@ -101,7 +99,7 @@ class MQTTMeasurementMessageBody(pydantic.BaseModel):
 
 
 # -----------------------------------------------------------------------------
-# MQTT Heartbeat Message
+# MQTT Acknowledgement Message
 
 
 class MQTTAcknowledgmentMessageBody(pydantic.BaseModel):
@@ -130,7 +128,6 @@ class MQTTMessageHeader(pydantic.BaseModel):
 class MQTTLogMessage(pydantic.BaseModel):
     """element in local message queue"""
 
-    variant: Literal["logs"]
     header: MQTTMessageHeader
     body: MQTTLogMessageBody
 
@@ -140,8 +137,7 @@ class MQTTLogMessage(pydantic.BaseModel):
 
 class MQTTDataMessage(pydantic.BaseModel):
     """element in local message queue"""
-
-    variant: Literal["data"]
+    
     header: MQTTMessageHeader
     body: MQTTMeasurementMessageBody
 
@@ -149,10 +145,9 @@ class MQTTDataMessage(pydantic.BaseModel):
         extra = "forbid"
 
 
-class MQTTHeartbeatMessage(pydantic.BaseModel):
+class MQTTAcknowledgeMessage(pydantic.BaseModel):
     """element in local message queue"""
-
-    variant: Literal["heartbeat"]
+    
     header: MQTTMessageHeader
     body: MQTTAcknowledgmentMessageBody
 

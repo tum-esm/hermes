@@ -57,15 +57,15 @@ def _test_message_sending(mqtt_communication_enabled: bool) -> None:
                     revision=config.revision,
                     timestamp=round(time.time(), 2),
                     value=custom_types.MQTTMeasurementData(
-                        raw=0.0,
-                        compensated=0.0,
-                        filtered=0.0,
+                        gmp343_raw=0.0,
+                        gmp343_compensated=0.0,
+                        gmp343_filtered=0.0,
                         bme280_temperature=0.0,
                         bme280_humidity=0.0,
                         bme280_pressure=0.0,
                         sht45_temperature=0.0,
                         sht45_humidity=0.0,
-                        chamber_temperature=0.0,
+                        gmp343_temperature=0.0,
                     )
                 )
     

@@ -197,6 +197,7 @@ class Logger:
     ) -> None:
         subject = f"{self.origin} - {subject}"
 
+        #TODO: refactore the split of subject and detail to only one message
         if len(subject) > 256:
             extension_message_subject = f" ... CUT ({len(subject)} -> 256)"
             subject = (
@@ -210,13 +211,13 @@ class Logger:
                 details[: (16384 - len(extension_message_details))]
                 + extension_message_details
             )
+    
 
         self.message_queue.enqueue_message(
             config,
             message_body=custom_types.MQTTLogMessageBody(
                 severity=level,
-                subject=subject,
-                details=details,
+                message=subject+' '+details,
                 timestamp=round(time.time(), 2),
                 revision=config.revision,
             ),
