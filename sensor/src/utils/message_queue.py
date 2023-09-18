@@ -164,13 +164,13 @@ class MessageQueue:
             new_message = custom_types.MQTTLogMessage(
                 variant="logs", header=new_header, body=message_body
             )
-        elif isinstance(message_body, custom_types.MQTTDataMessageBody):
+        elif isinstance(message_body, custom_types.MQTTMeasurementMessageBody):
             new_message = custom_types.MQTTDataMessage(
-                variant="data", header=new_header, body=message_body
+                variant="measurements", header=new_header, body=message_body
             )
-        elif isinstance(message_body, custom_types.MQTTHeartbeatMessageBody):
+        elif isinstance(message_body, custom_types.MQTTAcknowledgmentMessageBody):
             new_message = custom_types.MQTTHeartbeatMessage(
-                variant="heartbeat", header=new_header, body=message_body
+                variant="acknowledgments", header=new_header, body=message_body
             )
         else:
             raise ValueError(f"Unknown message type: {message_body}")

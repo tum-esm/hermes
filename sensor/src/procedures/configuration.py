@@ -140,7 +140,7 @@ class ConfigurationProcedure:
             # send UPGRADE SUCCESS message
             self.message_queue.enqueue_message(
                 self.config,
-                custom_types.MQTTHeartbeatMessageBody(
+                custom_types.MQTTAcknowledgmentMessageBody(
                     revision=new_revision,
                     timestamp=time.time(),
                     success=True,
@@ -165,7 +165,7 @@ class ConfigurationProcedure:
             # send UPGRADE FAILED message
             self.message_queue.enqueue_message(
                 self.config,
-                custom_types.MQTTHeartbeatMessageBody(
+                custom_types.MQTTAcknowledgmentMessageBody(
                     revision=new_revision,
                     timestamp=time.time(),
                     success=False,

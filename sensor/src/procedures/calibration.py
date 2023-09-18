@@ -96,7 +96,7 @@ class CalibrationProcedure:
                 # send out MQTT measurement message
                 self.message_queue.enqueue_message(
                     self.config,
-                    custom_types.MQTTDataMessageBody(
+                    custom_types.MQTTMeasurementMessageBody(
                         revision=self.config.revision,
                         timestamp=round(time.time(), 2),
                         value=custom_types.MQTTCalibrationData(

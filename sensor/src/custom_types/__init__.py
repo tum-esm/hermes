@@ -11,8 +11,8 @@ from .mqtt_sending import (
     MQTTWindData,
     # different message bodies
     MQTTLogMessageBody,
-    MQTTDataMessageBody,
-    MQTTHeartbeatMessageBody,
+    MQTTMeasurementMessageBody,
+    MQTTAcknowledgmentMessageBody,
     MQTTMessageBody,
     # message structure
     MQTTMessageHeader,

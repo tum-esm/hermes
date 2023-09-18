@@ -84,7 +84,7 @@ class MQTTWindData(pydantic.BaseModel):
     last_update_time: float
 
 
-class MQTTDataMessageBody(pydantic.BaseModel):
+class MQTTMeasurementMessageBody(pydantic.BaseModel):
     """message body which is sent to server"""
 
     revision: int = pydantic.Field(..., ge=0)
@@ -104,7 +104,7 @@ class MQTTDataMessageBody(pydantic.BaseModel):
 # MQTT Heartbeat Message
 
 
-class MQTTHeartbeatMessageBody(pydantic.BaseModel):
+class MQTTAcknowledgmentMessageBody(pydantic.BaseModel):
     """message body which is sent to server"""
 
     revision: int = pydantic.Field(..., ge=0)
@@ -143,7 +143,7 @@ class MQTTDataMessage(pydantic.BaseModel):
 
     variant: Literal["data"]
     header: MQTTMessageHeader
-    body: MQTTDataMessageBody
+    body: MQTTMeasurementMessageBody
 
     class Config:
         extra = "forbid"
@@ -154,13 +154,13 @@ class MQTTHeartbeatMessage(pydantic.BaseModel):
 
     variant: Literal["heartbeat"]
     header: MQTTMessageHeader
-    body: MQTTHeartbeatMessageBody
+    body: MQTTAcknowledgmentMessageBody
 
     class Config:
         extra = "forbid"
 
 
-MQTTMessageBody = Union[MQTTLogMessageBody, MQTTDataMessageBody, MQTTHeartbeatMessageBody]
+MQTTMessageBody = Union[MQTTLogMessageBody, MQTTMeasurementMessageBody, MQTTAcknowledgmentMessageBody]
 MQTTMessage = Union[MQTTLogMessage, MQTTDataMessage, MQTTHeartbeatMessage]
 
 # -----------------------------------------------------------------------------
