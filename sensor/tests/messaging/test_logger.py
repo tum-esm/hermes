@@ -142,11 +142,11 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     if mqtt_communication_enabled:
         assert active_logs_messages[0].header.mqtt_topic == None
         assert active_logs_messages[0].body.severity == "warning"
-        assert active_logs_messages[0].body.message == "pytests - some message c"
+        assert active_logs_messages[0].body.message == "pytests - some message c "
 
         assert active_logs_messages[1].header.mqtt_topic == None
         assert active_logs_messages[1].body.severity == "error"
-        assert active_logs_messages[1].body.message == "pytests - some message d"
+        assert active_logs_messages[1].body.message == "pytests - some message d "
 
         assert active_logs_messages[2].header.mqtt_topic == None
         assert active_logs_messages[2].body.message == "error"
