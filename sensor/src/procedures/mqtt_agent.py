@@ -104,6 +104,7 @@ class MQTTAgent:
         logger.info("established graceful teardown hook")
 
         try:
+            # TODO: finish changing topics to new structure and check other files
             config_topic = (
                 f"{mqtt_config.mqtt_base_topic}configurations"
                 + f"/{mqtt_config.station_identifier}"
@@ -130,10 +131,11 @@ class MQTTAgent:
         def _publish_record(record: custom_types.SQLMQTTRecord) -> None:
             record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
 
+            # TODO: finish changing topics to new structure and check other files
             record.content.header.mqtt_topic += {
-                "logs": "log-messages/",
-                "data": "measurements/",
-                "heartbeat": "heartbeats/",
+                "logs": "logs/",
+                "measurements": "measurements/",
+                "acknowledgments": "acknowledgments/",
             }[record.content.variant]
 
             record.content.header.mqtt_topic += mqtt_config.station_identifier
@@ -144,11 +146,11 @@ class MQTTAgent:
                 message_body = record.content.body.dict()
                 if len(message_body["details"]) == 0:
                     del message_body["details"]
-                payload = {"log_messages": [message_body]}
-            elif record.content.variant == "data":
+                payload = {"logs": [message_body]}
+            elif record.content.variant == "measurements":
                 payload = {"measurements": [record.content.body.dict()]}
             else:
-                payload = {"heartbeats": [record.content.body.dict()]}
+                payload = {"acknowledgments": [record.content.body.dict()]}
 
             message_info = mqtt_client.publish(
                 topic=record.content.header.mqtt_topic,
@@ -238,6 +240,9 @@ class MQTTAgent:
 
                 time.sleep(3)
 
+            # TODO: Add exception for the MQTT connected assertion and trigger
+            # a script that (re)nitialized the LTE head driver. Maybe add a 
+            # check for disconnected since > x hours
             except Exception as e:
                 logger.exception(e, label="sending loop has stopped", config=config)
                 mqtt_connection.teardown()
