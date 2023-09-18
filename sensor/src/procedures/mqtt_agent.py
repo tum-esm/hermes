@@ -85,7 +85,7 @@ class MQTTAgent:
         def _enqueue_heartbeat_message() -> None:
             message_queue.enqueue_message(
                 config,
-                custom_types.MQTTHeartbeatMessageBody(
+                custom_types.MQTTAcknowledgementMessageBody(
                     revision=config.revision, timestamp=time.time(), success=True
                 ),
             )

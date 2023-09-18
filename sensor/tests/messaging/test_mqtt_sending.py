@@ -53,7 +53,7 @@ def _test_message_sending(mqtt_communication_enabled: bool) -> None:
         config.active_components.send_messages_over_mqtt = mqtt_communication_enabled
 
     # enqueue dummy message
-    dummy_data_message_body = custom_types.MQTTDataMessageBody(
+    dummy_data_message_body = custom_types.MQTTMeasurementMessageBody(
                     revision=config.revision,
                     timestamp=round(time.time(), 2),
                     value=custom_types.MQTTMeasurementData(
