@@ -166,11 +166,11 @@ class MessageQueue:
                 header=new_header, body=message_body
             )
         elif isinstance(message_body, custom_types.MQTTMeasurementMessageBody):
-            new_message = custom_types.MQTTDataMessage(
+            new_message = custom_types.MQTTMeasurementMessage(
                 header=new_header, body=message_body
             )
         elif isinstance(message_body, custom_types.MQTTAcknowledgmentMessageBody):
-            new_message = custom_types.MQTTHeartbeatMessage(
+            new_message = custom_types.MQTTAcknowledgmentMessage(
                 header=new_header, body=message_body
             )
         else:

@@ -85,7 +85,7 @@ class MQTTAgent:
         def _enqueue_heartbeat_message() -> None:
             message_queue.enqueue_message(
                 config,
-                custom_types.MQTTAcknowledgementMessageBody(
+                custom_types.MQTTAcknowledgmentMessageBody(
                     revision=config.revision, timestamp=time.time(), success=True
                 ),
             )
@@ -131,26 +131,16 @@ class MQTTAgent:
         def _publish_record(record: custom_types.SQLMQTTRecord) -> None:
             record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
 
-            # TODO: finish changing topics to new structure and check other files
             record.content.header.mqtt_topic += {
-                "logs": "logs/",
-                "measurements": "measurements/",
-                "acknowledgments": "acknowledgments/",
-            }[record.content.variant]
+                custom_types.MQTTLogMessage: "logs/",
+                custom_types.MQTTMeasurementMessage: "measurements/",
+                custom_types.MQTTAcknowledgmentMessage: "acknowledgments/",
+            }[type(record.content)]
 
             record.content.header.mqtt_topic += mqtt_config.station_identifier
             assert mqtt_client.is_connected(), "mqtt client is not connected anymore"
 
-            payload: dict[str, list[Any]]
-            if record.content.variant == "logs":
-                message_body = record.content.body.dict()
-                if len(message_body["details"]) == 0:
-                    del message_body["details"]
-                payload = {"logs": [message_body]}
-            elif record.content.variant == "measurements":
-                payload = {"measurements": [record.content.body.dict()]}
-            else:
-                payload = {"acknowledgments": [record.content.body.dict()]}
+            payload: list[Any] = [record.content.body.dict()]
 
             message_info = mqtt_client.publish(
                 topic=record.content.header.mqtt_topic,
