@@ -99,7 +99,7 @@ class MQTTMeasurementMessageBody(pydantic.BaseModel):
 
 
 # -----------------------------------------------------------------------------
-# MQTT Acknowledgement Message
+# MQTT Acknowledgment Message
 
 
 class MQTTAcknowledgmentMessageBody(pydantic.BaseModel):
@@ -135,7 +135,7 @@ class MQTTLogMessage(pydantic.BaseModel):
         extra = "forbid"
 
 
-class MQTTDataMessage(pydantic.BaseModel):
+class MQTTMeasurementMessage(pydantic.BaseModel):
     """element in local message queue"""
     
     header: MQTTMessageHeader
@@ -144,8 +144,7 @@ class MQTTDataMessage(pydantic.BaseModel):
     class Config:
         extra = "forbid"
 
-
-class MQTTAcknowledgeMessage(pydantic.BaseModel):
+class MQTTAcknowledgmentMessage(pydantic.BaseModel):
     """element in local message queue"""
     
     header: MQTTMessageHeader
@@ -156,7 +155,7 @@ class MQTTAcknowledgeMessage(pydantic.BaseModel):
 
 
 MQTTMessageBody = Union[MQTTLogMessageBody, MQTTMeasurementMessageBody, MQTTAcknowledgmentMessageBody]
-MQTTMessage = Union[MQTTLogMessage, MQTTDataMessage, MQTTHeartbeatMessage]
+MQTTMessage = Union[MQTTLogMessage, MQTTMeasurementMessage, MQTTAcknowledgmentMessage]
 
 # -----------------------------------------------------------------------------
 # SQL

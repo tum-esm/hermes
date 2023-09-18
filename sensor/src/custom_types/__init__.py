@@ -17,8 +17,8 @@ from .mqtt_sending import (
     # message structure
     MQTTMessageHeader,
     MQTTLogMessage,
-    MQTTDataMessage,
-    MQTTHeartbeatMessage,
+    MQTTMeasurementMessage,
+    MQTTAcknowledgmentMessage,
     MQTTMessage,
 )
 from .mqtt_receiving import (

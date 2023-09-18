@@ -108,7 +108,7 @@ def _test_message_sending(mqtt_communication_enabled: bool) -> None:
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
         archived_mqtt_messages = [json.loads(m) for m in f.read().split("\n")[:-1]]
     assert len(archived_mqtt_messages) == (2 if mqtt_communication_enabled else 1)
-    stored_message = custom_types.MQTTDataMessage(
+    stored_message = custom_types.MQTTMeasurementMessage(
         **archived_mqtt_messages[1 if mqtt_communication_enabled else 0]
     )
     assert (

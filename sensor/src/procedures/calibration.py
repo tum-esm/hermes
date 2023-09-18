@@ -103,7 +103,7 @@ class CalibrationProcedure:
                             cal_bottle_id=float(gas.bottle_id),
                             cal_gmp343_raw=current_sensor_data.raw,
                             cal_gmp343_compensated=current_sensor_data.compensated,
-                            cal_filtered=current_sensor_data.filtered,
+                            cal_gmp343_filtered=current_sensor_data.filtered,
                             cal_bme280_temperature=self.air_inlet_bme280_data.temperature,
                             cal_bme280_humidity=self.air_inlet_bme280_data.humidity,
                             cal_bme280_pressure=self.air_inlet_bme280_data.pressure,

@@ -45,8 +45,7 @@ def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None
         + f"{details}\n"
         + "------------------------------\n"
     )
-    expected_mqtt_subject = f"pytests - {message[: (256 - 31)]} ... CUT (310 -> 256)"
-    expected_mqtt_details = f"{details[: (16384 - 25)]} ... CUT (20249 -> 16384)"
+    expected_mqtt_message = f"pytests - {message[: (256 - 31)]} ... CUT (310 -> 256)" + ' ' + f"{details[: (16384 - 25)]} ... CUT (20249 -> 16384)"
 
     assert len(message_queue.get_rows_by_status("pending")) == 0
     expect_log_file_contents(forbidden_content_blocks=[expected_log_file_content])
@@ -56,9 +55,8 @@ def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None
     mqtt_messages = message_queue.get_rows_by_status("pending")
     assert len(mqtt_messages) == 1
     mqtt_message_content = mqtt_messages[0].content
-    assert mqtt_message_content.variant == "logs"
-    assert mqtt_message_content.body.subject == expected_mqtt_subject
-    assert mqtt_message_content.body.details == expected_mqtt_details
+    assert isinstance(mqtt_message_content, custom_types.MQTTLogMessage)
+    assert mqtt_message_content.body.message == expected_mqtt_message
     expect_log_file_contents(required_content_blocks=[expected_log_file_content])
 
     wait_for_condition(
@@ -142,20 +140,18 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
     assert len(active_logs_messages) == (4 if mqtt_communication_enabled else 0)
 
     if mqtt_communication_enabled:
-        assert all([m.variant == "logs" for m in active_logs_messages])
-
         assert active_logs_messages[0].header.mqtt_topic == None
         assert active_logs_messages[0].body.severity == "warning"
-        assert active_logs_messages[0].body.subject == "pytests - some message c"
+        assert active_logs_messages[0].body.message == "pytests - some message c"
 
         assert active_logs_messages[1].header.mqtt_topic == None
         assert active_logs_messages[1].body.severity == "error"
-        assert active_logs_messages[1].body.subject == "pytests - some message d"
+        assert active_logs_messages[1].body.message == "pytests - some message d"
 
         assert active_logs_messages[2].header.mqtt_topic == None
-        assert active_logs_messages[2].body.severity == "error"
+        assert active_logs_messages[2].body.message == "error"
         assert (
-            active_logs_messages[2].body.subject
+            active_logs_messages[2].body.message
             == "pytests - ZeroDivisionError: division by zero"
         )
 
@@ -178,26 +174,28 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
 
     # -------------------------------------------------------------------------
     # check whether archive contains correct messages
+    
+    archived_log_messages = []
 
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
-        archived_log_messages = [
-            custom_types.MQTTLogMessage(**m)
-            for m in [json.loads(m) for m in f.read().split("\n") if len(m) > 0]
-            if m["variant"] == "logs"
-        ]
+        for message in [json.loads(m) for m in f.read().split("\n") if len(m) > 0]:
+            try:
+                archived_log_messages.append(custom_types.MQTTLogMessage(**message))
+            except:
+                pass
     archived_log_messages.sort(key=lambda m: m.body.timestamp)
     assert len(archived_log_messages) == 4
     assert archived_log_messages[0].header.mqtt_topic == None
     assert archived_log_messages[0].body.severity == "warning"
-    assert archived_log_messages[0].body.subject == "pytests - some message c"
+    assert archived_log_messages[0].body.message == "pytests - some message c"
 
     assert archived_log_messages[1].header.mqtt_topic == None
     assert archived_log_messages[1].body.severity == "error"
-    assert archived_log_messages[1].body.subject == "pytests - some message d"
+    assert archived_log_messages[1].body.message == "pytests - some message d"
 
     assert archived_log_messages[2].header.mqtt_topic == None
     assert archived_log_messages[2].body.severity == "error"
     assert (
-        archived_log_messages[2].body.subject
+        archived_log_messages[2].body.message
         == "pytests - ZeroDivisionError: division by zero"
     )
