@@ -43,10 +43,11 @@ class MeasurementProcedure:
         if wind_data is not None:
             self.logger.info(f"sending latest wind data: {wind_data}")
 
+            state = utils.StateInterface.read()
             self.message_queue.enqueue_message(
                 self.config,
                 custom_types.MQTTMeasurementMessageBody(
-                    revision=self.config.revision,
+                    revision=state.current_config_revision,
                     timestamp=round(time.time(), 2),
                     value=custom_types.MQTTWindData(
                         wxt532_direction_min =  wind_data.direction_min,
@@ -78,6 +79,7 @@ class MeasurementProcedure:
 
         # do regular measurements for about 2 minutes
         while True:
+            state = utils.StateInterface.read()
             # idle until next measurement period
             seconds_to_wait_for_next_measurement = max(
                 self.config.measurement.timing.seconds_per_measurement
@@ -106,7 +108,7 @@ class MeasurementProcedure:
             self.message_queue.enqueue_message(
                 self.config,
                 custom_types.MQTTMeasurementMessageBody(
-                    revision=self.config.revision,
+                    revision=state.current_config_revision,
                     timestamp=round(time.time(), 2),
                     value=custom_types.MQTTMeasurementData(
                         gmp343_raw=current_sensor_data.raw,

@@ -54,7 +54,7 @@ def _test_message_sending(mqtt_communication_enabled: bool) -> None:
 
     # enqueue dummy message
     dummy_data_message_body = custom_types.MQTTMeasurementMessageBody(
-                    revision=config.revision,
+                    revision=1,
                     timestamp=round(time.time(), 2),
                     value=custom_types.MQTTMeasurementData(
                         gmp343_raw=0.0,

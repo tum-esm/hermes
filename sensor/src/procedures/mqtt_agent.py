@@ -82,11 +82,12 @@ class MQTTAgent:
         )
 
         # periodically send a heartbeat message
+        state = utils.StateInterface.read()
         def _enqueue_heartbeat_message() -> None:
             message_queue.enqueue_message(
                 config,
                 custom_types.MQTTAcknowledgmentMessageBody(
-                    revision=config.revision, timestamp=time.time(), success=True
+                    revision=state.current_config_revision, timestamp=time.time(), success=True
                 ),
             )
 

@@ -56,7 +56,6 @@ def sample_config() -> Any:
 
     with open(join(PROJECT_DIR, "config", "config.template.json")) as f:
         sample_config = custom_types.Config(**json.load(f))
-        sample_config.revision = 17
 
     _save_file(
         CONFIG_FILE,
