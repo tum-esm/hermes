@@ -5,7 +5,7 @@ from datetime import datetime
 from os.path import dirname, abspath, join
 from typing import Literal, Optional
 
-from src import custom_types
+from src import custom_types, utils
 from .message_queue import MessageQueue
 from .functions import CommandLineException
 
@@ -212,13 +212,14 @@ class Logger:
                 + extension_message_details
             )
     
-
+        state = utils.StateInterface.read()
+        
         self.message_queue.enqueue_message(
             config,
             message_body=custom_types.MQTTLogMessageBody(
                 severity=level,
                 message=subject+' '+details,
                 timestamp=round(time.time(), 2),
-                revision=config.revision,
+                revision = state.current_config_revision
             ),
         )

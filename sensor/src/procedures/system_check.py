@@ -80,11 +80,13 @@ class SystemCheckProcedure:
                 f"memory usage is very high ({memory_usage_percent} %)",
                 config=self.config,
             )
-
+        
+        state = utils.StateInterface.read()
+        
         self.message_queue.enqueue_message(
             self.config,
             custom_types.MQTTMeasurementMessageBody(
-                revision=self.config.revision,
+                revision=state.current_config_revision,
                 timestamp=round(time.time(), 2),
                 value=custom_types.MQTTSystemData(
                     enclosure_bme280_temperature=mainboard_temperature,

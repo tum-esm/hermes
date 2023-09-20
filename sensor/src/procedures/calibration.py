@@ -53,6 +53,7 @@ class CalibrationProcedure:
             self.sequence_calibration_bottle = self.config.calibration.gases
 
     def run(self) -> None:
+        state = utils.StateInterface.read()
         calibration_time = datetime.utcnow().timestamp()
         self.logger.info(
             f"starting calibration procedure at timestamp {calibration_time}",
@@ -97,7 +98,7 @@ class CalibrationProcedure:
                 self.message_queue.enqueue_message(
                     self.config,
                     custom_types.MQTTMeasurementMessageBody(
-                        revision=self.config.revision,
+                        revision=state.current_config_revision,
                         timestamp=round(time.time(), 2),
                         value=custom_types.MQTTCalibrationData(
                             cal_bottle_id=float(gas.bottle_id),
