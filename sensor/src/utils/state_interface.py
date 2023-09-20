@@ -17,8 +17,12 @@ class StateInterface:
         state = StateInterface.read()
         if state.last_upgrade_time is None:
             state.last_upgrade_time = time.time()
+            
+        if state.current_config_revision is None:
+            state.current_config_revision = 0
+            
         StateInterface.write(state)
-
+        
     @staticmethod
     def read() -> custom_types.State:
         logger = utils.Logger("state-interface")

@@ -89,7 +89,6 @@ class Config(pydantic.BaseModel):
     """The config.json for each sensor"""
 
     version: Literal["0.2.0-beta.4"] #TODO: change that
-    revision: int = pydantic.Field(..., ge=0)
     verbose_logging: bool
     active_components: ActiveComponentsConfig
     hardware: HardwareConfig

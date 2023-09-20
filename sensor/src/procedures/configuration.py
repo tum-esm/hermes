@@ -79,10 +79,13 @@ class ConfigurationProcedure:
             )
             return
 
-        if self.config.revision >= new_revision:
+
+        state = utils.StateInterface.read()
+        
+        if state.current_config_revision >= new_revision:
             self.logger.info(
                 "received config revision is not newer",
-                details=f"received revision = {new_revision}, current revision = {self.config.revision}",
+                details=f"received revision = {new_revision}, current revision = {state.current_config_revision}",
                 config=self.config,
             )
             return
@@ -118,6 +121,16 @@ class ConfigurationProcedure:
 
             self.logger.info(
                 f"upgrading to revision {new_revision}: tests were successful",
+                config=self.config,
+            )
+            
+            # Update revision in state file
+            state = utils.StateInterface.read()
+            state.current_config_revision = new_revision
+            utils.StateInterface.write(state)
+            
+            self.logger.info(
+                f"Updated state file to new revision: {new_revision}",
                 config=self.config,
             )
 
@@ -175,7 +188,7 @@ class ConfigurationProcedure:
         if has_same_directory:
             restore_current_config()
         self.logger.info(
-            f"continuing with current revision {self.config.revision} "
+            f"continuing with current revision {state.current_config_revision} "
             + f"and version {self.config.version}"
         )
 
