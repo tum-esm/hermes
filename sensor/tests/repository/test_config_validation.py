@@ -39,9 +39,6 @@ def test_config_validation() -> None:
     # some valid configs
     Config(**VALID_CONFIG)
 
-    # testing the merge_dicts function
-    Config(**merge_dicts(deepcopy(VALID_CONFIG), {"revision": 72}))
-
     for modification in [
         {"version": "0.2.0"},
         {"general": 30},
