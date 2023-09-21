@@ -23,4 +23,4 @@ export MQTT_PASSWORD="password"
 export PYTHONPATH=$(pwd)
 
 # Start jupyter server
-poetry run python -m jupyterlab --no-browser --port 8532
+poetry run python -m jupyterlab --no-browser --port 8533

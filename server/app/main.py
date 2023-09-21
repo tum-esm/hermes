@@ -384,12 +384,23 @@ async def read_logs(request, values):
         },
     )
     elements = await request.state.dbpool.fetch(query, *arguments)
+    elements = database.dictify(
+        elements if values.query["direction"] == "next" else reversed(elements)
+    )
+    elements = [
+        {
+            "severity": element["severity"],
+            "revision": element["revision"],
+            "creation_timestamp": element["creation_timestamp"],
+            "subject": element["message"],
+            "details": "",
+        }
+        for element in elements
+    ]
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=200,
-        content=database.dictify(
-            elements if values.query["direction"] == "next" else reversed(elements)
-        ),
+        content=elements,
     )
 
 
@@ -400,10 +411,23 @@ async def read_logs_aggregates(request, values):
         arguments={"sensor_identifier": values.path["sensor_identifier"]},
     )
     elements = await request.state.dbpool.fetch(query, *arguments)
+    elements = database.dictify(elements)
+    elements = [
+        {
+            "severity": element["severity"],
+            "min_revision": element["min_revision"],
+            "max_revision": element["max_revision"],
+            "min_creation_timestamp": element["min_creation_timestamp"],
+            "max_creation_timestamp": element["max_creation_timestamp"],
+            "subject": element["message"],
+            "count": element["count"],
+        }
+        for element in elements
+    ]
     # Return successful response
     return starlette.responses.JSONResponse(
         status_code=200,
-        content=database.dictify(elements),
+        content=elements,
     )
 
 
