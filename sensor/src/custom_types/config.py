@@ -88,7 +88,7 @@ class CalibrationConfig(pydantic.BaseModel):
 class Config(pydantic.BaseModel):
     """The config.json for each sensor"""
 
-    version: Literal["0.2.0-beta.4"] #TODO: change that
+    version: str = pydantic.Field(regex=r"^\d+\.\d+\.\d+(?:-(?:alpha|beta)\.\d+)?$") #e.g., "1.2.3" or "99.0.1" or "42.1.0-alpha.6"
     verbose_logging: bool
     active_components: ActiveComponentsConfig
     hardware: HardwareConfig
