@@ -251,7 +251,6 @@ class ConfigurationProcedure:
         ) as f:
             json.dump(
                 {
-                    "revision": config_request.revision,
                     **config_request.configuration.dict(),
                 },
                 f,
