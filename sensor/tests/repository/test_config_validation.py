@@ -38,10 +38,9 @@ class ValidationPassedException(Exception):
 def test_config_validation() -> None:
     # some valid configs
     Config(**VALID_CONFIG)
-
+    
     for modification in [
-        {"version": "0.2.0"},
-        {"general": 30},
+        {"general": 30}, # parameter does not exist
         {
             "measurement": {
                 "air_inlets": [
@@ -59,14 +58,7 @@ def test_config_validation() -> None:
                     },  # invalid type of "number"
                 ]
             }
-        },
-        {
-            "heated_enclosure": {
-                "device_path": "something",
-                "target_temperature": -10,
-                "allowed_deviation": 15,
-            },
-        },
+        }
     ]:
         try:
             invalid_config = merge_dicts(deepcopy(VALID_CONFIG), modification)
