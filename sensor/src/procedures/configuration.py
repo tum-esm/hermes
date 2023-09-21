@@ -97,7 +97,7 @@ class ConfigurationProcedure:
             config=self.config,
         )
         self.logger.info(
-            message=f"using config {json.dumps(config_request.configuration.dict(), indent=4)}"
+            message=f"using config {json.dumps(config_request.configuration.dict(), indent=4)}", config=self.config
         )
 
         try:
