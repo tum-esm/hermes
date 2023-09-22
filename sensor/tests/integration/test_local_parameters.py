@@ -13,7 +13,7 @@ CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.json")
 
 MAX_PUMP_RPS = 70
 
-@pytest.mark.skip
+
 @pytest.mark.parameter_update
 @pytest.mark.version_update
 @pytest.mark.integration
