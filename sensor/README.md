@@ -223,22 +223,11 @@ sudo udhcpc -i wwan0
 
 **For every new release of the sensor software, the following code changes should happen:**
 
-1. Update the version in `pyproject.toml`
-2. Update the version in `src/custom_types/config.py`:
-
-    ```python
-    class Config(pydantic.BaseModel):
-        """The config.json for each sensor"""
-
-        version: Literal["0.1.0-beta.3"]
-        ...
-    ```
-
-3. Update the version in `config/config.template.json` (you can keep the revision at zero since the server will set it)
+1. Create a new release in Github with a matching tag (i.e. 0.1.0-beta.3)
+2. Update the `config.json` that will be sent to the system to the correct tag
     ```json
     {
         "version": "0.1.0-beta.3",
-        "revision": 0,
         ...
     }
     ```
