@@ -4,9 +4,6 @@ import time
 from src import custom_types, utils, hardware
 
 
-# TODO: refactor calibration and measurement procedure to use same base class
-
-
 class CalibrationProcedure:
     """runs when a calibration is due"""
 
@@ -126,7 +123,6 @@ class CalibrationProcedure:
             self.seconds_drying_with_first_bottle = 0
 
         # switch back to measurement inlet
-        # TODO: clean up the hard coded first measurement inlet
         self.hardware_interface.valves.set_active_input(
             self.config.measurement.air_inlets[0].valve_number
         )
