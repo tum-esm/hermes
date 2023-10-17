@@ -174,7 +174,10 @@ def run() -> None:
         calibration_prodecure = procedures.CalibrationProcedure(
             config, hardware_interface
         )
-        measurement_prodecure = procedures.MeasurementProcedure(
+        wind_measurement_prodecure = procedures.WindMeasurementProcedure(
+            config, hardware_interface
+        )
+        CO2_measurement_prodecure = procedures.CO2MeasurementProcedure(
             config, hardware_interface
         )
     except Exception as e:
@@ -245,7 +248,8 @@ def run() -> None:
 
             # if messages are empty, run regular measurements
             logger.info("running measurements")
-            measurement_prodecure.run()
+            wind_measurement_prodecure.run()
+            CO2_measurement_prodecure.run()
 
             # -----------------------------------------------------------------
 
