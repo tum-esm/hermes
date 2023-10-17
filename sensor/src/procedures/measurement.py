@@ -6,9 +6,11 @@ from src import custom_types, utils, hardware
 class MeasurementProcedure:
     """runs every mainloop call after possible configuration/calibration
 
-    1. Check whether the wind and co2 sensor report any issues
-    3. Read inlet pressure and humidity
-    4. Perform measurements"""
+    1. Check whether the wind and CO2 sensor report any issues
+    2. Collect latest pressure and humidity inlet sensor readings
+    3. Update compensation values for CO2 sensor
+    4. Perform measurements for wind/CO2 sensor
+    5. Send out measurement data over MQTT"""
 
     def __init__(
         self,
@@ -36,6 +38,9 @@ class MeasurementProcedure:
         )
 
     def _send_latest_wind_data(self) -> None:
+        """
+        fetches the latest wind data and sends it our over MQTT.
+        """
         # wind measurement
         wind_data = self.hardware_interface.wind_sensor.get_current_wind_measurement()
 
@@ -63,13 +68,8 @@ class MeasurementProcedure:
 
     def run(self) -> None:
         """
-        1. checks wind and co2 sensor for errors
-        2. switches between input valves
-        4. sends air parameters to co2 sensor for compensation
-        5. collects measurements for 2 minutes
-
-        the measurements will be sent to the MQTT client right
-        during the collection (2 minutes)
+        1. collect and send wind measurements in 2m intervals
+        2. collect and send CO2 measurements in 10s intervals
         """
         self.logger.info(f"starting 2 minute measurement interval")
         measurement_procedure_start_time = time.time()
