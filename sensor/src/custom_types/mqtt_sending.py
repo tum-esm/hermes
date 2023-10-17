@@ -13,7 +13,9 @@ class MQTTConfig(pydantic.BaseModel):
     mqtt_port: int = pydantic.Field(..., ge=1, le=65535)
     mqtt_username: str = pydantic.Field(..., min_length=4, max_length=256)
     mqtt_password: str = pydantic.Field(..., min_length=4, max_length=256)
-    mqtt_base_topic: str = pydantic.Field(..., max_length=256, regex=r"^([a-z0-9_-]+\/)*$")
+    mqtt_base_topic: str = pydantic.Field(
+        ..., max_length=256, regex=r"^([a-z0-9_-]+\/)*$"
+    )
 
     class Config:
         extra = "forbid"
@@ -38,28 +40,30 @@ class MQTTLogMessageBody(pydantic.BaseModel):
 # -----------------------------------------------------------------------------
 # MQTT Data Message
 
+
 class MQTTMeasurementData(pydantic.BaseModel):
     gmp343_raw: float
     gmp343_compensated: float
     gmp343_filtered: float
+    gmp343_temperature: Optional[float]
     bme280_temperature: Optional[float]
     bme280_humidity: Optional[float]
     bme280_pressure: Optional[float]
     sht45_temperature: Optional[float]
     sht45_humidity: Optional[float]
-    gmp343_temperature: Optional[float]
+
 
 class MQTTCalibrationData(pydantic.BaseModel):
     cal_bottle_id: float
     cal_gmp343_raw: float
     cal_gmp343_compensated: float
     cal_gmp343_filtered: float
+    cal_gmp343_temperature: Optional[float]
     cal_bme280_temperature: Optional[float]
     cal_bme280_humidity: Optional[float]
     cal_bme280_pressure: Optional[float]
     cal_sht45_temperature: Optional[float]
     cal_sht45_humidity: Optional[float]
-    cal_gmp343_temperature: Optional[float]
 
 
 class MQTTSystemData(pydantic.BaseModel):
@@ -137,16 +141,17 @@ class MQTTLogMessage(pydantic.BaseModel):
 
 class MQTTMeasurementMessage(pydantic.BaseModel):
     """element in local message queue"""
-    
+
     header: MQTTMessageHeader
     body: MQTTMeasurementMessageBody
 
     class Config:
         extra = "forbid"
 
+
 class MQTTAcknowledgmentMessage(pydantic.BaseModel):
     """element in local message queue"""
-    
+
     header: MQTTMessageHeader
     body: MQTTAcknowledgmentMessageBody
 
@@ -154,7 +159,9 @@ class MQTTAcknowledgmentMessage(pydantic.BaseModel):
         extra = "forbid"
 
 
-MQTTMessageBody = Union[MQTTLogMessageBody, MQTTMeasurementMessageBody, MQTTAcknowledgmentMessageBody]
+MQTTMessageBody = Union[
+    MQTTLogMessageBody, MQTTMeasurementMessageBody, MQTTAcknowledgmentMessageBody
+]
 MQTTMessage = Union[MQTTLogMessage, MQTTMeasurementMessage, MQTTAcknowledgmentMessage]
 
 # -----------------------------------------------------------------------------
