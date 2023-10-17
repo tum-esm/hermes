@@ -3,13 +3,80 @@ from typing import Optional
 from src import custom_types, utils, hardware
 
 
-class MeasurementProcedure:
+class WindMeasurementProcedure:
     """runs every mainloop call after possible configuration/calibration
 
-    1. Check whether the wind and CO2 sensor report any issues
+    1. Check whether the wind reports any issues
+    2. Perform measurements for wind sensor
+    5. Send out measurement data over MQTT"""
+
+    def __init__(
+        self,
+        config: custom_types.Config,
+        hardware_interface: hardware.HardwareInterface,
+    ) -> None:
+        self.logger, self.config = utils.Logger(origin="measurement-procedure"), config
+        self.hardware_interface = hardware_interface
+
+        # state variables
+        self.wind_data: Optional[custom_types.WindSensorData] = None
+        self.message_queue = utils.MessageQueue()
+
+    def _read_latest_wind_data(self) -> None:
+        # wind measurement
+        self.wind_data = (
+            self.hardware_interface.wind_sensor.get_current_wind_measurement()
+        )
+
+    def _send_latest_wind_data(self) -> None:
+        """
+        fetches the latest wind data and sends it our over MQTT.
+        """
+        # determine new valve
+        if self.wind_data is not None:
+            self.logger.info(f"sending latest wind data: {self.wind_data}")
+
+            state = utils.StateInterface.read()
+            self.message_queue.enqueue_message(
+                self.config,
+                custom_types.MQTTMeasurementMessageBody(
+                    revision=state.current_config_revision,
+                    timestamp=round(time.time(), 2),
+                    value=custom_types.MQTTWindData(
+                        wxt532_direction_min=self.wind_data.direction_min,
+                        wxt532_direction_avg=self.wind_data.direction_avg,
+                        wxt532_direction_max=self.wind_data.direction_max,
+                        wxt532_speed_min=self.wind_data.speed_min,
+                        wxt532_speed_avg=self.wind_data.speed_avg,
+                        wxt532_speed_max=self.wind_data.speed_max,
+                        wxt532_last_update_time=self.wind_data.last_update_time,
+                    ),
+                ),
+            )
+
+    def run(self) -> None:
+        """
+        1. collect and send wind measurements in 2m intervals
+        2. collect and send CO2 measurements in 10s intervals
+        """
+        self.logger.info(f"reading latest wind measurement")
+
+        # Read wind data
+        self._read_latest_wind_data()
+
+        # Send wind data
+        self._send_latest_wind_data()
+
+        self.logger.info(f"finished reading latest wind measurement")
+
+
+class CO2MeasurementProcedure:
+    """runs every mainloop call after possible configuration/calibration
+
+    1. Check whether the CO2 sensor report any issues
     2. Collect latest pressure and humidity inlet sensor readings
     3. Update compensation values for CO2 sensor
-    4. Perform measurements for wind/CO2 sensor
+    4. Perform measurements for CO2 sensor
     5. Send out measurement data over MQTT"""
 
     def __init__(
@@ -37,45 +104,12 @@ class MeasurementProcedure:
             self.hardware_interface.air_inlet_sht45_sensor.get_data()
         )
 
-    def _send_latest_wind_data(self) -> None:
-        """
-        fetches the latest wind data and sends it our over MQTT.
-        """
-        # wind measurement
-        wind_data = self.hardware_interface.wind_sensor.get_current_wind_measurement()
-
-        # determine new valve
-        if wind_data is not None:
-            self.logger.info(f"sending latest wind data: {wind_data}")
-
-            state = utils.StateInterface.read()
-            self.message_queue.enqueue_message(
-                self.config,
-                custom_types.MQTTMeasurementMessageBody(
-                    revision=state.current_config_revision,
-                    timestamp=round(time.time(), 2),
-                    value=custom_types.MQTTWindData(
-                        wxt532_direction_min=wind_data.direction_min,
-                        wxt532_direction_avg=wind_data.direction_avg,
-                        wxt532_direction_max=wind_data.direction_max,
-                        wxt532_speed_min=wind_data.speed_min,
-                        wxt532_speed_avg=wind_data.speed_avg,
-                        wxt532_speed_max=wind_data.speed_max,
-                        wxt532_last_update_time=wind_data.last_update_time,
-                    ),
-                ),
-            )
-
     def run(self) -> None:
         """
-        1. collect and send wind measurements in 2m intervals
-        2. collect and send CO2 measurements in 10s intervals
+        1. collect and send CO2 measurements in 10s intervals for 2 minutes
         """
-        self.logger.info(f"starting 2 minute measurement interval")
+        self.logger.info(f"starting 2 minute CO2 measurement interval")
         measurement_procedure_start_time = time.time()
-
-        # Send wind data
-        self._send_latest_wind_data()
 
         # do regular measurements for about 2 minutes
         while True:
@@ -130,4 +164,4 @@ class MeasurementProcedure:
             ) >= self.config.measurement.timing.seconds_per_measurement_interval:
                 break
 
-        self.logger.info(f"finished measurement interval")
+        self.logger.info(f"finished CO2 measurement interval")
