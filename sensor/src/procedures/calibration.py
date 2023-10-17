@@ -69,7 +69,13 @@ class CalibrationProcedure:
             f"starting calibration procedure at timestamp {calibration_time}",
             config=self.config,
         )
-        # clear ring buffer
+
+        # log the current CO2 sensor device info
+        self.logger.info(
+            f"GMP343 Sensor Info: {self.hardware_interface.co2_sensor.get_device_info()}"
+        )
+
+        # clear ring buffers
         self.rb_humidity.clear()
         self.rb_pressure.clear()
 
