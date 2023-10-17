@@ -124,6 +124,11 @@ class CO2MeasurementProcedure:
         self.logger.info(f"starting 2 minute CO2 measurement interval")
         measurement_procedure_start_time = time.time()
 
+        # log the current CO2 sensor device info
+        self.logger.info(
+            f"GMP343 Sensor Info: {self.hardware_interface.co2_sensor.get_device_info()}"
+        )
+
         # do regular measurements for about 2 minutes
         while True:
             state = utils.StateInterface.read()
