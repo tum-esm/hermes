@@ -18,6 +18,12 @@ class CalibrationProcedure:
         # state variables
         self.last_measurement_time: float = 0
         self.message_queue = utils.MessageQueue()
+        self.rb_pressure = utils.RingBuffer(
+            self.config.calibration.average_air_inlet_measurements
+        )
+        self.rb_humidity = utils.RingBuffer(
+            self.config.calibration.average_air_inlet_measurements
+        )
 
     def _update_air_inlet_parameters(self) -> None:
         """
@@ -27,9 +33,16 @@ class CalibrationProcedure:
         self.air_inlet_bme280_data = (
             self.hardware_interface.air_inlet_bme280_sensor.get_data()
         )
+
+        # Add to ring buffer to calculate moving average of low cost sensor
+        self.rb_pressure.append(self.air_inlet_bme280_data.pressure)
+
         self.air_inlet_sht45_data = (
             self.hardware_interface.air_inlet_sht45_sensor.get_data()
         )
+
+        # Add to ring buffer to calculate moving average of low cost sensor
+        self.rb_humidity.append(self.air_inlet_sht45_data.humidity)
 
     def _alternate_bottle_for_drying(self) -> None:
         """1. sets time for drying the air chamber with first calibration bottle
@@ -56,6 +69,9 @@ class CalibrationProcedure:
             f"starting calibration procedure at timestamp {calibration_time}",
             config=self.config,
         )
+        # clear ring buffer
+        self.rb_humidity.clear()
+        self.rb_pressure.clear()
 
         # alternate calibration bottle order every other day
         # first bottle receives additional time to dry air chamber
@@ -85,8 +101,8 @@ class CalibrationProcedure:
                 # perform a CO2 measurement
                 current_sensor_data = (
                     self.hardware_interface.co2_sensor.get_current_concentration(
-                        pressure=self.air_inlet_bme280_data.pressure,
-                        humidity=self.air_inlet_sht45_data.humidity,
+                        pressure=self.rb_pressure.avg(),
+                        humidity=self.rb_humidity.avg(),
                     )
                 )
                 self.logger.debug(f"new calibration measurement: {current_sensor_data}")

@@ -49,6 +49,7 @@ class MeasurementConfig(pydantic.BaseModel):
     air_inlets: list[MeasurementAirInletConfig] = pydantic.Field(
         min_items=1, max_items=4
     )
+    average_air_inlet_measurements: int
 
     class Config:
         extra = "forbid"
@@ -77,6 +78,7 @@ class CalibrationGasConfig(pydantic.BaseModel):
 class CalibrationConfig(pydantic.BaseModel):
     timing: CalibrationTimingConfig
     gases: list[CalibrationGasConfig] = pydantic.Field(..., min_items=1, max_items=3)
+    average_air_inlet_measurements: int
 
     class Config:
         extra = "forbid"

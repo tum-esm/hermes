@@ -91,6 +91,12 @@ class CO2MeasurementProcedure:
         self.active_air_inlet: Optional[custom_types.MeasurementAirInletConfig] = None
         self.last_measurement_time: float = 0
         self.message_queue = utils.MessageQueue()
+        self.rb_pressure = utils.RingBuffer(
+            self.config.measurement.average_air_inlet_measurements
+        )
+        self.rb_humidity = utils.RingBuffer(
+            self.config.measurement.average_air_inlet_measurements
+        )
 
     def _update_air_inlet_parameters(self) -> None:
         """
@@ -100,9 +106,16 @@ class CO2MeasurementProcedure:
         self.air_inlet_bme280_data = (
             self.hardware_interface.air_inlet_bme280_sensor.get_data()
         )
+
+        # Add to ring buffer to calculate moving average of low cost sensor
+        self.rb_pressure.append(self.air_inlet_bme280_data.pressure)
+
         self.air_inlet_sht45_data = (
             self.hardware_interface.air_inlet_sht45_sensor.get_data()
         )
+
+        # Add to ring buffer to calculate moving average of low cost sensor
+        self.rb_humidity.append(self.air_inlet_sht45_data.humidity)
 
     def run(self) -> None:
         """
@@ -132,8 +145,8 @@ class CO2MeasurementProcedure:
             # perform a CO2 measurement
             current_sensor_data = (
                 self.hardware_interface.co2_sensor.get_current_concentration(
-                    pressure=self.air_inlet_bme280_data.pressure,
-                    humidity=self.air_inlet_sht45_data.humidity,
+                    pressure=self.rb_pressure.avg(),
+                    humidity=self.rb_humidity.avg(),
                 )
             )
             self.logger.debug(f"new measurement: {current_sensor_data}")
