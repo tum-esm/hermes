@@ -16,7 +16,8 @@
             "seconds_per_measurement": 10,
             "pumped_litres_per_minute": 4
         },
-        "air_inlets": [{ "valve_number": 1, "direction": 0, "tube_length": 50 }]
+        "air_inlets": [{ "valve_number": 1, "direction": 0, "tube_length": 50 }],
+        "average_air_inlet_measurements": 15
     },
     "calibration": {
         "timing": {
@@ -27,6 +28,7 @@
         "gases": [
             { "valve_number": 2, "bottle_id": "1" },
             { "valve_number": 3, "bottle_id": "2" }
-        ]
+        ],
+        "average_air_inlet_measurements": 15
     }
 }

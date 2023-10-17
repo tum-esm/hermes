@@ -1,7 +1,7 @@
 from .logger import Logger
 from .config_interface import ConfigInterface
 from .state_interface import StateInterface
-
+from .moving_average_queue import RingBuffer
 from .message_queue import MessageQueue
 from .mqtt_connection import MQTTConnection
 
