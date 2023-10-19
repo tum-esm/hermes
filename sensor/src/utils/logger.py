@@ -54,7 +54,8 @@ class Logger:
         config: Optional[custom_types.Config] = None,
         details: str = "",
     ) -> None:
-        """writes an info log line"""
+        """writes an info log line, sends the message via
+        MQTT when config is passed (required for revision number)"""
         if len(details) == 0:
             self._write_log_line("INFO", message)
         else:
@@ -197,7 +198,7 @@ class Logger:
     ) -> None:
         subject = f"{self.origin} - {subject}"
 
-        #TODO: refactore the split of subject and detail to only one message
+        # TODO: refactore the split of subject and detail to only one message
         if len(subject) > 256:
             extension_message_subject = f" ... CUT ({len(subject)} -> 256)"
             subject = (
@@ -211,15 +212,15 @@ class Logger:
                 details[: (16384 - len(extension_message_details))]
                 + extension_message_details
             )
-    
+
         state = utils.StateInterface.read()
-        
+
         self.message_queue.enqueue_message(
             config,
             message_body=custom_types.MQTTLogMessageBody(
                 severity=level,
-                message=subject+' '+details,
+                message=subject + " " + details,
                 timestamp=round(time.time(), 2),
-                revision = state.current_config_revision
+                revision=state.current_config_revision,
             ),
         )
