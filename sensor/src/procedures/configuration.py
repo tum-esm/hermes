@@ -200,14 +200,14 @@ class ConfigurationProcedure:
                 ),
             )
 
-        if has_same_directory:
-            restore_current_config()
-        self.logger.info(
-            f"continuing with current revision {state.current_config_revision} "
-            + f"and version {self.config.version}"
-        )
+            if has_same_directory:
+                restore_current_config()
+            self.logger.info(
+                f"continuing with current revision {state.current_config_revision} "
+                + f"and version {self.config.version}"
+            )
 
-        raise e
+            raise e
 
     def _download_code(self, version: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""

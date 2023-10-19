@@ -59,32 +59,6 @@ def run() -> None:
     utils.set_alarm(MAX_SETUP_TIME, "setup")
 
     # -------------------------------------------------------------------------
-    # TODO: move to utils
-    # define incremental backoff mechanism
-
-    # will be used for rebooting when errors persist for more than 24 hours
-    last_successful_mainloop_iteration_time = time.time()
-
-    # incremental backoff times on exceptions (15s, 30s, 1m, 2m, 4m, 8m)
-    backoff_time_bucket_index = 0
-    backoff_time_buckets = [15, 30, 60, 120, 240, 480]
-
-    def wait_during_repair() -> int:
-        """Wait for the current backoff time and increase backoff time
-        bucket index. Log the waiting time. Return the new backoff time
-        bucket index."""
-        current_backoff_time = backoff_time_buckets[backoff_time_bucket_index]
-        logger.info(
-            f"waiting for {current_backoff_time} seconds",
-            config=config,
-        )
-        time.sleep(current_backoff_time)
-        return min(
-            backoff_time_bucket_index + 1,
-            len(backoff_time_buckets) - 1,
-        )
-
-    # -------------------------------------------------------------------------
     # initialize mqtt receiver, archiver, and sender (sending is optional)
 
     try:
@@ -251,9 +225,6 @@ def run() -> None:
                     config=config,
                 )
                 procedures.MQTTAgent.deinit()
-                # the back_off_time_bucket leads to measurement downtime
-                # TODO: refactor to skip instead of sleeping
-                backoff_time_bucket_index = wait_during_repair()
                 procedures.MQTTAgent.init(config)
                 logger.info(
                     f"successfully restarted messaging agent",
@@ -285,7 +256,6 @@ def run() -> None:
                 # reinitialize all hardware interfaces
                 logger.info("performing hard reset", config=config)
                 hardware_interface.teardown()
-                backoff_time_bucket_index = wait_during_repair()
                 hardware_interface.reinitialize(config)
                 logger.info("hard reset was successful", config=config)
 
