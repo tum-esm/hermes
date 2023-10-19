@@ -62,7 +62,7 @@ class HardwareInterface:
         self.mainboard_sensor.check_errors()
 
     def teardown(self) -> None:
-        """ends all hardware/system connections excluding the CO2 sensor"""
+        """ends all hardware/system connections"""
         self.logger.info("running hardware teardown")
 
         if not hardware_lock.is_locked:
