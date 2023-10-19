@@ -215,13 +215,15 @@ def run() -> None:
 
                 # stopping this script inside the procedure if successful
                 logger.info("running configuration procedure", config=config)
-                configuration_prodecure.run(new_config_message)
-                # Either raises an exception here if configuration was successful
-                # Shuts down current run and waits for restart via Cron Job
-                # -> Exit
 
-                # Or reinitialized hardware if configuration failed (no exception was raised)
-                hardware_interface.reinitialize(config)
+                try:
+                    configuration_prodecure.run(new_config_message)
+                    # Shuts down current run if configuration was successful
+                    # Restarts via Cron Job to load new config
+                    # -> Exit
+                except:
+                    # reinitialize hardware if configuration failed
+                    hardware_interface.reinitialize(config)
 
             # -----------------------------------------------------------------
 
