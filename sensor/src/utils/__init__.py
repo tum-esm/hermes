@@ -16,4 +16,5 @@ from .functions import (
     get_random_string,
     get_cpu_temperature,
     set_alarm,
+    ExponentialBackOff,
 )
