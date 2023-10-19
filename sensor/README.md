@@ -1,6 +1,7 @@
 ## Visualisation of procedures
 
-![image](https://github.com/tum-esm/hermes/assets/59452158/74dd40ac-59b0-4110-8be7-f4a3ca661496)
+![image](https://github.com/tum-esm/hermes/assets/59452158/a87f1974-4448-4a35-bfbc-3481af7e181c)
+
 
 ## System release & update process
 
