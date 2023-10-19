@@ -15,7 +15,7 @@ def run() -> None:
     - State Interface
     - Timeouts
     - Incremental Backoff Mechanism
-    - MQTT Agend (e)
+    - MQTT Agent
     - Initialize Hardware Interface (e)
     - Initialise Config Procedure (e)
     - Initialise Procedures (e) (System Checks, Calibration, Measurement)
