@@ -19,23 +19,29 @@ class CommandLineException(Exception):
 
     def __str__(self) -> str:
         return repr(self.value)
-    
-class ExponentialBackOff():
+
+
+class ExponentialBackOff:
     def __init__(self) -> None:
         self.backoff_time_bucket_index = 0
         # incremental backoff times on exceptions (1m, 2m, 4m, 8m, 16m, 32m)
         self.backoff_time_buckets = [60, 120, 240, 480, 960, 1920]
-        
-    def wait_during_repair(self) -> int:
-        """Wait for the current backoff time and increase backoff time
-        bucket index. Log the waiting time. Return the new backoff time
-        bucket index."""
+
+    def reset(self) -> None:
+        self.backoff_time_bucket_index = 0
+
+    def return_timer(self) -> int:
+        """
+        Returns the next backoff time in seconds
+        """
         current_backoff_time = self.backoff_time_buckets[self.backoff_time_bucket_index]
-        
-        return min(
+
+        self.backoff_time_bucket_index = min(
             self.backoff_time_bucket_index + 1,
             len(self.backoff_time_buckets) - 1,
         )
+
+        return current_backoff_time
 
 
 def run_shell_command(
@@ -117,5 +123,3 @@ def set_alarm(timeout: int, label: str) -> None:
 
     signal.signal(signal.SIGALRM, alarm_handler)
     signal.alarm(timeout)
-
-        

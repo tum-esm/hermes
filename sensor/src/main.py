@@ -58,6 +58,9 @@ def run() -> None:
     )
     utils.set_alarm(MAX_SETUP_TIME, "setup")
 
+    # Exponental backoff time
+    ebo = utils.ExponentialBackOff()
+
     # -------------------------------------------------------------------------
     # initialize mqtt receiver, archiver, and sender (sending is optional)
 
