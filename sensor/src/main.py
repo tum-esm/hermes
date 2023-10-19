@@ -97,6 +97,9 @@ def run() -> None:
             label="could not start messaging agent",
             config=config,
         )
+        # at this point the automation can't be started without internet connection
+        # or available broker
+        # TODO: fix this
         raise e
 
     # -------------------------------------------------------------------------
@@ -215,8 +218,10 @@ def run() -> None:
                 logger.info("running configuration procedure", config=config)
                 configuration_prodecure.run(new_config_message)
                 # Either raises an exception here if configuration was successful
-                # Or reinitialized hardware if configuration failed
-                # TODO: Ask why the exception is needed here
+                # Shuts down current run and waits for restart via Cron Job
+                # -> Exit
+
+                # Or reinitialized hardware if configuration failed (no exception was raised)
                 hardware_interface.reinitialize(config)
 
             # -----------------------------------------------------------------
@@ -292,6 +297,7 @@ def run() -> None:
                     config=config,
                 )
                 procedures.MQTTAgent.deinit()
+                # the back_off_time_bucket leads to measurement downtime
                 backoff_time_bucket_index = wait_during_repair()
                 procedures.MQTTAgent.init(config)
                 logger.info(
