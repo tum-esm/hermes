@@ -242,7 +242,6 @@ def run() -> None:
                     label="failed to restart messaging agent",
                     config=config,
                 )
-                raise e
 
         except Exception as e:
             logger.exception(e, label="exception in mainloop", config=config)
