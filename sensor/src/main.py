@@ -11,12 +11,13 @@ def run() -> None:
     (e) Indicates possibility of an exception that blocks further execution
 
     INIT
-    - Config Interface (e)
+
     - State Interface
     - Timeouts
     - Incremental Backoff Mechanism
     - MQTT Agend (e)
     - Initialize Hardware Interface (e)
+    - Initialise Config Procedure (e)
     - Initialise Procedures (e) (System Checks, Calibration, Measurement)
 
     RUN INFINITE MAIN LOOP
