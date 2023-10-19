@@ -23,7 +23,8 @@ class RingBuffer:
 
     def avg(self) -> Any:
         if len(self.ring_buffer) > 0:
-            return sum(self.ring_buffer) / len(self.ring_buffer)
+            value = sum(self.ring_buffer) / len(self.ring_buffer)
+            return round(value, 2)
         else:
             return None
 
