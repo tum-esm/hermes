@@ -17,9 +17,9 @@ class StateInterface:
         state = StateInterface.read()
         if state.last_upgrade_time is None:
             state.last_upgrade_time = time.time()
-            
+
         StateInterface.write(state)
-        
+
     @staticmethod
     def read() -> custom_types.State:
         logger = utils.Logger("state-interface")
@@ -34,7 +34,8 @@ class StateInterface:
         new_empty_state = custom_types.State(
             last_upgrade_time=None,
             last_calibration_time=None,
-            current_config_revision = 0,
+            current_config_revision=0,
+            offline_since=None,
         )
         StateInterface.write(new_empty_state)
         return new_empty_state
