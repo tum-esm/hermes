@@ -2638,8 +2638,8 @@
     },
     {
       "type": "rectangle",
-      "version": 1137,
-      "versionNonce": 943540147,
+      "version": 1138,
+      "versionNonce": 881466013,
       "isDeleted": false,
       "id": "rU0Q8Sy-w-vDAx5jLXyoh",
       "fillStyle": "hachure",
@@ -2672,9 +2672,13 @@
         {
           "id": "yWI7yXNGl1LEanFHX26Lo",
           "type": "arrow"
+        },
+        {
+          "id": "OE2SlAbcT5QLoAiriFuFl",
+          "type": "arrow"
         }
       ],
-      "updated": 1697727825643,
+      "updated": 1697727977468,
       "link": null,
       "locked": false
     },
@@ -3672,7 +3676,7 @@
     {
       "type": "text",
       "version": 287,
-      "versionNonce": 1922620434,
+      "versionNonce": 1177913411,
       "isDeleted": false,
       "id": "AB0M4grnl47PGIT1P6Law",
       "fillStyle": "hachure",
@@ -3692,7 +3696,7 @@
       "frameId": null,
       "roundness": null,
       "boundElements": [],
-      "updated": 1697727870667,
+      "updated": 1697728042248,
       "link": null,
       "locked": false,
       "fontSize": 20,
@@ -4558,6 +4562,124 @@
         [
           59.42383545042139,
           -1.387453716537948
+        ]
+      ]
+    },
+    {
+      "type": "rectangle",
+      "version": 1314,
+      "versionNonce": 1577477821,
+      "isDeleted": false,
+      "id": "GnvcyKmHUKipHR0LS5Z0V",
+      "fillStyle": "hachure",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": -1109.2776331573968,
+      "y": 457.479637157291,
+      "strokeColor": "#9f1239",
+      "backgroundColor": "#fda4af",
+      "width": 74.92250069304828,
+      "height": 45.78597264575155,
+      "seed": 1092229373,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 3
+      },
+      "boundElements": [
+        {
+          "type": "text",
+          "id": "KcirmdnuXU0o2tSLRoSpI"
+        }
+      ],
+      "updated": 1697727972216,
+      "link": null,
+      "locked": false
+    },
+    {
+      "type": "text",
+      "version": 1298,
+      "versionNonce": 1701087005,
+      "isDeleted": false,
+      "id": "KcirmdnuXU0o2tSLRoSpI",
+      "fillStyle": "hachure",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": -1089.5976328108727,
+      "y": 471.1726234801668,
+      "strokeColor": "#9f1239",
+      "backgroundColor": "#93c5fd",
+      "width": 35.5625,
+      "height": 18.4,
+      "seed": 130543965,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1697727972216,
+      "link": null,
+      "locked": false,
+      "fontSize": 16,
+      "fontFamily": 2,
+      "text": "EXIT",
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "GnvcyKmHUKipHR0LS5Z0V",
+      "originalText": "EXIT",
+      "lineHeight": 1.15,
+      "baseline": 15
+    },
+    {
+      "type": "arrow",
+      "version": 1423,
+      "versionNonce": 679641331,
+      "isDeleted": false,
+      "id": "OE2SlAbcT5QLoAiriFuFl",
+      "fillStyle": "hachure",
+      "strokeWidth": 1,
+      "strokeStyle": "dashed",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": -1309.4682516300425,
+      "y": 481.2576443521192,
+      "strokeColor": "#9f1239",
+      "backgroundColor": "#fecdd3",
+      "width": 200.94411453728935,
+      "height": 1.0660104981222247,
+      "seed": 2145107389,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": {
+        "type": 2
+      },
+      "boundElements": [],
+      "updated": 1697727981261,
+      "link": null,
+      "locked": false,
+      "startBinding": null,
+      "endBinding": {
+        "elementId": "rU0Q8Sy-w-vDAx5jLXyoh",
+        "focus": -0.43197668553944796,
+        "gap": 21.2538633089747
+      },
+      "lastCommittedPoint": null,
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          200.94411453728935,
+          -1.0660104981222247
         ]
       ]
     }
