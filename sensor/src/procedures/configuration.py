@@ -202,6 +202,8 @@ class ConfigurationProcedure:
             + f"and version {self.config.version}"
         )
 
+        raise e
+
     def _download_code(self, version: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""
         if os.path.isdir(code_path(version)):
