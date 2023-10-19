@@ -83,11 +83,14 @@ class MQTTAgent:
 
         # periodically send a heartbeat message
         state = utils.StateInterface.read()
+
         def _enqueue_heartbeat_message() -> None:
             message_queue.enqueue_message(
                 config,
                 custom_types.MQTTAcknowledgmentMessageBody(
-                    revision=state.current_config_revision, timestamp=time.time(), success=True
+                    revision=state.current_config_revision,
+                    timestamp=time.time(),
+                    success=True,
                 ),
             )
 
@@ -105,7 +108,6 @@ class MQTTAgent:
         logger.info("established graceful teardown hook")
 
         try:
-            # TODO: finish changing topics to new structure and check other files
             config_topic = (
                 f"{mqtt_config.mqtt_base_topic}configurations"
                 + f"/{mqtt_config.station_identifier}"
@@ -219,7 +221,9 @@ class MQTTAgent:
 
                 # -----------------------------------------------------------------
 
-                if any([sent_record_count, resent_record_count, delivered_record_count]):
+                if any(
+                    [sent_record_count, resent_record_count, delivered_record_count]
+                ):
                     if config.verbose_logging:
                         logger.info(
                             f"{sent_record_count}/{resent_record_count}/{delivered_record_count} "
@@ -232,7 +236,7 @@ class MQTTAgent:
                 time.sleep(3)
 
             # TODO: Add exception for the MQTT connected assertion and trigger
-            # a script that (re)nitialized the LTE head driver. Maybe add a 
+            # a script that (re)nitialized the LTE head driver. Maybe add a
             # check for disconnected since > x hours
             except Exception as e:
                 logger.exception(e, label="sending loop has stopped", config=config)
@@ -263,7 +267,9 @@ class MQTTAgent:
 
         if MQTTAgent.communication_loop_process is not None:
             if not MQTTAgent.communication_loop_process.is_alive():
-                raise MQTTAgent.CommunicationOutage("communication loop process is not running")
+                raise MQTTAgent.CommunicationOutage(
+                    "communication loop process is not running"
+                )
 
     @staticmethod
     def __on_config_message(

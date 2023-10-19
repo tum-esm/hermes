@@ -35,7 +35,9 @@ venv_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}/.venv"
 dirname = os.path.dirname
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 CURRENT_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.json")
-CURRENT_TMP_CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.param-change-tmp.json")
+CURRENT_TMP_CONFIG_PATH = os.path.join(
+    PROJECT_DIR, "config", "config.param-change-tmp.json"
+)
 
 
 def store_current_config() -> None:
@@ -45,7 +47,9 @@ def store_current_config() -> None:
 
 
 def restore_current_config() -> None:
-    assert os.path.isfile(CURRENT_TMP_CONFIG_PATH), f"{CURRENT_TMP_CONFIG_PATH} does not exist"
+    assert os.path.isfile(
+        CURRENT_TMP_CONFIG_PATH
+    ), f"{CURRENT_TMP_CONFIG_PATH} does not exist"
     if os.path.isfile(CURRENT_CONFIG_PATH):
         os.remove(CURRENT_CONFIG_PATH)
     os.rename(CURRENT_TMP_CONFIG_PATH, CURRENT_CONFIG_PATH)
@@ -79,9 +83,8 @@ class ConfigurationProcedure:
             )
             return
 
-
         state = utils.StateInterface.read()
-        
+
         if state.current_config_revision >= new_revision:
             self.logger.info(
                 "received config revision is not newer",
@@ -90,6 +93,8 @@ class ConfigurationProcedure:
             )
             return
 
+        # True: parameter update without version update
+        # False: version update (+ parameter update)
         has_same_directory = PROJECT_DIR == code_path(new_version)
 
         self.logger.info(
@@ -97,12 +102,15 @@ class ConfigurationProcedure:
             config=self.config,
         )
         self.logger.info(
-            message=f"using config {json.dumps(config_request.configuration.dict(), indent=4)}", config=self.config
+            message=f"using config {json.dumps(config_request.configuration.dict(), indent=4)}",
+            config=self.config,
         )
 
         try:
+            # parameter update without version update
             if has_same_directory:
                 store_current_config()
+            # version update (+ parameter update)
             else:
                 self._download_code(new_version)
                 self._set_up_venv(new_version)
@@ -116,24 +124,28 @@ class ConfigurationProcedure:
 
             self._run_pytests(
                 new_version,
-                scope=("parameter-change" if (has_same_directory) else "version-change"),
+                scope=(
+                    "parameter-change" if (has_same_directory) else "version-change"
+                ),
             )
 
             self.logger.info(
                 f"upgrading to revision {new_revision}: tests were successful",
                 config=self.config,
             )
-            
+
             # Update revision in state file
             state = utils.StateInterface.read()
             state.current_config_revision = new_revision
             utils.StateInterface.write(state)
-            
+
             self.logger.info(
                 f"Updated state file to new revision: {new_revision}",
                 config=self.config,
             )
 
+            # -------------------------------------------------------------------------
+            # version update (+ parameter update)
             if not has_same_directory:
                 self._update_cli_pointer(new_version)
                 self.logger.info(
@@ -160,11 +172,9 @@ class ConfigurationProcedure:
                 ),
             )
 
-            raise ConfigurationProcedure.ExitOnUpdateSuccess()
-
-        # This raises an error to the calling function on success
-        except ConfigurationProcedure.ExitOnUpdateSuccess as e:
-            raise e
+            # stop execution and wait for restart by cron job
+            # the restart will initialise with the new config
+            exit(0)
 
         # This exception is reached if the config update fails and returns
         # to calling function
@@ -244,6 +254,7 @@ class ConfigurationProcedure:
     ) -> None:
         """write new config config to json file"""
 
+        # config.json
         self.logger.info("dumping config.json file")
         with open(
             f"{code_path(config_request.configuration.version)}/config/config.json",
@@ -257,12 +268,14 @@ class ConfigurationProcedure:
                 indent=4,
             )
 
+        # .env file
         self.logger.info("copying .env file")
         src = f"{PROJECT_DIR}/config/.env"
         dst = f"{code_path(config_request.configuration.version)}/config/.env"
         if not os.path.isfile(dst):
             shutil.copy(src, dst)
 
+        # state.json
         self.logger.info("copying state.json file")
         src = f"{PROJECT_DIR}/config/state.json"
         dst = f"{code_path(config_request.configuration.version)}/config/state.json"

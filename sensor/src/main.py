@@ -103,37 +103,10 @@ def run() -> None:
         raise e
 
     # -------------------------------------------------------------------------
-    # initialize config procedure and check for new configurations
-    # before doing any hardware stuff
+    # initialize config procedure
 
-    # wait up to 15 seconds until retained messages arrived
-    t = time.time()
-    logger.info("checking for new config messages", config=config)
     new_config_message: Optional[custom_types.MQTTConfigurationRequest] = None
-    while (time.time() - t) < 15:
-        new_config_message = procedures.MQTTAgent.get_config_message()
-        if new_config_message is not None:
-            break
-        time.sleep(1)
-
     configuration_prodecure = procedures.ConfigurationProcedure(config)
-    if new_config_message is None:
-        logger.warning("initial config message not received", config=config)
-    else:
-        try:
-            logger.info("running configuration procedure", config=config)
-            utils.set_alarm(MAX_CONFIG_UPDATE_TIME, "config update")
-            configuration_prodecure.run(new_config_message)
-        except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
-            logger.info(
-                "shutting down mainloop due to successful update", config=config
-            )
-            exit(0)
-        except Exception as e:
-            logger.exception(
-                e, label="error during configuration procedure", config=config
-            )
-            raise e
 
     # -------------------------------------------------------------------------
     # initialize a single hardware interface that is only used by one
