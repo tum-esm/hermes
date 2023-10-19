@@ -202,7 +202,10 @@ def run() -> None:
 
             logger.info("checking for new config messages")
             new_config_message = procedures.MQTTAgent.get_config_message()
+
             if new_config_message is not None:
+                # shut down hardware interface before config update
+                # this allows the pytests to test the new config on local hardware
                 try:
                     hardware_interface.teardown()
                 except Exception as e:
@@ -213,14 +216,11 @@ def run() -> None:
                     )
                     exit(1)
 
-                # stopping this script inside the procedure if successful
+                # run config update procedure
                 logger.info("running configuration procedure", config=config)
-
                 try:
                     configuration_prodecure.run(new_config_message)
-                    # Shuts down current run if configuration was successful
-                    # Restarts via Cron Job to load new config
-                    # -> Exit
+                    # -> Exit, Restarts via Cron Job to load new config
                 except:
                     # reinitialize hardware if configuration failed
                     hardware_interface.reinitialize(config)

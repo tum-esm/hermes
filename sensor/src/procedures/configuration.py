@@ -72,6 +72,8 @@ class ConfigurationProcedure:
         new_revision = config_request.revision
         new_version = config_request.configuration.version
 
+        # validate that upgrade is executed by latest sw version
+        # TODO: why is this needed?
         if code_path(self.config.version) != PROJECT_DIR:
             self.logger.info(
                 "skipping upgrade because executed code is not in default directory",
@@ -85,6 +87,7 @@ class ConfigurationProcedure:
 
         state = utils.StateInterface.read()
 
+        # check if config has a newer revision
         if state.current_config_revision >= new_revision:
             self.logger.info(
                 "received config revision is not newer",
@@ -109,16 +112,18 @@ class ConfigurationProcedure:
         try:
             # parameter update without version update
             if has_same_directory:
+                # create a tmp file to store current config
                 store_current_config()
             # version update (+ parameter update)
             else:
                 self._download_code(new_version)
                 self._set_up_venv(new_version)
 
+            # save config to config.json
             self._dump_new_config(config_request)
 
             self.logger.info(
-                f"upgrading to revision {new_revision}: installation was successful",
+                f"upgrading to revision {new_revision}: download was successful",
                 config=self.config,
             )
 
