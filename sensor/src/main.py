@@ -97,10 +97,6 @@ def run() -> None:
             label="could not start messaging agent",
             config=config,
         )
-        # at this point the automation can't be started without internet connection
-        # or available broker
-        # TODO: fix this
-        raise e
 
     # -------------------------------------------------------------------------
     # initialize config procedure
