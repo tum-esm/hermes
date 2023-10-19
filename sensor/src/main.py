@@ -235,10 +235,10 @@ def run() -> None:
             # cancel the alarm for too long mainloops
             signal.alarm(0)
 
-            # reboot if exception lasts longer than 12 hours
-            if (time.time() - last_successful_mainloop_iteration_time) >= 43200:
+            # reboot if exception lasts longer than 24 hours
+            if (time.time() - last_successful_mainloop_iteration_time) >= 86400:
                 logger.info(
-                    "rebooting because no successful mainloop iteration for 12 hours",
+                    "rebooting because no successful MQTT connect for 24 hours",
                     config=config,
                 )
                 os.system("sudo reboot")
@@ -250,6 +250,7 @@ def run() -> None:
                 )
                 procedures.MQTTAgent.deinit()
                 # the back_off_time_bucket leads to measurement downtime
+                # TODO: refactor to skip instead of sleeping
                 backoff_time_bucket_index = wait_during_repair()
                 procedures.MQTTAgent.init(config)
                 logger.info(
@@ -271,14 +272,15 @@ def run() -> None:
             signal.alarm(0)
 
             # reboot if exception lasts longer than 12 hours
-            if (time.time() - last_successful_mainloop_iteration_time) >= 43200:
+            if (time.time() - last_successful_mainloop_iteration_time) >= 86400:
                 logger.info(
-                    "rebooting because no successful mainloop iteration for 12 hours",
+                    "rebooting because no successful mainloop iteration for 24 hours",
                     config=config,
                 )
                 os.system("sudo reboot")
 
             try:
+                # reinitialize all hardware interfaces
                 logger.info("performing hard reset", config=config)
                 hardware_interface.teardown()
                 backoff_time_bucket_index = wait_during_repair()
@@ -291,4 +293,4 @@ def run() -> None:
                     label="exception during hard reset of hardware",
                     config=config,
                 )
-                raise e
+                exit(1)
