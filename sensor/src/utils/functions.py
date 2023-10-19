@@ -4,6 +4,7 @@ import signal
 import string
 import subprocess
 from typing import Any, Optional
+import time
 import pigpio
 import gpiozero.pins.pigpio
 
@@ -26,13 +27,20 @@ class ExponentialBackOff:
         self.backoff_time_bucket_index = 0
         # incremental backoff times on exceptions (1m, 2m, 4m, 8m, 16m, 32m)
         self.backoff_time_buckets = [60, 120, 240, 480, 960, 1920]
+        self.next_timer = time.time()
 
-    def reset(self) -> None:
+    def reset_timer(self) -> None:
         self.backoff_time_bucket_index = 0
 
-    def return_timer(self) -> int:
+    def next_try_timer(self) -> float:
         """
-        Returns the next backoff time in seconds
+        Returns the next backoff time
+        """
+        return self.next_timer
+
+    def set_next_timer(self) -> None:
+        """
+        Sets next backoff timer
         """
         current_backoff_time = self.backoff_time_buckets[self.backoff_time_bucket_index]
 
@@ -41,7 +49,7 @@ class ExponentialBackOff:
             len(self.backoff_time_buckets) - 1,
         )
 
-        return current_backoff_time
+        self.next_timer = time.time() + current_backoff_time
 
 
 def run_shell_command(

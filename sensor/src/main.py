@@ -223,16 +223,20 @@ def run() -> None:
                 os.system("sudo reboot")
 
             try:
-                logger.info(
-                    f"restarting messaging agent",
-                    config=config,
-                )
-                procedures.MQTTAgent.deinit()
-                procedures.MQTTAgent.init(config)
-                logger.info(
-                    f"successfully restarted messaging agent",
-                    config=config,
-                )
+                # check timer with exponential backoff
+                if time.time() > ebo.next_try_timer():
+                    ebo.set_next_timer()
+                    # try to establish mqtt connection
+                    logger.info(
+                        f"restarting messaging agent",
+                        config=config,
+                    )
+                    procedures.MQTTAgent.deinit()
+                    procedures.MQTTAgent.init(config)
+                    logger.info(
+                        f"successfully restarted messaging agent",
+                        config=config,
+                    )
             except Exception as e:
                 logger.exception(
                     e,
@@ -256,11 +260,14 @@ def run() -> None:
                 os.system("sudo reboot")
 
             try:
-                # reinitialize all hardware interfaces
-                logger.info("performing hard reset", config=config)
-                hardware_interface.teardown()
-                hardware_interface.reinitialize(config)
-                logger.info("hard reset was successful", config=config)
+                # check timer with exponential backoff
+                if time.time() > ebo.next_try_timer():
+                    ebo.set_next_timer()
+                    # reinitialize all hardware interfaces
+                    logger.info("performing hard reset", config=config)
+                    hardware_interface.teardown()
+                    hardware_interface.reinitialize(config)
+                    logger.info("hard reset was successful", config=config)
 
             except Exception as e:
                 logger.exception(
