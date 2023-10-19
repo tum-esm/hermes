@@ -5,28 +5,26 @@ from typing import Any, Optional
 from src import custom_types, utils, hardware, procedures
 
 
-class ExitOnHardwareTeardownFail(Exception):
-    """raised when hardware.teardown() fails when called before the config
-    procedure should run. A fail in this location would mean that the sensor
-    is not able to upgrade until a reboot happens"""
-
-
 def run() -> None:
-    """Entry point of the mainloop running continuously on the sensor node
+    """Entry point for the measurement automation
 
-    0. system checks
-    1. read mqtt messages
-    2. if config update request in messages:
-        * run configuration procedure
-        * config = interfaces.ConfigInterface.read()
-        * logger = utils.Logger(config, origin="main")
-        * continue
-    3. if calibration is due:
-        * do calbration
-        * continue
-    4. run measurement procedure
+    (e) Indicates possibility of an exception that blocks further execution
+
+    INIT
+    - Config Interface (e)
+    - State Interface
+    - Timeouts
+    - Incremental Backoff Mechanism
+    - MQTT Agend (e)
+    - Initialize Hardware Interface (e)
+    - Initialise Procedures (e) (System Checks, Calibration, Measurement)
+
+    RUN INFINITE MAIN LOOP
+    - Procedure: System Check
+    - Procedure: Calibration
+    - Procedure: Measurements (CO2, Wind)
+    - Check for configuration update
     """
-    # TODO: Update the run description with more details
 
     logger = utils.Logger(origin="main")
     logger.horizontal_line()
@@ -43,13 +41,11 @@ def run() -> None:
     )
 
     # -------------------------------------------------------------------------
-    # create state file if it does not exist yet, add upgrade time if missing
 
+    # check and provide valid state file
     utils.StateInterface.init()
 
-    # -------------------------------------------------------------------------
     # define timeouts for parts of the automation
-
     MAX_SETUP_TIME = 180
     MAX_CONFIG_UPDATE_TIME = 1200
     MAX_SYSTEM_CHECK_TIME = 180
@@ -62,6 +58,7 @@ def run() -> None:
     utils.set_alarm(MAX_SETUP_TIME, "setup")
 
     # -------------------------------------------------------------------------
+    # TODO: move to utils
     # define incremental backoff mechanism
 
     # will be used for rebooting when errors persist for more than 24 hours
@@ -99,14 +96,8 @@ def run() -> None:
         )
 
     # -------------------------------------------------------------------------
-    # initialize config procedure
-
-    new_config_message: Optional[custom_types.MQTTConfigurationRequest] = None
-    configuration_prodecure = procedures.ConfigurationProcedure(config)
-
-    # -------------------------------------------------------------------------
-    # initialize a single hardware interface that is only used by one
-    # procedure at a time; tear down hardware on program termination
+    # initialize all hardware interfaces
+    # tear down hardware on program termination
 
     logger.info("initializing hardware interfaces", config=config)
 
@@ -132,6 +123,12 @@ def run() -> None:
     logger.info("established graceful teardown hook")
 
     # -------------------------------------------------------------------------
+    # initialize procedures
+
+    # initialize config procedure
+    new_config_message: Optional[custom_types.MQTTConfigurationRequest] = None
+    configuration_prodecure = procedures.ConfigurationProcedure(config)
+
     # initialize procedures interacting with hardware
     # system_check:   logging system statistics and reporting hardware/system errors
     # calibration:    using the two reference gas bottles to calibrate the CO2 sensor
@@ -166,34 +163,6 @@ def run() -> None:
             logger.info("starting mainloop iteration")
 
             # -----------------------------------------------------------------
-            # CONFIGURATION
-
-            utils.set_alarm(MAX_CONFIG_UPDATE_TIME, "config update")
-
-            logger.info("checking for new config messages")
-            new_config_message = procedures.MQTTAgent.get_config_message()
-            if new_config_message is not None:
-                try:
-                    hardware_interface.teardown()
-                except Exception as e:
-                    logger.exception(
-                        e,
-                        "error in hardware-teardown before configuration procedure",
-                        config=config,
-                    )
-                    raise ExitOnHardwareTeardownFail()
-
-                # stopping this script inside the procedure if successful
-                logger.info("running configuration procedure", config=config)
-                configuration_prodecure.run(new_config_message)
-                # Either raises an exception here if configuration was successful
-                # Shuts down current run and waits for restart via Cron Job
-                # -> Exit
-
-                # Or reinitialized hardware if configuration failed (no exception was raised)
-                hardware_interface.reinitialize(config)
-
-            # -----------------------------------------------------------------
             # SYSTEM CHECKS
 
             utils.set_alarm(MAX_SYSTEM_CHECK_TIME, "system check")
@@ -226,25 +195,38 @@ def run() -> None:
             CO2_measurement_prodecure.run()
 
             # -----------------------------------------------------------------
+            # CONFIGURATION
+
+            utils.set_alarm(MAX_CONFIG_UPDATE_TIME, "config update")
+
+            logger.info("checking for new config messages")
+            new_config_message = procedures.MQTTAgent.get_config_message()
+            if new_config_message is not None:
+                try:
+                    hardware_interface.teardown()
+                except Exception as e:
+                    logger.exception(
+                        e,
+                        "error in hardware-teardown before configuration procedure",
+                        config=config,
+                    )
+                    exit(1)
+
+                # stopping this script inside the procedure if successful
+                logger.info("running configuration procedure", config=config)
+                configuration_prodecure.run(new_config_message)
+                # Either raises an exception here if configuration was successful
+                # Shuts down current run and waits for restart via Cron Job
+                # -> Exit
+
+                # Or reinitialized hardware if configuration failed (no exception was raised)
+                hardware_interface.reinitialize(config)
+
+            # -----------------------------------------------------------------
 
             logger.info("finished mainloop iteration")
             backoff_time_bucket_index = 0
             last_successful_mainloop_iteration_time = time.time()
-
-        except procedures.ConfigurationProcedure.ExitOnUpdateSuccess:
-            logger.info(
-                "shutting down mainloop due to successful update",
-                config=config,
-            )
-            exit(0)
-
-        except ExitOnHardwareTeardownFail:
-            logger.error(
-                "shutting down mainloop due to failed "
-                + "hardware.teardown() before config update",
-                config=config,
-            )
-            exit(1)
 
         except procedures.MQTTAgent.CommunicationOutage as e:
             logger.exception(e, label="exception in mainloop", config=config)
