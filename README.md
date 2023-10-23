@@ -29,7 +29,7 @@ This software is developed for the ACROPOLIS network. The goal of ACROPOLIS is t
 
 <br/>
 
-## 🔨 Software Architecture
+## 🔨 Architecture
 
 ![](docs/schema.png)
 
