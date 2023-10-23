@@ -207,14 +207,26 @@ def run() -> None:
             backoff_time_bucket_index = 0
             last_successful_mainloop_iteration_time = time.time()
 
+            # update state config
+            state = utils.StateInterface.read()
+            if state.offline_since != None:
+                state.offline_since = None
+                utils.StateInterface.write(state)
+
         except procedures.MQTTAgent.CommunicationOutage as e:
             logger.exception(e, label="exception in mainloop", config=config)
 
             # cancel the alarm for too long mainloops
             signal.alarm(0)
 
+            # update state config if first raise
+            state = utils.StateInterface.read()
+            if state.offline_since == None:
+                state.offline_since = time.time()
+                utils.StateInterface.write(state)
+
             # reboot if exception lasts longer than 24 hours
-            if (time.time() - last_successful_mainloop_iteration_time) >= 86400:
+            if (time.time() - state.offline_since) >= 86400:
                 logger.info(
                     "rebooting because no successful MQTT connect for 24 hours",
                     config=config,
