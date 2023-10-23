@@ -9,6 +9,11 @@ assert run_shell_command("whoami") == "root", "please run this script as ROOT us
 # =============================================================================
 # INSTALL SYSTEM PACKAGES
 
+print("UPATING RASPBERRYPI")
+run_shell_command("sudo apt-get update")
+run_shell_command("sudo apt-get upgrade")
+run_shell_command("sudo apt install raspberrypi-kernel-headers")
+
 print("INSTALLING GENERAL PACKAGES WITH APT")
 run_shell_command("apt update")
 run_shell_command(

@@ -6,7 +6,11 @@ PATH="/home/pi/bin:/home/pi/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:
 # line format: minute | hour | day-of-month | month | day-of-week | command
 
 # report the local ip address to baserow
-*/2 * * * * /home/pi/Documents/baserow-ip-logger/.venv/bin/python /home/pi/Documents/baserow-ip-logger/run.py > /home/pi/Documents/baserow-ip-logger/cron.log
+*/2 * * * * /home/pi/Documents/baserow-ip-logger/.venv/bin/python /home/pi/Documents/baser
+ow-ip-logger/run.py > /home/pi/Documents/baserow-ip-logger/cron.log
 
 # start automation (if not already running)
 */2 * * * * bash /home/pi/Documents/hermes/hermes-cli.sh start > /home/pi/Documents/hermes/hermes-cli.log
+
+# restart automation at midnight on mondays and thursdays
+0 0 * * 1,4 bash /home/pi/Documents/hermes/hermes-cli.sh restart > /home/pi/Documents/hermes/hermes-cli.log
