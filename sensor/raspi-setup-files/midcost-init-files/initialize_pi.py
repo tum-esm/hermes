@@ -33,18 +33,10 @@ for line in new_bashrc_lines:
             f.write(line + "\n")
 
 # =============================================================================
-# INSTALL POETRY AND ARDUINO CLI
+# INSTALL POETRY
 
 print("INSTALLING POETRY")
 run_shell_command("curl -sSL https://install.python-poetry.org | python3 -")
-
-print("INSTALLING ARDUINO CLI")
-run_shell_command(
-    "curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh"
-)
-
-print("INSTALLING ARDUINO CLI CHIPSETS")
-run_shell_command("arduino-cli core install arduino:avr")
 
 # =============================================================================
 # ADD GLOBAL GIT SETTINGS
