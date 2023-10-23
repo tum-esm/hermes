@@ -1,6 +1,28 @@
-## Visualisation of procedures
+## Installation
 
-![image](https://github.com/tum-esm/hermes/assets/59452158/37c1be0d-2814-4823-9d04-397a3b001a9b)
+**Set up virtual environment and install dependencies:**
+
+```bash
+python3.9 -m venv .venv
+source .venv/bin/activate
+poetry install --with=dev
+```
+
+**Run tests/check static types:**
+
+```bash
+# all tests
+pytest --cov=src --cov=cli tests/
+
+# only ci tests
+pytest -m "ci" --cov=src --cov=cli tests/
+
+# only integration tests
+pytest -m "integration" --cov=src --cov=cli tests/
+
+#test static types
+bash ./scripts/check_static_types.sh
+```
 
 ## System release & update process
 
@@ -21,4 +43,34 @@
     ```
 
 3. Wait for the system to confirm the update with new revision
+
+## Visualisation
+
+### Automation
+
+![](../docs//hermes-main-py.png)
+
+### Main Loop
+
+**System Check Procedure**
+
+![](../docs/procedure-system-check.png)
+
+**Calibration Procedure**
+
+![](../docs/procedure-calibration.png)
+
+**Measurement Procedure**
+
+![](../docs/procedure-measurement.png)
+
+**Configuration Procedure**
+
+![](../docs/procedure-configuration.png)
+
+**Exception Handling**
+
+![](../docs/main-loop-exception-handling.png)
+
+
 
