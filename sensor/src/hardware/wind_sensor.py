@@ -47,6 +47,7 @@ class WindSensorInterface:
         self.power_pin.on()
 
         # serial connection to receive data from wind sensor
+        # TODO: change interface to RS-485
         self.rs232_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
             port=WIND_SENSOR_SERIAL_PORT,
             baudrate=19200,

@@ -58,10 +58,6 @@ def restore_current_config() -> None:
 class ConfigurationProcedure:
     """runs when a config change has been requested"""
 
-    @staticmethod
-    class ExitOnUpdateSuccess(Exception):
-        """raised when mainloop should stop because an update has been successful"""
-
     def __init__(self, config: custom_types.Config) -> None:
         self.logger = utils.Logger(origin="configuration-procedure")
         self.config = config
