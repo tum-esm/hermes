@@ -6,9 +6,8 @@ from src import custom_types, utils, hardware
 class WindMeasurementProcedure:
     """runs every mainloop call after possible configuration/calibration
 
-    1. Check whether the wind reports any issues
-    2. Perform measurements for wind sensor
-    5. Send out measurement data over MQTT"""
+    1. Perform measurements for wind sensor
+    2. Send out measurement data over MQTT"""
 
     def __init__(
         self,
@@ -73,7 +72,7 @@ class WindMeasurementProcedure:
 class CO2MeasurementProcedure:
     """runs every mainloop call after possible configuration/calibration
 
-    1. Check whether the CO2 sensor report any issues
+    1. Request latest GMP343 device info
     2. Collect latest pressure and humidity inlet sensor readings
     3. Update compensation values for CO2 sensor
     4. Perform measurements for CO2 sensor
