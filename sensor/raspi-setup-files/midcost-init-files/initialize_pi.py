@@ -69,46 +69,46 @@ run_shell_command(
 # =============================================================================
 # SET UP SSH
 
-print("SETTING UP SSH")
+# print("SETTING UP SSH")
 
-print(f"\tcopying files")
-if not os.path.isdir("/home/pi/.ssh"):
-    os.mkdir("/home/pi/.ssh")
-for src, dst in [
-    (
-        "/boot/midcost-init-files/ssh/authorized_keys",
-        "/home/pi/.ssh/authorized_keys",
-    ),
-    (
-        "/boot/midcost-init-files/ssh/id_ed25519_esm_technical_user",
-        "/home/pi/.ssh/id_ed25519_esm_technical_user",
-    ),
-    (
-        "/boot/midcost-init-files/ssh/id_ed25519_esm_technical_user.pub",
-        "/home/pi/.ssh/id_ed25519_esm_technical_user.pub",
-    ),
-    (
-        "/boot/midcost-init-files/ssh/config",
-        "/home/pi/.ssh/config",
-    ),
-]:
-    if not os.path.isfile(dst):
-        shutil.copyfile(src, dst)
+# print(f"\tcopying files")
+# if not os.path.isdir("/home/pi/.ssh"):
+#     os.mkdir("/home/pi/.ssh")
+# for src, dst in [
+#     (
+#         "/boot/midcost-init-files/ssh/authorized_keys",
+#         "/home/pi/.ssh/authorized_keys",
+#     ),
+#     (
+#         "/boot/midcost-init-files/ssh/id_ed25519_esm_technical_user",
+#         "/home/pi/.ssh/id_ed25519_esm_technical_user",
+#     ),
+#     (
+#         "/boot/midcost-init-files/ssh/id_ed25519_esm_technical_user.pub",
+#         "/home/pi/.ssh/id_ed25519_esm_technical_user.pub",
+#     ),
+#     (
+#         "/boot/midcost-init-files/ssh/config",
+#         "/home/pi/.ssh/config",
+#     ),
+# ]:
+#     if not os.path.isfile(dst):
+#         shutil.copyfile(src, dst)
 
-print(f"\tadding ssh key to agent")
-run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user")
-run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user.pub")
-run_shell_command("eval `ssh-agent -s`")
-run_shell_command("ssh-add /home/pi/.ssh/id_ed25519_esm_technical_user")
+# print(f"\tadding ssh key to agent")
+# run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user")
+# run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user.pub")
+# run_shell_command("eval `ssh-agent -s`")
+# run_shell_command("ssh-add /home/pi/.ssh/id_ed25519_esm_technical_user")
 
-print(f"\ttesting access to github")
-github_ssh_response = run_shell_command(
-    'ssh -o "StrictHostKeyChecking accept-new" -T git@github.com',
-    check_exit_code=False,
-)
-assert (
-    "You've successfully authenticated" in github_ssh_response
-), "GitHub Authentication failed"
+# print(f"\ttesting access to github")
+# github_ssh_response = run_shell_command(
+#     'ssh -o "StrictHostKeyChecking accept-new" -T git@github.com',
+#     check_exit_code=False,
+# )
+# assert (
+#     "You've successfully authenticated" in github_ssh_response
+# ), "GitHub Authentication failed"
 
 # =============================================================================
 # INSTALL BASEROW-IP-LOGGER
@@ -141,28 +141,31 @@ shutil.copyfile(
 
 # =============================================================================
 # INSTALL HERMES
+tarball_name = lambda version: f"v{version}.tar.gz"
+tarball_content_name = lambda version: f"hermes-{version}"
 
 print("SETTING UP HERMES")
 assert not os.path.isdir(AUTOMATION_DIR), f"{AUTOMATION_DIR} already exist"
 TMP_AUTOMATION_DIR = "/tmp/automation-dir"
 
-print(f"\tcloning into tmp dir {TMP_AUTOMATION_DIR}")
+# download release using the github cli
+print("downloading code from GitHub")
 run_shell_command(
-    "git clone git@github.com:tum-esm/hermes.git " + f"{TMP_AUTOMATION_DIR}"
+    f"wget https://github.com/tum-esm/hermes/archive/refs/tags/v{AUTOMATION_VERSION}.tar.gz"
 )
 
-print(f"\tchecking out tag v{AUTOMATION_VERSION}")
-run_shell_command(
-    f"git checkout v{AUTOMATION_VERSION}",
-    working_directory=f"{TMP_AUTOMATION_DIR}",
-)
+# extract code archive
+print("extracting tarball")
+run_shell_command(f"tar -xf {tarball_name(AUTOMATION_VERSION)}")
 
-print(f"\tcopying sensor subdirectory")
+# move sensor subdirectory
+print("copying sensor code")
 shutil.copytree(
     f"{TMP_AUTOMATION_DIR}/sensor", f"{AUTOMATION_DIR}/{AUTOMATION_VERSION}"
 )
 shutil.rmtree(TMP_AUTOMATION_DIR)
 
+# set up .venv
 print(f"\tsetting up .venv")
 run_shell_command(f"python3.9 -m venv {AUTOMATION_DIR}/{AUTOMATION_VERSION}/.venv")
 
