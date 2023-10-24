@@ -140,14 +140,6 @@ def run() -> None:
             logger.info("starting mainloop iteration")
 
             # -----------------------------------------------------------------
-            # SYSTEM CHECKS
-
-            utils.set_alarm(MAX_SYSTEM_CHECK_TIME, "system check")
-
-            logger.info("running system checks")
-            system_check_prodecure.run()
-
-            # -----------------------------------------------------------------
             # CALIBRATION
 
             utils.set_alarm(MAX_CALIBRATION_TIME, "calibration")
@@ -202,9 +194,16 @@ def run() -> None:
                     hardware_interface.reinitialize(config)
 
             # -----------------------------------------------------------------
+            # SYSTEM CHECKS
+
+            utils.set_alarm(MAX_SYSTEM_CHECK_TIME, "system check")
+
+            logger.info("running system checks")
+            system_check_prodecure.run()
+
+            # -----------------------------------------------------------------
 
             logger.info("finished mainloop iteration")
-            backoff_time_bucket_index = 0
             last_successful_mainloop_iteration_time = time.time()
 
             # update state config

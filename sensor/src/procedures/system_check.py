@@ -80,9 +80,9 @@ class SystemCheckProcedure:
                 f"memory usage is very high ({memory_usage_percent} %)",
                 config=self.config,
             )
-        
+
         state = utils.StateInterface.read()
-        
+
         self.message_queue.enqueue_message(
             self.config,
             custom_types.MQTTMeasurementMessageBody(
@@ -102,5 +102,7 @@ class SystemCheckProcedure:
 
         # check for errors
         self.hardware_interface.check_errors()
+
+        # MQTT Agent
         if self.config.active_components.send_messages_over_mqtt:
             MQTTAgent.check_errors()
