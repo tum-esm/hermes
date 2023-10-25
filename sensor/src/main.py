@@ -208,9 +208,9 @@ def run() -> None:
 
             # update state config
             state = utils.StateInterface.read()
-            if state.offline_since != None:
+            if state.offline_since:
                 state.offline_since = None
-                utils.StateInterface.write(state)
+                # utils.StateInterface.write(state)
 
         except procedures.MQTTAgent.CommunicationOutage as e:
             logger.exception(e, label="exception in mainloop", config=config)
@@ -220,7 +220,7 @@ def run() -> None:
 
             # update state config if first raise
             state = utils.StateInterface.read()
-            if state.offline_since == None:
+            if not state.offline_since:
                 state.offline_since = time.time()
                 utils.StateInterface.write(state)
 
