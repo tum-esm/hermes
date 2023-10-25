@@ -141,8 +141,6 @@ shutil.copyfile(
 
 # =============================================================================
 # INSTALL HERMES
-tarball_name = lambda version: f"v{version}.tar.gz"
-tarball_content_name = lambda version: f"hermes-{version}"
 
 print("SETTING UP HERMES")
 assert not os.path.isdir(AUTOMATION_DIR), f"{AUTOMATION_DIR} already exist"
@@ -156,7 +154,7 @@ run_shell_command(
 
 # extract code archive
 print("extracting tarball")
-run_shell_command(f"tar -xf {tarball_name(AUTOMATION_VERSION)}")
+run_shell_command(f"tar -xf v{AUTOMATION_VERSION}.tar.gz")
 
 # move sensor subdirectory
 print("copying sensor code")
