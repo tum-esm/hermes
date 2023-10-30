@@ -71,15 +71,16 @@ run_shell_command("service ssh restart")
 
 # =============================================================================
 # ADD WIFI SETTINGS
+# Done at system installation with Imager
 
-print("ADDING WIFI SETTINGS")
+# print("ADDING WIFI SETTINGS")
 
 # this could be done by putting the .conf file directly onto
 # /boot but did not work for me
-shutil.copyfile(
-    "/boot/midcost-init-files/system/wpa_supplicant.conf",
-    "/etc/wpa_supplicant/wpa_supplicant.conf",
-)
+# shutil.copyfile(
+#     "/boot/midcost-init-files/system/wpa_supplicant.conf",
+#     "/etc/wpa_supplicant/wpa_supplicant.conf",
+# )
 
 # =============================================================================
 

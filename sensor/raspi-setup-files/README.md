@@ -73,14 +73,14 @@ All files in the `raspi-setup-files/` directory should be copied to a Raspberry 
 ping -c 3 www.google.com
 
 # initialize the node
-sudo python3 /boot/midcost-init-files/initialize_root.py
-python3 /boot/midcost-init-files/initialize_pi.py
+sudo python3 /boot/firmware/midcost-init-files/initialize_root.py
+python3 /boot/firmware/midcost-init-files/initialize_pi.py
 
 # reboot
 sudo reboot
 
 # test the initial installation
-python3 /boot/midcost-init-files/run_node_tests.py
+python3 /boot/firmware/midcost-init-files/run_node_tests.py
 
 # finish installation
 curl parrot.live
