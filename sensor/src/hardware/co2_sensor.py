@@ -76,8 +76,6 @@ class CO2SensorInterface:
             "echo off",  # do not output received strings
             "range 1",  # measuring from 0 to 1000 ppm
             'form CO2RAWUC CO2RAW CO2 T " (R C C+F T)"',
-            "lc off",  # line correction (used with internal calibration)
-            "mpc off",  # multi point correction (used with internal calibration)
             "tc on",  # temperature compensation
             "rhc on",  # relative humidity compensation
             "pc on",  # pressure compensation
