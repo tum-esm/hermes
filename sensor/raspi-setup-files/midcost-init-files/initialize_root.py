@@ -11,7 +11,7 @@ assert run_shell_command("whoami") == "root", "please run this script as ROOT us
 
 print("UPATING RASPBERRYPI")
 run_shell_command("sudo apt-get update")
-run_shell_command("sudo apt-get upgrade")
+print("UPDATING HEADERS")
 run_shell_command("sudo apt install raspberrypi-kernel-headers")
 
 print("INSTALLING GENERAL PACKAGES WITH APT")
@@ -38,49 +38,15 @@ run_shell_command(
     + "exa "
     + "uhubctl "
     + "screen "
-    + "p7zip-full"
-    + "minicom"
-    + "udhcpc"
+    + "p7zip-full "
+    + "minicom "
+    + "udhcpc "
 )
 
-print("INSTALLING PYTHON3.9 WITH APT")
-run_shell_command(
-    "apt install -y "
-    + "python3.9-full "
-    + "python3-venv "
-    + "python3-wheel "
-    + "python3-setuptools "
-)
+# =============================================================================
 
 print("INSTALLING VSCODE WITH APT")
 run_shell_command("apt install code -y")
-
-# =============================================================================
-# CONFIGURE THE SSH DAEMON
-
-print("ALLOWING SSH ACCESS WITH PASSWORD")
-
-with open("/etc/ssh/sshd_config", "r") as f:
-    sshd_config_content = f.read()
-sshd_config_content = sshd_config_content.replace(
-    "#PasswordAuthentication no", "PasswordAuthentication no"
-).replace("PasswordAuthentication no", "PasswordAuthentication yes")
-with open("/etc/ssh/sshd_config", "w") as f:
-    f.write(sshd_config_content)
-run_shell_command("service ssh restart")
-
-# =============================================================================
-# ADD WIFI SETTINGS
-# Done at system installation with Imager
-
-# print("ADDING WIFI SETTINGS")
-
-# this could be done by putting the .conf file directly onto
-# /boot but did not work for me
-# shutil.copyfile(
-#     "/boot/midcost-init-files/system/wpa_supplicant.conf",
-#     "/etc/wpa_supplicant/wpa_supplicant.conf",
-# )
 
 # =============================================================================
 
