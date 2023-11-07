@@ -4,6 +4,7 @@
 
 - Use **Raspberry Pi Imager** (https://www.raspberrypi.com/software/) to flash the **Raspberry Pi OS 64-Bit** on the SD card.
 - In settings set hostname, set ssh key access, configure, maintainence wifi, timezone.
+- Start up the RaspberryPi once with the new SD card and confirm the SSH access
 - Prepare the RaspberryPi setup files by filling in some of the template/example files
 
 ```
@@ -40,7 +41,7 @@ The `raspi-setup-files/` should contain the following files:
             📄 .bashrc
             📄 crontab
 ```
-- Copy all files from the `raspi-setup-files/` on the SD card (boot). The files should end up in `/boot/firmware`.
+- Copy all files from the `raspi-setup-files/` on the SD card (`bootfs`). The files should end up in `/boot/firmware`.
 - Eject the SD card and insert it into the RaspberryPi.
 - Connect to the RaspberryPi via SSH.
 
