@@ -175,6 +175,7 @@ class ConfigurationProcedure:
 
             # stop execution and wait for restart by cron job
             # the restart will initialise with the new config
+            self.logger.debug(label="Ending current Hermes execution. Exit(0).")
             exit(0)
 
         # This exception is reached if the config update fails and returns
