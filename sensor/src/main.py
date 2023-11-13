@@ -197,8 +197,11 @@ def run() -> None:
                 try:
                     configuration_prodecure.run(new_config_message)
                     # -> Exit, Restarts via Cron Job to load new config
-                except:
+                except Exception:
                     # reinitialize hardware if configuration failed
+                    logger.info(
+                        "Exception during configuration procedure", config=config
+                    )
                     hardware_interface.reinitialize(config)
 
             # -----------------------------------------------------------------
