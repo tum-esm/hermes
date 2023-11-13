@@ -175,8 +175,9 @@ class ConfigurationProcedure:
 
             # stop execution and wait for restart by cron job
             # the restart will initialise with the new config
-            self.logger.debug(
-                "Ending current Hermes execution. Exit(0).", config=self.config
+            self.logger.info(
+                "Ending current Hermes execution. Exit(0).",
+                config=self.config,
             )
             exit(0)
 
