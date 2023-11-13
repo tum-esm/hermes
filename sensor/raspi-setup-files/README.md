@@ -49,11 +49,14 @@ The `raspi-setup-files/` should contain the following files:
 # test network connection
 ping -c 3 www.google.com
 
+#create user directories
+xdg-user-dirs-update
+
 #install python3.9
-sudo wget https://www.python.org/ftp/python/3.9.17/Python-3.9.17.tgz
-sudo tar xzf Python-3.9.17.tgz
-cd /home/pi/Python-3.9.17
-sudo ./configure --enable-optimizations
+sudo wget https://www.python.org/ftp/python/3.9.16/Python-3.9.16.tgz
+sudo tar xzf Python-3.9.16.tgz
+cd /home/pi/Python-3.9.16
+sudo ./configure --enable-optimizations --with-openssl
 sudo make altinstall
 
 # initialize the node
@@ -113,6 +116,7 @@ AT+CPSI? #return IMEI
 
 ```bash
 # download and install driver
+cd /home/pi
 wget https://www.waveshare.net/w/upload/8/89/SIM8200_for_RPI.7z
 7z x SIM8200_for_RPI.7z -r -o./SIM8200_for_RPI
 sudo chmod 777 -R SIM8200_for_RPI
