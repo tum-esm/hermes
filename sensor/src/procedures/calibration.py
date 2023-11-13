@@ -149,6 +149,9 @@ class CalibrationProcedure:
             self.config.measurement.air_inlets[0].valve_number
         )
 
+        # flush calibration gases with measurement inlet
+        time.sleep(5 * 60)
+
         # save last calibration time
         self.logger.debug("finished calibration: updating state")
         state = utils.StateInterface.read()

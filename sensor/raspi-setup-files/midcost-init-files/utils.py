@@ -5,7 +5,7 @@ from typing import Optional
 ENV = os.environ.copy()
 ENV["PATH"] = "/home/pi/bin:/home/pi/.local/bin:" + ENV["PATH"]
 ENV["PYTHON_KEYRING_BACKEND"] = "keyring.backends.null.Keyring"
-AUTOMATION_VERSION = "0.2.0-beta.8"
+AUTOMATION_VERSION = "0.2.0-beta.9"
 AUTOMATION_DIR = "/home/pi/Documents/hermes"
 IP_LOGGER_DIR = "/home/pi/Documents/baserow-ip-logger"
 

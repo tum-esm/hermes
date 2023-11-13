@@ -1,3 +1,0 @@
-Host *
-  PreferredAuthentications publickey
-  IdentityFile ~/.ssh/id_ed25519_esm_technical_user

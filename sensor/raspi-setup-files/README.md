@@ -1,92 +1,24 @@
-# Sensor Software
-
-## Installation
-
-**Set up virtual environment and install dependencies:**
-
-```bash
-python3.9 -m venv .venv
-source .venv/bin/activate
-poetry install --with=dev
-```
-
-**Run tests/check static types:**
-
-```bash
-# all tests
-pytest --cov=src --cov=cli tests/
-
-# only ci tests
-pytest -m "ci" --cov=src --cov=cli tests/
-
-# only integration tests
-pytest -m "integration" --cov=src --cov=cli tests/
-
-#test static types
-bash ./scripts/check_static_types.sh
-```
-
-
-<br/>
-<br/>
-
-## Configuration
-
-Use the `config/config.template.json` to generate a `config/config.json`. `config.general.station_name` will be used in the logs, the MQTT communication, and the database/server to identify each station.
-
-<br/>
-<br/>
-
-## Code location on the Raspi
-
-On the sensor, the codebase layout will look like this:
-
-```bash
-📁 Documents
-    📁 hermes
-        📄 hermes-cli.sh
-        📁 0.1.0
-            📁 .venv
-            📄 run_automation.py
-            ...
-        📁 0.1.1
-            📁 .venv
-            📄 run_automation.py
-            ...
-        ...
-```
-
-The `hermes-cli.sh` will point to the currently used version, and the bash shell has an alias `hermes-cli`.
-
-<br/>
-<br/>
-
+# Configuration
 
 ## Raspberry Pi Setup (`raspi-setup-files/`)
 
-As the operating system for the Raspis, we chose **Raspberry Pi OS 64-Bit** and used the **Raspberry Pi Imager** (https://www.raspberrypi.com/software/) to flash the SD cards.
+- Use **Raspberry Pi Imager** (https://www.raspberrypi.com/software/) to flash the **Raspberry Pi OS 64-Bit** on the SD card.
+- In settings set hostname, set ssh key access, configure, maintainence wifi, timezone.
+- Start up the RaspberryPi once with the new SD card and confirm the SSH access
+- Prepare the RaspberryPi setup files by filling in some of the template/example files
 
-All files in the `raspi-setup-files/` directory should be copied to a Raspberry Pi's `/boot/` directory. The setup script has to be run manually after initially connecting the Pi using the following command:
+```
+📁 boot-files/
 
-```bash
-# test network connection
-ping -c 3 www.google.com
+    📁 midcost-init-files/
 
-# initialize the node
-sudo python3 /boot/firmware/midcost-init-files/initialize_root.py
-python3 /boot/firmware/midcost-init-files/initialize_pi.py
-
-# reboot
-sudo reboot
-
-# test the initial installation
-python3 /boot/firmware/midcost-init-files/run_node_tests.py
-
-# finish installation
-curl parrot.live
+        📁 hermes/
+            📄 .env.example
+            📄 config.template.json
+            📄 hostname_to_mqtt_id.template.json
 ```
 
-The `boot-files/` should contain the following files:
+The `raspi-setup-files/` should contain the following files:
 
 ```
 📁 boot-files/
@@ -99,59 +31,49 @@ The `boot-files/` should contain the following files:
         📄 initialize_pi.py
         📄 run_node_tests.py
 
-        📁 baserow-ip-logger/
-            📄 config.json
-
         📁 hermes/
             📄 .env
             📄 config.json
-            📄 hermes-cli.template
+            📄 hermes-cli.template.sh
             📄 hostname_to_mqtt_id.json
-
-        📁 ssh/
-            📄 authorized_keys
-            📄 config.txt
-            📄 id_ed25519_esm_technical_user
-            📄 id_ed25519_esm_technical_user.pub
-            📄 wpa_supplicant.conf
 
         📁 system/
             📄 .bashrc
             📄 crontab
 ```
-
-<br/>
-<br/>
-
-## Manual commands
+- Copy all files from the `raspi-setup-files/` on the SD card (`bootfs`). The files should end up in `/boot/firmware`.
+- Eject the SD card and insert it into the RaspberryPi.
+- Connect to the RaspberryPi via SSH.
 
 ```bash
-# setting the pump to max/zero rps
-pigs w 19 1
-pigs w 19 0
+# test network connection
+ping -c 3 www.google.com
 
-# powering the co2 sensor up/down
-# serial: /dev/ttySC0, baudrate 19200, bytes 8, parity N, stopbits 1, newline \r\n
-pigs w 20 1
-pigs w 20 0
+#create user directories
+xdg-user-dirs-update
 
-# powering the wind sensor up/down
-# serial: /dev/ttySC1, baudrate 19200, bytes 8, parity N, stopbits 1, newline \r\n
-pigs w 21 1
-pigs w 21 0
+#install python3.9
+sudo wget https://www.python.org/ftp/python/3.9.16/Python-3.9.16.tgz
+sudo tar xzf Python-3.9.16.tgz
+cd /home/pi/Python-3.9.16
+sudo ./configure --enable-optimizations --with-openssl
+sudo make altinstall
+
+# initialize the node
+sudo python3 /boot/firmware/midcost-init-files/initialize_root.py
+python3 /boot/firmware/midcost-init-files/initialize_pi.py
+
+# reboot
+sudo reboot
+
+# test the initial installation
+python3 /boot/firmware/midcost-init-files/run_node_tests.py
+
 ```
 
 <br/>
 
 ## Set up LTE Hat
-
-### Install software on RaspberryPi
-
-```bash
-sudo apt-get install minicom
-sudo apt-get install p7zip-full
-sudo apt-get install udhcpc
-```
 
 ### Configure modem
 
@@ -194,6 +116,7 @@ AT+CPSI? #return IMEI
 
 ```bash
 # download and install driver
+cd /home/pi
 wget https://www.waveshare.net/w/upload/8/89/SIM8200_for_RPI.7z
 7z x SIM8200_for_RPI.7z -r -o./SIM8200_for_RPI
 sudo chmod 777 -R SIM8200_for_RPI
@@ -223,23 +146,17 @@ sudo udhcpc -i wwan0
 
 ## How the Raspi's run this code
 
-The sensor code is at `~/Documents/hermes/0.1.0-beta.3`. Only the files from /sensor directory is downloaded by the system. The _crontab_ contains a line that starts the version currently active every 2 minutes. The CLI will only start the automation if it is not already running.
-
-```cron
-# start automation every two minutes (if not already running)
-*/2 * * * * bash /home/pi/Documents/hermes/hermes-cli.sh start > /home/pi/Documents/hermes/hermes-cli.log
-# restart automation at midnight on mondays and thursdays
-0 0 * * 1,4 bash /home/pi/Documents/hermes/hermes-cli.sh restart > /home/pi/Documents/hermes/hermes-cli.log
-```
-
-The file `~/Documents/hermes/hermes-cli.sh` always points to the currently active version of Hermes.
+- The sensor code is at `~/Documents/hermes/%VERSION%` 
+- Note: Only the files from /sensor directory are kept on the RaspberryPi.
+- The _crontab_ starts the automation every 2 minutes via the CLI
+- Note: `~/Documents/hermes/hermes-cli.sh` always points to the latest version of Hermes
 
 ```bash
 #!/bin/bash
 
 set -o errexit
 
-/home/pi/Documents/hermes/0.1.0-beta.3/.venv/bin/python /home/pi/Documents/hermes/0.1.0-beta.3/cli/main.py $*
+/home/pi/Documents/hermes/%VERSION%/.venv/bin/python /home/pi/Documents/hermes/%VERSION%/cli/main.py $*
 ```
 
 The `~/.bashrc` file contains an alias for the CLI:
@@ -247,4 +164,5 @@ The `~/.bashrc` file contains an alias for the CLI:
 ```bash
 alias hermes-cli="bash /home/pi/Documents/hermes/hermes-cli.sh"
 ```
+
 

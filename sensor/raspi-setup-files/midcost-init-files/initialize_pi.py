@@ -3,14 +3,13 @@ import os
 import shutil
 from utils import (
     run_shell_command,
-    IP_LOGGER_DIR,
     AUTOMATION_DIR,
     AUTOMATION_VERSION,
     get_hostname,
 )
 
 # =============================================================================
-# CHECK FOR ROOT ACCESS (REQUIRED BY APT)
+# CHECK That SCRIPT IS NOT RUN IN ROOT ACCESS (REQUIRED BY APT)
 
 assert run_shell_command("whoami") == "pi", "please run this script as the PI users"
 
@@ -19,7 +18,7 @@ assert run_shell_command("whoami") == "pi", "please run this script as the PI us
 
 print("EXTENDING BASHRC FILE")
 
-with open("/boot/midcost-init-files/system/.bashrc", "r") as f:
+with open("/boot/firmware/midcost-init-files/system/.bashrc", "r") as f:
     new_bashrc_lines = [l for l in f.read().split("\n") if (not l.startswith("#"))]
 with open("/home/pi/.bashrc", "r") as f:
     current_bashrc_content = f.read()
@@ -67,84 +66,10 @@ run_shell_command(
 )
 
 # =============================================================================
-# SET UP SSH
-
-# print("SETTING UP SSH")
-
-# print(f"\tcopying files")
-# if not os.path.isdir("/home/pi/.ssh"):
-#     os.mkdir("/home/pi/.ssh")
-# for src, dst in [
-#     (
-#         "/boot/midcost-init-files/ssh/authorized_keys",
-#         "/home/pi/.ssh/authorized_keys",
-#     ),
-#     (
-#         "/boot/midcost-init-files/ssh/id_ed25519_esm_technical_user",
-#         "/home/pi/.ssh/id_ed25519_esm_technical_user",
-#     ),
-#     (
-#         "/boot/midcost-init-files/ssh/id_ed25519_esm_technical_user.pub",
-#         "/home/pi/.ssh/id_ed25519_esm_technical_user.pub",
-#     ),
-#     (
-#         "/boot/midcost-init-files/ssh/config",
-#         "/home/pi/.ssh/config",
-#     ),
-# ]:
-#     if not os.path.isfile(dst):
-#         shutil.copyfile(src, dst)
-
-# print(f"\tadding ssh key to agent")
-# run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user")
-# run_shell_command("chmod 600 /home/pi/.ssh/id_ed25519_esm_technical_user.pub")
-# run_shell_command("eval `ssh-agent -s`")
-# run_shell_command("ssh-add /home/pi/.ssh/id_ed25519_esm_technical_user")
-
-# print(f"\ttesting access to github")
-# github_ssh_response = run_shell_command(
-#     'ssh -o "StrictHostKeyChecking accept-new" -T git@github.com',
-#     check_exit_code=False,
-# )
-# assert (
-#     "You've successfully authenticated" in github_ssh_response
-# ), "GitHub Authentication failed"
-
-# =============================================================================
-# INSTALL BASEROW-IP-LOGGER
-
-print("SETTING UP BASEROW-IP-LOGGER")
-
-# remove old baserow-ip-logger
-if os.path.isdir(IP_LOGGER_DIR):
-    shutil.rmtree(IP_LOGGER_DIR)
-
-print(f"\tcloning repository")
-run_shell_command(
-    "git clone git@github.com:dostuffthatmatters/baserow-ip-logger.git " + IP_LOGGER_DIR
-)
-
-print(f"\tsetting up .venv")
-run_shell_command(f"python3.9 -m venv {IP_LOGGER_DIR}/.venv")
-
-print(f"\tinstalling dependencies")
-run_shell_command(
-    "source .venv/bin/activate && poetry install",
-    working_directory=IP_LOGGER_DIR,
-)
-
-print(f"\tcopying config.json")
-shutil.copyfile(
-    "/boot/midcost-init-files/baserow-ip-logger/config.json",
-    f"{IP_LOGGER_DIR}/config.json",
-)
-
-# =============================================================================
 # INSTALL HERMES
 
 print("SETTING UP HERMES")
-assert not os.path.isdir(AUTOMATION_DIR), f"{AUTOMATION_DIR} already exist"
-TMP_AUTOMATION_DIR = "/tmp/automation-dir"
+# assert os.path.isdir(AUTOMATION_DIR), f"{AUTOMATION_DIR} already exist"
 
 # download release using the github cli
 print("downloading code from GitHub")
@@ -157,11 +82,13 @@ print("extracting tarball")
 run_shell_command(f"tar -xf v{AUTOMATION_VERSION}.tar.gz")
 
 # move sensor subdirectory
-print("copying sensor code")
-shutil.copytree(
-    f"{TMP_AUTOMATION_DIR}/sensor", f"{AUTOMATION_DIR}/{AUTOMATION_VERSION}"
+run_shell_command(f"mkdir {AUTOMATION_DIR}")
+run_shell_command(f"mkdir {AUTOMATION_DIR}/{AUTOMATION_VERSION}")
+run_shell_command(
+    f"cp -r hermes-{AUTOMATION_VERSION}/sensor/* {AUTOMATION_DIR}/{AUTOMATION_VERSION}"
 )
-shutil.rmtree(TMP_AUTOMATION_DIR)
+run_shell_command(f"rm v{AUTOMATION_VERSION}.tar.gz")
+run_shell_command(f"rm -r hermes-{AUTOMATION_VERSION}")
 
 # set up .venv
 print(f"\tsetting up .venv")
@@ -175,22 +102,22 @@ run_shell_command(
 
 print(f"\tcopying config.json")
 shutil.copyfile(
-    "/boot/midcost-init-files/hermes/config.json",
+    "/boot/firmware/midcost-init-files/hermes/config.json",
     f"{AUTOMATION_DIR}/{AUTOMATION_VERSION}/config/config.json",
 )
 
 print(f"\tcopying .env")
-with open("/boot/midcost-init-files/hermes/hostname_to_mqtt_id.json") as f:
+with open("/boot/firmware/midcost-init-files/hermes/hostname_to_mqtt_id.json") as f:
     hostname_to_mqtt_identifier = json.load(f)
 hostname = get_hostname()
 mqtt_identifier: str = hostname_to_mqtt_identifier[hostname]
-with open("/boot/midcost-init-files/hermes/.env") as f:
+with open("/boot/firmware/midcost-init-files/hermes/.env") as f:
     env_file_content = f.read()
 with open(f"{AUTOMATION_DIR}/{AUTOMATION_VERSION}/config/.env", "w") as f:
     f.write(env_file_content.replace("%HERMES_MQTT_IDENTIFIER%", mqtt_identifier))
 
 print(f"\tmaking CLI point to release version")
-with open("/boot/midcost-init-files/hermes/hermes-cli.template.sh") as f:
+with open("/boot/firmware/midcost-init-files/hermes/hermes-cli.template.sh") as f:
     cli_file_content = f.read()
 cli_file_content = cli_file_content.replace("%VERSION%", AUTOMATION_VERSION)
 with open("/home/pi/Documents/hermes/hermes-cli.sh", "w") as f:
@@ -200,7 +127,7 @@ with open("/home/pi/Documents/hermes/hermes-cli.sh", "w") as f:
 # ADD CRONTAB
 
 print(f"ADDING CRONTAB")
-run_shell_command("crontab /boot/midcost-init-files/system/crontab")
+run_shell_command("crontab /boot/firmware/midcost-init-files/system/crontab")
 
 # =============================================================================
 

@@ -1,0 +1,46 @@
+{
+    "version": "0.0.0-beta.0",
+    "verbose_logging": false,
+    "hardware": {
+        "pumped_litres_per_round": 0.000833
+    },
+    "active_components": {
+        "run_calibration_procedures": false,
+        "send_messages_over_mqtt": true,
+        "run_pump_speed_monitoring": false,
+        "ignore_missing_air_inlet_sensor": false
+    },
+    "measurement": {
+        "timing": {
+            "seconds_per_measurement_interval": 120,
+            "seconds_per_measurement": 10,
+            "pumped_litres_per_minute": 0.5
+        },
+        "air_inlets": [
+            {
+                "valve_number": 1,
+                "direction": 0,
+                "tube_length": 50
+            }
+        ],
+        "average_air_inlet_measurements": 15
+    },
+    "calibration": {
+        "timing": {
+            "start_timestamp": 1682503200,
+            "hours_between_calibrations": 25,
+            "seconds_per_gas_bottle": 600
+        },
+        "gases": [
+            {
+                "valve_number": 2,
+                "bottle_id": "999"
+            },
+            {
+                "valve_number": 3,
+                "bottle_id": "998"
+            }
+        ],
+        "average_air_inlet_measurements": 15
+    }
+}
