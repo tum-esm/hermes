@@ -75,7 +75,7 @@ class CO2SensorInterface:
         for measurement_setting in [
             "echo off",  # do not output received strings
             "range 1",  # measuring from 0 to 1000 ppm
-            "heat on",  # turn on the optics heating (default: on)
+            "heat on",  # turn on the optics heating
             "linear on",  # turn on linearisation (default: on)
             'form CO2RAWUC CO2RAW CO2 T " (R C C+F T)"',
             "tc on",  # temperature compensation
