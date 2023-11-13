@@ -224,6 +224,12 @@ class CO2SensorInterface:
         self.rs232_interface.send_command("??")
         return self._format_raw_answer(self.rs232_interface.wait_for_answer())
 
+    def get_param_info(self) -> str:
+        """runs the "param" command to get a full sensor parameter report"""
+        self.rs232_interface.flush_receiver_stream()
+        self.rs232_interface.send_command("param")
+        return self._format_raw_answer(self.rs232_interface.wait_for_answer())
+
     def get_correction_info(self) -> str:
         """runs the "corr" command to retrieve information about the correction
         the CO2 probe currently uses"""
