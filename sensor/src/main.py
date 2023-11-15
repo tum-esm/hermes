@@ -50,10 +50,13 @@ def run() -> None:
     MAX_CONFIG_UPDATE_TIME = 1200
     MAX_SYSTEM_CHECK_TIME = 180
     MAX_CALIBRATION_TIME = (
-        len(config.calibration.gases) + 1
-    ) * config.calibration.timing.seconds_per_gas_bottle + 180
+        (len(config.calibration.gases) + 1)
+        * config.calibration.timing.seconds_per_gas_bottle
+        + 300  # flush time
+        + 180  # extra time
+    )
     MAX_MEASUREMENT_TIME = (
-        config.measurement.timing.seconds_per_measurement_interval + 180
+        config.measurement.timing.seconds_per_measurement_interval + 180  # extra time
     )
     utils.set_alarm(MAX_SETUP_TIME, "setup")
 
