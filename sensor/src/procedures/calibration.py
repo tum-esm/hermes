@@ -150,7 +150,7 @@ class CalibrationProcedure:
         )
 
         # flush calibration gases with measurement inlet
-        time.sleep(5 * 60)
+        time.sleep(300)
 
         # save last calibration time
         self.logger.debug("finished calibration: updating state")
