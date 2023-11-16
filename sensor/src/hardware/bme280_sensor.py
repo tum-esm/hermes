@@ -25,7 +25,6 @@ class BME280SensorInterface:
         self.logger.info("Starting initialization")
 
         # set up connection to BME280 sensor
-        self.i2c_device = smbus2.SMBus(1)
         self.bus = smbus2.SMBus(1)
         self.address = 0x77 if (variant == "mainboard") else 0x76
         self.compensation_params: Optional[bme280.params] = None
@@ -39,41 +38,49 @@ class BME280SensorInterface:
             humidity=None,
             pressure=None,
         )
-        if self.compensation_params is None:
-            try:
-                self.compensation_params = bme280.load_calibration_params(
-                    self.bus, self.address
-                )
-            except OSError:
-                self.logger.warning(
-                    "could not fetch compensation params", config=self.config
-                )
-                if (self.variant == "air-inlet") and (
-                    self.config.active_components.ignore_missing_air_inlet_sensor
-                ):
-                    return output
-                raise self.DeviceFailure("could not fetch compensation params")
 
-        bme280_data: Optional[bme280.compensated_readings] = None
-        try:
-            bme280_data = bme280.sample(
-                self.bus,
-                self.address,
-                self.compensation_params,
-            )
-            output.temperature = round(bme280_data.temperature, 2)
-            output.humidity = round(bme280_data.humidity, 2)
-            output.pressure = round(bme280_data.pressure, 2)
+        # returns None if no air-inlet sensor is connected
+        if (self.variant == "air-inlet") and (
+            self.config.active_components.ignore_missing_air_inlet_sensor
+        ):
             return output
 
-        except (AssertionError, OSError):
-            self.compensation_params = None
-            self.logger.warning("could not sample data", config=self.config)
-            if (self.variant == "air-inlet") and (
-                self.config.active_components.ignore_missing_air_inlet_sensor
-            ):
+        # reads compensation values
+        if self.compensation_params is None:
+            self.read_compensation_param()
+
+        # read bme280 data (retries 2 additional times)
+        for _ in range(3):
+            bme280_data: Optional[bme280.compensated_readings] = None
+            try:
+                bme280_data = bme280.sample(
+                    self.bus,
+                    self.address,
+                    self.compensation_params,
+                )
+                output.temperature = round(bme280_data.temperature, 2)
+                output.humidity = round(bme280_data.humidity, 2)
+                output.pressure = round(bme280_data.pressure, 2)
                 return output
-            raise self.DeviceFailure("could not sample data")
+
+            except Exception as e:
+                self.logger.exception(
+                    e,
+                    label="exception during BME280 measurement request.",
+                    config=self.config,
+                )
+                self.logger.warning(
+                    "reinitialising sensor communication.",
+                    config=self.config,
+                )
+                self._reset_sensor()
+
+        # returns None if mainboard sensor could be read
+        if self.variant == "mainboard":
+            return output
+
+        # raises device error if air-inlet sensor could be read
+        raise BME280SensorInterface.DeviceFailure("could not fetch data")
 
     def check_errors(self) -> None:
         """Tries to fetch data, possibly raises `DeviceFailure`"""
@@ -81,6 +88,27 @@ class BME280SensorInterface:
         data = self.get_data()
         if data.temperature is None:
             raise BME280SensorInterface.DeviceFailure("could not fetch data")
+
+    def read_compensation_param(self) -> None:
+        try:
+            self.compensation_params = bme280.load_calibration_params(
+                self.bus, self.address
+            )
+        except Exception as e:
+            self.logger.exception(
+                e,
+                label="could not fetch compensation params",
+                config=self.config,
+            )
+            self.compensation_params = None
+
+    def _reset_sensor(self):
+        self.compensation_params = None
+        self.teardown()
+        self.bus = smbus2.SMBus(1)
+        self.address = 0x77 if (self.variant == "mainboard") else 0x76
+        self.read_compensation_param()
+        self.logger.info("Starting initialization")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
