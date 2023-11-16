@@ -102,7 +102,7 @@ class BME280SensorInterface:
             )
             self.compensation_params = None
 
-    def _reset_sensor(self):
+    def _reset_sensor(self) -> None:
         self.compensation_params = None
         self.teardown()
         self.bus = smbus2.SMBus(1)
