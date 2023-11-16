@@ -285,10 +285,10 @@ def run() -> None:
                 if time.time() > ebo.next_try_timer():
                     ebo.set_next_timer()
                     # reinitialize all hardware interfaces
-                    logger.info("performing hard reset", config=config)
+                    logger.info("performing hardware reset", config=config)
                     hardware_interface.teardown()
                     hardware_interface.reinitialize(config)
-                    logger.info("hard reset was successful", config=config)
+                    logger.info("hardware reset was successful", config=config)
 
             except Exception as e:
                 logger.exception(
