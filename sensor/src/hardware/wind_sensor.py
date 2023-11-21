@@ -5,15 +5,6 @@ import gpiozero
 import gpiozero.pins.pigpio
 import re
 
-# number_regex = r"\d+(\.\d+)?"
-# measurement_pattern = re.compile(
-#     f"^0R1,Dn={number_regex}D,Dm={number_regex}D,Dx={number_regex}D,"
-#     + f"Sn={number_regex}M,Sm={number_regex}M,Sx={number_regex}M$"
-# )
-# device_status_pattern = re.compile(
-#     f"^0R5,Th={number_regex}C,Vh={number_regex}N,"
-#     + f"Vs={number_regex}V,Vr={number_regex}V$" #,Id=tumesmmw\\d+
-# )
 measurement_pattern = (
     pattern
 ) = r"Dn=([0-9.]+)D,Dm=([0-9.]+)D,Dx=([0-9.]+)D,Sn=([0-9.]+)M,Sm=([0-9.]+)M,Sx=([0-9.]+)M"
@@ -40,7 +31,10 @@ class WindSensorInterface:
             write_to_file=(not testing),
         )
         self.config = config
+
         self.logger.info("Starting initialization")
+        self.wind_measurement: Optional[custom_types.WindSensorData] = None
+        self.device_status: Optional[custom_types.WindSensorStatus] = None
 
         # power pin to power up/down wind sensor
         self.pin_factory = utils.get_gpio_pin_factory()
@@ -51,19 +45,17 @@ class WindSensorInterface:
         self.power_pin.on()
 
         # serial connection to receive data from wind sensor
-        self.wxt530_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
+        self.wxt532_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
             port=WIND_SENSOR_SERIAL_PORT,
             baudrate=19200,
             encoding="cp1252",
             line_endling="\r\n",
         )
-        self.wind_measurement: Optional[custom_types.WindSensorData] = None
-        self.device_status: Optional[custom_types.WindSensorStatus] = None
 
         self.logger.info("Finished initialization")
 
     def _update_current_values(self) -> None:
-        new_messages = self.wxt530_interface.get_messages()
+        new_messages = self.wxt532_interface.get_messages()
         now = round(time.time())
         for message in new_messages:
             # Check if there's a match for the measurement_pattern
@@ -107,16 +99,6 @@ class WindSensorInterface:
         now = time.time()
         self._update_current_values()
 
-        if self.wind_measurement is not None:
-            if (now - self.wind_measurement.last_update_time) > 120:
-                self.logger.warning(
-                    "last wind measurement data is older than 2 minutes"
-                )
-            if (now - self.wind_measurement.last_update_time) > 900:
-                raise WindSensorInterface.DeviceFailure(
-                    "last wind measurement data is older than 15 minutes"
-                )
-
         if self.device_status is not None:
             # only consider values less than 5 minutes old
             if (now - self.device_status.last_update_time) < 300:
@@ -136,7 +118,7 @@ class WindSensorInterface:
                         + f" ({self.device_status})"
                     )
 
-        self.logger.info("sensor doesn't report any errors")
+                self.logger.info("the wind sensor check doesn't report any errors")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
