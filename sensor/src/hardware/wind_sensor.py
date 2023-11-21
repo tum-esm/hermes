@@ -5,15 +5,19 @@ import gpiozero
 import gpiozero.pins.pigpio
 import re
 
-number_regex = r"\d+(\.\d+)?"
-measurement_pattern = re.compile(
-    f"^0R1,Dn={number_regex}D,Dm={number_regex}D,Dx={number_regex}D,"
-    + f"Sn={number_regex}M,Sm={number_regex}M,Sx={number_regex}M$"
-)
-device_status_pattern = re.compile(
-    f"^0R5,Th={number_regex}C,Vh={number_regex}N,"
-    + f"Vs={number_regex}V,Vr={number_regex}V,Id=tumesmmw\\d+$"
-)
+# number_regex = r"\d+(\.\d+)?"
+# measurement_pattern = re.compile(
+#     f"^0R1,Dn={number_regex}D,Dm={number_regex}D,Dx={number_regex}D,"
+#     + f"Sn={number_regex}M,Sm={number_regex}M,Sx={number_regex}M$"
+# )
+# device_status_pattern = re.compile(
+#     f"^0R5,Th={number_regex}C,Vh={number_regex}N,"
+#     + f"Vs={number_regex}V,Vr={number_regex}V$" #,Id=tumesmmw\\d+
+# )
+measurement_pattern = (
+    pattern
+) = r"Dn=([0-9.]+)D,Dm=([0-9.]+)D,Dx=([0-9.]+)D,Sn=([0-9.]+)M,Sm=([0-9.]+)M,Sx=([0-9.]+)M"
+device_status_pattern = r"Th=([0-9.]+)C,Vh=([0-9.]+)N,Vs=([0-9.]+)V,Vr=([0-9.]+)V"
 
 
 WIND_SENSOR_POWER_PIN_OUT = 21
@@ -47,8 +51,7 @@ class WindSensorInterface:
         self.power_pin.on()
 
         # serial connection to receive data from wind sensor
-        # TODO: change interface to RS-485
-        self.rs232_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
+        self.wxt530_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
             port=WIND_SENSOR_SERIAL_PORT,
             baudrate=19200,
             encoding="cp1252",
@@ -60,34 +63,32 @@ class WindSensorInterface:
         self.logger.info("Finished initialization")
 
     def _update_current_values(self) -> None:
-        new_messages = self.rs232_interface.get_messages()
+        new_messages = self.wxt530_interface.get_messages()
         now = round(time.time())
-        for m in new_messages:
-            if measurement_pattern.match(m) is not None:
-                parsed_message = "".join(
-                    c for c in m[4:] if c.isnumeric() or c in [",", "."]
-                )
-                dn, dm, dx, sn, sm, sx = [float(v) for v in parsed_message.split(",")]
+        for message in new_messages:
+            # Check if there's a match for the measurement_pattern
+            measurement_match = re.search(measurement_pattern, message)
+            if measurement_match is not None:
+                # Extract the values using group() method
                 self.wind_measurement = custom_types.WindSensorData(
-                    direction_min=dn,
-                    direction_avg=dm,
-                    direction_max=dx,
-                    speed_min=sn,
-                    speed_avg=sm,
-                    speed_max=sx,
+                    direction_min=measurement_match.group(1),
+                    direction_avg=measurement_match.group(2),
+                    direction_max=measurement_match.group(3),
+                    speed_min=measurement_match.group(4),
+                    speed_avg=measurement_match.group(5),
+                    speed_max=measurement_match.group(6),
                     last_update_time=now,
                 )
-            if device_status_pattern.match(m) is not None:
-                parsed_message = "".join(
-                    c for c in m[4:-13] if c.isnumeric() or c in [",", "."]
-                )
-                th, vh, vs, vr = [float(v) for v in parsed_message.split(",")]
+
+            # Check if there's a match for the device_status_pattern
+            device_match = re.search(device_status_pattern, message)
+            if device_match is not None:
+                # Extract the values using group() method
                 self.device_status = custom_types.WindSensorStatus(
-                    temperature=th,
-                    heating_voltage=vh,
-                    supply_voltage=vs,
-                    reference_voltage=vr,
-                    sensor_id=m.split("=")[-1],
+                    temperature=device_match.group(1),
+                    heating_voltage=device_match.group(2),
+                    supply_voltage=device_match.group(3),
+                    reference_voltage=device_match.group(4),
                     last_update_time=now,
                 )
 
