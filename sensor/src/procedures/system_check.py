@@ -30,20 +30,20 @@ class SystemCheckProcedure:
         """
 
         mainboard_bme280_data = self.hardware_interface.mainboard_sensor.get_data()
-        mainboard_temperature = mainboard_bme280_data.temperature
         cpu_temperature = utils.get_cpu_temperature()
+        self.logger.debug(f"raspi cpu temp. = {cpu_temperature} °C")
+
         self.logger.debug(
-            f"mainboard temp. = {mainboard_temperature} °C, "
-            + f"raspi cpu temp. = {cpu_temperature} °C"
-        )
-        self.logger.debug(
-            f"enclosure humidity = {mainboard_bme280_data.humidity} % rH, "
+            f"mainboard temp. = {mainboard_bme280_data.temperature} °C, "
+            + f"enclosure humidity = {mainboard_bme280_data.humidity} % rH, "
             + f"enclosure pressure = {mainboard_bme280_data.pressure} hPa"
         )
 
-        if (mainboard_temperature is not None) and (mainboard_temperature > 70):
+        if (mainboard_bme280_data.temperature is not None) and (
+            mainboard_bme280_data.temperature > 70
+        ):
             self.logger.warning(
-                f"mainboard temperature is very high ({mainboard_temperature} °C)",
+                f"mainboard temperature is very high ({mainboard_bme280_data.temperature} °C)",
                 config=self.config,
             )
 
@@ -89,7 +89,7 @@ class SystemCheckProcedure:
                 revision=state.current_config_revision,
                 timestamp=round(time.time(), 2),
                 value=custom_types.MQTTSystemData(
-                    enclosure_bme280_temperature=mainboard_temperature,
+                    enclosure_bme280_temperature=mainboard_bme280_data.temperature,
                     enclosure_bme280_humidity=mainboard_bme280_data.humidity,
                     enclosure_bme280_pressure=mainboard_bme280_data.pressure,
                     raspi_cpu_temperature=cpu_temperature,

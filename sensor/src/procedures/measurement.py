@@ -58,7 +58,7 @@ class WindMeasurementProcedure:
             )
         else:
             self.logger.info(f"did not receive any wind sensor measurement")
-            
+
         # send latest wind sensor device info
         if self.device_info is not None:
             self.logger.info(f"latest wind sensor device info: {self.device_info}")
@@ -81,7 +81,6 @@ class WindMeasurementProcedure:
             )
         else:
             self.logger.info(f"did not receive any wind sensor device info")
-        
 
     def run(self) -> None:
         """
@@ -150,7 +149,7 @@ class CO2MeasurementProcedure:
         """
         1. collect and send CO2 measurements in 10s intervals for 2 minutes
         """
-        self.logger.info(f"starting 2 minute CO2 measurement interval")
+        self.logger.info(f"starting 2 minute long CO2 measurement interval")
         measurement_procedure_start_time = time.time()
 
         # log the current CO2 sensor device info

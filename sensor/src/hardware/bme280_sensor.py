@@ -1,6 +1,7 @@
-from typing import Literal, Optional
 import smbus2
 import bme280
+import time
+from typing import Literal, Optional
 from src import utils, custom_types
 
 
@@ -22,17 +23,19 @@ class BME280SensorInterface:
         )
         self.config = config
         self.variant = variant
-        self.logger.info("Starting initialization")
+        self.logger.info("starting initialization")
+        self.compensation_params: Optional[bme280.params] = None
 
         # set up connection to BME280 sensor
         self.bus = smbus2.SMBus(1)
         self.address = 0x77 if (variant == "mainboard") else 0x76
-        self.compensation_params: Optional[bme280.params] = None
-        self.logger.info("Finished initialization")
+
+        self.logger.info("finished initialization")
 
     def get_data(self) -> custom_types.BME280SensorData:
         """log mainboard and cpu temperature and enclosure humidity and pressure"""
 
+        # initialize output
         output = custom_types.BME280SensorData(
             temperature=None,
             humidity=None,
@@ -45,18 +48,16 @@ class BME280SensorInterface:
         ):
             return output
 
-        # reads compensation values
+        # sets compensation values once
         if self.compensation_params is None:
             self.read_compensation_param()
 
         # read bme280 data (retries 2 additional times)
         for _ in range(3):
-            bme280_data: Optional[bme280.compensated_readings] = None
             try:
                 bme280_data = bme280.sample(
                     self.bus,
                     self.address,
-                    self.compensation_params,
                 )
                 output.temperature = round(bme280_data.temperature, 2)
                 output.humidity = round(bme280_data.humidity, 2)
@@ -66,21 +67,21 @@ class BME280SensorInterface:
             except Exception as e:
                 self.logger.exception(
                     e,
-                    label="exception during BME280 measurement request.",
+                    label="exception during BME280 measurement request",
                     config=self.config,
                 )
                 self.logger.warning(
-                    "reinitialising sensor communication.",
+                    "reinitialising sensor communication",
                     config=self.config,
                 )
                 self._reset_sensor()
 
-        # returns None if mainboard sensor could be read
-        if self.variant == "mainboard":
-            return output
-
-        # raises device error if air-inlet sensor could be read
-        raise BME280SensorInterface.DeviceFailure("could not fetch data")
+        # returns None if sensor could not be read
+        self.logger.warning(
+            "could not read BME280 measurement values",
+            config=self.config,
+        )
+        return output
 
     def check_errors(self) -> None:
         """Tries to fetch data, possibly raises `DeviceFailure`"""
@@ -104,11 +105,11 @@ class BME280SensorInterface:
 
     def _reset_sensor(self) -> None:
         self.compensation_params = None
-        self.teardown()
+        self.bus.close()
+        time.sleep(1)
         self.bus = smbus2.SMBus(1)
         self.address = 0x77 if (self.variant == "mainboard") else 0x76
         self.read_compensation_param()
-        self.logger.info("Starting initialization")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
