@@ -251,7 +251,7 @@ class CO2SensorInterface:
             )
             self._reset_sensor()
 
-        self.logger.info("Sensor doesn't report any errors")
+        self.logger.info("the CO2 sensor check doesn't report any errors")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
