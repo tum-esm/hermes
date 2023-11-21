@@ -6,11 +6,13 @@ import pydantic
 
 # Sensor data
 
+
 class CO2SensorData(pydantic.BaseModel):
     raw: float
     compensated: float
     filtered: float
     temperature: float
+
 
 class BME280SensorData(pydantic.BaseModel):
     """units: °C for temperature, rH for humidity, hPa for pressure"""
@@ -25,7 +27,8 @@ class SHT45SensorData(pydantic.BaseModel):
 
     temperature: Optional[float]
     humidity: Optional[float]
-    
+
+
 class WindSensorData(pydantic.BaseModel):
     direction_min: float
     direction_avg: float
@@ -41,5 +44,4 @@ class WindSensorStatus(pydantic.BaseModel):
     heating_voltage: float
     supply_voltage: float
     reference_voltage: float
-    sensor_id: str
     last_update_time: float
