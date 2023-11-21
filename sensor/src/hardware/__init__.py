@@ -35,12 +35,13 @@ class HardwareInterface:
         self.acquire_hardare_lock()
 
         # measurement sensors
+        self.wind_sensor = WindSensorInterface(config, testing=self.testing)
         self.air_inlet_bme280_sensor = BME280SensorInterface(
             config, variant="air-inlet", testing=self.testing
         )
         self.air_inlet_sht45_sensor = SHT45SensorInterface(config, testing=self.testing)
         self.co2_sensor = CO2SensorInterface(config, testing=self.testing)
-        self.wind_sensor = WindSensorInterface(config, testing=self.testing)
+
 
         # measurement actors
         self.pump = PumpInterface(config, testing=self.testing)

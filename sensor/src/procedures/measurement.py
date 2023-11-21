@@ -21,21 +21,25 @@ class WindMeasurementProcedure:
         self.wind_data: Optional[custom_types.WindSensorData] = None
         self.message_queue = utils.MessageQueue()
 
-    def _read_latest_wind_data(self) -> None:
+    def _read_latest_wind_sensor_communication(self) -> None:
         # wind measurement
         self.wind_data = (
             self.hardware_interface.wind_sensor.get_current_wind_measurement()
         )
+        self.device_info = (
+            self.hardware_interface.wind_sensor.get_current_device_status()
+        )
 
-    def _send_latest_wind_data(self) -> None:
+    def _send_latest_wind_sensor_communication(self) -> None:
         """
         fetches the latest wind data and sends it our over MQTT.
         """
-        # determine new valve
+        # send latest wind measurement info
         if self.wind_data is not None:
-            self.logger.info(f"sending latest wind data: {self.wind_data}")
+            self.logger.info(f"latest wind sensor measurement: {self.wind_data}")
 
             state = utils.StateInterface.read()
+
             self.message_queue.enqueue_message(
                 self.config,
                 custom_types.MQTTMeasurementMessageBody(
@@ -52,19 +56,45 @@ class WindMeasurementProcedure:
                     ),
                 ),
             )
+        else:
+            self.logger.info(f"did not receive any wind sensor measurement")
+            
+        # send latest wind sensor device info
+        if self.device_info is not None:
+            self.logger.info(f"latest wind sensor device info: {self.device_info}")
+
+            state = utils.StateInterface.read()
+
+            self.message_queue.enqueue_message(
+                self.config,
+                custom_types.MQTTMeasurementMessageBody(
+                    revision=state.current_config_revision,
+                    timestamp=round(time.time(), 2),
+                    value=custom_types.MQTTWindSensorInfo(
+                        wxt532_temperature=self.device_info.temperature,
+                        wxt532_heating_voltage=self.device_info.heating_voltage,
+                        wxt532_supply_voltage=self.device_info.supply_voltage,
+                        wxt532_reference_voltage=self.device_info.reference_voltage,
+                        wxt532_last_update_time=self.device_info.last_update_time,
+                    ),
+                ),
+            )
+        else:
+            self.logger.info(f"did not receive any wind sensor device info")
+        
 
     def run(self) -> None:
         """
-        1. collect and send wind measurements in 2m intervals
+        1. collect and send wind measurements in 2m interval
         2. collect and send CO2 measurements in 10s intervals
         """
         self.logger.info(f"reading latest wind measurement")
 
         # Read wind data
-        self._read_latest_wind_data()
+        self._read_latest_wind_sensor_communication()
 
         # Send wind data
-        self._send_latest_wind_data()
+        self._send_latest_wind_sensor_communication()
 
         self.logger.info(f"finished reading latest wind measurement")
 
@@ -125,7 +155,7 @@ class CO2MeasurementProcedure:
 
         # log the current CO2 sensor device info
         self.logger.info(
-            f"GMP343 Sensor Info: {self.hardware_interface.co2_sensor.get_param_info()}"
+            f"GMP343 Sensor Info: {self.hardware_interface.co2_sensor.get_device_info()}"
         )
 
         # do regular measurements for about 2 minutes
