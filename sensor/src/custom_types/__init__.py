@@ -9,6 +9,7 @@ from .mqtt_sending import (
     MQTTCalibrationData,
     MQTTSystemData,
     MQTTWindData,
+    MQTTWindSensorInfo,
     # different message bodies
     MQTTLogMessageBody,
     MQTTMeasurementMessageBody,
