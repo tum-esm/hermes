@@ -71,8 +71,8 @@ class CO2SensorInterface:
             700 <= pressure <= 1300
         ), f"invalid pressure ({pressure} not in [700, 1300])"
 
-        self.set_sensor_parameter(parameter="rh", value=round(humidity, 2))
-        self.set_sensor_parameter(parameter="p", value=round(pressure, 2))
+        self._set_sensor_parameter(parameter="rh", value=round(humidity, 2))
+        self._set_sensor_parameter(parameter="p", value=round(pressure, 2))
 
         self.logger.info(
             f"updated compensation values: pressure = {pressure}, "
@@ -98,9 +98,9 @@ class CO2SensorInterface:
             median >= 0 and median <= 13
         ), "invalid calibration setting, median not in [0, 13]"
 
-        self.set_sensor_parameter(parameter="average", value=average)
-        self.set_sensor_parameter(parameter="smooth", value=smooth)
-        self.set_sensor_parameter(parameter="median", value=median)
+        self._set_sensor_parameter(parameter="average", value=average)
+        self._set_sensor_parameter(parameter="smooth", value=smooth)
+        self._set_sensor_parameter(parameter="median", value=median)
 
         self.logger.info(
             f"updating filter settings (average = {average}, smooth"
@@ -120,7 +120,7 @@ class CO2SensorInterface:
             if (humidity is not None) and (pressure is not None):
                 self.set_compensation_values(pressure=pressure, humidity=humidity)
 
-            answer = self.request_measurement_data()
+            answer = self._request_measurement_data()
 
             xs = [s for s in answer.replace("\t", " ").split(" ") if len(s) > 0]
             sensor_data = float(xs[0]), float(xs[1]), float(xs[2]), float(xs[3])
@@ -144,30 +144,30 @@ class CO2SensorInterface:
     def get_param_info(self) -> str:
         """runs the "param" command to get a full sensor parameter report"""
         try:
-            return self.send_command_to_sensor("param")
+            return self._send_command_to_sensor("param")
         except Exception:
             self._reset_sensor()
-            return self.send_command_to_sensor("param")
+            return self._send_command_to_sensor("param")
 
     def get_device_info(self) -> str:
         """runs the "??" command to get a full sensor parameter report"""
         try:
-            return self.send_command_to_sensor("??")
+            return self._send_command_to_sensor("??")
         except Exception:
             self._reset_sensor()
-            return self.send_command_to_sensor("??")
+            return self._send_command_to_sensor("??")
 
     def get_correction_info(self) -> str:
         """runs the "corr" command to get a full sensor parameter report"""
         try:
-            return self.send_command_to_sensor("corr")
+            return self._send_command_to_sensor("corr")
         except Exception:
             self._reset_sensor()
-            return self.send_command_to_sensor("corr")
+            return self._send_command_to_sensor("corr")
 
     # utility functions
 
-    def send_command_to_sensor(
+    def _send_command_to_sensor(
         self,
         command: str,
         expected_regex: str = r"[^>]*",
@@ -180,7 +180,7 @@ class CO2SensorInterface:
         else:
             raise self.CommunicationError("Could not send command to sensor.")
 
-    def set_sensor_parameter(
+    def _set_sensor_parameter(
         self,
         parameter: str,
         value: float,
@@ -222,7 +222,7 @@ class CO2SensorInterface:
                     f"Paramter could not be set. Sensor answer: {answer[1]}"
                 )
 
-    def request_measurement_data(self) -> str:
+    def _request_measurement_data(self) -> str:
         """sends a command to the sensor"""
 
         answer = self.rs232_interface.send_command(
@@ -265,15 +265,17 @@ class CO2SensorInterface:
 
         self.logger.debug("sending measurement settings")
 
-        self.send_command_to_sensor(command="echo off")
-        self.set_sensor_parameter(parameter="range", value=1)
-        self.send_command_to_sensor(command="heat on")
-        self.send_command_to_sensor(command="linear on")
-        self.send_command_to_sensor(command='form CO2RAWUC CO2RAW CO2 T " (R C C+F T)"')
-        self.send_command_to_sensor(command="tc on")
-        self.send_command_to_sensor(command="rpc on")
-        self.send_command_to_sensor(command="pc on")
-        self.send_command_to_sensor(command="oc on")
+        self._send_command_to_sensor(command="echo off")
+        self._set_sensor_parameter(parameter="range", value=1)
+        self._send_command_to_sensor(command="heat on")
+        self._send_command_to_sensor(command="linear on")
+        self._send_command_to_sensor(
+            command='form CO2RAWUC CO2RAW CO2 T " (R C C+F T)"'
+        )
+        self._send_command_to_sensor(command="tc on")
+        self._send_command_to_sensor(command="rpc on")
+        self._send_command_to_sensor(command="pc on")
+        self._send_command_to_sensor(command="oc on")
 
         # set filter setting
         self.set_filter_setting(
@@ -283,7 +285,7 @@ class CO2SensorInterface:
     def check_errors(self) -> None:
         """checks whether the CO2 probe reports any errors. Possibly raises
         the CO2SensorInterface.CommunicationError exception"""
-        answer = self.send_command_to_sensor("errs")
+        answer = self._send_command_to_sensor("errs")
 
         if not ("OK: No errors detected" in answer[1]):
             self.logger.info(
