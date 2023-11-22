@@ -72,7 +72,7 @@ class CalibrationProcedure:
 
         # log the current CO2 sensor device info
         self.logger.info(
-            f"GMP343 Sensor Info: {self.hardware_interface.co2_sensor.get_device_info()}"
+            f"GMP343 Sensor Info: {self.hardware_interface.co2_sensor.get_param_info()}"
         )
 
         # clear ring buffers

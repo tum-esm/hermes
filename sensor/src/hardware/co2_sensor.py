@@ -1,15 +1,15 @@
 import time
-from typing import Optional
+from typing import Literal, Optional
 from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
 
-NUMBER_REGEX = r"\d+\.\d+"
+times_REGEX = r"\d+\.\d+"
 STARTUP_REGEX = (
-    f"GMP343 - Version STD {NUMBER_REGEX}\\r\\n"
+    f"GMP343 - Version STD {times_REGEX}\\r\\n"
     + f"Copyright: Vaisala Oyj \\d{{4}} - \\d{{4}}"
 )
-MEASUREMENT_REGEX = (
+CO2_MEASUREMENT_REGEX = (
     r"\d+\.\d+\s+"  # raw
     + r"\d+\.\d+\s+"  # compensated
     + r"\d+\.\d+\s+"  # compensated + filtered
@@ -22,8 +22,8 @@ CO2_SENSOR_SERIAL_PORT = "/dev/ttySC0"
 
 
 class CO2SensorInterface:
-    class DeviceFailure(Exception):
-        """raised when the CO2 probe "errs" command responds with an error"""
+    class CommunicationError(Exception):
+        """raised when the CO2 communication fails"""
 
     def __init__(
         self,
@@ -55,40 +55,28 @@ class CO2SensorInterface:
 
         self.logger.info("finished initialization")
 
-    def _reset_sensor(self) -> None:
-        """reset the sensors default settings by turning it off and on and
-        sending the initial settings again"""
+    # set functions
 
-        self.logger.info("initializing the sensor with measurement settings")
+    def set_compensation_values(self, pressure: float, humidity: float) -> None:
+        """
+        update pressure, humidity in sensor
+        for its internal compensation.
 
-        self.logger.debug("powering down sensor")
-        self.power_pin.off()
-        time.sleep(1)
+        the internal temperature compensation is enabled by de-
+        fault and uses the built-in temperature sensor.
+        """
 
-        self.logger.debug("powering up sensor")
-        self.rs232_interface.flush_receiver_stream()
-        self.power_pin.on()
-        self.last_powerup_time = time.time()
-        self.rs232_interface.wait_for_answer(expected_regex=STARTUP_REGEX)
+        assert 0 <= humidity <= 100, f"invalid humidity ({humidity} not in [0, 100])"
+        assert (
+            700 <= pressure <= 1300
+        ), f"invalid pressure ({pressure} not in [700, 1300])"
 
-        self.logger.debug("sending measurement settings")
-        for measurement_setting in [
-            "echo off",  # do not output received strings
-            "range 1",  # measuring from 0 to 1000 ppm
-            "heat on",  # turn on the optics heating
-            "linear on",  # turn on linearisation (default: on)
-            'form CO2RAWUC CO2RAW CO2 T " (R C C+F T)"',
-            "tc on",  # temperature compensation
-            "rhc on",  # relative humidity compensation
-            "pc on",  # pressure compensation
-            "oc on",  # oxygen compensation
-        ]:
-            self.rs232_interface.send_command(measurement_setting)
-            self.rs232_interface.wait_for_answer()
+        self.set_sensor_parameter(parameter="rh", value=round(humidity, 2))
+        self.set_sensor_parameter(parameter="p", value=round(pressure, 2))
 
-        # set filter setting
-        self.set_filter_setting(
-            average=self.config.measurement.timing.seconds_per_measurement
+        self.logger.info(
+            f"updated compensation values: pressure = {pressure}, "
+            + f"humidity = {humidity}"
         )
 
     def set_filter_setting(
@@ -110,90 +98,37 @@ class CO2SensorInterface:
             median >= 0 and median <= 13
         ), "invalid calibration setting, median not in [0, 13]"
 
-        self.rs232_interface.flush_receiver_stream()
-
-        self.rs232_interface.send_command(f"average {average}")
-        self.rs232_interface.wait_for_answer()
-
-        self.rs232_interface.send_command(f"smooth {smooth}")
-        self.rs232_interface.wait_for_answer()
-
-        self.rs232_interface.send_command(f"median {median}")
-        self.rs232_interface.wait_for_answer()
-
-        self.rs232_interface.send_command(f"linear {'on' if linear else 'off'}")
-        self.rs232_interface.wait_for_answer()
+        self.set_sensor_parameter(parameter="average", value=average)
+        self.set_sensor_parameter(parameter="smooth", value=smooth)
+        self.set_sensor_parameter(parameter="median", value=median)
 
         self.logger.info(
             f"updating filter settings (average = {average}, smooth"
-            + f" = {smooth}, median = {median}, linear = {linear})"
+            + f" = {smooth}, median = {median})"
         )
 
-    def set_compensation_values(self, pressure: float, humidity: float) -> None:
-        """
-        update pressure, humidity, and oxygen values in sensor
-        for its internal compensation.
-
-        the internal temperature compensation is enabled by de-
-        fault and uses the built-in temperature sensor.
-        """
-
-        assert 0 <= humidity <= 100, f"invalid humidity ({humidity} not in [0, 100])"
-        assert (
-            700 <= pressure <= 1300
-        ), f"invalid pressure ({pressure} not in [700, 1300])"
-
-        self.rs232_interface.flush_receiver_stream()
-
-        # send latest humidity reading to CO2 sensor
-        self.rs232_interface.send_command(f"rh {round(humidity, 2)}")
-        self.rs232_interface.wait_for_answer()
-
-        # send latest pressure reading to CO2 sensor
-        self.rs232_interface.send_command(f"p {round(pressure, 2)}")
-        self.rs232_interface.wait_for_answer()
-
-        self.logger.info(
-            f"updated compensation values: pressure = {pressure}, "
-            + f"humidity = {humidity}"
-        )
-
-    def _get_current_sensor_data(self) -> tuple[float, float, float, float]:
-        """get the current data from the CO2 probe
-        tuple[co2rawuc, co2raw, co2, t]"""
-
-        self.rs232_interface.flush_receiver_stream()
-
-        request_time = time.time()
-        self.rs232_interface.send_command("send")
-        answer = self.rs232_interface.wait_for_answer(
-            expected_regex=MEASUREMENT_REGEX, timeout=30
-        )
-        answer_delay = round(time.time() - request_time, 3)
-        if answer_delay > 6:
-            self.logger.warning(
-                f"sensor took a long time to answer ({answer_delay}s)",
-                config=self.config,
-            )
-        xs = [s for s in answer.replace("\t", " ").split(" ") if len(s) > 0]
-        return float(xs[0]), float(xs[1]), float(xs[2]), float(xs[3])
+    # get functions
 
     def get_current_concentration(
         self, pressure: Optional[float] = None, humidity: Optional[float] = None
     ) -> custom_types.CO2SensorData:
         """get the latest concentration and chamber temperature from the CO2 probe"""
+
+        # request data from CO2 sensor
         try:
+            # set compensation values if provided
             if (humidity is not None) and (pressure is not None):
                 self.set_compensation_values(pressure=pressure, humidity=humidity)
-            sensor_data = self._get_current_sensor_data()
+
+            answer = self.request_measurement_data()
+
+            xs = [s for s in answer.replace("\t", " ").split(" ") if len(s) > 0]
+            sensor_data = float(xs[0]), float(xs[1]), float(xs[2]), float(xs[3])
+
         except Exception as e:
             self.logger.exception(
                 e,
-                label="exception during CO2 sensor measurement request.",
-                config=self.config,
-            )
-            self.logger.warning(
-                "performing sensor restart.",
+                label="exception during CO2 sensor measurement request - restarting sensor",
                 config=self.config,
             )
             self._reset_sensor()
@@ -205,6 +140,100 @@ class CO2SensorInterface:
             filtered=sensor_data[2],
             temperature=sensor_data[3],
         )
+
+    def get_param_info(self) -> str:
+        """runs the "param" command to get a full sensor parameter report"""
+        try:
+            return self.send_command_to_sensor("param")
+        except Exception:
+            self._reset_sensor()
+            return self.send_command_to_sensor("param")
+
+    def get_device_info(self) -> str:
+        """runs the "??" command to get a full sensor parameter report"""
+        try:
+            return self.send_command_to_sensor("??")
+        except Exception:
+            self._reset_sensor()
+            return self.send_command_to_sensor("??")
+
+    def get_correction_info(self) -> str:
+        """runs the "corr" command to get a full sensor parameter report"""
+        try:
+            return self.send_command_to_sensor("corr")
+        except Exception:
+            self._reset_sensor()
+            return self.send_command_to_sensor("corr")
+
+    # utility functions
+
+    def send_command_to_sensor(
+        self,
+        command: str,
+        expected_regex: str = r"[^>]*",
+        timeout: float = 8,
+    ) -> str:
+        answer = self.rs232_interface.send_command(command)
+
+        if answer[0] == "success":
+            return self._format_raw_answer(answer[1])
+        else:
+            raise self.CommunicationError("Could not send command to sensor.")
+
+    def set_sensor_parameter(
+        self,
+        parameter: str,
+        value: float,
+        expected_regex: str = r"[^>]*",
+        timeout: float = 8,
+    ) -> str:
+        command = f"{parameter} {value}"
+
+        answer = self.rs232_interface.send_command(
+            message=command, expected_regex=expected_regex, timeout=timeout
+        )
+
+        if answer[0] == "success":
+            return answer[1]
+
+        if answer[0] == "uncomplete":
+            # command was sent uncomplete. sensor asked to set value.
+            command = str(value)
+            answer = self.rs232_interface.send_command(
+                message=command, expected_regex=expected_regex, timeout=timeout
+            )
+            if answer[0] == "success":
+                return answer[1]
+            else:
+                raise self.CommunicationError(
+                    f"Paramter could not be set. Sensor answer: {answer[1]}"
+                )
+
+        if answer[0] == "timeout":
+            # retry sending command
+            answer = self.rs232_interface.send_command(
+                message=command, expected_regex=expected_regex, timeout=timeout
+            )
+
+            if answer[0] == "success":
+                return answer[1]
+            else:
+                raise self.CommunicationError(
+                    f"Paramter could not be set. Sensor answer: {answer[1]}"
+                )
+
+    def request_measurement_data(self) -> str:
+        """sends a command to the sensor"""
+
+        answer = self.rs232_interface.send_command(
+            "send", expected_regex=CO2_MEASUREMENT_REGEX, timeout=30
+        )
+
+        # TODO: think about retry
+        if answer[0] == "success":
+            return answer[1]
+        else:
+            raise self.CommunicationError("could not request latest measurement data")
 
     def _format_raw_answer(self, raw: str) -> str:
         """replace all useless characters in the CO2 probe's answer"""
@@ -218,34 +247,45 @@ class CO2SensorInterface:
             .removesuffix("; >")
         )
 
-    def get_device_info(self) -> str:
-        """runs the "??" command to get a report about the sensor state"""
-        self.rs232_interface.flush_receiver_stream()
-        self.rs232_interface.send_command("??")
-        return self._format_raw_answer(self.rs232_interface.wait_for_answer())
+    def _reset_sensor(self) -> None:
+        """reset the sensors default settings by turning it off and on and
+        sending the initial settings again"""
 
-    def get_param_info(self) -> str:
-        """runs the "param" command to get a full sensor parameter report"""
-        self.rs232_interface.flush_receiver_stream()
-        self.rs232_interface.send_command("param")
-        return self._format_raw_answer(self.rs232_interface.wait_for_answer())
+        self.logger.info("initializing the sensor with measurement settings")
 
-    def get_correction_info(self) -> str:
-        """runs the "corr" command to retrieve information about the correction
-        the CO2 probe currently uses"""
+        self.logger.debug("powering down sensor")
+        self.power_pin.off()
+        time.sleep(1)
+
+        self.logger.debug("powering up sensor")
         self.rs232_interface.flush_receiver_stream()
-        self.rs232_interface.send_command("corr")
-        return self._format_raw_answer(self.rs232_interface.wait_for_answer())
+        self.power_pin.on()
+        self.last_powerup_time = time.time()
+        self.rs232_interface.wait_for_answer(expected_regex=STARTUP_REGEX, timeout=10)
+
+        self.logger.debug("sending measurement settings")
+
+        self.send_command_to_sensor(command="echo off")
+        self.set_sensor_parameter(parameter="range", value=1)
+        self.send_command_to_sensor(command="heat on")
+        self.send_command_to_sensor(command="linear on")
+        self.send_command_to_sensor(command='form CO2RAWUC CO2RAW CO2 T " (R C C+F T)"')
+        self.send_command_to_sensor(command="tc on")
+        self.send_command_to_sensor(command="rpc on")
+        self.send_command_to_sensor(command="pc on")
+        self.send_command_to_sensor(command="oc on")
+
+        # set filter setting
+        self.set_filter_setting(
+            average=self.config.measurement.timing.seconds_per_measurement
+        )
 
     def check_errors(self) -> None:
         """checks whether the CO2 probe reports any errors. Possibly raises
-        the CO2SensorInterface.DeviceFailure exception"""
-        self.rs232_interface.flush_receiver_stream()
-        self.rs232_interface.send_command("errs")
-        answer = self._format_raw_answer(self.rs232_interface.wait_for_answer())
+        the CO2SensorInterface.CommunicationError exception"""
+        answer = self.send_command_to_sensor("errs")
 
-        if not ("OK: No errors detected" in answer):
-            # raise CO2SensorInterface.DeviceFailure(answer)
+        if not ("OK: No errors detected" in answer[1]):
             self.logger.info(
                 "Sensor doesn't report error free operation. Performing restart."
             )
