@@ -46,7 +46,7 @@ class CO2SensorInterface:
         )
 
         # serial connection to receive data from CO2 sensor
-        self.rs232_interface = utils.serial_interfaces.SerialCO2SensorInterface(
+        self.serial_interface = utils.serial_interfaces.SerialCO2SensorInterface(
             port=CO2_SENSOR_SERIAL_PORT
         )
 
@@ -173,7 +173,10 @@ class CO2SensorInterface:
         expected_regex: str = r"[^>]*",
         timeout: float = 8,
     ) -> str:
-        answer = self.rs232_interface.send_command(command)
+        """Allows to send a full text command to the GMP343 CO2 Sensor.
+        Please refer to the user manual for valid commands."""
+
+        answer = self.serial_interface.send_command(command)
 
         if answer[0] == "success":
             return self._format_raw_answer(answer[1])
@@ -187,9 +190,18 @@ class CO2SensorInterface:
         expected_regex: str = r"[^>]*",
         timeout: float = 8,
     ) -> str:
+        """Allows to change a parameter in the GMP343 CO2 Sensor.
+        The sensor response is checked. In case of a uncompleted
+        request the parameter is sent again to finish to parameter
+        change.
+        In case the sensor does not respond a timeout will retrigger
+        the request to the sensor.
+        At success the sensor answer is returned.
+        In all other cases a Communication Error is raised.
+        """
         command = f"{parameter} {value}"
 
-        answer = self.rs232_interface.send_command(
+        answer = self.serial_interface.send_command(
             message=command, expected_regex=expected_regex, timeout=timeout
         )
 
@@ -199,7 +211,7 @@ class CO2SensorInterface:
         if answer[0] == "uncomplete":
             # command was sent uncomplete. sensor asked to set value.
             command = str(value)
-            answer = self.rs232_interface.send_command(
+            answer = self.serial_interface.send_command(
                 message=command, expected_regex=expected_regex, timeout=timeout
             )
             if answer[0] == "success":
@@ -211,7 +223,7 @@ class CO2SensorInterface:
 
         if answer[0] == "timeout":
             # retry sending command
-            answer = self.rs232_interface.send_command(
+            answer = self.serial_interface.send_command(
                 message=command, expected_regex=expected_regex, timeout=timeout
             )
 
@@ -223,17 +235,34 @@ class CO2SensorInterface:
                 )
 
     def _request_measurement_data(self) -> str:
-        """sends a command to the sensor"""
+        """Requests the latest measurement from the GMP343 CO2 Sensor.
+        If the first request runs into a timeout another request is sent.
+        At success the sensor answer is returned.
+        In all other cases a Communication Error is raised.
+        """
 
-        answer = self.rs232_interface.send_command(
+        answer = self.serial_interface.send_command(
             "send", expected_regex=CO2_MEASUREMENT_REGEX, timeout=30
         )
 
-        # TODO: think about retry
         if answer[0] == "success":
             return answer[1]
+        elif answer[0] == "timeout":
+            # retry sending command
+            answer = self.serial_interface.send_command(
+                "send", expected_regex=CO2_MEASUREMENT_REGEX, timeout=30
+            )
+
+            if answer[0] == "success":
+                return answer[1]
+            else:
+                raise self.CommunicationError(
+                    f"Could not request sensor measurement data. Sensor answer: {answer[1]}"
+                )
         else:
-            raise self.CommunicationError("could not request latest measurement data")
+            raise self.CommunicationError(
+                f"Could not request sensor measurement data. Sensor answer: {answer[1]}"
+            )
 
     def _format_raw_answer(self, raw: str) -> str:
         """replace all useless characters in the CO2 probe's answer"""
@@ -258,10 +287,10 @@ class CO2SensorInterface:
         time.sleep(1)
 
         self.logger.debug("powering up sensor")
-        self.rs232_interface.flush_receiver_stream()
+        self.serial_interface.flush_receiver_stream()
         self.power_pin.on()
         self.last_powerup_time = time.time()
-        self.rs232_interface.wait_for_answer(expected_regex=STARTUP_REGEX, timeout=10)
+        self.serial_interface.wait_for_answer(expected_regex=STARTUP_REGEX, timeout=10)
 
         self.logger.debug("sending measurement settings")
 
