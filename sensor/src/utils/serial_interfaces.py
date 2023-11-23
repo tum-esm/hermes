@@ -16,7 +16,7 @@ class SerialCO2SensorInterface:
         )
 
     def send_command(
-        self, message: str, expected_regex: str = r"[^>]*", timeout: float = 8
+        self, message: str, expected_regex: str = r".*\>.*", timeout: float = 8
     ) -> tuple[Literal["success", "uncomplete", "timeout"], str]:
         """
         send a command to the sensor. Puts a "\x1B" string after the
@@ -47,15 +47,15 @@ class SerialCO2SensorInterface:
             if received_bytes is not None:
                 answer += received_bytes.decode(encoding="cp1252")
 
-            # return successful answer as it matches expected regex
-            if re.search(expected_regex, answer):
-                return ("success", answer)
+                # return successful answer as it matches expected regex
+                if re.search(expected_regex, answer):
+                    return ("success", answer)
 
-            # return answer that is requesting to set the new value in another message
-            # this can happen if only "p" is received instead of "p 1000"
-            # Example answer: "PRESSURE (hPa) : 1000.000 ?"
-            if re.search(r".*\?.*", answer):
-                return ("uncomplete", answer)
+                # return answer that is requesting to set the new value in another message
+                # this can happen if only "p" is received instead of "p 1000"
+                # Example answer: "PRESSURE (hPa) : 1000.000 ?"
+                if re.search(r".*\?.*", answer):
+                    return ("uncomplete", answer)
 
             if (time.time() - start_time) > timeout:
                 return ("timeout", answer)

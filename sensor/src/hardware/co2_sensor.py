@@ -170,7 +170,7 @@ class CO2SensorInterface:
     def _send_command_to_sensor(
         self,
         command: str,
-        expected_regex: str = r"[^>]*",
+        expected_regex: str = r".*\>.*",
         timeout: float = 8,
     ) -> str:
         """Allows to send a full text command to the GMP343 CO2 Sensor.
@@ -187,7 +187,7 @@ class CO2SensorInterface:
         self,
         parameter: str,
         value: float,
-        expected_regex: str = r"[^>]*",
+        expected_regex: str = r".*\>.*",
         timeout: float = 8,
     ) -> str:
         """Allows to change a parameter in the GMP343 CO2 Sensor.
@@ -302,7 +302,7 @@ class CO2SensorInterface:
             command='form CO2RAWUC CO2RAW CO2 T " (R C C+F T)"'
         )
         self._send_command_to_sensor(command="tc on")
-        self._send_command_to_sensor(command="rpc on")
+        self._send_command_to_sensor(command="rhc on")
         self._send_command_to_sensor(command="pc on")
         self._send_command_to_sensor(command="oc on")
 
@@ -316,10 +316,8 @@ class CO2SensorInterface:
         the CO2SensorInterface.CommunicationError exception"""
         answer = self._send_command_to_sensor("errs")
 
-        if not ("OK: No errors detected" in answer[1]):
-            self.logger.info(
-                "Sensor doesn't report error free operation. Performing restart."
-            )
+        if not ("OK: No errors detected." in answer):
+            self.logger.info("the CO2 sensor error check failed. Performing restart.")
             self._reset_sensor()
 
         self.logger.info("the CO2 sensor check doesn't report any errors")
