@@ -24,6 +24,7 @@ class UPSInterface:
         self.powered_by_grid = None
         self.battery_is_fully_charged = None
         self.battery_error_detected = None
+        self.battery_above_voltage_threshold = None
         
 
         # use underlying pigpio library
@@ -70,10 +71,10 @@ class UPSInterface:
         
         if battery_state.is_active:
             self.logger.info("the battery is fully charged")
-            self.battery_is_charged = True
+            self.battery_is_fully_charged = True
         else:
             self.logger.info("the battery is not fully charged")
-            self.battery_is_charged = False
+            self.battery_is_fully_charged = False
             
             
         # this is probably never reached as the power is shut down in this case

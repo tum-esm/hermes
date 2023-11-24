@@ -74,6 +74,10 @@ class MQTTSystemData(pydantic.BaseModel):
     raspi_disk_usage: float
     raspi_cpu_usage: float
     raspi_memory_usage: float
+    ups_powered_by_grid: float
+    ups_battery_is_fully_charged: float
+    ups_battery_error_detected: float
+    ups_battery_above_voltage_threshold: float
 
 
 class MQTTWindData(pydantic.BaseModel):
