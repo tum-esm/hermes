@@ -18,47 +18,95 @@ class UPSInterface:
             write_to_file=(not testing),
         )
         self.config = config
+        
         self.logger.info("Starting initialization")
+        
+        self.powered_by_grid = None
+        self.battery_is_fully_charged = None
+        self.battery_error_detected = None
+        
 
         # use underlying pigpio library
         self.pin_factory = utils.get_gpio_pin_factory()
 
-        # pin goes high if the system is powered by the UPS battery
-        mode_input = gpiozero.DigitalInputDevice(
+        self.logger.info("Finished initialization")
+    
+    def _read_power_mode(self):
+        """
+        UPS_BATTERY_MODE_PIN_IN is HIGH when the system is powered by the battery
+        UPS_BATTERY_MODE_PIN_IN is LOW when the system is powered by the grid
+        """
+        
+        power_mode = gpiozero.DigitalInputDevice(
             UPS_BATTERY_MODE_PIN_IN,
             bounce_time=0.3,
             pin_factory=self.pin_factory,
         )
-        mode_input.when_activated = lambda: self.logger.warning(
-            "system is powered by battery", config=self.config
-        )
-        mode_input.when_deactivated = lambda: self.logger.info(
-            "system is powered externally"
-        )
-
-        # pin goes high if the battery has any error or has been disconected
-        alarm_input = gpiozero.DigitalInputDevice(
-            UPS_ALARM_PIN_IN, bounce_time=0.3, pin_factory=self.pin_factory
-        )
-        alarm_input.when_activated = lambda: self.logger.warning(
-            "battery error detected", config=self.config
-        )
-        alarm_input.when_deactivated = lambda: self.logger.info("battery status is ok")
-
-        def _on_battery_is_ready() -> None:
-            if mode_input.is_active:
-                self.logger.error("battery voltage is under threshold", config=config)
-                # TODO: https://github.com/tum-esm/insert-name-here/issues/33
-            else:
-                self.logger.info("battery is fully charged")
-
-        # pin goes high if the battery is empty or fully charged (two thresholds like 10% and 90%)
-        ready_input = gpiozero.DigitalInputDevice(
+        
+        if not power_mode.is_active:
+            self.logger.info("system is powered by the grid")
+            self.powered_by_grid = True
+        else:
+            self.logger.info("system is powered by the battery")
+            self.powered_by_grid = False
+        
+    
+    def _read_battery_state(self):
+        """
+        UPS_STATUS_READY is HIGH when the battery is fully charged
+        UPS_STATUS_READY is LOW when the battery is not fully charged
+        (UPS_STATUS_READY is HIGH & UPS_BATTERY_MODE_PIN_IN is HIGH) when the system is powered by the system and the battery voltage has dropped to a minimum
+        """
+        
+        battery_state = gpiozero.DigitalInputDevice(
             UPS_READY_PIN_IN, bounce_time=0.3, pin_factory=self.pin_factory
         )
-        ready_input.when_activated = _on_battery_is_ready
-
-        self.logger.info("Finished initialization")
+        
+        power_mode = gpiozero.DigitalInputDevice(
+            UPS_BATTERY_MODE_PIN_IN,
+            bounce_time=0.3,
+            pin_factory=self.pin_factory,
+        )
+        
+        if battery_state.is_active:
+            self.logger.info("the battery is fully charged")
+            self.battery_is_charged = True
+        else:
+            self.logger.info("the battery is not fully charged")
+            self.battery_is_charged = False
+            
+            
+        # this is probably never reached as the power is shut down in this case
+        if (battery_state.is_active & (power_mode.is_active)):
+            self.logger.info("the battery voltage has dropped below the minimum threshold")
+            self.battery_above_voltage_threshold = False
+        else:
+            self.logger.info("the battery voltage is above the minimum threshold")
+            self.battery_above_voltage_threshold = True
+            
+    
+    def _read_alarm_state(self):
+        """
+        UPS_ALARM_PIN_IN is HIGH when a battery error is detected
+        UPS_ALARM_PIN_IN is LOW when the battery status is okay
+        """
+        
+        alarm_state = gpiozero.DigitalInputDevice(
+            UPS_ALARM_PIN_IN, bounce_time=0.3, pin_factory=self.pin_factory
+        )
+        
+        if not alarm_state.is_active:
+            self.logger.info("the battery status is fine")
+            self.battery_error_detected = False
+        else:
+            self.logger.info("a battery error was detected")
+            self.battery_error_detected = True
+            
+    def update_ups_status(self):
+        
+        self._read_power_mode()
+        self._read_battery_state()
+        self._read_alarm_state()
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
