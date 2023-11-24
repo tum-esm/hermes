@@ -181,7 +181,9 @@ class CO2SensorInterface:
         if answer[0] == "success":
             return self._format_raw_answer(answer[1])
         else:
-            raise self.CommunicationError("Could not send command to sensor.")
+            raise self.CommunicationError(
+                f"Could not send command to sensor. Command: {command}. Sensor answer: {answer[1]}"
+            )
 
     def _set_sensor_parameter(
         self,
@@ -210,7 +212,9 @@ class CO2SensorInterface:
 
         if answer[0] == "uncomplete":
             # command was sent uncomplete. sensor asked to set value.
-            self.logger.warning(f"command was sent uncomplete. resending value: {value}")
+            self.logger.warning(
+                f"command was sent uncomplete. resending value: {value}"
+            )
             answer = self.serial_interface.send_command(
                 message=str(value), expected_regex=expected_regex, timeout=timeout
             )
@@ -218,14 +222,15 @@ class CO2SensorInterface:
                 self.logger.info("resending value was successful")
                 return answer[1]
             else:
-                self.logger.warning("resending value failed")
                 raise self.CommunicationError(
-                    f"Paramter could not be set. Sensor answer: {answer[1]}"
+                    f"resend failed after uncomplete. Sensor answer: {answer[1]}"
                 )
 
         if answer[0] == "timeout":
             # retry sending command
-            self.logger.warning("sent sensor command timed out. resending command.")
+            self.logger.warning(
+                f"sent sensor command timed out. resending command: {command}"
+            )
             answer = self.serial_interface.send_command(
                 message=command, expected_regex=expected_regex, timeout=timeout
             )
@@ -234,9 +239,8 @@ class CO2SensorInterface:
                 self.logger.info("resending command was successful")
                 return answer[1]
             else:
-                self.logger.warning("resending command failed")
                 raise self.CommunicationError(
-                    f"Timeout: Paramter could not be set. Sensor answer: {answer[1]}"
+                    f"resend failed after timeout. Command: {command}. Sensor answer: {answer[1]}"
                 )
 
     def _request_measurement_data(self) -> str:
@@ -254,7 +258,9 @@ class CO2SensorInterface:
             return answer[1]
         elif answer[0] == "timeout":
             # retry sending command
-            self.logger.warning("sensor answer for measurement request timed out. resending request.")
+            self.logger.warning(
+                "sensor answer for measurement request timed out. resending request."
+            )
             answer = self.serial_interface.send_command(
                 "send", expected_regex=CO2_MEASUREMENT_REGEX, timeout=30
             )
@@ -263,15 +269,12 @@ class CO2SensorInterface:
                 self.logger.info("resending value was successful")
                 return answer[1]
             else:
-                self.logger.warning("resending value failed")
                 raise self.CommunicationError(
-                    f"Could not request sensor measurement data. Sensor answer: {answer[1]}"
+                    f"resend failed after timeout. Sensor answer: {answer[1]}"
                 )
         else:
             self.logger.warning("requesting measurement failed")
-            raise self.CommunicationError(
-                f"Could not request sensor measurement data. Sensor answer: {answer[1]}"
-            )
+            raise self.CommunicationError(f"Uncomplete. Sensor answer: {answer[1]}")
 
     def _format_raw_answer(self, raw: str) -> str:
         """replace all useless characters in the CO2 probe's answer"""
@@ -326,9 +329,7 @@ class CO2SensorInterface:
         answer = self._send_command_to_sensor("errs")
 
         if not ("OK: No errors detected." in answer):
-            self.logger.info(
-                "the CO2 sensor error check failed. Performing restart."
-            )
+            self.logger.info("the CO2 sensor error check failed. Performing restart.")
             self._reset_sensor()
 
         self.logger.info("the CO2 sensor check doesn't report any errors")
