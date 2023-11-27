@@ -182,7 +182,7 @@ class CO2SensorInterface:
             return self._format_raw_answer(answer[1])
         else:
             raise self.CommunicationError(
-                f"Could not send command to sensor. Command: {command}. Sensor answer: {answer[1]}"
+                f"Could not send command to sensor. Command: {command} Sensor answer: {answer[1]}"
             )
 
     def _set_sensor_parameter(
@@ -240,7 +240,7 @@ class CO2SensorInterface:
                 return answer[1]
             else:
                 raise self.CommunicationError(
-                    f"resend failed after timeout. Command: {command}. Sensor answer: {answer[1]}"
+                    f"resend failed after timeout. Command: {command} Sensor answer: {answer[1]}"
                 )
 
     def _request_measurement_data(self) -> str:
