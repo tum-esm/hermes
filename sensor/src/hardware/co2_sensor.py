@@ -307,16 +307,25 @@ class CO2SensorInterface:
         self.logger.debug("sending measurement settings")
 
         self._send_command_to_sensor(command="echo off")
+        time.sleep(0.1)
         self._set_sensor_parameter(parameter="range", value=1)
+        time.sleep(0.1)
         self._send_command_to_sensor(command="heat on")
+        time.sleep(0.1)
         self._send_command_to_sensor(command="linear on")
+        time.sleep(0.1)
         self._send_command_to_sensor(
             command='form CO2RAWUC CO2RAW CO2 T " (R C C+F T)"'
         )
+        time.sleep(0.1)
         self._send_command_to_sensor(command="tc on")
+        time.sleep(0.1)
         self._send_command_to_sensor(command="rhc on")
+        time.sleep(0.1)
         self._send_command_to_sensor(command="pc on")
+        time.sleep(0.1)
         self._send_command_to_sensor(command="oc on")
+        time.sleep(0.1)
 
         # set filter setting
         self.set_filter_setting(
