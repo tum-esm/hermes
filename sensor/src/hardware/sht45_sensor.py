@@ -1,5 +1,6 @@
 import busio
 import adafruit_sht4x
+import board
 from src import utils, custom_types
 
 
@@ -20,8 +21,6 @@ class SHT45SensorInterface:
         )
         self.config = config
         self.logger.info("Starting initialization")
-
-        import board
 
         self.i2c = busio.I2C(board.SCL, board.SDA)
         self.sht = adafruit_sht4x.SHT4x(self.i2c)
