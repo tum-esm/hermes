@@ -101,6 +101,7 @@ class ConfigurationProcedure:
             message=f"upgrading to revision {new_revision}",
             config=self.config,
         )
+
         self.logger.info(
             message=f"using config {json.dumps(config_request.configuration.dict(), indent=4)}",
             config=self.config,
@@ -116,13 +117,13 @@ class ConfigurationProcedure:
                 self._download_code(new_version)
 
                 self.logger.info(
-                    f"upgrading to revision {new_revision}: download was successful",
+                    f"download was successful",
                     config=self.config,
                 )
                 self._set_up_venv(new_version)
 
                 self.logger.info(
-                    f"upgrading to revision {new_revision}: set up new virtual environment was successful",
+                    f"set up new virtual environment was successful",
                     config=self.config,
                 )
 
@@ -139,11 +140,6 @@ class ConfigurationProcedure:
             # copy config, state file, .env file
             self._dump_new_config(config_request)
 
-            self.logger.info(
-                f"upgrading to revision {new_revision}",
-                config=self.config,
-            )
-
             self._run_pytests(
                 new_version,
                 scope=(
@@ -152,7 +148,7 @@ class ConfigurationProcedure:
             )
 
             self.logger.info(
-                f"upgrading to revision {new_revision}: tests were successful",
+                f"tests were successful",
                 config=self.config,
             )
 
@@ -161,7 +157,7 @@ class ConfigurationProcedure:
             if not has_same_directory:
                 self._update_cli_pointer(new_version)
                 self.logger.info(
-                    f"upgrading to revision {new_revision}: switched CLI pointer successfully",
+                    f"switched CLI pointer successfully",
                     config=self.config,
                 )
                 self.logger.debug("waiting to send out remaining messages")
@@ -193,7 +189,7 @@ class ConfigurationProcedure:
         except Exception as e:
             self.logger.exception(
                 e,
-                label="upgrading to revision {new_revision}: exception during upgrade",
+                label=f"exception during upgrade",
                 config=self.config,
             )
 
