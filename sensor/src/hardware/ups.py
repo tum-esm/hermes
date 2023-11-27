@@ -1,4 +1,5 @@
 import gpiozero
+import time
 from typing import Optional
 from src import utils, custom_types
 
@@ -103,9 +104,17 @@ class UPSInterface:
             self.battery_error_detected = True
 
     def update_ups_status(self) -> None:
-        self._read_power_mode()
-        self._read_battery_state()
-        self._read_alarm_state()
+        try:
+            self._read_power_mode()
+            self._read_battery_state()
+            self._read_alarm_state()
+        except Exception:
+            # retry
+            self.pin_factory = utils.get_gpio_pin_factory()
+            time.sleep(1)
+            self._read_power_mode()
+            self._read_battery_state()
+            self._read_alarm_state()
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
