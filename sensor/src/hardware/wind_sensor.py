@@ -119,6 +119,8 @@ class WindSensorInterface:
                     )
 
                 self.logger.info("the wind sensor check doesn't report any errors")
+        else:
+            self.logger.info("no wind sensor seems to be connected")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
