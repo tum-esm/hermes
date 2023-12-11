@@ -5,6 +5,7 @@ import gpiozero
 import gpiozero.pins.pigpio
 import re
 
+# TODO: Check if pattern is the same for 2min instead 1s messages
 measurement_pattern = (
     pattern
 ) = r"Dn=([0-9.]+)D,Dm=([0-9.]+)D,Dx=([0-9.]+)D,Sn=([0-9.]+)M,Sm=([0-9.]+)M,Sx=([0-9.]+)M"
