@@ -58,6 +58,8 @@ class WindSensorInterface:
         new_messages = self.wxt532_interface.get_messages()
         now = round(time.time())
         for message in new_messages:
+            # TODO: Average over all valid messages of the last 2 minutes
+            # TODO: Don't average for Min/Max
             # Check if there's a match for the measurement_pattern
             measurement_match = re.search(measurement_pattern, message)
             if measurement_match is not None:
