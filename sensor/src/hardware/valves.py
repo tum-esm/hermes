@@ -31,9 +31,11 @@ class ValveInterface:
             3: gpiozero.OutputDevice(VALVE_PIN_3_OUT, pin_factory=self.pin_factory),
             4: gpiozero.OutputDevice(VALVE_PIN_4_OUT, pin_factory=self.pin_factory),
         }
-        self.active_input: Literal[1, 2, 3, 4] = 1
-        self.logger.info("Initialized with switching to valve: 1")
-        self.set_active_input(1)
+        self.active_input: Literal[1, 2, 3, 4] = self.config.measurement.air_inlets[
+            0
+        ].valve_number
+        self.logger.info(f"Initialized with switching to valve: {self.active_input}")
+        self.set_active_input(self.active_input)
 
         self.logger.info("Finished initialization")
 
