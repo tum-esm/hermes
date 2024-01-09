@@ -28,8 +28,15 @@ class BME280SensorInterface:
 
         if not self.config.hardware.mock_air_inlet_sensors:
             # set up connection to BME280 sensor
-            self.bus = smbus2.SMBus(1)
-            self.address = 0x77 if (variant == "mainboard") else 0x76
+            try:
+                self.bus = smbus2.SMBus(1)
+                self.address = 0x77 if (variant == "mainboard") else 0x76
+            except Exception as e:
+                self.logger.exception(
+                    e,
+                    label=f"could not initialize BME280 sensor (variant: {variant})",
+                    config=self.config,
+                )
 
         self.logger.info("finished initialization")
 
