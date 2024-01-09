@@ -331,6 +331,7 @@ class CO2SensorInterface:
         self.set_filter_setting(
             average=self.config.measurement.sensor_frequency_seconds
         )
+        time.sleep(1)
 
     def check_errors(self) -> None:
         """checks whether the CO2 probe reports any errors. Possibly raises
