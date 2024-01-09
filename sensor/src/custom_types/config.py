@@ -25,14 +25,6 @@ class HardwareConfig(pydantic.BaseModel):
 # -----------------------------------------------------------------------------
 
 
-class MeasurementTimingConfig(pydantic.BaseModel):
-    procedure_seconds: int = pydantic.Field(..., ge=10, le=7200)
-    sensor_frequency_seconds: int = pydantic.Field(..., ge=1, le=300)
-
-    class Config:
-        extra = "forbid"
-
-
 class MeasurementAirInletConfig(pydantic.BaseModel):
     valve_number: Literal[1, 2, 3, 4]
     direction: int = pydantic.Field(..., ge=0, le=359)
@@ -43,27 +35,18 @@ class MeasurementAirInletConfig(pydantic.BaseModel):
 
 
 class MeasurementConfig(pydantic.BaseModel):
-    timing: MeasurementTimingConfig
     air_inlets: list[MeasurementAirInletConfig] = pydantic.Field(
         min_items=1, max_items=4
     )
     average_air_inlet_measurements: int
+    procedure_seconds: int = pydantic.Field(..., ge=10, le=7200)
+    sensor_frequency_seconds: int = pydantic.Field(..., ge=1, le=300)
 
     class Config:
         extra = "forbid"
 
 
 # -----------------------------------------------------------------------------
-
-
-class CalibrationTimingConfig(pydantic.BaseModel):
-    start_timestamp: int = pydantic.Field(..., ge=1672531200)  # start 2023-01-01T00:00
-    hours_between_calibrations: float = pydantic.Field(..., ge=1)
-    seconds_per_gas_bottle: int = pydantic.Field(..., ge=6, le=1800)
-    system_flushing_seconds: int = pydantic.Field(..., ge=0, le=600)
-
-    class Config:
-        extra = "forbid"
 
 
 class CalibrationGasConfig(pydantic.BaseModel):
@@ -75,9 +58,14 @@ class CalibrationGasConfig(pydantic.BaseModel):
 
 
 class CalibrationConfig(pydantic.BaseModel):
-    timing: CalibrationTimingConfig
-    gases: list[CalibrationGasConfig] = pydantic.Field(..., min_items=1, max_items=3)
-    average_air_inlet_measurements: int
+    average_air_inlet_measurements: int = pydantic.Field(..., ge=1)
+    calibration_frequency_hours: float = pydantic.Field(..., ge=1)
+    sampling_per_cylinder_seconds: int = pydantic.Field(..., ge=6, le=1800)
+    start_timestamp: int = pydantic.Field(..., ge=1672531200)  # start 2023-01-01T00:00
+    system_flushing_seconds: int = pydantic.Field(..., ge=0, le=600)
+    gas_cylinders: list[CalibrationGasConfig] = pydantic.Field(
+        ..., min_items=1, max_items=3
+    )
 
     class Config:
         extra = "forbid"
