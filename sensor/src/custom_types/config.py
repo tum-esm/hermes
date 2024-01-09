@@ -17,7 +17,7 @@ class ActiveComponentsConfig(pydantic.BaseModel):
 
 
 class HardwareConfig(pydantic.BaseModel):
-    pumped_litres_per_round: float = pydantic.Field(ge=0.0001, le=1)
+    pump_pwm_duty_cycle: float = pydantic.Field(ge=0, le=1)
 
     class Config:
         extra = "forbid"
@@ -29,7 +29,6 @@ class HardwareConfig(pydantic.BaseModel):
 class MeasurementTimingConfig(pydantic.BaseModel):
     seconds_per_measurement_interval: int = pydantic.Field(..., ge=10, le=7200)
     seconds_per_measurement: int = pydantic.Field(..., ge=1, le=300)
-    pumped_litres_per_minute: float = pydantic.Field(..., ge=0.1, le=30)
 
     class Config:
         extra = "forbid"
@@ -62,6 +61,7 @@ class CalibrationTimingConfig(pydantic.BaseModel):
     start_timestamp: int = pydantic.Field(..., ge=1672531200)  # start 2023-01-01T00:00
     hours_between_calibrations: float = pydantic.Field(..., ge=1)
     seconds_per_gas_bottle: int = pydantic.Field(..., ge=6, le=1800)
+    system_flushing_seconds: int = pydantic.Field(..., ge=0, le=600)
 
     class Config:
         extra = "forbid"

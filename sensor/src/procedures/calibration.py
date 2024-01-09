@@ -149,8 +149,10 @@ class CalibrationProcedure:
             self.config.measurement.air_inlets[0].valve_number
         )
 
-        # flush calibration gases with measurement inlet
-        time.sleep(300)
+        # flush the system after calibration at max pump speed
+        self.hardware_interface.pump.flush_system(
+            duration=self.config.calibration.timing.system_flushing_seconds
+        )
 
         # save last calibration time
         self.logger.debug("finished calibration: updating state")

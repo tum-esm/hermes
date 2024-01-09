@@ -95,7 +95,11 @@ def distance_between_angles(angle_1: float, angle_2: float) -> float:
 
 
 def get_gpio_pin_factory() -> gpiozero.pins.pigpio.PiGPIOFactory:
-    """return a PiGPIO pin factory (necessary for hardware PWM for pump)"""
+    """
+    Connects to the active pipiod deamon running on the Pi over network socket.
+    Documentation: https://gpiozero.readthedocs.io/en/latest/api_pins.html#gpiozero.pins.pigpio.PiGPIOFactory
+    """
+
     try:
         pin_factory = gpiozero.pins.pigpio.PiGPIOFactory(host="127.0.0.1")
         assert pin_factory.connection is not None
