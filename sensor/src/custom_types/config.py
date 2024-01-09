@@ -6,7 +6,6 @@ import pydantic
 class ActiveComponentsConfig(pydantic.BaseModel):
     run_calibration_procedures: bool
     send_messages_over_mqtt: bool
-    ignore_missing_air_inlet_sensor: bool
 
     class Config:
         extra = "forbid"
@@ -26,12 +25,12 @@ class CalibrationGasConfig(pydantic.BaseModel):
 class CalibrationConfig(pydantic.BaseModel):
     average_air_inlet_measurements: int = pydantic.Field(..., ge=1)
     calibration_frequency_hours: float = pydantic.Field(..., ge=1)
-    sampling_per_cylinder_seconds: int = pydantic.Field(..., ge=6, le=1800)
-    start_timestamp: int = pydantic.Field(..., ge=1672531200)  # start 2023-01-01T00:00
-    system_flushing_seconds: int = pydantic.Field(..., ge=0, le=600)
     gas_cylinders: list[CalibrationGasConfig] = pydantic.Field(
         ..., min_items=1, max_items=3
     )
+    sampling_per_cylinder_seconds: int = pydantic.Field(..., ge=6, le=1800)
+    start_timestamp: int = pydantic.Field(..., ge=1672531200)  # start 2023-01-01T00:00
+    system_flushing_seconds: int = pydantic.Field(..., ge=0, le=600)
 
     class Config:
         extra = "forbid"
@@ -42,6 +41,7 @@ class CalibrationConfig(pydantic.BaseModel):
 
 class HardwareConfig(pydantic.BaseModel):
     pump_pwm_duty_cycle: float = pydantic.Field(ge=0, le=1)
+    mock_air_inlet_sensors: bool
 
     class Config:
         extra = "forbid"

@@ -22,16 +22,28 @@ class SHT45SensorInterface:
         self.config = config
         self.logger.info("Starting initialization")
 
-        self.i2c = busio.I2C(board.SCL, board.SDA)
-        self.sht = adafruit_sht4x.SHT4x(self.i2c)
-        self.logger.debug(
-            f"Found SHT4x with serial number {hex(self.sht.serial_number)}"
-        )
-        self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
+        if not self.config.hardware.mock_air_inlet_sensors:
+            self.i2c = busio.I2C(board.SCL, board.SDA)
+            self.sht = adafruit_sht4x.SHT4x(self.i2c)
+            self.logger.debug(
+                f"Found SHT4x with serial number {hex(self.sht.serial_number)}"
+            )
+            self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
 
         self.logger.info("Finished initialization")
 
     def get_data(self) -> custom_types.SHT45SensorData:
+        """reads temperature and humidity in the air inlet"""
+        output = custom_types.SHT45SensorData(
+            temperature=None,
+            humidity=None,
+        )
+
+        # returns None if no air-inlet sensor is connected
+        if self.config.hardware.mock_air_inlet_sensors:
+            return output
+
+        # request sensor reading
         try:
             temperature, relative_humidity = self.sht.measurements
             return custom_types.SHT45SensorData(
@@ -41,11 +53,6 @@ class SHT45SensorInterface:
 
         except Exception:
             self.logger.warning("could not sample data", config=self.config)
-            if self.config.active_components.ignore_missing_air_inlet_sensor:
-                return custom_types.SHT45SensorData(
-                    temperature=None,
-                    humidity=None,
-                )
             raise SHT45SensorInterface.DeviceFailure("could not sample data")
 
     def check_errors(self) -> None:

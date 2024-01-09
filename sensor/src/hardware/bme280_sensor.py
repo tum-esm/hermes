@@ -26,14 +26,15 @@ class BME280SensorInterface:
         self.logger.info("starting initialization")
         self.compensation_params: Optional[bme280.params] = None
 
-        # set up connection to BME280 sensor
-        self.bus = smbus2.SMBus(1)
-        self.address = 0x77 if (variant == "mainboard") else 0x76
+        if not self.config.hardware.mock_air_inlet_sensors:
+            # set up connection to BME280 sensor
+            self.bus = smbus2.SMBus(1)
+            self.address = 0x77 if (variant == "mainboard") else 0x76
 
         self.logger.info("finished initialization")
 
     def get_data(self) -> custom_types.BME280SensorData:
-        """log mainboard and cpu temperature and enclosure humidity and pressure"""
+        """reads temperature,humidity and pressure on mainboard and air inlet"""
 
         # initialize output
         output = custom_types.BME280SensorData(
@@ -44,7 +45,7 @@ class BME280SensorInterface:
 
         # returns None if no air-inlet sensor is connected
         if (self.variant == "air-inlet") and (
-            self.config.active_components.ignore_missing_air_inlet_sensor
+            self.config.hardware.mock_air_inlet_sensors
         ):
             return output
 
