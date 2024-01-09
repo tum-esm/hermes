@@ -64,22 +64,21 @@ def restart() -> None:
     config = src.utils.config_interface.ConfigInterface.read()
 
     # calculate the time of the last calibration
-    seconds_between_calibrations = (
-        3600 * config.calibration.timing.hours_between_calibrations
-    )
+    seconds_between_calibrations = 3600 * config.calibration.calibration_frequency_hours
     calibrations_since_start_time = math.floor(
-        (time.time() - config.calibration.timing.start_timestamp)
+        (time.time() - config.calibration.start_timestamp)
         / seconds_between_calibrations
     )
     last_calibration_time = (
         calibrations_since_start_time * seconds_between_calibrations
-        + config.calibration.timing.start_timestamp
+        + config.calibration.start_timestamp
     )
 
     # do not restart if last calibration time could still be running
     # summed times per bottle + 15 minutes for safety
     max_calibration_time = (
-        len(config.calibration.gases) * config.calibration.timing.seconds_per_gas_bottle
+        len(config.calibration.gas_cylinders)
+        * config.calibration.sampling_per_cylinder_seconds
         + 900
     )
 

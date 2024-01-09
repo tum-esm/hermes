@@ -29,7 +29,7 @@ def test_local_config() -> None:
 
     # check valve numbers
     valve_numbers = [ai.valve_number for ai in config.measurement.air_inlets] + [
-        ai.valve_number for ai in config.calibration.gases
+        ai.valve_number for ai in config.calibration.gas_cylinders
     ]
     unique_valve_numbers = list(set(valve_numbers))
     assert len(valve_numbers) == len(
@@ -44,7 +44,9 @@ def test_local_config() -> None:
     ), "multiple air inlets use the same direction"
 
     # check calibration gas concentrations
-    calibration_gas_bottle_ids = [cg.bottle_id for cg in config.calibration.gases]
+    calibration_gas_bottle_ids = [
+        cg.bottle_id for cg in config.calibration.gas_cylinders
+    ]
     unique_calibration_gas_concentrations = list(set(calibration_gas_bottle_ids))
     assert len(calibration_gas_bottle_ids) == len(
         unique_calibration_gas_concentrations

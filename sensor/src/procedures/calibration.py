@@ -50,7 +50,7 @@ class CalibrationProcedure:
 
         # set time extension for first bottle
         self.seconds_drying_with_first_bottle = (
-            self.config.calibration.timing.seconds_per_gas_bottle
+            self.config.calibration.sampling_per_cylinder_seconds
         )
 
         # alternate order every other day
@@ -58,9 +58,11 @@ class CalibrationProcedure:
         alternate_order = days_since_unix % 2 == 1
 
         if alternate_order:
-            self.sequence_calibration_bottle = self.config.calibration.gases[::-1]
+            self.sequence_calibration_bottle = self.config.calibration.gas_cylinders[
+                ::-1
+            ]
         else:
-            self.sequence_calibration_bottle = self.config.calibration.gases
+            self.sequence_calibration_bottle = self.config.calibration.gas_cylinders
 
     def run(self) -> None:
         state = utils.StateInterface.read()
@@ -91,7 +93,7 @@ class CalibrationProcedure:
             while True:
                 # idle until next measurement period
                 seconds_to_wait_for_next_measurement = max(
-                    self.config.measurement.timing.sensor_frequency_seconds
+                    self.config.measurement.sensor_frequency_seconds
                     - (time.time() - self.last_measurement_time),
                     0,
                 )
@@ -136,7 +138,7 @@ class CalibrationProcedure:
 
                 if (
                     (self.last_measurement_time - calibration_procedure_start_time)
-                    >= self.config.calibration.timing.seconds_per_gas_bottle
+                    >= self.config.calibration.sampling_per_cylinder_seconds
                     + self.seconds_drying_with_first_bottle
                 ):
                     break
@@ -151,7 +153,7 @@ class CalibrationProcedure:
 
         # flush the system after calibration at max pump speed
         self.hardware_interface.pump.flush_system(
-            duration=self.config.calibration.timing.system_flushing_seconds
+            duration=self.config.calibration.system_flushing_seconds
         )
 
         # save last calibration time
@@ -175,15 +177,15 @@ class CalibrationProcedure:
             return True
 
         seconds_between_calibrations = (
-            3600 * self.config.calibration.timing.hours_between_calibrations
+            3600 * self.config.calibration.calibration_frequency_hours
         )
         calibrations_since_start_time = math.floor(
-            (current_utc_timestamp - self.config.calibration.timing.start_timestamp)
+            (current_utc_timestamp - self.config.calibration.start_timestamp)
             / seconds_between_calibrations
         )
         last_calibration_time = (
             calibrations_since_start_time * seconds_between_calibrations
-            + self.config.calibration.timing.start_timestamp
+            + self.config.calibration.start_timestamp
         )
 
         if state.last_calibration_time > last_calibration_time:
