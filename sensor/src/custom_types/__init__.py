@@ -1,4 +1,4 @@
-from .config import Config, MeasurementAirInletConfig
+from .config import Config
 
 from .mqtt_sending import (
     # config and queue files
@@ -32,7 +32,7 @@ from .sensor_answers import (
     BME280SensorData,
     SHT45SensorData,
     WindSensorData,
-    WindSensorStatus
+    WindSensorStatus,
 )
 
 from .state import State

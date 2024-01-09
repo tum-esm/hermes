@@ -148,7 +148,7 @@ class CalibrationProcedure:
 
         # switch back to measurement inlet
         self.hardware_interface.valves.set_active_input(
-            self.config.measurement.air_inlets[0].valve_number
+            self.config.measurement.valve_number
         )
 
         # flush the system after calibration at max pump speed
