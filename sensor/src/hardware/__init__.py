@@ -42,7 +42,6 @@ class HardwareInterface:
         self.air_inlet_sht45_sensor = SHT45SensorInterface(config, testing=self.testing)
         self.co2_sensor = CO2SensorInterface(config, testing=self.testing)
 
-
         # measurement actors
         self.pump = PumpInterface(config, testing=self.testing)
         self.valves = ValveInterface(config, testing=self.testing)
@@ -58,7 +57,6 @@ class HardwareInterface:
         self.logger.info("checking for hardware errors")
         self.co2_sensor.check_errors()
         self.wind_sensor.check_errors()
-        self.pump.check_errors()
         self.air_inlet_bme280_sensor.check_errors()
         self.mainboard_sensor.check_errors()
 

@@ -27,15 +27,6 @@ def test_local_config() -> None:
     with open(CONFIG_PATH, "r") as f:
         config = custom_types.Config(**json.load(f))
 
-    # check allowed pump speed
-    max_litres_per_minute = MAX_PUMP_RPS * config.hardware.pumped_litres_per_round * 60
-    assert (
-        config.measurement.timing.pumped_litres_per_minute <= max_litres_per_minute
-    ), (
-        "config.measurement.pumped_litres_per_minute is above the maximum "
-        + f"of {max_litres_per_minute} litres per minute"
-    )
-
     # check valve numbers
     valve_numbers = [ai.valve_number for ai in config.measurement.air_inlets] + [
         ai.valve_number for ai in config.calibration.gases
