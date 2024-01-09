@@ -6,7 +6,6 @@ import pydantic
 class ActiveComponentsConfig(pydantic.BaseModel):
     run_calibration_procedures: bool
     send_messages_over_mqtt: bool
-    run_pump_speed_monitoring: bool
     ignore_missing_air_inlet_sensor: bool
 
     class Config:
