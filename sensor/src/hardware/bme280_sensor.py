@@ -27,7 +27,9 @@ class BME280SensorInterface:
         self.logger.info("starting initialization")
         self.compensation_params: Optional[bme280.params] = None
 
-        if not self.config.hardware.mock_air_inlet_sensors:
+        if (not self.config.hardware.mock_air_inlet_sensors) or (
+            variant == "mainboard"
+        ):
             # set up connection to BME280 sensor
             try:
                 self.bus = smbus2.SMBus(1)
