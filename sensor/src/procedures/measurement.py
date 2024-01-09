@@ -162,7 +162,7 @@ class CO2MeasurementProcedure:
             state = utils.StateInterface.read()
             # idle until next measurement period
             seconds_to_wait_for_next_measurement = max(
-                self.config.measurement.timing.measurement_frequency_seconds
+                self.config.measurement.timing.sensor_frequency_seconds
                 - (time.time() - self.last_measurement_time),
                 0,
             )
@@ -207,7 +207,7 @@ class CO2MeasurementProcedure:
             # stop loop after defined measurement interval
             if (
                 self.last_measurement_time - measurement_procedure_start_time
-            ) >= self.config.measurement.timing.measurement_procedure_seconds:
+            ) >= self.config.measurement.timing.procedure_seconds:
                 break
 
         self.logger.info(f"finished CO2 measurement interval")
