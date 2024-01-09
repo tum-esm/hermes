@@ -26,8 +26,8 @@ class HardwareConfig(pydantic.BaseModel):
 
 
 class MeasurementTimingConfig(pydantic.BaseModel):
-    seconds_per_measurement_interval: int = pydantic.Field(..., ge=10, le=7200)
-    seconds_per_measurement: int = pydantic.Field(..., ge=1, le=300)
+    measurement_procedure_seconds: int = pydantic.Field(..., ge=10, le=7200)
+    measurement_frequency_seconds: int = pydantic.Field(..., ge=1, le=300)
 
     class Config:
         extra = "forbid"

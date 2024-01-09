@@ -329,7 +329,7 @@ class CO2SensorInterface:
 
         # set filter setting
         self.set_filter_setting(
-            average=self.config.measurement.timing.seconds_per_measurement
+            average=self.config.measurement.timing.measurement_frequency_seconds
         )
 
     def check_errors(self) -> None:

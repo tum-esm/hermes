@@ -91,7 +91,7 @@ class CalibrationProcedure:
             while True:
                 # idle until next measurement period
                 seconds_to_wait_for_next_measurement = max(
-                    self.config.measurement.timing.seconds_per_measurement
+                    self.config.measurement.timing.measurement_frequency_seconds
                     - (time.time() - self.last_measurement_time),
                     0,
                 )
