@@ -31,6 +31,5 @@
         "procedure_seconds": 120,
         "sensor_frequency_seconds": 10,
         "valve_number": 1
-    },
-    "verbose_logging": false
+    }
 }
