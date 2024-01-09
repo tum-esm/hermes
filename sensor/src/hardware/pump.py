@@ -61,7 +61,7 @@ class PumpInterface:
         ), f"pwm duty cycle has to be between 0 and 1 (passed {pwm_duty_cycle})"
         self.control_pin.value = pwm_duty_cycle
 
-    def flush_system(self, duration: int):
+    def flush_system(self, duration: int) -> None:
         """flushed the system by setting the pump to max speed and waiting the duration in seconds. At the end the pump speed is set to the duty cycle defined in the config file."""
         self.set_desired_pump_speed(pwm_duty_cycle=1)
         time.sleep(duration)

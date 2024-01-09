@@ -10,7 +10,7 @@ from src import utils, hardware
 
 config = utils.ConfigInterface.read()
 pump = hardware.PumpInterface(config)
-pump.set_desired_pump_speed(unit="rps", value=30)
+pump.set_desired_pump_speed(pwm_duty_cycle=0.15)
 
 valves = hardware.ValveInterface(config)
 valve_no: Literal[1, 2, 3, 4] = int(input("Enter valve number: "))  # type:ignore

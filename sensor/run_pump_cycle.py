@@ -4,9 +4,9 @@ from src import utils, hardware
 config = utils.ConfigInterface.read()
 pump = hardware.PumpInterface(config)
 
-for rps in [10, 20, 30, 40, 50, 60, 70]:
-    print(f"setting rps to {rps}")
-    pump.set_desired_pump_speed(unit="rps", value=rps)
+for duty_cycle in [0, 0.05, 0.1, 0.15, 0.2, 0]:
+    print(f"setting rps to {duty_cycle}")
+    pump.set_desired_pump_speed(pwm_duty_cycle=duty_cycle)
     time.sleep(20)
 
 pump.teardown()
