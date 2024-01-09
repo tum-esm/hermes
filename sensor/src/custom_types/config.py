@@ -15,40 +15,6 @@ class ActiveComponentsConfig(pydantic.BaseModel):
 # -----------------------------------------------------------------------------
 
 
-class HardwareConfig(pydantic.BaseModel):
-    pump_pwm_duty_cycle: float = pydantic.Field(ge=0, le=1)
-
-    class Config:
-        extra = "forbid"
-
-
-# -----------------------------------------------------------------------------
-
-
-class MeasurementAirInletConfig(pydantic.BaseModel):
-    valve_number: Literal[1, 2, 3, 4]
-    direction: int = pydantic.Field(..., ge=0, le=359)
-    tube_length: float = pydantic.Field(..., ge=1, le=100)
-
-    class Config:
-        extra = "forbid"
-
-
-class MeasurementConfig(pydantic.BaseModel):
-    air_inlets: list[MeasurementAirInletConfig] = pydantic.Field(
-        min_items=1, max_items=4
-    )
-    average_air_inlet_measurements: int
-    procedure_seconds: int = pydantic.Field(..., ge=10, le=7200)
-    sensor_frequency_seconds: int = pydantic.Field(..., ge=1, le=300)
-
-    class Config:
-        extra = "forbid"
-
-
-# -----------------------------------------------------------------------------
-
-
 class CalibrationGasConfig(pydantic.BaseModel):
     valve_number: Literal[1, 2, 3, 4]
     bottle_id: str
@@ -74,6 +40,29 @@ class CalibrationConfig(pydantic.BaseModel):
 # -----------------------------------------------------------------------------
 
 
+class HardwareConfig(pydantic.BaseModel):
+    pump_pwm_duty_cycle: float = pydantic.Field(ge=0, le=1)
+
+    class Config:
+        extra = "forbid"
+
+
+# -----------------------------------------------------------------------------
+
+
+class MeasurementConfig(pydantic.BaseModel):
+    average_air_inlet_measurements: int
+    procedure_seconds: int = pydantic.Field(..., ge=10, le=7200)
+    sensor_frequency_seconds: int = pydantic.Field(..., ge=1, le=300)
+    valve_number: Literal[1, 2, 3, 4]
+
+    class Config:
+        extra = "forbid"
+
+
+# -----------------------------------------------------------------------------
+
+
 class Config(pydantic.BaseModel):
     """The config.json for each sensor"""
 
@@ -81,11 +70,11 @@ class Config(pydantic.BaseModel):
     version: str = pydantic.Field(
         regex=r"^\d+\.\d+\.\d+(?:-(?:alpha|beta)\.\d+)?$"
     )  # e.g., "1.2.3" or "99.0.1" or "42.1.0-alpha.6"
-    verbose_logging: bool
     active_components: ActiveComponentsConfig
+    calibration: CalibrationConfig
     hardware: HardwareConfig
     measurement: MeasurementConfig
-    calibration: CalibrationConfig
+    verbose_logging: bool
 
     class Config:
         extra = "forbid"

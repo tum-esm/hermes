@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import Optional, Literal
 from src import custom_types, utils, hardware
 
 
@@ -116,7 +116,7 @@ class CO2MeasurementProcedure:
         self.hardware_interface = hardware_interface
 
         # state variables
-        self.active_air_inlet: Optional[custom_types.MeasurementAirInletConfig] = None
+        self.active_air_inlet: Optional[Literal[1, 2, 3, 4]] = None
         self.last_measurement_time: float = 0
         self.message_queue = utils.MessageQueue()
         self.rb_pressure = utils.RingBuffer(
