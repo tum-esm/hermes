@@ -219,25 +219,8 @@ class MQTTAgent:
                         sent_record_count += 1
                     message_queue.update_records(records_to_be_sent)
 
-                # -----------------------------------------------------------------
-
-                if any(
-                    [sent_record_count, resent_record_count, delivered_record_count]
-                ):
-                    if config.verbose_logging:
-                        logger.info(
-                            f"{sent_record_count}/{resent_record_count}/{delivered_record_count} "
-                            + "messages have been sent/resent/delivered"
-                        )
-                        logger.debug(
-                            f"sending queue has {OPEN_SENDING_SLOTS -  len(records_to_be_sent)} more slot(s)"
-                        )
-
                 time.sleep(3)
 
-            # TODO: Add exception for the MQTT connected assertion and trigger
-            # a script that (re)nitialized the LTE head driver. Maybe add a
-            # check for disconnected since > x hours
             except Exception as e:
                 logger.exception(e, label="sending loop has stopped", config=config)
                 mqtt_connection.teardown()

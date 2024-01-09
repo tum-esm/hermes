@@ -74,7 +74,6 @@ class Config(pydantic.BaseModel):
     calibration: CalibrationConfig
     hardware: HardwareConfig
     measurement: MeasurementConfig
-    verbose_logging: bool
 
     class Config:
         extra = "forbid"
