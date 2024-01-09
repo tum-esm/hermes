@@ -56,7 +56,7 @@ def run() -> None:
         + 180  # extra time
     )
     MAX_MEASUREMENT_TIME = (
-        config.measurement.timing.measurement_procedure_seconds + 180  # extra time
+        config.measurement.timing.procedure_seconds + 180  # extra time
     )
     utils.set_alarm(MAX_SETUP_TIME, "setup")
 
