@@ -1,34 +1,36 @@
 {
-    "version": "0.0.0-beta.0",
-    "verbose_logging": false,
+    "version": "0.2.0-beta.4",
     "active_components": {
-        "run_calibration_procedures": false,
-        "send_messages_over_mqtt": true,
-        "run_pump_speed_monitoring": false,
-        "ignore_missing_air_inlet_sensor": false
-    },
-    "hardware": {
-        "pumped_litres_per_round": 0.003
-    },
-    "measurement": {
-        "timing": {
-            "seconds_per_measurement_interval": 120,
-            "seconds_per_measurement": 10,
-            "pumped_litres_per_minute": 4
-        },
-        "air_inlets": [{ "valve_number": 1, "direction": 0, "tube_length": 50 }],
-        "average_air_inlet_measurements": 15
+        "run_calibration_procedures": true,
+        "send_messages_over_mqtt": true
     },
     "calibration": {
-        "timing": {
-            "start_timestamp": 1682503200,
-            "hours_between_calibrations": 25,
-            "seconds_per_gas_bottle": 600
-        },
-        "gases": [
-            { "valve_number": 2, "bottle_id": "1" },
-            { "valve_number": 3, "bottle_id": "2" }
+        "average_air_inlet_measurements": 15,
+        "calibration_frequency_hours": 25,
+        "gas_cylinders": [
+            {
+                "valve_number": 2,
+                "bottle_id": "999"
+            },
+            {
+                "valve_number": 3,
+                "bottle_id": "998"
+            }
         ],
-        "average_air_inlet_measurements": 15
-    }
+        "sampling_per_cylinder_seconds": 600,
+        "start_timestamp": 1682503200,
+        "system_flushing_seconds": 300
+
+    },
+    "hardware": {
+        "mock_air_inlet_sensors": false,
+        "pump_pwm_duty_cycle": 0.15
+    },
+    "measurement": {
+        "average_air_inlet_measurements": 15,
+        "procedure_seconds": 120,
+        "sensor_frequency_seconds": 10,
+        "valve_number": 1
+    },
+    "verbose_logging": false
 }
