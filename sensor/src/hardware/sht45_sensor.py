@@ -20,7 +20,9 @@ class SHT45SensorInterface:
             print_to_console=testing,
             write_to_file=(not testing),
         )
+        self.broken_sensor = False
         self.config = config
+
         self.logger.info("Starting initialization")
 
         if not self.config.hardware.mock_air_inlet_sensors:
@@ -38,6 +40,7 @@ class SHT45SensorInterface:
                     label="could not initialize SHT45 sensor",
                     config=self.config,
                 )
+                self.broken_sensor = True
 
         self.logger.info("Finished initialization")
 
@@ -51,7 +54,7 @@ class SHT45SensorInterface:
         )
 
         # returns None if no air-inlet sensor is connected
-        if self.config.hardware.mock_air_inlet_sensors:
+        if self.config.hardware.mock_air_inlet_sensors or self.broken_sensor:
             return output
 
         # read sht45 data (retries 2 additional times)
