@@ -41,7 +41,6 @@ class CalibrationConfig(pydantic.BaseModel):
 
 class HardwareConfig(pydantic.BaseModel):
     pump_pwm_duty_cycle: float = pydantic.Field(ge=0, le=1)
-    mock_air_inlet_sensors: bool
 
     class Config:
         extra = "forbid"

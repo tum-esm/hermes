@@ -20,13 +20,13 @@ class SHT45SensorInterface:
             print_to_console=testing,
             write_to_file=(not testing),
         )
-        self.broken_sensor = False
         self.config = config
 
         self.logger.info("Starting initialization")
 
-        if not self.config.hardware.mock_air_inlet_sensors:
-            # set up connection to SHT45 sensor
+        # set up connection to SHT45 sensor
+        self.sensor_connected = False
+        for _ in range(3):
             try:
                 self.i2c = busio.I2C(board.SCL, board.SDA)
                 self.sht = adafruit_sht4x.SHT4x(self.i2c)
@@ -34,13 +34,18 @@ class SHT45SensorInterface:
                     f"Found SHT4x with serial number {hex(self.sht.serial_number)}"
                 )
                 self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
+
+                # sensor didn't raise any issue during connection
+                self.sensor_connected = True
+                break
             except Exception as e:
                 self.logger.exception(
                     e,
                     label="could not initialize SHT45 sensor",
                     config=self.config,
                 )
-                self.broken_sensor = True
+
+            time.sleep(1)
 
         self.logger.info("Finished initialization")
 
@@ -54,7 +59,7 @@ class SHT45SensorInterface:
         )
 
         # returns None if no air-inlet sensor is connected
-        if self.config.hardware.mock_air_inlet_sensors or self.broken_sensor:
+        if not self.sensor_connected:
             return output
 
         # read sht45 data (retries 2 additional times)
