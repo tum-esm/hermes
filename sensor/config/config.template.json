@@ -1,5 +1,5 @@
 {
-    "version": "0.2.1-beta.1",
+    "version": "0.2.2-beta.1",
     "active_components": {
         "run_calibration_procedures": true,
         "send_messages_over_mqtt": true

@@ -4,9 +4,8 @@ import pydantic
 # validation is only necessary for external sources
 # internal source will be covered by mypy
 
+
 # Sensor data
-
-
 class CO2SensorData(pydantic.BaseModel):
     raw: float
     compensated: float
