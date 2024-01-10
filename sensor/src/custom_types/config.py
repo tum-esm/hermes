@@ -24,7 +24,8 @@ class CalibrationGasConfig(pydantic.BaseModel):
 
 class CalibrationConfig(pydantic.BaseModel):
     average_air_inlet_measurements: int = pydantic.Field(..., ge=1)
-    calibration_frequency_hours: float = pydantic.Field(..., ge=1)
+    calibration_frequency_days: int = pydantic.Field(..., ge=1)
+    calibration_hour_of_day: int = pydantic.Field(..., ge=0, le=23)
     gas_cylinders: list[CalibrationGasConfig] = pydantic.Field(
         ..., min_items=1, max_items=3
     )

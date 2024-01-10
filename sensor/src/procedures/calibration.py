@@ -163,33 +163,50 @@ class CalibrationProcedure:
         utils.StateInterface.write(state)
 
     def is_due(self) -> bool:
-        """returns true when calibration procedure should run now"""
+        """returns true when calibration procedure should run
+
+        two conditions are checked:
+        1. time > last calibration day + x days (config) at time (config)
+        2. day of last calibration was not today
+        #"""
 
         # load state, kept during configuration procedures
         state = utils.StateInterface.read()
-        current_utc_timestamp = datetime.utcnow().timestamp()
+        current_utc_day = datetime.utcnow().date()
+        current_utc_hour = datetime.utcnow().hour
 
         # if last calibration time is unknown, calibrate now
-        # should only happen when the state.json is not copied
-        # during the upgrade routine or its interface changes
+        # only happens when the state.json is recreated
         if state.last_calibration_time is None:
             self.logger.info("last calibration time is unknown, calibrating now")
             return True
 
+        # calculate configured time until next calibration
         seconds_between_calibrations = (
-            3600 * self.config.calibration.calibration_frequency_hours
-        )
-        calibrations_since_start_time = math.floor(
-            (current_utc_timestamp - self.config.calibration.start_timestamp)
-            / seconds_between_calibrations
-        )
-        last_calibration_time = (
-            calibrations_since_start_time * seconds_between_calibrations
-            + self.config.calibration.start_timestamp
+            3600 * 24 * self.config.calibration.calibration_frequency_days
         )
 
-        if state.last_calibration_time > last_calibration_time:
-            self.logger.info("last calibration is up to date")
+        # determine day of next calibration
+        next_calibration_day = datetime.fromtimestamp(
+            state.last_calibration_time + seconds_between_calibrations
+        ).date()
+
+        # compare scheduled calibration day to today
+        if next_calibration_day < current_utc_day:
+            self.logger.info("next scheduled calibration is not due today")
+            return False
+
+        # check if a calibration was already performed on the same day
+        if (
+            current_utc_day
+            == datetime.fromtimestamp(state.last_calibration_time).date()
+        ):
+            self.logger.info("last calibration was already done today")
+            return False
+
+        # check if current hour is past the scheduled hour of day
+        if current_utc_hour < self.config.calibration.calibration_hour_of_day:
+            self.logger.info("next calibration is scheduled for later today")
             return False
 
         # skip calibration when sensor has had power for less than 30
@@ -204,7 +221,5 @@ class CalibrationProcedure:
             )
             return False
 
-        self.logger.info(
-            "last calibration is older than last calibration due date, calibrating now"
-        )
+        self.logger.info("next calibration is due, calibrating now")
         return True
