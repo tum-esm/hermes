@@ -30,7 +30,6 @@ class CalibrationConfig(pydantic.BaseModel):
         ..., min_items=1, max_items=3
     )
     sampling_per_cylinder_seconds: int = pydantic.Field(..., ge=6, le=1800)
-    start_timestamp: int = pydantic.Field(..., ge=1672531200)  # start 2023-01-01T00:00
     system_flushing_seconds: int = pydantic.Field(..., ge=0, le=600)
 
     class Config:
