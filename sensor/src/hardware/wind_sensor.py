@@ -87,6 +87,7 @@ class WindSensorInterface:
                     last_update_time=now,
                 )
 
+        # min/max/average over all received messages
         self.wind_measurement = custom_types.WindSensorData(
             direction_min=min([m.direction_min for m in wind_measurements]),
             direction_avg=utils.functions.avg_list(
