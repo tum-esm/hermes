@@ -135,3 +135,8 @@ def set_alarm(timeout: int, label: str) -> None:
 
     signal.signal(signal.SIGALRM, alarm_handler)
     signal.alarm(timeout)
+
+
+def avg_list(input_list: list[float]) -> float:
+    """averages a list of float"""
+    return sum(input_list) / len(input_list)
