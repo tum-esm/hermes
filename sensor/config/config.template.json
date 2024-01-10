@@ -23,7 +23,6 @@
 
     },
     "hardware": {
-        "mock_air_inlet_sensors": false,
         "pump_pwm_duty_cycle": 0.15
     },
     "measurement": {

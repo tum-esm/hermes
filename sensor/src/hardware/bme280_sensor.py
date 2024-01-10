@@ -21,26 +21,29 @@ class BME280SensorInterface:
             print_to_console=testing,
             write_to_file=(not testing),
         )
-        self.broken_sensor = False
         self.config = config
         self.variant = variant
         self.logger.info("starting initialization")
         self.compensation_params: Optional[bme280.params] = None
 
-        if (not self.config.hardware.mock_air_inlet_sensors) or (
-            variant == "mainboard"
-        ):
-            # set up connection to BME280 sensor
+        # set up connection to BME280 sensor
+        self.sensor_connected = False
+        for _ in range(3):
             try:
                 self.bus = smbus2.SMBus(1)
                 self.address = 0x77 if (variant == "mainboard") else 0x76
+
+                # sensor didn't raise any issue during connection
+                self.sensor_connected = True
+                break
             except Exception as e:
                 self.logger.exception(
                     e,
                     label=f"could not initialize BME280 sensor (variant: {variant})",
                     config=self.config,
                 )
-                self.broken_sensor = True
+
+            time.sleep(1)
 
         self.logger.info("finished initialization")
 
@@ -55,10 +58,7 @@ class BME280SensorInterface:
         )
 
         # returns None if no air-inlet sensor is connected
-        if (
-            (self.variant == "air-inlet")
-            and (self.config.hardware.mock_air_inlet_sensors)
-        ) or self.broken_sensor:
+        if not self.sensor_connected:
             return output
 
         # sets compensation values once
