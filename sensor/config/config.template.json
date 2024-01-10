@@ -6,7 +6,8 @@
     },
     "calibration": {
         "average_air_inlet_measurements": 15,
-        "calibration_frequency_hours": 25,
+        "calibration_frequency_days": 1,
+        "calibration_hour_of_day": 3,
         "gas_cylinders": [
             {
                 "valve_number": 2,
@@ -18,7 +19,6 @@
             }
         ],
         "sampling_per_cylinder_seconds": 600,
-        "start_timestamp": 1682503200,
         "system_flushing_seconds": 300
 
     },

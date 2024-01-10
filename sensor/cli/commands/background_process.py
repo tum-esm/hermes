@@ -62,32 +62,30 @@ def stop() -> None:
 )
 def restart() -> None:
     config = src.utils.config_interface.ConfigInterface.read()
+    state = src.utils.StateInterface.read()
 
-    # calculate the time of the last calibration
-    seconds_between_calibrations = 3600 * config.calibration.calibration_frequency_hours
-    calibrations_since_start_time = math.floor(
-        (time.time() - config.calibration.start_timestamp)
-        / seconds_between_calibrations
-    )
-    last_calibration_time = (
-        calibrations_since_start_time * seconds_between_calibrations
-        + config.calibration.start_timestamp
-    )
-
-    # do not restart if last calibration time could still be running
-    # summed times per bottle + 15 minutes for safety
-    max_calibration_time = (
-        len(config.calibration.gas_cylinders)
-        * config.calibration.sampling_per_cylinder_seconds
-        + 900
-    )
-
-    if time.time() - last_calibration_time < max_calibration_time:
-        utils.print_red(
-            "Calibration might still be running. Please wait until "
-            + "the calibration is finished with the restart"
+    if state.last_calibration_time:
+        # calculate configured time until next calibration
+        seconds_between_calibrations = (
+            3600 * 24 * config.calibration.calibration_frequency_days
         )
-        return
+
+        # determine timestamp of next scheduled calibration
+        next_calibration = state.last_calibration_time + seconds_between_calibrations
+
+        # summed times per bottle + drying + 15 minutes for safety
+        max_calibration_time = (
+            config.calibration.sampling_per_cylinder_seconds
+            * (len(config.calibration.gas_cylinders) + 1)
+            + 900
+        )
+
+        if 0 < time.time() - next_calibration < max_calibration_time:
+            utils.print_red(
+                "Calibration might still be running. Please wait until "
+                + "the calibration is finished with the restart"
+            )
+            return
 
     utils.print_green("Restarting background process")
 
