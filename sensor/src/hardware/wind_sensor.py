@@ -5,7 +5,6 @@ import gpiozero
 import gpiozero.pins.pigpio
 import re
 
-# TODO: Check if pattern is the same for 2min instead 1s messages
 measurement_pattern = (
     pattern
 ) = r"Dn=([0-9.]+)D,Dm=([0-9.]+)D,Dx=([0-9.]+)D,Sn=([0-9.]+)M,Sm=([0-9.]+)M,Sx=([0-9.]+)M"
@@ -58,14 +57,14 @@ class WindSensorInterface:
     def _update_current_values(self) -> None:
         new_messages = self.wxt532_interface.get_messages()
         now = round(time.time())
+        wind_measurements: list[custom_types.WindSensorData] = []
+
         for message in new_messages:
-            # TODO: Average over all valid messages of the last 2 minutes
-            # TODO: Don't average for Min/Max
             # Check if there's a match for the measurement_pattern
             measurement_match = re.search(measurement_pattern, message)
             if measurement_match is not None:
                 # Extract the values using group() method
-                self.wind_measurement = custom_types.WindSensorData(
+                measurement_message = custom_types.WindSensorData(
                     direction_min=measurement_match.group(1),
                     direction_avg=measurement_match.group(2),
                     direction_max=measurement_match.group(3),
@@ -74,6 +73,7 @@ class WindSensorInterface:
                     speed_max=measurement_match.group(6),
                     last_update_time=now,
                 )
+                wind_measurements.append(measurement_message)
 
             # Check if there's a match for the device_status_pattern
             device_match = re.search(device_status_pattern, message)
@@ -86,6 +86,20 @@ class WindSensorInterface:
                     reference_voltage=device_match.group(4),
                     last_update_time=now,
                 )
+
+        self.wind_measurement = custom_types.WindSensorData(
+            direction_min=min([m.direction_min for m in wind_measurements]),
+            direction_avg=utils.functions.avg_list(
+                [m.direction_avg for m in wind_measurements]
+            ),
+            direction_max=max([m.direction_max for m in wind_measurements]),
+            speed_min=min([m.speed_min for m in wind_measurements]),
+            speed_avg=utils.functions.avg_list(
+                [m.speed_avg for m in wind_measurements]
+            ),
+            speed_max=max([m.speed_max for m in wind_measurements]),
+            last_update_time=[m.last_update_time for m in wind_measurements][-1],
+        )
 
     def get_current_wind_measurement(self) -> Optional[custom_types.WindSensorData]:
         self._update_current_values()
