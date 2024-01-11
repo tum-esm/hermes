@@ -97,7 +97,6 @@ class ConfigurationProcedure:
             self.logger.info(
                 "received config revision is not newer",
                 details=f"received revision = {new_revision}, current revision = {current_revision}",
-                config=self.config,
             )
             return
 
