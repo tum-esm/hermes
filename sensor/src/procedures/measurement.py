@@ -23,11 +23,8 @@ class WindMeasurementProcedure:
 
     def _read_latest_wind_sensor_communication(self) -> None:
         # wind measurement
-        self.wind_data = (
-            self.hardware_interface.wind_sensor.get_current_wind_measurement()
-        )
-        self.device_info = (
-            self.hardware_interface.wind_sensor.get_current_device_status()
+        self.wind_data, self.device_info = (
+            self.hardware_interface.wind_sensor.get_current_sensor_measurement()
         )
 
     def _send_latest_wind_sensor_communication(self) -> None:
