@@ -55,7 +55,20 @@ class WindSensorInterface:
         self.logger.info("Finished initialization")
 
     def _update_current_values(self) -> None:
-        new_messages = self.wxt532_interface.get_messages()
+        start_time = time.time()
+        new_messages = []
+        
+        while(True):
+            answer = self.wxt532_interface.get_messages()
+            if answer == []:
+                break
+            if (time.time() - start_time) > 5:
+                break
+            
+            time.sleep(0.05)
+                
+            new_messages += answer
+        
         now = round(time.time())
         wind_measurements: list[custom_types.WindSensorData] = []
 
@@ -89,7 +102,7 @@ class WindSensorInterface:
 
         # min/max/average over all received messages
         if len(wind_measurements) > 0:
-            self.logger.info(f"Processed {len(wind_measurements)} wind sensor measurements during the last {self.config.measurement.procedure_seconds} seconds.")
+            self.logger.info(f"Processed {len(wind_measurements)} wind sensor measurements during the last {self.config.measurement.procedure_seconds} seconds interval.")
             self.wind_measurement = custom_types.WindSensorData(
                 direction_min=min([m.direction_min for m in wind_measurements]),
                 direction_avg=utils.functions.avg_list(
