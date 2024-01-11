@@ -57,8 +57,6 @@ class HardwareInterface:
         self.logger.info("checking for hardware errors")
         self.co2_sensor.check_errors()
         self.wind_sensor.check_errors()
-        self.air_inlet_bme280_sensor.check_errors()
-        self.mainboard_sensor.check_errors()
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
