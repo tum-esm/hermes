@@ -63,7 +63,7 @@ class PumpInterface:
 
     def flush_system(self, duration: int) -> None:
         """flushed the system by setting the pump to max speed and waiting the duration in seconds. At the end the pump speed is set to the duty cycle defined in the config file."""
-        self.set_desired_pump_speed(pwm_duty_cycle=1)
+        self.set_desired_pump_speed(pwm_duty_cycle=0.5)
         time.sleep(duration)
         self.set_desired_pump_speed(
             pwm_duty_cycle=self.config.hardware.pump_pwm_duty_cycle,
