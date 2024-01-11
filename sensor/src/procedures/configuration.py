@@ -21,7 +21,7 @@ import re
 import shutil
 import time
 from typing import Callable, Literal
-from src import custom_types, utils
+from src import custom_types, utils, hardware
 
 NAME = "hermes"
 REPOSITORY = f"tum-esm/{NAME}"
@@ -64,6 +64,14 @@ class ConfigurationProcedure:
         self._remove_old_venvs()
         self.message_queue = utils.MessageQueue()
 
+        try:
+            self.hardware_interface = hardware.HardwareInterface(config)
+        except Exception as e:
+            self.logger.exception(
+                e, label="could not initialize hardware interface", config=config
+            )
+            raise e
+
     def run(self, config_request: custom_types.MQTTConfigurationRequest) -> None:
         new_revision = config_request.revision
         new_version = config_request.configuration.version
@@ -92,6 +100,18 @@ class ConfigurationProcedure:
                 config=self.config,
             )
             return
+
+        # shut down hardware interface before config update
+        # this allows the pytests to test the new config on local hardware
+        try:
+            self.hardware_interface.teardown()
+        except Exception as e:
+            self.logger.exception(
+                e,
+                "error in hardware-teardown before configuration procedure",
+                config=self.config,
+            )
+            exit(1)
 
         # True: parameter update without version update
         # False: version update (+ parameter update)
