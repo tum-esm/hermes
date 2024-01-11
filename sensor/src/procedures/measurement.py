@@ -146,7 +146,7 @@ class CO2MeasurementProcedure:
         """
         1. collect and send CO2 measurements in 10s intervals for 2 minutes
         """
-        self.logger.info(f"starting 2 minute long CO2 measurement interval")
+        self.logger.info(f"starting {self.config.measurement.procedure_seconds} seconds long CO2 measurement interval")
         measurement_procedure_start_time = time.time()
 
         # log the current CO2 sensor device info
