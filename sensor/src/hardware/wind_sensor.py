@@ -89,6 +89,7 @@ class WindSensorInterface:
 
         # min/max/average over all received messages
         if len(wind_measurements) > 0:
+            self.logger.info(f"Processed {len(wind_measurements)} wind sensor measurements during the last {self.config.measurement.procedure_seconds} seconds.")
             self.wind_measurement = custom_types.WindSensorData(
                 direction_min=min([m.direction_min for m in wind_measurements]),
                 direction_avg=utils.functions.avg_list(
@@ -118,7 +119,6 @@ class WindSensorInterface:
         raises the WindSensorInterface.DeviceFailure exception"""
 
         now = time.time()
-        self._update_current_values()
 
         if self.device_status is not None:
             # only consider values less than 5 minutes old
