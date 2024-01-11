@@ -9,8 +9,8 @@ def test_wind_sensor(log_files: None) -> None:
     wind_sensor = hardware.WindSensorInterface(config)
 
     def data_arrived() -> bool:
-        d1 = wind_sensor.get_current_wind_measurement()
-        d2 = wind_sensor.get_current_device_status()
+        d1, d2 = wind_sensor.get_current_sensor_measurement()
+
         print(f"measurement: {d1}")
         print(f"device_status: {d2}")
         return d1 is not None

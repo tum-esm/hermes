@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import Optional, Tuple
 from src import utils, custom_types
 import gpiozero
 import gpiozero.pins.pigpio
@@ -57,18 +57,18 @@ class WindSensorInterface:
     def _update_current_values(self) -> None:
         start_time = time.time()
         new_messages = []
-        
-        while(True):
+
+        while True:
             answer = self.wxt532_interface.get_messages()
             if answer == []:
                 break
             if (time.time() - start_time) > 5:
                 break
-            
+
             time.sleep(0.05)
-                
+
             new_messages += answer
-        
+
         now = round(time.time())
         wind_measurements: list[custom_types.WindSensorData] = []
 
@@ -102,7 +102,9 @@ class WindSensorInterface:
 
         # min/max/average over all received messages
         if len(wind_measurements) > 0:
-            self.logger.info(f"Processed {len(wind_measurements)} wind sensor measurements during the last {self.config.measurement.procedure_seconds} seconds interval.")
+            self.logger.info(
+                f"Processed {len(wind_measurements)} wind sensor measurements during the last {self.config.measurement.procedure_seconds} seconds interval."
+            )
             self.wind_measurement = custom_types.WindSensorData(
                 direction_min=min([m.direction_min for m in wind_measurements]),
                 direction_avg=utils.functions.avg_list(
@@ -117,12 +119,16 @@ class WindSensorInterface:
                 last_update_time=[m.last_update_time for m in wind_measurements][-1],
             )
         else:
-            self.wind_measurement: Optional[custom_types.WindSensorData] = None
+            self.wind_measurement = None
 
-    def get_current_sensor_measurement(self) -> (Optional[custom_types.WindSensorData], Optional[custom_types.WindSensorStatus]):
+    def get_current_sensor_measurement(
+        self,
+    ) -> Tuple[
+        Optional[custom_types.WindSensorData],
+        Optional[custom_types.WindSensorStatus],
+    ]:
         self._update_current_values()
         return (self.wind_measurement, self.device_status)
-
 
     def check_errors(self) -> None:
         """checks whether the wind sensor behaves incorrectly - Possibly

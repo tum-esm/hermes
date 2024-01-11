@@ -6,7 +6,6 @@ from src import utils, custom_types
 
 
 class BME280SensorInterface:
-
     def __init__(
         self,
         config: custom_types.Config,
@@ -29,7 +28,7 @@ class BME280SensorInterface:
             try:
                 self.bus = smbus2.SMBus(1)
                 self.address = 0x77 if (variant == "mainboard") else 0x76
-                
+
                 # test if the sensor data can be read
                 bme280.sample(
                     self.bus,
@@ -53,7 +52,7 @@ class BME280SensorInterface:
                 f"Could not connect to BME280 sensor (variant: {self.variant}).",
                 config=self.config,
             )
-            
+
         self.logger.info("Finished initialization")
 
     def get_data(self, retries: int = 1) -> custom_types.BME280SensorData:
@@ -110,9 +109,7 @@ class BME280SensorInterface:
             )
         except Exception as e:
             self.logger.warning(
-                
-                label="Could not fetch compensation params.",
-                
+                "Could not fetch compensation params.",
             )
             self.compensation_params = None
 
@@ -123,13 +120,13 @@ class BME280SensorInterface:
             time.sleep(1)
             self.bus = smbus2.SMBus(1)
             self.address = 0x77 if (self.variant == "mainboard") else 0x76
-            
+
             # test if the sensor data can be read
             bme280.sample(
                 self.bus,
                 self.address,
             )
-            
+
             self.read_compensation_param()
             self.logger.info(
                 f"Reset sensor was successful.",

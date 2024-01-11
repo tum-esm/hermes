@@ -13,14 +13,17 @@ config = utils.ConfigInterface.read()
 wind_sensor = hardware.WindSensorInterface(config)
 
 for i in range(30):
-    current_measurement = wind_sensor.get_current_wind_measurement()
+    (
+        current_measurement,
+        current_device_status,
+    ) = wind_sensor.get_current_sensor_measurement()
     print("current_measurement: ", end="")
+
     if current_measurement is not None:
         print(json.dumps(current_measurement.dict(), indent=4))
     else:
         print("null")
 
-    current_device_status = wind_sensor.get_current_device_status()
     print("current_device_status: ", end="")
     if current_device_status is not None:
         print(json.dumps(current_device_status.dict(), indent=4))
