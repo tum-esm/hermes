@@ -181,27 +181,24 @@ class CalibrationProcedure:
             self.logger.info("last calibration time is unknown, calibrating now")
             return True
 
-        # calculate configured time until next calibration
-        seconds_between_calibrations = (
-            3600 * 24 * self.config.calibration.calibration_frequency_days
-        )
-
-        # determine day of next calibration
-        next_calibration_day = datetime.fromtimestamp(
-            state.last_calibration_time + seconds_between_calibrations
+        last_calibration_day = datetime.fromtimestamp(
+            state.last_calibration_time
         ).date()
-
-        # compare scheduled calibration day to today
-        if next_calibration_day < current_utc_day:
-            self.logger.info("next scheduled calibration is not due today")
-            return False
+        days_since_last_calibration = (current_utc_day - last_calibration_day).days
 
         # check if a calibration was already performed on the same day
-        if (
-            current_utc_day
-            == datetime.fromtimestamp(state.last_calibration_time).date()
-        ):
+        if current_utc_day == last_calibration_day:
             self.logger.info("last calibration was already done today")
+            return False
+
+        # compare scheduled calibration day to today
+        if (
+            days_since_last_calibration
+            < self.config.calibration.calibration_frequency_days
+        ):
+            self.logger.info(
+                f"next scheduled calibration is not due today {days_since_last_calibration} {self.config.calibration.calibration_frequency_days}"
+            )
             return False
 
         # check if current hour is past the scheduled hour of day
