@@ -106,13 +106,10 @@ class WindSensorInterface:
         else:
             self.wind_measurement: Optional[custom_types.WindSensorData] = None
 
-    def get_current_wind_measurement(self) -> Optional[custom_types.WindSensorData]:
+    def get_current_sensor_measurement(self) -> (Optional[custom_types.WindSensorData], Optional[custom_types.WindSensorStatus]):
         self._update_current_values()
-        return self.wind_measurement
+        return (self.wind_measurement, self.device_status)
 
-    def get_current_device_status(self) -> Optional[custom_types.WindSensorStatus]:
-        self._update_current_values()
-        return self.device_status
 
     def check_errors(self) -> None:
         """checks whether the wind sensor behaves incorrectly - Possibly
