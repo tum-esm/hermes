@@ -6,9 +6,6 @@ from src import utils, custom_types
 
 
 class SHT45SensorInterface:
-    @staticmethod
-    class DeviceFailure(Exception):
-        """raised when the sensor is not available"""
 
     def __init__(
         self,
@@ -22,11 +19,11 @@ class SHT45SensorInterface:
         )
         self.config = config
 
-        self.logger.info("Starting initialization")
+        self.logger.info("Starting initialization.")
 
         # set up connection to SHT45 sensor
         self.sensor_connected = False
-        for _ in range(3):
+        for _ in range(2):
             try:
                 self.i2c = busio.I2C(board.SCL, board.SDA)
                 self.sht = adafruit_sht4x.SHT4x(self.i2c)
@@ -41,16 +38,22 @@ class SHT45SensorInterface:
             except Exception as e:
                 self.logger.exception(
                     e,
-                    label="could not initialize SHT45 sensor",
+                    label="Could not initialize SHT45 sensor",
                     config=self.config,
                 )
 
             time.sleep(1)
+            
+        if not self.sensor_connected:
+            self.logger.warning(
+                "Could not connect to SHT45 sensor.",
+                config=self.config,
+            )
+            
+        self.logger.info("finished initialization.")
 
-        self.logger.info("Finished initialization")
-
-    def get_data(self) -> custom_types.SHT45SensorData:
-        """reads temperature and humidity in the air inlet"""
+    def get_data(self, retries: int = 1) -> custom_types.SHT45SensorData:
+        """Reads temperature and humidity in the air inlet"""
 
         # initialize output
         output = custom_types.SHT45SensorData(
@@ -60,10 +63,13 @@ class SHT45SensorInterface:
 
         # returns None if no air-inlet sensor is connected
         if not self.sensor_connected:
+            self.logger.warning(
+                "Did not fetch SHT45 sensor data. Device is not connected.",
+            )
             return output
 
-        # read sht45 data (retries 2 additional times)
-        for _ in range(3):
+        # read sht45 data (retries one time)
+        for _ in range(retries + 1):
             try:
                 temperature, relative_humidity = self.sht.measurements
                 output.temperature = round(temperature, 2)
@@ -71,31 +77,26 @@ class SHT45SensorInterface:
                 return output
 
             except Exception as e:
-                self.logger.exception(
-                    e,
-                    label="exception during BME280 measurement request",
-                    config=self.config,
-                )
                 self.logger.warning(
-                    "reinitialising sensor communication",
+                    "Problem during sensor readout. Reinitialising sensor communication",
                     config=self.config,
                 )
                 self._reset_sensor()
 
         # returns None if sensor could not be read
         self.logger.warning(
-            "could not read BME280 measurement values",
+            "Could not read SHT45 measurement values. Device is not connected.",
             config=self.config,
         )
         return output
 
-    def check_errors(self) -> None:
-        """Tries to fetch data, possibly raises `DeviceFailure`"""
-
-        data = self.get_data()
-        if data.temperature is None:
-            raise SHT45SensorInterface.DeviceFailure("could not sample data")
-
     def _reset_sensor(self) -> None:
-        self.sht.reset()
-        time.sleep(1)
+        try:
+            self.sht.reset()
+            self.sensor_connected = True
+            time.sleep(1)
+        except Exception:
+            self.logger.warning(
+                f"Reset of the SHT45 sensor failed.",
+            )
+            self.sensor_connected = False
