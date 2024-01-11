@@ -181,17 +181,6 @@ def run() -> None:
             new_config_message = procedures.MQTTAgent.get_config_message()
 
             if new_config_message is not None:
-                # shut down hardware interface before config update
-                # this allows the pytests to test the new config on local hardware
-                try:
-                    hardware_interface.teardown()
-                except Exception as e:
-                    logger.exception(
-                        e,
-                        "error in hardware-teardown before configuration procedure",
-                        config=config,
-                    )
-                    exit(1)
 
                 # run config update procedure
                 logger.info("running configuration procedure", config=config)
