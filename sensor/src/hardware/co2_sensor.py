@@ -36,7 +36,7 @@ class CO2SensorInterface:
             write_to_file=(not testing),
         )
         self.config = config
-        self.logger.info("Starting initialization")
+        self.logger.info("Starting initialization.")
         self.last_powerup_time: float = time.time()
 
         # power pin to power up/down CO2 sensor
@@ -53,7 +53,7 @@ class CO2SensorInterface:
         # turn the sensor off and on and set it to our default settings
         self._reset_sensor()
 
-        self.logger.info("finished initialization")
+        self.logger.info("Finished initialization.")
 
     # set functions
 
@@ -75,8 +75,8 @@ class CO2SensorInterface:
         self._set_sensor_parameter(parameter="p", value=round(pressure, 2))
 
         self.logger.info(
-            f"updated compensation values: pressure = {pressure}, "
-            + f"humidity = {humidity}"
+            f"Updated compensation values: pressure = {pressure}, "
+            + f"humidity = {humidity}."
         )
 
     def set_filter_setting(
@@ -103,8 +103,8 @@ class CO2SensorInterface:
         self._set_sensor_parameter(parameter="median", value=median)
 
         self.logger.info(
-            f"updating filter settings (average = {average}, smooth"
-            + f" = {smooth}, median = {median})"
+            f"Updating filter settings (average = {average}, smooth"
+            + f" = {smooth}, median = {median})."
         )
 
     # get functions
@@ -128,7 +128,7 @@ class CO2SensorInterface:
         except Exception as e:
             self.logger.exception(
                 e,
-                label="exception during CO2 sensor measurement request - restarting sensor",
+                label="Exception during CO2 sensor measurement request - restarting sensor",
                 config=self.config,
             )
             self._reset_sensor()
@@ -213,34 +213,34 @@ class CO2SensorInterface:
         if answer[0] == "uncomplete":
             # command was sent uncomplete. sensor asked to set value.
             self.logger.warning(
-                f"command was sent uncomplete. resending value: {value}"
+                f"Command was sent uncomplete. Resending value: {value}"
             )
             answer = self.serial_interface.send_command(
                 message=str(value), expected_regex=expected_regex, timeout=timeout
             )
             if answer[0] == "success":
-                self.logger.info("resending value was successful")
+                self.logger.info("Resending value was successful")
                 return answer[1]
             else:
                 raise self.CommunicationError(
-                    f"resend failed after uncomplete. Sensor answer: {answer[1]}"
+                    f"Resend failed after uncomplete. Sensor answer: {answer[1]}"
                 )
 
         if answer[0] == "timeout":
             # retry sending command
             self.logger.warning(
-                f"sent sensor command timed out. resending command: {command}"
+                f"Sent sensor command timed out. resending command: {command}"
             )
             answer = self.serial_interface.send_command(
                 message=command, expected_regex=expected_regex, timeout=timeout
             )
 
             if answer[0] == "success":
-                self.logger.info("resending command was successful")
+                self.logger.info("Resending command was successful.")
                 return answer[1]
             else:
                 raise self.CommunicationError(
-                    f"resend failed after timeout. Command: {command} Sensor answer: {answer[1]}"
+                    f"Resend failed after timeout. Command: {command} Sensor answer: {answer[1]}"
                 )
 
     def _request_measurement_data(self) -> str:
@@ -259,21 +259,21 @@ class CO2SensorInterface:
         elif answer[0] == "timeout":
             # retry sending command
             self.logger.warning(
-                "sensor answer for measurement request timed out. resending request."
+                "Sensor answer for measurement request timed out. resending request."
             )
             answer = self.serial_interface.send_command(
                 "send", expected_regex=CO2_MEASUREMENT_REGEX, timeout=30
             )
 
             if answer[0] == "success":
-                self.logger.info("resending value was successful")
+                self.logger.info("Resending value was successful.")
                 return answer[1]
             else:
                 raise self.CommunicationError(
                     f"resend failed after timeout. Sensor answer: {answer[1]}"
                 )
         else:
-            self.logger.warning("requesting measurement failed")
+            self.logger.warning("Requesting measurement failed.")
             raise self.CommunicationError(f"Uncomplete. Sensor answer: {answer[1]}")
 
     def _format_raw_answer(self, raw: str) -> str:
@@ -292,19 +292,19 @@ class CO2SensorInterface:
         """reset the sensors default settings by turning it off and on and
         sending the initial settings again"""
 
-        self.logger.info("initializing the sensor with measurement settings")
+        self.logger.info("Initializing the sensor with measurement settings.")
 
-        self.logger.debug("powering down sensor")
+        self.logger.debug("Powering down sensor.")
         self.power_pin.off()
         time.sleep(1)
 
-        self.logger.debug("powering up sensor")
+        self.logger.debug("Powering up sensor.")
         self.serial_interface.flush_receiver_stream()
         self.power_pin.on()
         self.last_powerup_time = time.time()
         self.serial_interface.wait_for_answer(expected_regex=STARTUP_REGEX, timeout=10)
 
-        self.logger.debug("sending measurement settings")
+        self.logger.debug("Sending measurement settings.")
 
         self._send_command_to_sensor(command="echo off")
         time.sleep(0.1)
@@ -339,10 +339,10 @@ class CO2SensorInterface:
         answer = self._send_command_to_sensor("errs")
 
         if not ("OK: No errors detected." in answer):
-            self.logger.info("the CO2 sensor error check failed. Performing restart.")
-            self._reset_sensor()
+            self.logger.warning(f"The CO2 sensor reported errors: {answer}).",
+                config=self.config,)
 
-        self.logger.info("the CO2 sensor check doesn't report any errors")
+        self.logger.info("The CO2 sensor check doesn't report any errors.")
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
