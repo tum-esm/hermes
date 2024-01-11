@@ -339,8 +339,10 @@ class CO2SensorInterface:
         answer = self._send_command_to_sensor("errs")
 
         if not ("OK: No errors detected." in answer):
-            self.logger.warning(f"The CO2 sensor reported errors: {answer}).",
-                config=self.config,)
+            self.logger.warning(
+                f"The CO2 sensor reported errors: {answer}).",
+                config=self.config,
+            )
 
         self.logger.info("The CO2 sensor check doesn't report any errors.")
 
