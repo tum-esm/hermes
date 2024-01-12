@@ -340,7 +340,7 @@ class CO2SensorInterface:
 
         if not ("OK: No errors detected." in answer):
             self.logger.warning(
-                f"The CO2 sensor reported errors: {answer}).",
+                f"The CO2 sensor reported errors: {answer}",
                 config=self.config,
             )
 
