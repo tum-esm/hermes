@@ -153,7 +153,8 @@ class CalibrationProcedure:
 
         # flush the system after calibration at max pump speed
         self.hardware_interface.pump.flush_system(
-            duration=self.config.calibration.system_flushing_seconds
+            duration=self.config.calibration.system_flushing_seconds,
+            duty_cycle=self.config.calibration.system_flushing_pump_pwm_duty_cycle,
         )
 
         # save last calibration time
@@ -196,9 +197,7 @@ class CalibrationProcedure:
             days_since_last_calibration
             < self.config.calibration.calibration_frequency_days
         ):
-            self.logger.info(
-                f"next scheduled calibration is not due today {days_since_last_calibration} {self.config.calibration.calibration_frequency_days}"
-            )
+            self.logger.info(f"next scheduled calibration is not due today.")
             return False
 
         # check if current hour is past the scheduled hour of day

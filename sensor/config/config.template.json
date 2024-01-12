@@ -1,5 +1,5 @@
 {
-    "version": "0.2.2-beta.1",
+    "version": "0.2.2-beta.3",
     "active_components": {
         "run_calibration_procedures": true,
         "send_messages_over_mqtt": true
@@ -19,7 +19,9 @@
             }
         ],
         "sampling_per_cylinder_seconds": 600,
+        "system_flushing_pump_pwm_duty_cycle": 0.5,
         "system_flushing_seconds": 300
+
 
     },
     "hardware": {

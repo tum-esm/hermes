@@ -30,6 +30,7 @@ class CalibrationConfig(pydantic.BaseModel):
         ..., min_items=1, max_items=3
     )
     sampling_per_cylinder_seconds: int = pydantic.Field(..., ge=6, le=1800)
+    system_flushing_pump_pwm_duty_cycle: float = pydantic.Field(ge=0, le=1)
     system_flushing_seconds: int = pydantic.Field(..., ge=0, le=600)
 
     class Config:
