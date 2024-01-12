@@ -36,7 +36,7 @@ def run() -> None:
         raise e
 
     logger.info(
-        f"started new automation process with SW version {config.version} and PID {os.getpid()}",
+        f"Started new automation process with SW version {config.version} and PID {os.getpid()}.",
         config=config,
     )
 
@@ -69,7 +69,7 @@ def run() -> None:
     except Exception as e:
         logger.exception(
             e,
-            label="could not start messaging agent",
+            label="Could not start messaging agent.",
             config=config,
         )
 
@@ -77,13 +77,13 @@ def run() -> None:
     # initialize all hardware interfaces
     # tear down hardware on program termination
 
-    logger.info("initializing hardware interfaces", config=config)
+    logger.info("Initializing hardware interfaces.", config=config)
 
     try:
         hardware_interface = hardware.HardwareInterface(config)
     except Exception as e:
         logger.exception(
-            e, label="could not initialize hardware interface", config=config
+            e, label="Could not initialize hardware interface.", config=config
         )
         raise e
 
@@ -91,14 +91,14 @@ def run() -> None:
     def _graceful_teardown(*args: Any) -> None:
         utils.set_alarm(10, "graceful teardown")
 
-        logger.info("starting graceful teardown")
+        logger.info("Starting graceful teardown.")
         hardware_interface.teardown()
-        logger.info("finished graceful teardown")
+        logger.info("Finished graceful teardown.")
         exit(0)
 
     signal.signal(signal.SIGINT, _graceful_teardown)
     signal.signal(signal.SIGTERM, _graceful_teardown)
-    logger.info("established graceful teardown hook")
+    logger.info("Established graceful teardown hook.")
 
     # -------------------------------------------------------------------------
     # initialize procedures
@@ -112,7 +112,7 @@ def run() -> None:
     # calibration:    using the two reference gas bottles to calibrate the CO2 sensor
     # measurements:   do regular measurements for x minutes
 
-    logger.info("initializing procedures", config=config)
+    logger.info("Initializing procedures.", config=config)
 
     try:
         system_check_prodecure = procedures.SystemCheckProcedure(
@@ -134,18 +134,18 @@ def run() -> None:
     # -------------------------------------------------------------------------
     # infinite mainloop
 
-    logger.info("successfully finished setup, starting mainloop", config=config)
+    logger.info("Successfully finished setup, starting mainloop.", config=config)
 
     while True:
         try:
-            logger.info("starting mainloop iteration")
+            logger.info("Starting mainloop iteration.")
 
             # -----------------------------------------------------------------
             # SYSTEM CHECKS
 
             utils.set_alarm(MAX_SYSTEM_CHECK_TIME, "system check")
 
-            logger.info("running system checks")
+            logger.info("Running system checks.")
             system_check_prodecure.run()
 
             # -----------------------------------------------------------------
@@ -155,12 +155,12 @@ def run() -> None:
 
             if config.active_components.run_calibration_procedures:
                 if calibration_prodecure.is_due():
-                    logger.info("running calibration procedure", config=config)
+                    logger.info("Running calibration procedure.", config=config)
                     calibration_prodecure.run()
                 else:
-                    logger.info("calibration procedure is not due")
+                    logger.info("Calibration procedure is not due.")
             else:
-                logger.info("skipping calibration procedure due to config")
+                logger.info("Skipping calibration procedure due to config.")
 
             # -----------------------------------------------------------------
             # MEASUREMENTS
@@ -168,7 +168,7 @@ def run() -> None:
             utils.set_alarm(MAX_MEASUREMENT_TIME, "measurement")
 
             # if messages are empty, run regular measurements
-            logger.info("running measurements")
+            logger.info("Running measurements.")
             wind_measurement_prodecure.run()
             CO2_measurement_prodecure.run()
 
@@ -177,19 +177,19 @@ def run() -> None:
 
             utils.set_alarm(MAX_CONFIG_UPDATE_TIME, "config update")
 
-            logger.info("checking for new config messages")
+            logger.info("Checking for new config messages.")
             new_config_message = procedures.MQTTAgent.get_config_message()
 
             if new_config_message is not None:
                 # run config update procedure
-                logger.info("running configuration procedure", config=config)
+                logger.info("Running configuration procedure.", config=config)
                 try:
                     configuration_prodecure.run(new_config_message)
                     # -> Exit, Restarts via Cron Job to load new config
                 except Exception:
                     # reinitialize hardware if configuration failed
                     logger.info(
-                        "Exception during configuration procedure", config=config
+                        "Exception during configuration procedure.", config=config
                     )
                     hardware_interface.reinitialize(config)
 
@@ -201,7 +201,7 @@ def run() -> None:
 
             # -----------------------------------------------------------------
 
-            logger.info("finished mainloop iteration")
+            logger.info("Finished mainloop iteration.")
             last_successful_mainloop_iteration_time = time.time()
 
             # update state config
@@ -225,7 +225,7 @@ def run() -> None:
             # reboot if exception lasts longer than 24 hours
             if (time.time() - state.offline_since) >= 86400:
                 logger.info(
-                    "rebooting because no successful MQTT connect for 24 hours",
+                    "Rebooting because no successful MQTT connect for 24 hours.",
                     config=config,
                 )
                 os.system("sudo reboot")
@@ -236,19 +236,19 @@ def run() -> None:
                     ebo.set_next_timer()
                     # try to establish mqtt connection
                     logger.info(
-                        f"restarting messaging agent",
+                        f"Restarting messaging agent.",
                         config=config,
                     )
                     procedures.MQTTAgent.deinit()
                     procedures.MQTTAgent.init(config)
                     logger.info(
-                        f"successfully restarted messaging agent",
+                        f"Successfully restarted messaging agent.",
                         config=config,
                     )
             except Exception as e:
                 logger.exception(
                     e,
-                    label="failed to restart messaging agent",
+                    label="Failed to restart messaging agent.",
                     config=config,
                 )
 
@@ -261,7 +261,7 @@ def run() -> None:
             # reboot if exception lasts longer than 12 hours
             if (time.time() - last_successful_mainloop_iteration_time) >= 86400:
                 logger.info(
-                    "rebooting because no successful mainloop iteration for 24 hours",
+                    "Rebooting because no successful mainloop iteration for 24 hours.",
                     config=config,
                 )
                 os.system("sudo reboot")
@@ -271,10 +271,10 @@ def run() -> None:
                 if time.time() > ebo.next_try_timer():
                     ebo.set_next_timer()
                     # reinitialize all hardware interfaces
-                    logger.info("performing hardware reset", config=config)
+                    logger.info("Performing hardware reset.", config=config)
                     hardware_interface.teardown()
                     hardware_interface.reinitialize(config)
-                    logger.info("hardware reset was successful", config=config)
+                    logger.info("Hardware reset was successful.", config=config)
 
             except Exception as e:
                 logger.exception(
