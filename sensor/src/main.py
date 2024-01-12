@@ -36,7 +36,7 @@ def run() -> None:
         raise e
 
     logger.info(
-        f"started new automation process with PID {os.getpid()}",
+        f"started new automation process with SW version {config.version} and PID {os.getpid()}",
         config=config,
     )
 
@@ -181,7 +181,6 @@ def run() -> None:
             new_config_message = procedures.MQTTAgent.get_config_message()
 
             if new_config_message is not None:
-
                 # run config update procedure
                 logger.info("running configuration procedure", config=config)
                 try:
