@@ -108,12 +108,12 @@ class WindSensorInterface:
             self.wind_measurement = custom_types.WindSensorData(
                 direction_min=min([m.direction_min for m in wind_measurements]),
                 direction_avg=utils.functions.avg_list(
-                    [m.direction_avg for m in wind_measurements]
+                    [m.direction_avg for m in wind_measurements], 1
                 ),
                 direction_max=max([m.direction_max for m in wind_measurements]),
                 speed_min=min([m.speed_min for m in wind_measurements]),
                 speed_avg=utils.functions.avg_list(
-                    [m.speed_avg for m in wind_measurements]
+                    [m.speed_avg for m in wind_measurements], 1
                 ),
                 speed_max=max([m.speed_max for m in wind_measurements]),
                 last_update_time=[m.last_update_time for m in wind_measurements][-1],
