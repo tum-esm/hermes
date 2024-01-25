@@ -1,14 +1,46 @@
 {
-    "version": "0.2.2-beta.3",
+    "version": "0.2.2-beta.4",
+    "verbose_logging": false,
+    "hardware": {
+        "pumped_litres_per_round": 0.000833,
+        "gmp343_optics_heating": true,
+        "gmp343_linearisation": true,
+        "gmp343_temperature_compensation": true,
+        "gmp343_relative_humidity_compensation": true,
+        "gmp343_pressure_compensation": true,
+        "gmp343_oxygen_compensation": true,
+        "gmp343_filter_seconds_averaging": 10,
+        "gmp343_filter_smoothing_factor": 0,
+        "gmp343_filter_median_measurements": 0
+    },
     "active_components": {
-        "run_calibration_procedures": true,
-        "send_messages_over_mqtt": true
+        "run_calibration_procedures": false,
+        "send_messages_over_mqtt": true,
+        "run_pump_speed_monitoring": false,
+        "ignore_missing_air_inlet_sensor": false
+    },
+    "measurement": {
+        "timing": {
+            "seconds_per_measurement_interval": 120,
+            "seconds_per_measurement": 10,
+            "pumped_litres_per_minute": 0.5
+        },
+        "air_inlets": [
+            {
+                "valve_number": 1,
+                "direction": 0,
+                "tube_length": 50
+            }
+        ],
+        "average_air_inlet_measurements": 15
     },
     "calibration": {
-        "average_air_inlet_measurements": 15,
-        "calibration_frequency_days": 1,
-        "calibration_hour_of_day": 3,
-        "gas_cylinders": [
+        "timing": {
+            "start_timestamp": 1682503200,
+            "hours_between_calibrations": 25,
+            "seconds_per_gas_bottle": 600
+        },
+        "gases": [
             {
                 "valve_number": 2,
                 "bottle_id": "999"
@@ -18,19 +50,6 @@
                 "bottle_id": "998"
             }
         ],
-        "sampling_per_cylinder_seconds": 600,
-        "system_flushing_pump_pwm_duty_cycle": 0.5,
-        "system_flushing_seconds": 300
-
-
-    },
-    "hardware": {
-        "pump_pwm_duty_cycle": 0.15
-    },
-    "measurement": {
-        "average_air_inlet_measurements": 15,
-        "procedure_seconds": 120,
-        "sensor_frequency_seconds": 10,
-        "valve_number": 1
+        "average_air_inlet_measurements": 15
     }
 }
