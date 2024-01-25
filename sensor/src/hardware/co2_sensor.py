@@ -310,7 +310,7 @@ class CO2SensorInterface:
         time.sleep(0.1)
         self._set_sensor_parameter(parameter="range", value=1)
         time.sleep(0.1)
-        setting = self.config.hardware.gmp343_temperature_compensation
+        setting = self.config.hardware.gmp343_optics_heating
         self._send_command_to_sensor(command=f"heat {'on' if setting else 'off'}")
         time.sleep(0.1)
         setting = self.config.hardware.gmp343_linearisation
