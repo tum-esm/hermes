@@ -38,7 +38,6 @@
     "measurement": {
         "average_air_inlet_measurements": 15,
         "procedure_seconds": 120,
-        "sensor_frequency_seconds": 10,
         "valve_number": 1
     }
 }
