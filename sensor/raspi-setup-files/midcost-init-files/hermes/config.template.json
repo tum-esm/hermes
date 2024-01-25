@@ -2,7 +2,16 @@
     "version": "0.0.0-beta.0",
     "verbose_logging": false,
     "hardware": {
-        "pumped_litres_per_round": 0.000833
+        "pumped_litres_per_round": 0.000833,
+        "gmp343_optics_heating": true,
+        "gmp343_linearisation": true,
+        "gmp343_temperature_compensation": true,
+        "gmp343_relative_humidity_compensation": true,
+        "gmp343_pressure_compensation": true,
+        "gmp343_oxygen_compensation": true,
+        "gmp343_filter_seconds_averaging": 10,
+        "gmp343_filter_smoothing_factor": 0,
+        "gmp343_filter_median_measurements": 0
     },
     "active_components": {
         "run_calibration_procedures": false,

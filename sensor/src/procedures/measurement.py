@@ -23,9 +23,10 @@ class WindMeasurementProcedure:
 
     def _read_latest_wind_sensor_communication(self) -> None:
         # wind measurement
-        self.wind_data, self.device_info = (
-            self.hardware_interface.wind_sensor.get_current_sensor_measurement()
-        )
+        (
+            self.wind_data,
+            self.device_info,
+        ) = self.hardware_interface.wind_sensor.get_current_sensor_measurement()
 
     def _send_latest_wind_sensor_communication(self) -> None:
         """
@@ -146,7 +147,9 @@ class CO2MeasurementProcedure:
         """
         1. collect and send CO2 measurements in 10s intervals for 2 minutes
         """
-        self.logger.info(f"starting {self.config.measurement.procedure_seconds} seconds long CO2 measurement interval")
+        self.logger.info(
+            f"starting {self.config.measurement.procedure_seconds} seconds long CO2 measurement interval"
+        )
         measurement_procedure_start_time = time.time()
 
         # log the current CO2 sensor device info
@@ -159,7 +162,7 @@ class CO2MeasurementProcedure:
             state = utils.StateInterface.read()
             # idle until next measurement period
             seconds_to_wait_for_next_measurement = max(
-                self.config.measurement.sensor_frequency_seconds
+                self.config.hardware.gmp343_filter_seconds_averaging
                 - (time.time() - self.last_measurement_time),
                 0,
             )
