@@ -158,7 +158,11 @@ class CalibrationProcedure:
         )
 
         # save last calibration time
-        self.logger.debug("finished calibration: updating state")
+        self.logger.debug("updating state")
+        self.logger.info(
+            f"finished calibration procedure at timestamp {datetime.utcnow().timestamp()}",
+            config=self.config,
+        )
         state = utils.StateInterface.read()
         state.last_calibration_time = calibration_time
         utils.StateInterface.write(state)
