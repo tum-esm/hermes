@@ -42,6 +42,15 @@ class CalibrationConfig(pydantic.BaseModel):
 
 class HardwareConfig(pydantic.BaseModel):
     pump_pwm_duty_cycle: float = pydantic.Field(ge=0, le=1)
+    gmp343_optics_heating: bool
+    gmp343_linearisation: bool
+    gmp343_temperature_compensation: bool
+    gmp343_relative_humidity_compensation: bool
+    gmp343_pressure_compensation: bool
+    gmp343_oxygen_compensation: bool
+    gmp343_filter_seconds_averaging: int = pydantic.Field(..., ge=0, le=60)
+    gmp343_filter_smoothing_factor: int = pydantic.Field(..., ge=0, le=255)
+    gmp343_filter_median_measurements: int = pydantic.Field(..., ge=0, le=13)
 
     class Config:
         extra = "forbid"
@@ -53,7 +62,6 @@ class HardwareConfig(pydantic.BaseModel):
 class MeasurementConfig(pydantic.BaseModel):
     average_air_inlet_measurements: int
     procedure_seconds: int = pydantic.Field(..., ge=10, le=7200)
-    sensor_frequency_seconds: int = pydantic.Field(..., ge=1, le=300)
     valve_number: Literal[1, 2, 3, 4]
 
     class Config:

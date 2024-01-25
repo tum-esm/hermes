@@ -84,7 +84,6 @@ class CO2SensorInterface:
         median: int = 0,
         average: int = 10,
         smooth: int = 0,
-        linear: bool = True,
     ) -> None:
         """update the filter settings on the CO2 probe"""
 
@@ -291,6 +290,7 @@ class CO2SensorInterface:
     def _reset_sensor(self) -> None:
         """reset the sensors default settings by turning it off and on and
         sending the initial settings again"""
+        setting: bool = False
 
         self.logger.info("Initializing the sensor with measurement settings.")
 
@@ -310,26 +310,34 @@ class CO2SensorInterface:
         time.sleep(0.1)
         self._set_sensor_parameter(parameter="range", value=1)
         time.sleep(0.1)
-        self._send_command_to_sensor(command="heat on")
+        setting = self.config.hardware.gmp343_temperature_compensation
+        self._send_command_to_sensor(command=f"heat {'on' if setting else 'off'}")
         time.sleep(0.1)
-        self._send_command_to_sensor(command="linear on")
+        setting = self.config.hardware.gmp343_linearisation
+        self._send_command_to_sensor(command=f"linear {'on' if setting else 'off'}")
         time.sleep(0.1)
         self._send_command_to_sensor(
             command='form CO2RAWUC CO2RAW CO2 T " (R C C+F T)"'
         )
         time.sleep(0.1)
-        self._send_command_to_sensor(command="tc on")
+        setting = self.config.hardware.gmp343_temperature_compensation
+        self._send_command_to_sensor(command=f"tc {'on' if setting else 'off'}")
         time.sleep(0.1)
-        self._send_command_to_sensor(command="rhc on")
+        setting = self.config.hardware.gmp343_relative_humidity_compensation
+        self._send_command_to_sensor(command=f"rhc {'on' if setting else 'off'}")
         time.sleep(0.1)
-        self._send_command_to_sensor(command="pc on")
+        setting = self.config.hardware.gmp343_pressure_compensation
+        self._send_command_to_sensor(command=f"pc {'on' if setting else 'off'}")
         time.sleep(0.1)
-        self._send_command_to_sensor(command="oc on")
+        setting = self.config.hardware.gmp343_oxygen_compensation
+        self._send_command_to_sensor(command=f"oc {'on' if setting else 'off'}")
         time.sleep(0.1)
 
         # set filter setting
         self.set_filter_setting(
-            average=self.config.measurement.sensor_frequency_seconds
+            median=self.config.hardware.gmp343_filter_median_measurements,
+            average=self.config.hardware.gmp343_filter_seconds_averaging,
+            smooth=self.config.hardware.gmp343_filter_smoothing_factor,
         )
         time.sleep(1)
 
