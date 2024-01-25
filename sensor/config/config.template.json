@@ -1,5 +1,5 @@
 {
-    "version": "0.2.2-beta.4",
+    "version": "0.0.0-beta.0",
     "verbose_logging": false,
     "hardware": {
         "pumped_litres_per_round": 0.000833,
