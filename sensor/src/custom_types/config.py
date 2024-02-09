@@ -40,6 +40,23 @@ class CalibrationConfig(pydantic.BaseModel):
 # -----------------------------------------------------------------------------
 
 
+class DocumentationConfig(pydantic.BaseModel):
+    documentation: str
+    site_name: str
+    site_short_name: str
+    site_observation_since: str
+    inlet_elevation: str
+    last_maintainence_date: str
+    maintainence_comment: str
+    gmp343_sensor_id: str
+
+    class Config:
+        extra = "forbid"
+
+
+# -----------------------------------------------------------------------------
+
+
 class HardwareConfig(pydantic.BaseModel):
     pump_pwm_duty_cycle: float = pydantic.Field(ge=0, le=1)
     gmp343_optics_heating: bool
@@ -80,6 +97,7 @@ class Config(pydantic.BaseModel):
     )  # e.g., "1.2.3" or "99.0.1" or "42.1.0-alpha.6"
     active_components: ActiveComponentsConfig
     calibration: CalibrationConfig
+    documentation: DocumentationConfig
     hardware: HardwareConfig
     measurement: MeasurementConfig
 

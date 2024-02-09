@@ -23,6 +23,15 @@
         "system_flushing_seconds": 300
 
     },
+    "documentation": {
+        "site_name": "...",
+        "site_short_name": "...",
+        "site_observation_since": "...",
+        "inlet_elevation": "...",
+        "last_maintainence_date": "...",
+        "maintainence_comment": "...",
+        "gmp343_sensor_id": "..."
+    },
     "hardware": {
         "pump_pwm_duty_cycle": 0.13,
         "gmp343_optics_heating": true,
