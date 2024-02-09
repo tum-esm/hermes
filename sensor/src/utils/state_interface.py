@@ -36,6 +36,7 @@ class StateInterface:
             last_calibration_time=None,
             current_config_revision=0,
             offline_since=None,
+            next_calibration_cylinder=0,
         )
         StateInterface.write(new_empty_state)
         return new_empty_state

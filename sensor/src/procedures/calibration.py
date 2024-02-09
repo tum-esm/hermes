@@ -45,24 +45,35 @@ class CalibrationProcedure:
         self.rb_humidity.append(self.air_inlet_sht45_data.humidity)
 
     def _alternate_bottle_for_drying(self) -> None:
-        """1. sets time for drying the air chamber with first calibration bottle
-        2. switches order of calibration bottles every other day"""
+        """
+        1. sets time for drying the air chamber with first calibration bottle
+        2. switches to the next calibration cylinder every other calibration
+        """
 
         # set time extension for first bottle
         self.seconds_drying_with_first_bottle = (
             self.config.calibration.sampling_per_cylinder_seconds
         )
 
-        # alternate order every other day
-        days_since_unix = (datetime.now().date() - datetime(1970, 1, 1).date()).days
-        alternate_order = days_since_unix % 2 == 1
+        # read latest state
+        state = utils.StateInterface.read()
 
-        if alternate_order:
-            self.sequence_calibration_bottle = self.config.calibration.gas_cylinders[
-                ::-1
-            ]
+        current_position = state.next_calibration_cylinder
+
+        if current_position + 1 < len(self.config.calibration.gas_cylinders):
+            next_position = current_position + 1
         else:
-            self.sequence_calibration_bottle = self.config.calibration.gas_cylinders
+            next_position = 0
+
+        # update state config
+        state.next_calibration_cylinder = next_position
+        utils.StateInterface.write(state)
+
+        # update sequence
+        before_position = self.config.calibration.gas_cylinders[:current_position]
+        after_position = self.config.calibration.gas_cylinders[:current_position:]
+
+        self.sequence_calibration_bottle = after_position + before_position
 
     def run(self) -> None:
         state = utils.StateInterface.read()
