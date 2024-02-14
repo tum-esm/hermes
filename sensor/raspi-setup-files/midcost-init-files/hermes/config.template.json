@@ -11,11 +11,11 @@
         "gas_cylinders": [
             {
                 "valve_number": 2,
-                "bottle_id": "999"
+                "bottle_id": "..."
             },
             {
                 "valve_number": 3,
-                "bottle_id": "998"
+                "bottle_id": "..."
             }
         ],
         "sampling_per_cylinder_seconds": 600,
