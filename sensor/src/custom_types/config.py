@@ -41,7 +41,6 @@ class CalibrationConfig(pydantic.BaseModel):
 
 
 class DocumentationConfig(pydantic.BaseModel):
-    documentation: str
     site_name: str
     site_short_name: str
     site_observation_since: str
