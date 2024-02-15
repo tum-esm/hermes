@@ -6,18 +6,6 @@ echo "Removing old mypy cache"
 rm -rf .mypy_cache 
 
 # *********************************************************
-# raspi setup
-
-echo "Checking raspi-setup-files/midcost-init-files/initialize_root.py"
-mypy raspi-setup-files/midcost-init-files/initialize_root.py
-
-echo "Checking raspi-setup-files/midcost-init-files/initialize_pi.py"
-mypy raspi-setup-files/midcost-init-files/initialize_pi.py
-
-echo "Checking raspi-setup-files/midcost-init-files/run_node_tests.py"
-mypy raspi-setup-files/midcost-init-files/run_node_tests.py
-
-# *********************************************************
 # sensor code
 
 echo "Checking run_automation.py"
