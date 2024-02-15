@@ -39,14 +39,6 @@ sudo dd of=/dev/disk4 if=/.../hermes-version.img bs=4M status=progress
 
 # Initial setup
 
-
-## Raspberry Pi Setup (`raspi-setup-files/`)
-
-- Use **Raspberry Pi Imager** (https://www.raspberrypi.com/software/) to flash the **Raspberry Pi OS 64-Bit** on the SD card.
-- In settings set hostname, set ssh key access, configure, maintainence wifi, timezone.
-- Start up the RaspberryPi once with the new SD card and confirm the SSH access
-- Prepare the RaspberryPi setup files by filling in some of the template/example files
-
 ```
 📁 boot-files/
 
@@ -60,10 +52,20 @@ sudo dd of=/dev/disk4 if=/.../hermes-version.img bs=4M status=progress
             📄 .bashrc
             📄 crontab
             📄 config.txt
-            
-        
-
 ```
+
+<br/>
+
+## Raspberry Pi Setup
+
+
+
+- Use **Raspberry Pi Imager** (https://www.raspberrypi.com/software/) to flash the **Raspberry Pi OS 64-Bit** on the SD card.
+- In settings set hostname, set ssh key access, configure, maintainence wifi, timezone.
+- Start up the RaspberryPi once with the new SD card and confirm the SSH access
+- Prepare the RaspberryPi setup files by filling in some of the template/example files
+
+
 
 ```
 - Copy all files from the `raspi-setup-files/` on the SD card (`bootfs`). The files should end up in `/boot/firmware`.
