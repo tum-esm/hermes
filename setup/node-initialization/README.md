@@ -1,62 +1,95 @@
-# Clone existing system setup
+# Table of contents
+1. [Clone existing system setup](#paragraph1)
+   1. [Copy from SD Card to MacOS](#subparagraph1)
+   2. [Copy From MacOS to SD Card](#subparagraph2)
+2. [Initial setup](#paragraph2)
+   1. [Raspberry Pi Setup](#subparagraph2)
+   2. [How the Raspi's run this code](#subparagraph2)
+3. [Set up LTE Hat](#paragraph3)
+   1. [Configure modem](#subparagraph5)
+   2. [Install Driver](#subparagraph6)
+
+<br/>
+
+## Clone existing system setup <a name="paragraph1"></a>
 
 
-### Copy from SD Card to MacOS
+### Copy from SD Card to MacOS <a name="subparagraph1"></a>
 
+- Set current_revision to 0
+```
+/home/pi/Documents/hermes/%VERSION%/config/state.json 
+```
+
+- Identify the correct volume
 ```
 diskutil list
 ```
 
-Identify the correct volume
+- Dismount volume
 ```
 diskutil umount /dev/disk*
 ```
 
-Start image creation from SD Card
+- Start image creation from SD Card
 ```
-udo dd if=/dev/disk4 of=/.../hermes-version.img bs=4M status=progress
+sudo dd if=/dev/disk4 of=/.../hermes-version.img bs=4M status=progress
 ```
 
 <br/>
 
-### Copy From MacOS to SD Card
+### Copy From MacOS to SD Card <a name="subparagraph2"></a>
 
+- Identify the correct volume
 ```
 diskutil list
 ```
 
-Identify the correct volume
+- Dismount volume
 ```
 diskutil umount /dev/disk*
 ```
 
-Transfer existing image to SD Card
+- Transfer existing image to SD Card
 ```
 sudo dd of=/dev/disk4 if=/.../hermes-version.img bs=4M status=progress
 ```
 
-<br/>
+Insert the SD Card into the new node system. Connect to the RaspberryPi over SSH:
 
-# Initial setup
-
+- Set the HERMES_MQTT_IDENTIFIER for the new node
 ```
-📁 boot-files/
+/home/pi/Documents/hermes/%VERSION%/config/.env 
+```
 
-    📁 midcost-init-files/
-
-        📁 hermes/
-            📄 .env.example
-            📄 config.template.json
-
-        📁 raspberrypi/
-            📄 .bashrc
-            📄 crontab
-            📄 config.txt
+- RaspberryPi Hostname
+  
+```
+sudo raspi-config
+1 System Options / S4 Hostname
+reboot
 ```
 
 <br/>
 
-## Raspberry Pi Setup
+## Initial setup <a name="paragraph2"></a>
+
+```
+📁 node-initialization/
+
+    📁 hermes/
+        📄 .env.example
+        📄 config.template.json
+
+    📁 raspberrypi/
+        📄 .bashrc
+        📄 crontab
+        📄 config.txt
+```
+
+<br/>
+
+### Raspberry Pi Setup <a name="subparagraph3"></a>
 
 
 
@@ -100,9 +133,32 @@ python3 /boot/firmware/midcost-init-files/run_node_tests.py
 
 <br/>
 
-## Set up LTE Hat
+### How the Raspi's run this code <a name="subparagraph4"></a>
 
-### Configure modem
+- The sensor code is at `~/Documents/hermes/%VERSION%` 
+- Note: Only the files from /sensor directory are kept on the RaspberryPi.
+- The _crontab_ starts the automation every 2 minutes via the CLI
+- Note: `~/Documents/hermes/hermes-cli.sh` always points to the latest version of Hermes
+
+```bash
+#!/bin/bash
+
+set -o errexit
+
+/home/pi/Documents/hermes/%VERSION%/.venv/bin/python /home/pi/Documents/hermes/%VERSION%/cli/main.py $*
+```
+
+The `~/.bashrc` file contains an alias for the CLI:
+
+```bash
+alias hermes-cli="bash /home/pi/Documents/hermes/hermes-cli.sh"
+```
+
+<br/>
+
+## Set up LTE Hat <a name="paragraph3"></a>
+
+### Configure modem <a name="subparagraph5"></a>
 
 ```bash
 # open modem interface
@@ -141,7 +197,7 @@ AT+CPSI? #return IMEI
 
 <br/>
 
-### Install Driver 
+### Install Driver <a name="subparagraph6"></a>
 
 ```bash
 # download and install driver
@@ -172,25 +228,6 @@ sudo udhcpc -i wwan0
 
 <br/>
 
-## How the Raspi's run this code
 
-- The sensor code is at `~/Documents/hermes/%VERSION%` 
-- Note: Only the files from /sensor directory are kept on the RaspberryPi.
-- The _crontab_ starts the automation every 2 minutes via the CLI
-- Note: `~/Documents/hermes/hermes-cli.sh` always points to the latest version of Hermes
-
-```bash
-#!/bin/bash
-
-set -o errexit
-
-/home/pi/Documents/hermes/%VERSION%/.venv/bin/python /home/pi/Documents/hermes/%VERSION%/cli/main.py $*
-```
-
-The `~/.bashrc` file contains an alias for the CLI:
-
-```bash
-alias hermes-cli="bash /home/pi/Documents/hermes/hermes-cli.sh"
-```
 
 
