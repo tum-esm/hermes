@@ -74,12 +74,29 @@ reboot
 
 ## Initial setup <a name="paragraph2"></a>
 
+
+<br/>
+
+### Inital System Setup <a name="subparagraph3"></a>
+
+
+#### Raspberry Pi OS Setup
+- Download **Raspberry Pi Imager** (https://www.raspberrypi.com/software/) 
+- Flash the **Raspberry Pi OS 64-Bit** on a SD card
+- In settings set hostname, set ssh key access, timezone, wifi (optional)
+
+<br/>
+
+#### Hermes Setup
+
+- Open `hermes-template/.env.template`, fill and rename to `.env` 
+- Copy everything in `/node-initialization/` on the SD card (`bootfs`) 
+- Confirm that the files are present at `/boot/firmware`
 ```
 📁 /boot/firmware/
 
     📁 hermes-templates/
         📄 .env.
-        📄 config.json
         📄 hermes-cli.template.sh
 
     📁 system-setup-files/
@@ -92,22 +109,9 @@ reboot
 
     📄 config.txt
 ```
-
-<br/>
-
-### Inital System Setup <a name="subparagraph3"></a>
-
-
-#### Raspberry Pi Setup
-- Download **Raspberry Pi Imager** (https://www.raspberrypi.com/software/) 
-- Flash the **Raspberry Pi OS 64-Bit** on a SD card
-- In settings set hostname, set ssh key access, timezone, wifi (optional)
-- Open `hermes-template/.env.template`, fill and rename to `.env` 
-- Copy everything in `/node-initialization/` on the SD card (`bootfs`) 
-- Confirm that the files are present at `/boot/firmware`
-- Start up the RaspberryPi with the new SD card and confirm the SSH access
-
-<br/>
+- Insert SD Card into RaspberryPi
+- Confirm the SSH access
+- Execute via terminal
 
 ```bash
 # test network connection
