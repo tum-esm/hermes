@@ -22,7 +22,7 @@ udo dd if=/dev/disk4 of=/.../hermes-version.img bs=4M status=progress
 ### Copy From MacOS to SD Card
 
 ```
-diskutil list → identify volume
+diskutil list
 ```
 
 Identify the correct volume
@@ -39,7 +39,6 @@ sudo dd of=/dev/disk4 if=/.../hermes-version.img bs=4M status=progress
 
 # Initial setup
 
-<br/>
 
 ## Raspberry Pi Setup (`raspi-setup-files/`)
 
