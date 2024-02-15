@@ -75,35 +75,39 @@ reboot
 ## Initial setup <a name="paragraph2"></a>
 
 ```
-📁 node-initialization/
+📁 /boot/firmware/
 
-    📁 hermes/
-        📄 .env.example
-        📄 config.template.json
+    📁 hermes-templates/
+        📄 .env.
+        📄 config.json
+        📄 hermes-cli.template.sh
 
-    📁 raspberrypi/
+    📁 system-setup-files/
         📄 .bashrc
         📄 crontab
-        📄 config.txt
+        📄 initialize_pi.py
+        📄 initialize_root.py
+        📄 run_node_tests.py
+        📄 utils.py
+
+    📄 config.txt
 ```
 
 <br/>
 
-### Raspberry Pi Setup <a name="subparagraph3"></a>
+### Inital System Setup <a name="subparagraph3"></a>
 
 
+#### Raspberry Pi Setup
+- Download **Raspberry Pi Imager** (https://www.raspberrypi.com/software/) 
+- Flash the **Raspberry Pi OS 64-Bit** on a SD card
+- In settings set hostname, set ssh key access, timezone, wifi (optional)
+- Open `hermes-template/.env.template`, fill and rename to `.env` 
+- Copy everything in `/node-initialization/` on the SD card (`bootfs`) 
+- Confirm that the files are present at `/boot/firmware`
+- Start up the RaspberryPi with the new SD card and confirm the SSH access
 
-- Use **Raspberry Pi Imager** (https://www.raspberrypi.com/software/) to flash the **Raspberry Pi OS 64-Bit** on the SD card.
-- In settings set hostname, set ssh key access, configure, maintainence wifi, timezone.
-- Start up the RaspberryPi once with the new SD card and confirm the SSH access
-- Prepare the RaspberryPi setup files by filling in some of the template/example files
-
-
-
-```
-- Copy all files from the `raspi-setup-files/` on the SD card (`bootfs`). The files should end up in `/boot/firmware`.
-- Eject the SD card and insert it into the RaspberryPi.
-- Connect to the RaspberryPi via SSH.
+<br/>
 
 ```bash
 # test network connection
@@ -125,11 +129,22 @@ python3 /boot/firmware/midcost-init-files/initialize_pi.py
 
 # reboot
 sudo reboot
+```
+
+<br/>
+
+#### Hermes Setup
+
+
+```
+# =============================================================================
+# INSTALL HERMES
+
 
 # test the initial installation
 python3 /boot/firmware/midcost-init-files/run_node_tests.py
-
 ```
+
 
 <br/>
 
