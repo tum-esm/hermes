@@ -75,8 +75,6 @@ reboot
 ## Initial system setup <a name="paragraph2"></a>
 
 
-<br/>
-
 ### Inital System Setup <a name="subparagraph3"></a>
 
 
