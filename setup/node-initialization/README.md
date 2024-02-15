@@ -227,15 +227,19 @@ sudo route add -net 0.0.0.0 wwan0
 
 # test connection
 ping -I wwan0 www.google.de
+```
 
-# add lines to rc.local
+Add lines to rc.local
+
+`sudo /home/pi/SIM8200_for_RPI/Goonline/simcom-cm &` <br/>
+`sudo udhcpc -i wwan0`
+```
 sudo nano /etc/rc.local
 ```
 
-```bash
-sudo /home/pi/SIM8200_for_RPI/Goonline/simcom-cm &
-sudo udhcpc -i wwan0
-```
+
+
+
 
 <br/>
 
