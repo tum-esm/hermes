@@ -88,7 +88,7 @@ reboot
 #### Hermes Setup
 
 - Open `hermes-template/.env.template`, fill and rename to `.env` 
-- Copy everything in `/node-initialization/` on the SD card (`bootfs`) 
+- Copy everything in `/sensor-node-initialization/` on the SD card (`bootfs`) 
 - Confirm that the files are present at `/boot/firmware`
 ```
 📁 /boot/firmware/
