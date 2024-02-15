@@ -1,4 +1,45 @@
-# Configuration
+# Clone existing system setup
+
+
+### Copy from SD Card to MacOS
+
+```
+diskutil list
+```
+
+Identify the correct volume
+```
+diskutil umount /dev/disk*
+```
+
+Start image creation from SD Card
+```
+udo dd if=/dev/disk4 of=/.../hermes-version.img bs=4M status=progress
+```
+
+<br/>
+
+### Copy From MacOS to SD Card
+
+```
+diskutil list → identify volume
+```
+
+Identify the correct volume
+```
+diskutil umount /dev/disk*
+```
+
+Transfer existing image to SD Card
+```
+sudo dd of=/dev/disk4 if=/.../hermes-version.img bs=4M status=progress
+```
+
+<br/>
+
+# Initial setup
+
+<br/>
 
 ## Raspberry Pi Setup (`raspi-setup-files/`)
 
@@ -15,31 +56,16 @@
         📁 hermes/
             📄 .env.example
             📄 config.template.json
-            📄 hostname_to_mqtt_id.template.json
-```
 
-The `raspi-setup-files/` should contain the following files:
-
-```
-📁 boot-files/
-
-    📄 config.txt
-
-    📁 midcost-init-files/
-
-        📄 initialize_root.py
-        📄 initialize_pi.py
-        📄 run_node_tests.py
-
-        📁 hermes/
-            📄 .env
-            📄 config.json
-            📄 hermes-cli.template.sh
-            📄 hostname_to_mqtt_id.json
-
-        📁 system/
+        📁 raspberrypi/
             📄 .bashrc
             📄 crontab
+            📄 config.txt
+            
+        
+
+```
+
 ```
 - Copy all files from the `raspi-setup-files/` on the SD card (`bootfs`). The files should end up in `/boot/firmware`.
 - Eject the SD card and insert it into the RaspberryPi.
@@ -112,7 +138,9 @@ AT+CGREG?
 AT+CPSI? #return IMEI
 ```
 
-## Install Driver 
+<br/>
+
+### Install Driver 
 
 ```bash
 # download and install driver
@@ -142,7 +170,6 @@ sudo udhcpc -i wwan0
 ```
 
 <br/>
-
 
 ## How the Raspi's run this code
 
