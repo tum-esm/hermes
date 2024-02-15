@@ -4,7 +4,7 @@
    2. [Copy From MacOS to SD Card](#subparagraph2)
 2. [Initial setup](#paragraph2)
    1. [Raspberry Pi Setup](#subparagraph2)
-   2. [How the Raspi's run this code](#subparagraph2)
+   2. [How the Raspberry Pi runs this code](#subparagraph2)
 3. [Set up LTE Hat](#paragraph3)
    1. [Configure modem](#subparagraph5)
    2. [Install Driver](#subparagraph6)
@@ -146,7 +146,7 @@ python3 /boot/firmware/system-setup-files/run_node_tests.py
 
 <br/>
 
-### How the Raspi's run this code <a name="subparagraph4"></a>
+### How the Raspberry Pi runs this code <a name="subparagraph4"></a>
 
 - The sensor code is at `~/Documents/hermes/%VERSION%` 
 - Note: Only the files from /sensor directory are kept on the RaspberryPi.
