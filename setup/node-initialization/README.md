@@ -2,7 +2,7 @@
 1. [Clone existing system setup](#paragraph1)
    1. [Copy from SD Card to MacOS](#subparagraph1)
    2. [Copy From MacOS to SD Card](#subparagraph2)
-2. [Initial setup](#paragraph2)
+2. [Initial system setup](#paragraph2)
    1. [Raspberry Pi Setup](#subparagraph2)
    2. [How the Raspberry Pi runs this code](#subparagraph2)
 3. [Set up LTE Hat](#paragraph3)
@@ -72,7 +72,7 @@ reboot
 
 <br/>
 
-## Initial setup <a name="paragraph2"></a>
+## Initial system setup <a name="paragraph2"></a>
 
 
 <br/>
