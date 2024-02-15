@@ -24,7 +24,7 @@ assert run_shell_command("whoami") == "pi", "please run this script as the PI us
 
 print("EXTENDING BASHRC FILE")
 
-with open("/boot/firmware/rpi-setup/system-setup-files/.bashrc", "r") as f:
+with open("/boot/firmware/system-setup-files/.bashrc", "r") as f:
     new_bashrc_lines = [l for l in f.read().split("\n") if (not l.startswith("#"))]
 with open("/home/pi/.bashrc", "r") as f:
     current_bashrc_content = f.read()

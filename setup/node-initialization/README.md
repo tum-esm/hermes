@@ -124,8 +124,8 @@ sudo ./configure --enable-optimizations --with-openssl
 sudo make altinstall
 
 # initialize the node
-sudo python3 /boot/firmware/midcost-init-files/initialize_root.py
-python3 /boot/firmware/midcost-init-files/initialize_pi.py
+sudo python3 /boot/firmware/system-setup-files/initialize_root.py
+python3 /boot/firmware/system-setup-files/initialize_pi.py
 
 # reboot
 sudo reboot
@@ -133,16 +133,10 @@ sudo reboot
 
 <br/>
 
-#### Hermes Setup
-
+#### Test Hermes Setup
 
 ```
-# =============================================================================
-# INSTALL HERMES
-
-
-# test the initial installation
-python3 /boot/firmware/midcost-init-files/run_node_tests.py
+python3 /boot/firmware/system-setup-files/run_node_tests.py
 ```
 
 
