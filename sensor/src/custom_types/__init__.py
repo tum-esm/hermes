@@ -1,4 +1,4 @@
-from .config import Config
+from .config import Config, CalibrationGasConfig
 
 from .mqtt_sending import (
     # config and queue files
