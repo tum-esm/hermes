@@ -70,6 +70,8 @@ class CalibrationProcedure:
         utils.StateInterface.write(state)
 
         # update sequence
+
+        # 2 calibration cylinders
         if len(self.config.calibration.gas_cylinders) == 2:
             if current_position == 0:
                 return self.config.calibration.gas_cylinders
@@ -79,6 +81,7 @@ class CalibrationProcedure:
                     self.config.calibration.gas_cylinders[0],
                 ]
 
+        # 3 calibration cylinders
         if len(self.config.calibration.gas_cylinders) == 3:
             if current_position == 0:
                 return self.config.calibration.gas_cylinders
@@ -94,6 +97,9 @@ class CalibrationProcedure:
                     self.config.calibration.gas_cylinders[1],
                     self.config.calibration.gas_cylinders[0],
                 ]
+
+        # 1 or 4+ calibration cylinders
+        return self.config.calibration.gas_cylinders
 
     def run(self) -> None:
         state = utils.StateInterface.read()
