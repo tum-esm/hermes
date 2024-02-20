@@ -9,15 +9,10 @@ from .ups import UPSInterface
 from .valves import ValveInterface
 from .wind_sensor import WindSensorInterface
 
-# global lock over all software versions
-hardware_lock = filelock.FileLock(
-    "/home/pi/Documents/hermes/hermes-hardware.lock", timeout=5
-)
-
 
 class HardwareInterface:
     class HardwareOccupiedException(Exception):
-        """raise when trying to use the hardware but it
+        """raise when trying to use the hardware, but it
         is used by another process"""
 
     def __init__(
@@ -25,6 +20,7 @@ class HardwareInterface:
         config: custom_types.Config,
         testing: bool = False,
     ) -> None:
+        self.hardware_lock = filelock.FileLock(config.hardware_lockfile_path, timeout=5)
         self.config = config
         self.logger = utils.Logger(
             "hardware-interface",
@@ -62,7 +58,7 @@ class HardwareInterface:
         """ends all hardware/system connections"""
         self.logger.info("running hardware teardown")
 
-        if not hardware_lock.is_locked:
+        if not self.hardware_lock.is_locked:
             self.logger.info("not tearing down due to disconnected hardware")
             return
 
@@ -80,7 +76,7 @@ class HardwareInterface:
         self.ups.teardown()
 
         # release lock
-        hardware_lock.release()
+        self.hardware_lock.release()
 
     def reinitialize(self, config: custom_types.Config) -> None:
         """reinitialize after an unsuccessful update"""
@@ -109,7 +105,7 @@ class HardwareInterface:
     def acquire_hardare_lock(self) -> None:
         """make sure that there is only one initialized hardware connection"""
         try:
-            hardware_lock.acquire()
+            self.hardware_lock.acquire()
         except filelock.Timeout:
             raise HardwareInterface.HardwareOccupiedException(
                 "hardware occupied by another process"

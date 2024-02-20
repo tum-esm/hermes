@@ -99,6 +99,7 @@ class Config(pydantic.BaseModel):
     documentation: DocumentationConfig
     hardware: HardwareConfig
     measurement: MeasurementConfig
+    hardware_lockfile_path: str
 
     class Config:
         extra = "forbid"
