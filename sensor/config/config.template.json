@@ -1,6 +1,5 @@
 {
     "version": "0.2.3-beta.1",
-    "hardware_lockfile_path": "/home/pi/Documents/hermes/hermes-hardware.lock",
     "active_components": {
         "run_calibration_procedures": false,
         "send_messages_over_mqtt": true

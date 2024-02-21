@@ -1,3 +1,5 @@
+import os
+
 import filelock
 from src import custom_types, utils
 
@@ -20,7 +22,7 @@ class HardwareInterface:
         config: custom_types.Config,
         testing: bool = False,
     ) -> None:
-        self.hardware_lock = filelock.FileLock(config.hardware_lockfile_path, timeout=5)
+        self.hardware_lock = filelock.FileLock(os.environ.get("HARDWARE_LOCKFILE_PATH") or "/home/pi/Documents/hermes/hermes-hardware.lock", timeout=5)
         self.config = config
         self.logger = utils.Logger(
             "hardware-interface",
