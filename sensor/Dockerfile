@@ -18,6 +18,7 @@ COPY pyproject.toml .
 COPY README.md .
 
 # install dependencies through poetry
+RUN poetry config installer.max-workers 1
 RUN poetry install --with=dev
 
 # copy source directories
@@ -31,8 +32,5 @@ COPY tests ./tests
 
 COPY run_automation.py .
 COPY config/config.template.json ./config/config.json
-
-# overwrite values from the template config.json
-RUN jq '.hardware_lockfile_path = "/root/hermes-hardware.lock"' ./config/config.json | sponge ./config/config.json
 
 ENTRYPOINT ["/root/.venv/bin/python3.9", "/root/run_automation.py"]
