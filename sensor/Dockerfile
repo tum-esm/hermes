@@ -33,4 +33,6 @@ COPY tests ./tests
 COPY run_automation.py .
 COPY config/config.template.json ./config/config.json
 
+RUN echo 'HARDWARE_LOCKFILE_PATH="/root/hermes_hardware.lock"' > ./config/.env
+
 ENTRYPOINT ["/root/.venv/bin/python3.9", "/root/run_automation.py"]
