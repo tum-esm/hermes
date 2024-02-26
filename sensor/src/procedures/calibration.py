@@ -44,7 +44,7 @@ class CalibrationProcedure:
         # Add to ring buffer to calculate moving average of low cost sensor
         self.rb_humidity.append(self.air_inlet_sht45_data.humidity)
 
-    def _alternate_bottle_for_drying(self) -> None:
+    def _alternate_bottle_for_drying(self) -> list[custom_types.CalibrationGasConfig]:
         """
         1. sets time for drying the air chamber with first calibration bottle
         2. switches to the next calibration cylinder every other calibration
@@ -70,10 +70,36 @@ class CalibrationProcedure:
         utils.StateInterface.write(state)
 
         # update sequence
-        before_position = self.config.calibration.gas_cylinders[:current_position]
-        after_position = self.config.calibration.gas_cylinders[:current_position:]
 
-        self.sequence_calibration_bottle = after_position + before_position
+        # 2 calibration cylinders
+        if len(self.config.calibration.gas_cylinders) == 2:
+            if current_position == 0:
+                return self.config.calibration.gas_cylinders
+            if current_position == 1:
+                return [
+                    self.config.calibration.gas_cylinders[1],
+                    self.config.calibration.gas_cylinders[0],
+                ]
+
+        # 3 calibration cylinders
+        if len(self.config.calibration.gas_cylinders) == 3:
+            if current_position == 0:
+                return self.config.calibration.gas_cylinders
+            if current_position == 1:
+                return [
+                    self.config.calibration.gas_cylinders[1],
+                    self.config.calibration.gas_cylinders[2],
+                    self.config.calibration.gas_cylinders[0],
+                ]
+            if current_position == 2:
+                return [
+                    self.config.calibration.gas_cylinders[2],
+                    self.config.calibration.gas_cylinders[1],
+                    self.config.calibration.gas_cylinders[0],
+                ]
+
+        # 1 or 4+ calibration cylinders
+        return self.config.calibration.gas_cylinders
 
     def run(self) -> None:
         state = utils.StateInterface.read()
@@ -94,9 +120,9 @@ class CalibrationProcedure:
 
         # alternate calibration bottle order every other day
         # first bottle receives additional time to dry air chamber
-        self._alternate_bottle_for_drying()
+        sequence_calibration_bottle = self._alternate_bottle_for_drying()
 
-        for gas in self.sequence_calibration_bottle:
+        for gas in sequence_calibration_bottle:
             # switch to each calibration valve
             self.hardware_interface.valves.set_active_input(gas.valve_number)
             calibration_procedure_start_time = time.time()
