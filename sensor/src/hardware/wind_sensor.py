@@ -62,7 +62,7 @@ class WindSensorInterface:
 
         while True:
             answer = self.wxt532_interface.get_messages()
-            if answer == []:
+            if not answer:
                 break
             if (time.time() - start_time) > 5:
                 break
@@ -105,7 +105,8 @@ class WindSensorInterface:
         # min/max/average over all received messages
         if len(wind_measurements) > 0:
             self.logger.info(
-                f"Processed {len(wind_measurements)} wind sensor measurements during the last {self.config.measurement.procedure_seconds} seconds interval."
+                f"Processed {len(wind_measurements)} wind sensor measurements during the last "
+                f"{self.config.measurement.procedure_seconds} seconds interval."
             )
             self.wind_measurement = custom_types.WindSensorData(
                 direction_min=min([m.direction_min for m in wind_measurements]),
@@ -130,7 +131,7 @@ class WindSensorInterface:
         Optional[custom_types.WindSensorStatus],
     ]:
         self._update_current_values()
-        return (self.wind_measurement, self.device_status)
+        return self.wind_measurement, self.device_status
 
     def check_errors(self) -> None:
         """checks whether the wind sensor behaves incorrectly - Possibly

@@ -13,7 +13,7 @@ class RingBuffer:
         self.ring_buffer: list[Any] = []
 
     def append(self, value: Optional[float]) -> None:
-        if value != None:
+        if value is not None:
             if len(self.ring_buffer) < self.size:
                 self.ring_buffer.append(value)
             if len(self.ring_buffer) == self.size:

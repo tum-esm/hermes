@@ -24,6 +24,7 @@ class CalibrationProcedure:
         self.rb_humidity = utils.RingBuffer(
             self.config.calibration.average_air_inlet_measurements
         )
+        self.seconds_drying_with_first_bottle = 0
 
     def _update_air_inlet_parameters(self) -> None:
         """

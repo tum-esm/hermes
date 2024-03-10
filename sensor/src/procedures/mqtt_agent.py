@@ -97,7 +97,7 @@ class MQTTAgent:
             )
 
         # tear down connection on program termination
-        def _graceful_teardown(*args: Any) -> None:
+        def _graceful_teardown(*_args: Any) -> None:
             utils.set_alarm(10, "graceful teardown")
 
             logger.info("starting graceful shutdown")
@@ -133,27 +133,27 @@ class MQTTAgent:
 
         # -----------------------------------------------------------------
 
-        def _publish_record(record: custom_types.SQLMQTTRecord) -> None:
-            record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
+        def _publish_record(_record: custom_types.SQLMQTTRecord) -> None:
+            _record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
 
-            record.content.header.mqtt_topic += {
+            _record.content.header.mqtt_topic += {
                 custom_types.MQTTLogMessage: "logs/",
                 custom_types.MQTTMeasurementMessage: "measurements/",
                 custom_types.MQTTAcknowledgmentMessage: "acknowledgments/",
-            }[type(record.content)]
+            }[type(_record.content)]
 
-            record.content.header.mqtt_topic += mqtt_config.station_identifier
+            _record.content.header.mqtt_topic += mqtt_config.station_identifier
             assert mqtt_client.is_connected(), "mqtt client is not connected anymore"
 
-            payload: list[Any] = [record.content.body.dict()]
+            payload: list[Any] = [_record.content.body.dict()]
 
             message_info = mqtt_client.publish(
-                topic=record.content.header.mqtt_topic,
+                topic=_record.content.header.mqtt_topic,
                 payload=json.dumps(payload),
                 qos=1,
             )
-            current_records[record.internal_id] = message_info
-            record.status = "in-progress"
+            current_records[_record.internal_id] = message_info
+            _record.status = "in-progress"
 
         # -----------------------------------------------------------------
 
@@ -199,22 +199,22 @@ class MQTTAgent:
                 # -----------------------------------------------------------------
                 # SEND PENDING MESSAGES
 
-                MAX_SEND_COUNT = 100
-                OPEN_SENDING_SLOTS = max(
-                    MAX_SEND_COUNT - (len(sent_records) - delivered_record_count), 0
+                max_send_count = 100
+                open_sending_slots = max(
+                    max_send_count - (len(sent_records) - delivered_record_count), 0
                 )
-                if OPEN_SENDING_SLOTS == 0:
+                if open_sending_slots == 0:
                     logger.warning(
-                        f"sending queue is full ({MAX_SEND_COUNT} "
+                        f"sending queue is full ({max_send_count} "
                         + "items not processed by broker yet)"
                     )
 
                 records_to_be_sent = message_queue.get_rows_by_status(
-                    "pending", limit=OPEN_SENDING_SLOTS
+                    "pending", limit=open_sending_slots
                 )
                 if len(records_to_be_sent) > 0:
                     records_to_be_sent = message_queue.get_rows_by_status(
-                        "pending", limit=OPEN_SENDING_SLOTS
+                        "pending", limit=open_sending_slots
                     )
                     for record in records_to_be_sent:
                         _publish_record(record)
@@ -263,8 +263,8 @@ class MQTTAgent:
         logger = utils.Logger(origin="message-communication")
 
         def _f(
-            client: paho.mqtt.client.Client,
-            userdata: Any,
+            _client: paho.mqtt.client.Client,
+            _userdata: Any,
             msg: paho.mqtt.client.MQTTMessage,
         ) -> None:
             logger.info(f"received message on config topic: {msg.payload.decode()}")

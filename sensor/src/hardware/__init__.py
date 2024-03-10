@@ -15,6 +15,16 @@ hardware_lock = filelock.FileLock(
 )
 
 
+def acquire_hardware_lock() -> None:
+    """make sure that there is only one initialized hardware connection"""
+    try:
+        hardware_lock.acquire()
+    except filelock.Timeout:
+        raise HardwareInterface.HardwareOccupiedException(
+            "hardware occupied by another process"
+        )
+
+
 class HardwareInterface:
     class HardwareOccupiedException(Exception):
         """raise when trying to use the hardware, but it
@@ -32,7 +42,7 @@ class HardwareInterface:
             write_to_file=(not testing),
         )
         self.testing = testing
-        self.acquire_hardware_lock()
+        acquire_hardware_lock()
 
         # measurement sensors
         self.wind_sensor = WindSensorInterface(config, testing=self.testing)
@@ -86,7 +96,7 @@ class HardwareInterface:
         """reinitialize after an unsuccessful update"""
         self.config = config
         self.logger.info("running hardware reinitialization")
-        self.acquire_hardware_lock()
+        acquire_hardware_lock()
 
         # measurement sensors
         self.air_inlet_bme280_sensor = BME280SensorInterface(
@@ -105,12 +115,3 @@ class HardwareInterface:
             config, variant="mainboard", testing=self.testing
         )
         self.ups = UPSInterface(config, testing=self.testing)
-
-    def acquire_hardware_lock(self) -> None:
-        """make sure that there is only one initialized hardware connection"""
-        try:
-            hardware_lock.acquire()
-        except filelock.Timeout:
-            raise HardwareInterface.HardwareOccupiedException(
-                "hardware occupied by another process"
-            )

@@ -26,7 +26,7 @@ class SerialCO2SensorInterface:
         Returns the sensor answer as tuple (indicator, answer).
         """
         self.flush_receiver_stream()  # empty input queue
-        self.serial_interface.write((f"{message}\r\n").encode("utf-8"))  # send command
+        self.serial_interface.write(f"{message}\r\n".encode("utf-8"))  # send command
         self.serial_interface.flush()  # wait until data is written
         return self.wait_for_answer(
             expected_regex=expected_regex, timeout=timeout

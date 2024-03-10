@@ -29,9 +29,7 @@ class SHT45SensorInterface:
             try:
                 self.i2c = busio.I2C(board.SCL, board.SDA)
                 self.sht = adafruit_sht4x.SHT4x(self.i2c)
-                self.logger.debug(
-                    f"Found SHT4x with serial number {hex(self.sht.serial_number)}"
-                )
+                self.logger.debug(f"Found SHT4x with serial number {hex(self.sht.serial_number)}")
                 self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
 
                 # sensor didn't raise any issue during connection
@@ -78,7 +76,7 @@ class SHT45SensorInterface:
                 output.humidity = round(relative_humidity, 2)
                 return output
 
-            except Exception as e:
+            except Exception:
                 self.logger.warning(
                     "Problem during sensor readout. Reinitialising sensor communication",
                     config=self.config,

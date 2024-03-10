@@ -161,7 +161,7 @@ class MessageQueue:
         )
         new_message: custom_types.MQTTMessage
 
-        #TODO: refactor
+        # TODO: refactor
         if isinstance(message_body, custom_types.MQTTLogMessageBody):
             new_message = custom_types.MQTTLogMessage(
                 header=new_header, body=message_body

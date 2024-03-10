@@ -90,7 +90,7 @@ class BME280SensorInterface:
                 output.pressure = round(bme280_data.pressure, 2)
                 return output
 
-            except Exception as e:
+            except Exception:
                 self.logger.warning(
                     "Problem during sensor readout. Reinitialising sensor communication.",
                     config=self.config,
@@ -109,7 +109,7 @@ class BME280SensorInterface:
             self.compensation_params = bme280.load_calibration_params(
                 self.bus, self.address
             )
-        except Exception as e:
+        except Exception:
             self.logger.warning(
                 "Could not fetch compensation params.",
             )

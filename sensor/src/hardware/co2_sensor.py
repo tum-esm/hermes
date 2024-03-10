@@ -89,15 +89,9 @@ class CO2SensorInterface:
     ) -> None:
         """update the filter settings on the CO2 probe"""
 
-        assert (
-            average >= 0 and average <= 60
-        ), "invalid calibration setting, average not in [0, 60]"
-        assert (
-            smooth >= 0 and smooth <= 255
-        ), "invalid calibration setting, smooth not in [0, 255]"
-        assert (
-            median >= 0 and median <= 13
-        ), "invalid calibration setting, median not in [0, 13]"
+        assert (0 <= average <= 60),    "invalid calibration setting, average not in [0, 60]"
+        assert (0 <= smooth <= 255),    "invalid calibration setting, smooth not in [0, 255]"
+        assert (0 <= median <= 13),     "invalid calibration setting, median not in [0, 13]"
 
         self._set_sensor_parameter(parameter="average", value=average)
         self._set_sensor_parameter(parameter="smooth", value=smooth)
@@ -177,7 +171,7 @@ class CO2SensorInterface:
         """Allows to send a full text command to the GMP343 CO2 Sensor.
         Please refer to the user manual for valid commands."""
 
-        answer = self.serial_interface.send_command(command)
+        answer = self.serial_interface.send_command(command, expected_regex, timeout)
 
         if answer[0] == "success":
             return self._format_raw_answer(answer[1])
@@ -292,8 +286,6 @@ class CO2SensorInterface:
     def _reset_sensor(self) -> None:
         """reset the sensors default settings by turning it off and on and
         sending the initial settings again"""
-        setting: bool = False
-
         self.logger.info("Initializing the sensor with measurement settings.")
 
         self.logger.debug("Powering down sensor.")
