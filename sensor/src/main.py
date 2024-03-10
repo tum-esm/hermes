@@ -136,7 +136,7 @@ def run() -> None:
 
     logger.info("Successfully finished setup, starting mainloop.", config=config)
 
-    last_successful_mainloop_iteration_time = 0
+    last_successful_mainloop_iteration_time = 0.0
     while True:
         try:
             logger.info("Starting mainloop iteration.")
