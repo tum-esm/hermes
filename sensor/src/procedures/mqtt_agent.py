@@ -23,7 +23,7 @@ class MQTTAgent:
 
     @staticmethod
     def init(config: custom_types.Config) -> None:
-        """start the the communication loop in a separate process"""
+        """start the communication loop in a separate process"""
 
         # the communication loop starts a connection to the
         # mqtt broker, receives config messages and send out
@@ -42,7 +42,7 @@ class MQTTAgent:
                 MQTTAgent.communication_loop_process = new_process
 
         # wait until messaging agent has
-        # TOOO: finish sentence
+        # TODO: finish sentence
         time.sleep(2)
 
     @staticmethod
@@ -157,14 +157,14 @@ class MQTTAgent:
 
         # -----------------------------------------------------------------
 
-        last_hearbeat_timestamp: float = 0
+        last_heartbeat_timestamp: float = 0
 
         while True:
             # send heartbeat message every 5 minutes
             now = time.time()
-            if (now - last_hearbeat_timestamp) > 300:
+            if (now - last_heartbeat_timestamp) > 300:
                 _enqueue_heartbeat_message()
-                last_hearbeat_timestamp = now
+                last_heartbeat_timestamp = now
 
             sent_record_count = 0
             resent_record_count = 0

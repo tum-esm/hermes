@@ -64,8 +64,8 @@ class CO2SensorInterface:
         update pressure, humidity in sensor
         for its internal compensation.
 
-        the internal temperature compensation is enabled by de-
-        fault and uses the built-in temperature sensor.
+        the internal temperature compensation is enabled by default
+        and uses the built-in temperature sensor.
         """
 
         assert 0 <= humidity <= 100, f"invalid humidity ({humidity} not in [0, 100])"
@@ -194,10 +194,10 @@ class CO2SensorInterface:
         timeout: float = 8,
     ) -> str:
         """Allows to change a parameter in the GMP343 CO2 Sensor.
-        The sensor response is checked. In case of a uncompleted
+        The sensor response is checked. In case of an uncompleted
         request the parameter is sent again to finish to parameter
         change.
-        In case the sensor does not respond a timeout will retrigger
+        In case the sensor does not respond a timeout will re-trigger
         the request to the sensor.
         At success the sensor answer is returned.
         In all other cases a Communication Error is raised.

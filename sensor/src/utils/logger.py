@@ -199,7 +199,7 @@ class Logger:
     ) -> None:
         subject = f"{self.origin} - {subject}"
 
-        # TODO: refactore the split of subject and detail to only one message
+        # TODO: refactor the split of subject and detail to only one message
         if len(subject) > 256:
             extension_message_subject = f" ... CUT ({len(subject)} -> 256)"
             subject = (

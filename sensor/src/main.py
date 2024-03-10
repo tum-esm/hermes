@@ -17,8 +17,8 @@ def run() -> None:
     - Timeouts
     - MQTT Agent
     - Initialize Hardware Interface (e)
-    - Initialise Config Procedure (e)
-    - Initialise Procedures (e) (System Checks, Calibration, Measurement)
+    - Initialize Config Procedure (e)
+    - Initialize Procedures (e) (System Checks, Calibration, Measurement)
 
     RUN INFINITE MAIN LOOP
     - Procedure: System Check
@@ -59,7 +59,7 @@ def run() -> None:
     MAX_MEASUREMENT_TIME = config.measurement.procedure_seconds + 180  # extra time
     utils.set_alarm(MAX_SETUP_TIME, "setup")
 
-    # Exponental backoff time
+    # Exponential backoff time
     ebo = utils.ExponentialBackOff()
 
     # -------------------------------------------------------------------------
@@ -106,7 +106,7 @@ def run() -> None:
 
     # initialize config procedure
     new_config_message: Optional[custom_types.MQTTConfigurationRequest] = None
-    configuration_prodecure = procedures.ConfigurationProcedure(config)
+    configuration_procedure = procedures.ConfigurationProcedure(config)
 
     # initialize procedures interacting with hardware
     # system_check:   logging system statistics and reporting hardware/system errors
@@ -116,16 +116,16 @@ def run() -> None:
     logger.info("Initializing procedures.", config=config)
 
     try:
-        system_check_prodecure = procedures.SystemCheckProcedure(
+        system_check_procedure = procedures.SystemCheckProcedure(
             config, hardware_interface
         )
-        calibration_prodecure = procedures.CalibrationProcedure(
+        calibration_procedure = procedures.CalibrationProcedure(
             config, hardware_interface
         )
-        wind_measurement_prodecure = procedures.WindMeasurementProcedure(
+        wind_measurement_procedure = procedures.WindMeasurementProcedure(
             config, hardware_interface
         )
-        CO2_measurement_prodecure = procedures.CO2MeasurementProcedure(
+        co2_measurement_procedure = procedures.CO2MeasurementProcedure(
             config, hardware_interface
         )
     except Exception as e:
@@ -147,7 +147,7 @@ def run() -> None:
             utils.set_alarm(MAX_SYSTEM_CHECK_TIME, "system check")
 
             logger.info("Running system checks.")
-            system_check_prodecure.run()
+            system_check_procedure.run()
 
             # -----------------------------------------------------------------
             # CALIBRATION
@@ -155,9 +155,9 @@ def run() -> None:
             utils.set_alarm(MAX_CALIBRATION_TIME, "calibration")
 
             if config.active_components.run_calibration_procedures:
-                if calibration_prodecure.is_due():
+                if calibration_procedure.is_due():
                     logger.info("Running calibration procedure.", config=config)
-                    calibration_prodecure.run()
+                    calibration_procedure.run()
                 else:
                     logger.info("Calibration procedure is not due.")
             else:
@@ -170,8 +170,8 @@ def run() -> None:
 
             # if messages are empty, run regular measurements
             logger.info("Running measurements.")
-            wind_measurement_prodecure.run()
-            CO2_measurement_prodecure.run()
+            wind_measurement_procedure.run()
+            co2_measurement_procedure.run()
 
             # -----------------------------------------------------------------
             # CONFIGURATION
@@ -185,7 +185,7 @@ def run() -> None:
                 # run config update procedure
                 logger.info("Running configuration procedure.", config=config)
                 try:
-                    configuration_prodecure.run(new_config_message)
+                    configuration_procedure.run(new_config_message)
                     # -> Exit, Restarts via Cron Job to load new config
                 except Exception:
                     # reinitialize hardware if configuration failed

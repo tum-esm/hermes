@@ -53,8 +53,8 @@ class ExponentialBackOff:
 
 
 def run_shell_command(
-    command: str,
-    working_directory: Optional[str] = None,
+        command: str,
+        working_directory: Optional[str] = None,
 ) -> str:
     """runs a shell command and raises a CommandLineException if the
     return code is not zero, returns the stdout"""

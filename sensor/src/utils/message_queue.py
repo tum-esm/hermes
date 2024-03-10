@@ -110,7 +110,7 @@ class MessageQueue:
         return len(self.__read_sql("SELECT Count(internal_id) FROM QUEUE;"))
 
     def update_records(self, records: list[custom_types.SQLMQTTRecord]) -> None:
-        """Records distinguished by `interal_id`. Used for:
+        """Records distinguished by `internal_id`. Used for:
         * "Message has been `sent`"
         * "Message has been `delivered`" """
 
@@ -135,7 +135,7 @@ class MessageQueue:
         )
 
     def remove_records_by_id(self, record_ids: list[int]) -> None:
-        """Records distinguished by `interal_id`. Used for:
+        """Records distinguished by `internal_id`. Used for:
         * "Message has been `sent`"
         * "Message has been `delivered`" """
 

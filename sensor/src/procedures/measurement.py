@@ -134,14 +134,14 @@ class CO2MeasurementProcedure:
             self.hardware_interface.air_inlet_bme280_sensor.get_data()
         )
 
-        # Add to ring buffer to calculate moving average of low cost sensor
+        # Add to ring buffer to calculate moving average of low-cost sensor
         self.rb_pressure.append(self.air_inlet_bme280_data.pressure)
 
         self.air_inlet_sht45_data = (
             self.hardware_interface.air_inlet_sht45_sensor.get_data()
         )
 
-        # Add to ring buffer to calculate moving average of low cost sensor
+        # Add to ring buffer to calculate moving average of low-cost sensor
         self.rb_humidity.append(self.air_inlet_sht45_data.humidity)
 
     def run(self) -> None:
@@ -173,7 +173,7 @@ class CO2MeasurementProcedure:
             time.sleep(seconds_to_wait_for_next_measurement)
             self.last_measurement_time = time.time()
 
-            # Get latest auxilliary sensor data information
+            # Get latest auxiliary sensor data information
             self._update_air_inlet_parameters()
 
             # perform a CO2 measurement

@@ -17,7 +17,7 @@ hardware_lock = filelock.FileLock(
 
 class HardwareInterface:
     class HardwareOccupiedException(Exception):
-        """raise when trying to use the hardware but it
+        """raise when trying to use the hardware, but it
         is used by another process"""
 
     def __init__(
@@ -32,7 +32,7 @@ class HardwareInterface:
             write_to_file=(not testing),
         )
         self.testing = testing
-        self.acquire_hardare_lock()
+        self.acquire_hardware_lock()
 
         # measurement sensors
         self.wind_sensor = WindSensorInterface(config, testing=self.testing)
@@ -86,7 +86,7 @@ class HardwareInterface:
         """reinitialize after an unsuccessful update"""
         self.config = config
         self.logger.info("running hardware reinitialization")
-        self.acquire_hardare_lock()
+        self.acquire_hardware_lock()
 
         # measurement sensors
         self.air_inlet_bme280_sensor = BME280SensorInterface(
@@ -106,7 +106,7 @@ class HardwareInterface:
         )
         self.ups = UPSInterface(config, testing=self.testing)
 
-    def acquire_hardare_lock(self) -> None:
+    def acquire_hardware_lock(self) -> None:
         """make sure that there is only one initialized hardware connection"""
         try:
             hardware_lock.acquire()

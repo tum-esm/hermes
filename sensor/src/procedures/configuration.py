@@ -244,7 +244,7 @@ class ConfigurationProcedure:
             self.logger.info("code directory already exists")
             return
 
-        # download release using the github cli
+        # download release using the GitHub cli
         self.logger.info("downloading code from GitHub")
         utils.run_shell_command(
             f"wget https://github.com/tum-esm/hermes/archive/refs/tags/{tarball_name(version)}"
@@ -288,7 +288,7 @@ class ConfigurationProcedure:
         self,
         config_request: custom_types.MQTTConfigurationRequest,
     ) -> None:
-        """write new config config to json file"""
+        """write new config to json file"""
 
         # config.json
         self.logger.info("dumping config.json file")

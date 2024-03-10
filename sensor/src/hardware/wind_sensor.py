@@ -51,7 +51,7 @@ class WindSensorInterface:
             port=WIND_SENSOR_SERIAL_PORT,
             baudrate=19200,
             encoding="cp1252",
-            line_endling="\r\n",
+            line_ending="\r\n",
         )
 
         self.logger.info("Finished initialization")

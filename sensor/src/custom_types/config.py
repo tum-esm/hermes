@@ -47,8 +47,8 @@ class DocumentationConfig(pydantic.BaseModel):
     site_short_name: str
     site_observation_since: str
     inlet_elevation: str
-    last_maintainence_date: str
-    maintainence_comment: str
+    last_maintenance_date: str
+    maintenance_comment: str
     gmp343_sensor_id: str
 
     class Config:
