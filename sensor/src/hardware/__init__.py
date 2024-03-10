@@ -14,11 +14,11 @@ from .wind_sensor import WindSensorInterface
 
 
 class HwLock(TypedDict):
-    lock: Optional[filelock.FileLock]
+    lock: filelock.FileLock
 
 
 global_hw_lock: HwLock = {
-    "lock": None
+    "lock": filelock.FileLock("")
 }
 
 
