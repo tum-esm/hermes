@@ -16,6 +16,7 @@ class ValveInterface:
         self,
         config: custom_types.Config,
         testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
             origin="valves",
@@ -23,19 +24,21 @@ class ValveInterface:
             write_to_file=(not testing),
         )
         self.config = config
+        self.simulate = simulate
         self.logger.info("Starting initialization")
 
-        # set up valve control pin connections
-        self.pin_factory = utils.get_gpio_pin_factory()
-        self.valves: dict[Literal[1, 2, 3, 4], gpiozero.OutputDevice] = {
-            1: gpiozero.OutputDevice(VALVE_PIN_1_OUT, pin_factory=self.pin_factory),
-            2: gpiozero.OutputDevice(VALVE_PIN_2_OUT, pin_factory=self.pin_factory),
-            3: gpiozero.OutputDevice(VALVE_PIN_3_OUT, pin_factory=self.pin_factory),
-            4: gpiozero.OutputDevice(VALVE_PIN_4_OUT, pin_factory=self.pin_factory),
-        }
-        self.active_input: Literal[1, 2, 3, 4] = self.config.measurement.valve_number
-        self.logger.info(f"Initialized with switching to valve: {self.active_input}")
-        self.set_active_input(self.active_input)
+        if not simulate:
+            # set up valve control pin connections
+            self.pin_factory = utils.get_gpio_pin_factory()
+            self.valves: dict[Literal[1, 2, 3, 4], gpiozero.OutputDevice] = {
+                1: gpiozero.OutputDevice(VALVE_PIN_1_OUT, pin_factory=self.pin_factory),
+                2: gpiozero.OutputDevice(VALVE_PIN_2_OUT, pin_factory=self.pin_factory),
+                3: gpiozero.OutputDevice(VALVE_PIN_3_OUT, pin_factory=self.pin_factory),
+                4: gpiozero.OutputDevice(VALVE_PIN_4_OUT, pin_factory=self.pin_factory),
+            }
+            self.active_input: Literal[1, 2, 3, 4] = self.config.measurement.valve_number
+            self.logger.info(f"Initialized with switching to valve: {self.active_input}")
+            self.set_active_input(self.active_input)
 
         self.logger.info("Finished initialization")
 
@@ -74,6 +77,9 @@ class ValveInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
+        if self.simulate:
+            return
+
         self.set_active_input(1)
         self.pin_factory.close()
 

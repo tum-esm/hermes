@@ -27,7 +27,7 @@ class MQTTConnection:
         self.client.tls_set(
             certfile=None,
             keyfile=None,
-            cert_reqs=ssl.CERT_REQUIRED,
+            cert_reqs=ssl.CERT_NONE,
             tls_version=ssl.PROTOCOL_TLS_CLIENT,
         )
         self.client.connect(

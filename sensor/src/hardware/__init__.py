@@ -38,9 +38,10 @@ class HardwareInterface:
         is used by another process"""
 
     def __init__(
-            self,
-            config: custom_types.Config,
-            testing: bool = False,
+        self,
+        config: custom_types.Config,
+        testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         global_hw_lock["lock"] = filelock.FileLock(
             os.environ.get("HERMES_HARDWARE_LOCKFILE_PATH") or "/home/pi/Documents/hermes/hermes-hardware.lock",
@@ -53,25 +54,26 @@ class HardwareInterface:
             write_to_file=(not testing),
         )
         self.testing = testing
+        self.simulate = simulate
         acquire_hardware_lock()
 
         # measurement sensors
-        self.wind_sensor = WindSensorInterface(config, testing=self.testing)
+        self.wind_sensor = WindSensorInterface(config, testing=self.testing, simulate=self.simulate)
         self.air_inlet_bme280_sensor = BME280SensorInterface(
-            config, variant="air-inlet", testing=self.testing
+            config, variant="air-inlet", testing=self.testing, simulate=self.simulate
         )
-        self.air_inlet_sht45_sensor = SHT45SensorInterface(config, testing=self.testing)
-        self.co2_sensor = CO2SensorInterface(config, testing=self.testing)
+        self.air_inlet_sht45_sensor = SHT45SensorInterface(config, testing=self.testing, simulate=self.simulate)
+        self.co2_sensor = CO2SensorInterface(config, testing=self.testing, simulate=self.simulate)
 
         # measurement actors
-        self.pump = PumpInterface(config, testing=self.testing)
-        self.valves = ValveInterface(config, testing=self.testing)
+        self.pump = PumpInterface(config, testing=self.testing, simulate=self.simulate)
+        self.valves = ValveInterface(config, testing=self.testing, simulate=self.simulate)
 
         # enclosure controls
         self.mainboard_sensor = BME280SensorInterface(
-            config, variant="mainboard", testing=self.testing
+            config, variant="mainboard", testing=self.testing, simulate=self.simulate
         )
-        self.ups = UPSInterface(config, testing=self.testing)
+        self.ups = UPSInterface(config, testing=self.testing, simulate=self.simulate)
 
     def check_errors(self) -> None:
         """checks for detectable hardware errors"""
@@ -111,18 +113,18 @@ class HardwareInterface:
 
         # measurement sensors
         self.air_inlet_bme280_sensor = BME280SensorInterface(
-            config, variant="air-inlet", testing=self.testing
+            config, variant="air-inlet", testing=self.testing, simulate=self.simulate
         )
-        self.air_inlet_sht45_sensor = SHT45SensorInterface(config, testing=self.testing)
-        self.co2_sensor = CO2SensorInterface(config, testing=self.testing)
-        self.wind_sensor = WindSensorInterface(config, testing=self.testing)
+        self.air_inlet_sht45_sensor = SHT45SensorInterface(config, testing=self.testing, simulate=self.simulate)
+        self.co2_sensor = CO2SensorInterface(config, testing=self.testing, simulate=self.simulate)
+        self.wind_sensor = WindSensorInterface(config, testing=self.testing, simulate=self.simulate)
 
         # measurement actors
-        self.pump = PumpInterface(config, testing=self.testing)
-        self.valves = ValveInterface(config, testing=self.testing)
+        self.pump = PumpInterface(config, testing=self.testing, simulate=self.simulate)
+        self.valves = ValveInterface(config, testing=self.testing, simulate=self.simulate)
 
         # enclosure controls
         self.mainboard_sensor = BME280SensorInterface(
-            config, variant="mainboard", testing=self.testing
+            config, variant="mainboard", testing=self.testing, simulate=self.simulate
         )
-        self.ups = UPSInterface(config, testing=self.testing)
+        self.ups = UPSInterface(config, testing=self.testing, simulate=self.simulate)

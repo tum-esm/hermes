@@ -27,7 +27,7 @@ def run() -> None:
     - Check for configuration update
     """
 
-    logger = utils.Logger(origin="main")
+    logger = utils.Logger(origin="main", print_to_console=True)
     logger.horizontal_line()
 
     try:
@@ -35,6 +35,7 @@ def run() -> None:
     except Exception as e:
         logger.exception(e, label="could not load local config.json")
         raise e
+    simulate = os.environ.get("HERMES_MODE") == "simulate"
 
     logger.info(
         f"Started new automation process with SW version {config.version} and PID {os.getpid()}.",
@@ -81,7 +82,8 @@ def run() -> None:
     logger.info("Initializing hardware interfaces.", config=config)
 
     try:
-        hardware_interface = hardware.HardwareInterface(config)
+        hardware_interface = hardware.HardwareInterface(config=config,
+                                                        simulate=simulate)
     except Exception as e:
         logger.exception(
             e, label="Could not initialize hardware interface.", config=config
@@ -105,7 +107,7 @@ def run() -> None:
     # initialize procedures
 
     # initialize config procedure
-    configuration_procedure = procedures.ConfigurationProcedure(config)
+    configuration_procedure = procedures.ConfigurationProcedure(config, simulate=simulate)
 
     # initialize procedures interacting with hardware:
     #   system_check:   logging system statistics and reporting hardware/system errors
@@ -116,16 +118,16 @@ def run() -> None:
 
     try:
         system_check_procedure = procedures.SystemCheckProcedure(
-            config, hardware_interface
+            config, hardware_interface, simulate=simulate
         )
         calibration_procedure = procedures.CalibrationProcedure(
-            config, hardware_interface
+            config, hardware_interface, simulate=simulate
         )
         wind_measurement_procedure = procedures.WindMeasurementProcedure(
-            config, hardware_interface
+            config, hardware_interface, simulate=simulate
         )
         co2_measurement_procedure = procedures.CO2MeasurementProcedure(
-            config, hardware_interface
+            config, hardware_interface, simulate=simulate
         )
     except Exception as e:
         logger.exception(e, label="could not initialize procedures", config=config)

@@ -13,6 +13,7 @@ class BME280SensorInterface:
         config: custom_types.Config,
         variant: Literal["mainboard", "air-inlet"],
         testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
             "mainboard-bme280" if (variant == "mainboard") else "air-inlet-bme280",
@@ -21,8 +22,11 @@ class BME280SensorInterface:
         )
         self.config = config
         self.variant = variant
+        self.simulate = simulate
         self.logger.info("starting initialization")
         self.compensation_params: Optional[bme280.params] = None
+        self.simulate = simulate
+        self.bus = None
 
         # set up connection to BME280 sensor
         self.sensor_connected = False
@@ -59,6 +63,13 @@ class BME280SensorInterface:
 
     def get_data(self, retries: int = 1) -> custom_types.BME280SensorData:
         """Reads temperature,humidity and pressure on mainboard and air inlet"""
+
+        if self.simulate:
+            return custom_types.BME280SensorData(
+                temperature=20.0,
+                humidity=50.0,
+                pressure=1013.25,
+            )
 
         # initialize output
         output = custom_types.BME280SensorData(
@@ -143,4 +154,5 @@ class BME280SensorInterface:
 
     def teardown(self) -> None:
         """Ends all hardware/system connections"""
-        self.bus.close()
+        if self.bus:
+            self.bus.close()

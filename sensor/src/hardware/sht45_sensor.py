@@ -13,6 +13,7 @@ class SHT45SensorInterface:
         self,
         config: custom_types.Config,
         testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
             origin="sht45-sensor",

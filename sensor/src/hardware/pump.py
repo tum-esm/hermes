@@ -17,6 +17,7 @@ class PumpInterface:
         self,
         config: custom_types.Config,
         testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
             origin="pump",
@@ -24,28 +25,30 @@ class PumpInterface:
             write_to_file=(not testing),
         )
         self.config = config
+        self.simulate = simulate
         self.logger.info("Starting initialization")
 
         # ---------------------------------------------------------------------
         # INITIALIZING THE PUMP CONTROL PIN
 
-        # pin factory required for hardware PWM
-        self.pin_factory = utils.get_gpio_pin_factory()
+        if not simulate:
+            # pin factory required for hardware PWM
+            self.pin_factory = utils.get_gpio_pin_factory()
 
-        # pins for setting desired pump speed
-        self.control_pin = gpiozero.PWMOutputDevice(
-            pin=PUMP_CONTROL_PIN_OUT,
-            active_high=True,
-            initial_value=0,
-            frequency=PUMP_CONTROL_PIN_FREQUENCY,
-            pin_factory=self.pin_factory,
-        )
+            # pins for setting desired pump speed
+            self.control_pin = gpiozero.PWMOutputDevice(
+                pin=PUMP_CONTROL_PIN_OUT,
+                active_high=True,
+                initial_value=0,
+                frequency=PUMP_CONTROL_PIN_FREQUENCY,
+                pin_factory=self.pin_factory,
+            )
 
-        # start pump to run continuously
-        self.set_desired_pump_speed(
-            pwm_duty_cycle=self.config.hardware.pump_pwm_duty_cycle,
-        )
-        time.sleep(0.5)
+            # start pump to run continuously
+            self.set_desired_pump_speed(
+                pwm_duty_cycle=self.config.hardware.pump_pwm_duty_cycle,
+            )
+            time.sleep(0.5)
 
         self.logger.info("Finished initialization")
 
@@ -72,6 +75,9 @@ class PumpInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
+        if self.simulate:
+            return
+
         self.set_desired_pump_speed(pwm_duty_cycle=0)
         self.pin_factory.close()
 
