@@ -1,5 +1,7 @@
 from typing import Literal, Optional, Union
+
 import pydantic
+
 
 # -----------------------------------------------------------------------------
 # MQTT Config (read from env variables)

@@ -1,7 +1,9 @@
-import busio
+import time
+
 import adafruit_sht4x
 import board
-import time
+import busio
+
 from src import utils, custom_types
 
 

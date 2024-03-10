@@ -1,8 +1,10 @@
 import time
-from typing import Literal, Optional
-from src import utils, custom_types
+from typing import Optional
+
 import gpiozero
 import gpiozero.pins.pigpio
+
+from src import utils, custom_types
 
 times_REGEX = r"\d+\.\d+"
 STARTUP_REGEX = (

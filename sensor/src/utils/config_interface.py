@@ -1,6 +1,7 @@
 import json
 import os
 import pathlib
+
 from src import custom_types
 
 PROJECT_DIR = pathlib.Path(os.path.abspath(__file__)).parents[2]

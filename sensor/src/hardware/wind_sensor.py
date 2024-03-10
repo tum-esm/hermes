@@ -1,9 +1,11 @@
+import re
 import time
 from typing import Optional, Tuple
-from src import utils, custom_types
+
 import gpiozero
 import gpiozero.pins.pigpio
-import re
+
+from src import utils, custom_types
 
 measurement_pattern = (
     pattern

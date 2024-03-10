@@ -1,7 +1,8 @@
 import time
+
 import psutil
+
 from src import hardware, custom_types, utils
-from .mqtt_agent import MQTTAgent
 
 
 class SystemCheckProcedure:

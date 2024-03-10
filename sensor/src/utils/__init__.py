@@ -1,12 +1,5 @@
-from .logger import Logger
-from .config_interface import ConfigInterface
-from .state_interface import StateInterface
-from .moving_average_queue import RingBuffer
-from .message_queue import MessageQueue
-from .mqtt_connection import MQTTConnection
-
 from . import serial_interfaces
-
+from .config_interface import ConfigInterface
 from .functions import (
     run_shell_command,
     CommandLineException,
@@ -18,3 +11,8 @@ from .functions import (
     set_alarm,
     ExponentialBackOff,
 )
+from .logger import Logger
+from .message_queue import MessageQueue
+from .moving_average_queue import RingBuffer
+from .mqtt_connection import MQTTConnection
+from .state_interface import StateInterface

@@ -1,6 +1,8 @@
-import gpiozero
 import time
 from typing import Optional
+
+import gpiozero
+
 from src import utils, custom_types
 
 UPS_READY_PIN_IN = 5

@@ -1,7 +1,9 @@
-import smbus2
-import bme280
 import time
 from typing import Literal, Optional
+
+import bme280
+import smbus2
+
 from src import utils, custom_types
 
 

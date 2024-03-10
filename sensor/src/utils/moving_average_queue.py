@@ -1,5 +1,5 @@
 from typing import Any, Optional
-import math
+
 
 # TODO: improve typing once sum(list()) is easier to describe
 

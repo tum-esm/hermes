@@ -1,12 +1,14 @@
 import json
+import multiprocessing
+import multiprocessing.synchronize
 import queue
 import signal
 import time
 from typing import Any, Callable, Optional
-import pydantic
+
 import paho.mqtt.client
-import multiprocessing
-import multiprocessing.synchronize
+import pydantic
+
 from src import custom_types, utils
 
 

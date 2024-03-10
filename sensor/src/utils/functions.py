@@ -3,11 +3,11 @@ import random
 import signal
 import string
 import subprocess
-from typing import Any, Optional
 import time
-import pigpio
-import gpiozero.pins.pigpio
+from typing import Any, Optional
 
+import gpiozero.pins.pigpio
+import pigpio
 
 pigpio.exceptions = False
 

@@ -1,13 +1,14 @@
 import time
 import traceback
-import filelock
 from datetime import datetime
 from os.path import dirname, abspath, join
 from typing import Literal, Optional
 
+import filelock
+
 from src import custom_types, utils
-from .message_queue import MessageQueue
 from .functions import CommandLineException
+from .message_queue import MessageQueue
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOGS_ARCHIVE_DIR = join(PROJECT_DIR, "logs", "archive")

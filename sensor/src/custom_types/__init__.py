@@ -1,5 +1,7 @@
 from .config import Config, CalibrationGasConfig
-
+from .mqtt_receiving import (
+    MQTTConfigurationRequest,
+)
 from .mqtt_sending import (
     # config and queue files
     MQTTConfig,
@@ -22,11 +24,6 @@ from .mqtt_sending import (
     MQTTAcknowledgmentMessage,
     MQTTMessage,
 )
-from .mqtt_receiving import (
-    MQTTConfigurationRequest,
-)
-
-
 from .sensor_answers import (
     CO2SensorData,
     BME280SensorData,
@@ -34,5 +31,4 @@ from .sensor_answers import (
     WindSensorData,
     WindSensorStatus,
 )
-
 from .state import State

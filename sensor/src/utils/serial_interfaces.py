@@ -1,8 +1,9 @@
 import fcntl
-from typing import Literal
-import serial
 import re
 import time
+from typing import Literal
+
+import serial
 
 
 class SerialCO2SensorInterface:

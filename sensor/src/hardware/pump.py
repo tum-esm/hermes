@@ -1,9 +1,8 @@
-import multiprocessing
-import queue
 import time
-from typing import Literal, Optional
+
 import gpiozero
 import gpiozero.pins.pigpio
+
 from src import utils, custom_types
 
 PUMP_CONTROL_PIN_OUT = 19
