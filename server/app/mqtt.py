@@ -33,7 +33,7 @@ async def client():
         password=settings.MQTT_PASSWORD,
         # TODO it would be nicer to use TLS here for local development as well
         tls_params=(
-            aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS)
+            aiomqtt.TLSParameters(tls_version=ssl.PROTOCOL_TLS, cert_reqs=ssl.CERT_NONE)
             if settings.ENVIRONMENT == "production"
             else None
         ),
