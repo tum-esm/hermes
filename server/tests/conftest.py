@@ -18,11 +18,11 @@ async def _connection():
     """Provide a connection to the database that's properly closed afterwards."""
     try:
         connection = await asyncpg.connect(
-            host=os.environ["POSTGRESQL_URL"],
-            port=os.environ["POSTGRESQL_PORT"],
-            user=os.environ["POSTGRESQL_IDENTIFIER"],
-            password=os.environ["POSTGRESQL_PASSWORD"],
-            database=os.environ["POSTGRESQL_DATABASE"],
+            host=os.environ["HERMES_POSTGRESQL_URL"],
+            port=os.environ["HERMES_POSTGRESQL_PORT"],
+            user=os.environ["HERMES_POSTGRESQL_IDENTIFIER"],
+            password=os.environ["HERMES_POSTGRESQL_PASSWORD"],
+            database=os.environ["HERMES_POSTGRESQL_DATABASE"],
         )
         await database.initialize(connection)
         yield connection

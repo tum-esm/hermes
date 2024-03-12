@@ -6,18 +6,18 @@ set -o errexit -o pipefail -o nounset
 cd "$(dirname "$0")/.."
 
 # Set our environment variables
-export ENVIRONMENT="development"
-export COMMIT_SHA=$(git rev-parse --verify HEAD)
-export BRANCH_NAME=$(git branch --show-current)
-export POSTGRESQL_URL="localhost"
-export POSTGRESQL_PORT="5432"
-export POSTGRESQL_IDENTIFIER="postgres"
-export POSTGRESQL_PASSWORD="12345678"
-export POSTGRESQL_DATABASE="database"
-export MQTT_URL="localhost"
-export MQTT_PORT="1883"
-export MQTT_IDENTIFIER="server"
-export MQTT_PASSWORD="password"
+export HERMES_ENVIRONMENT="development"
+export HERMES_COMMIT_SHA=$(git rev-parse --verify HEAD)
+export HERMES_BRANCH_NAME=$(git branch --show-current)
+export HERMES_POSTGRESQL_URL="localhost"
+export HERMES_POSTGRESQL_PORT="5432"
+export HERMES_POSTGRESQL_IDENTIFIER="postgres"
+export HERMES_POSTGRESQL_PASSWORD="12345678"
+export HERMES_POSTGRESQL_DATABASE="database"
+export HERMES_MQTT_URL="localhost"
+export HERMES_MQTT_PORT="1883"
+export HERMES_MQTT_IDENTIFIER="server"
+export HERMES_MQTT_PASSWORD="password"
 
 # Enable importing local modules
 export PYTHONPATH=$(pwd)
