@@ -60,6 +60,26 @@ type NetworkState = {
   ) => void;
 };
 
+// store auth token, username and wether user is logged in or not
+type AuthState = {
+    token: string | null;
+    username: string | null;
+    loggedIn: boolean;
+    setAuthState: (newToken: any, newUsername: any, newLoggedIn: any) => void;
+    setToken: (newToken: string) => void;
+    setUsername: (newUsername: string) => void;
+    setLoggedIn: (newLoggedIn: boolean) => void;
+}
+export const useAuthStore = create<AuthState>((set) => ({
+    token: null,
+    username: null,
+    loggedIn: false,
+    setAuthState: (newToken: any, newUsername: any, newLoggedIn: any) => set((state) => ({ token: newToken, username: newUsername, loggedIn: newLoggedIn })),
+    setToken: (newToken) => set((state) => ({ token: newToken })),
+    setUsername: (newUsername) => set((state) => ({ username: newUsername })),
+    setLoggedIn: (newLoggedIn) => set((state) => ({ loggedIn: newLoggedIn })),
+}));
+
 export const useNetworkStore = create<NetworkState>((set) => ({
   state: Object.values(SENSOR_IDS).map((sensorId) => ({
     sensorId: sensorId,
