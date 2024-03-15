@@ -22,6 +22,16 @@ global_hw_lock: HwLock = {
 }
 
 
+def acquire_hardware_lock() -> None:
+    """make sure that there is only one initialized hardware connection"""
+    try:
+        global_hw_lock["lock"].acquire()
+    except filelock.Timeout:
+        raise HardwareInterface.HardwareOccupiedException(
+            "hardware occupied by another process"
+        )
+
+
 class HardwareInterface:
     class HardwareOccupiedException(Exception):
         """raise when trying to use the hardware, but it
@@ -116,12 +126,3 @@ class HardwareInterface:
             config, variant="mainboard", testing=self.testing
         )
         self.ups = UPSInterface(config, testing=self.testing)
-
-    def acquire_hardare_lock(self) -> None:
-        """make sure that there is only one initialized hardware connection"""
-        try:
-            global_hw_lock["lock"].acquire()
-        except filelock.Timeout:
-            raise HardwareInterface.HardwareOccupiedException(
-                "hardware occupied by another process"
-            )
