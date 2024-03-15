@@ -1,3 +1,6 @@
+import os
+from typing import TypedDict, Optional
+
 import filelock
 from src import custom_types, utils
 
@@ -9,22 +12,30 @@ from .ups import UPSInterface
 from .valves import ValveInterface
 from .wind_sensor import WindSensorInterface
 
-# global lock over all software versions
-hardware_lock = filelock.FileLock(
-    "/home/pi/Documents/hermes/hermes-hardware.lock", timeout=5
-)
+
+class HwLock(TypedDict):
+    lock: filelock.FileLock
+
+
+global_hw_lock: HwLock = {
+    "lock": filelock.FileLock("")
+}
 
 
 class HardwareInterface:
     class HardwareOccupiedException(Exception):
-        """raise when trying to use the hardware but it
+        """raise when trying to use the hardware, but it
         is used by another process"""
 
     def __init__(
-        self,
-        config: custom_types.Config,
-        testing: bool = False,
+            self,
+            config: custom_types.Config,
+            testing: bool = False,
     ) -> None:
+        global_hw_lock["lock"] = filelock.FileLock(
+            os.environ.get("HARDWARE_LOCKFILE_PATH") or "/home/pi/Documents/hermes/hermes-hardware.lock",
+            timeout=5
+        )
         self.config = config
         self.logger = utils.Logger(
             "hardware-interface",
@@ -62,7 +73,7 @@ class HardwareInterface:
         """ends all hardware/system connections"""
         self.logger.info("running hardware teardown")
 
-        if not hardware_lock.is_locked:
+        if not global_hw_lock["lock"].is_locked:
             self.logger.info("not tearing down due to disconnected hardware")
             return
 
@@ -80,7 +91,7 @@ class HardwareInterface:
         self.ups.teardown()
 
         # release lock
-        hardware_lock.release()
+        global_hw_lock["lock"].release()
 
     def reinitialize(self, config: custom_types.Config) -> None:
         """reinitialize after an unsuccessful update"""
@@ -109,7 +120,7 @@ class HardwareInterface:
     def acquire_hardare_lock(self) -> None:
         """make sure that there is only one initialized hardware connection"""
         try:
-            hardware_lock.acquire()
+            global_hw_lock["lock"].acquire()
         except filelock.Timeout:
             raise HardwareInterface.HardwareOccupiedException(
                 "hardware occupied by another process"
