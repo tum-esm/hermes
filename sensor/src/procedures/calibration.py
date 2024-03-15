@@ -1,6 +1,6 @@
-from datetime import datetime
-import math
 import time
+from datetime import datetime
+
 from src import custom_types, utils, hardware
 
 
@@ -24,6 +24,7 @@ class CalibrationProcedure:
         self.rb_humidity = utils.RingBuffer(
             self.config.calibration.average_air_inlet_measurements
         )
+        self.seconds_drying_with_first_bottle = 0
 
     def _update_air_inlet_parameters(self) -> None:
         """
@@ -34,14 +35,14 @@ class CalibrationProcedure:
             self.hardware_interface.air_inlet_bme280_sensor.get_data()
         )
 
-        # Add to ring buffer to calculate moving average of low cost sensor
+        # Add to ring buffer to calculate moving average of low-cost sensor
         self.rb_pressure.append(self.air_inlet_bme280_data.pressure)
 
         self.air_inlet_sht45_data = (
             self.hardware_interface.air_inlet_sht45_sensor.get_data()
         )
 
-        # Add to ring buffer to calculate moving average of low cost sensor
+        # Add to ring buffer to calculate moving average of low-cost sensor
         self.rb_humidity.append(self.air_inlet_sht45_data.humidity)
 
     def _alternate_bottle_for_drying(self) -> list[custom_types.CalibrationGasConfig]:
@@ -55,7 +56,7 @@ class CalibrationProcedure:
             self.config.calibration.sampling_per_cylinder_seconds
         )
 
-        # read latest state
+        # read the latest state
         state = utils.StateInterface.read()
 
         current_position = state.next_calibration_cylinder

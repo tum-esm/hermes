@@ -1,13 +1,14 @@
 import time
 import traceback
-import filelock
 from datetime import datetime
 from os.path import dirname, abspath, join
 from typing import Literal, Optional
 
+import filelock
+
 from src import custom_types, utils
-from .message_queue import MessageQueue
 from .functions import CommandLineException
+from .message_queue import MessageQueue
 
 PROJECT_DIR = dirname(dirname(dirname(abspath(__file__))))
 LOGS_ARCHIVE_DIR = join(PROJECT_DIR, "logs", "archive")
@@ -198,7 +199,7 @@ class Logger:
     ) -> None:
         subject = f"{self.origin} - {subject}"
 
-        # TODO: refactore the split of subject and detail to only one message
+        # TODO: refactor the split of subject and detail to only one message
         if len(subject) > 256:
             extension_message_subject = f" ... CUT ({len(subject)} -> 256)"
             subject = (

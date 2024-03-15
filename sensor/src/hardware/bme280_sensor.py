@@ -1,7 +1,9 @@
-import smbus2
-import bme280
 import time
 from typing import Literal, Optional
+
+import bme280
+import smbus2
+
 from src import utils, custom_types
 
 
@@ -88,7 +90,7 @@ class BME280SensorInterface:
                 output.pressure = round(bme280_data.pressure, 2)
                 return output
 
-            except Exception as e:
+            except Exception:
                 self.logger.warning(
                     "Problem during sensor readout. Reinitialising sensor communication.",
                     config=self.config,
@@ -107,7 +109,7 @@ class BME280SensorInterface:
             self.compensation_params = bme280.load_calibration_params(
                 self.bus, self.address
             )
-        except Exception as e:
+        except Exception:
             self.logger.warning(
                 "Could not fetch compensation params.",
             )

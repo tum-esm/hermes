@@ -2,6 +2,7 @@ import os
 import signal
 import time
 from typing import Any, Optional
+
 from src import custom_types, utils, hardware, procedures
 
 
@@ -16,8 +17,8 @@ def run() -> None:
     - Timeouts
     - MQTT Agent
     - Initialize Hardware Interface (e)
-    - Initialise Config Procedure (e)
-    - Initialise Procedures (e) (System Checks, Calibration, Measurement)
+    - Initialize Config Procedure (e)
+    - Initialize Procedures (e) (System Checks, Calibration, Measurement)
 
     RUN INFINITE MAIN LOOP
     - Procedure: System Check
@@ -46,19 +47,19 @@ def run() -> None:
     utils.StateInterface.init()
 
     # define timeouts for parts of the automation
-    MAX_SETUP_TIME = 180
-    MAX_CONFIG_UPDATE_TIME = 1200
-    MAX_SYSTEM_CHECK_TIME = 180
-    MAX_CALIBRATION_TIME = (
-        (len(config.calibration.gas_cylinders) + 1)
-        * config.calibration.sampling_per_cylinder_seconds
-        + 300  # flush time
-        + 180  # extra time
+    max_setup_time = 180
+    max_config_update_time = 1200
+    max_system_check_time = 180
+    max_calibration_time = (
+            (len(config.calibration.gas_cylinders) + 1)
+            * config.calibration.sampling_per_cylinder_seconds
+            + 300  # flush time
+            + 180  # extra time
     )
-    MAX_MEASUREMENT_TIME = config.measurement.procedure_seconds + 180  # extra time
-    utils.set_alarm(MAX_SETUP_TIME, "setup")
+    max_measurement_time = config.measurement.procedure_seconds + 180  # extra time
+    utils.set_alarm(max_setup_time, "setup")
 
-    # Exponental backoff time
+    # Exponential backoff time
     ebo = utils.ExponentialBackOff()
 
     # -------------------------------------------------------------------------
@@ -88,7 +89,7 @@ def run() -> None:
         raise e
 
     # tear down hardware on program termination
-    def _graceful_teardown(*args: Any) -> None:
+    def _graceful_teardown(*_args: Any) -> None:
         utils.set_alarm(10, "graceful teardown")
 
         logger.info("Starting graceful teardown.")
@@ -104,27 +105,26 @@ def run() -> None:
     # initialize procedures
 
     # initialize config procedure
-    new_config_message: Optional[custom_types.MQTTConfigurationRequest] = None
-    configuration_prodecure = procedures.ConfigurationProcedure(config)
+    configuration_procedure = procedures.ConfigurationProcedure(config)
 
-    # initialize procedures interacting with hardware
-    # system_check:   logging system statistics and reporting hardware/system errors
-    # calibration:    using the two reference gas bottles to calibrate the CO2 sensor
-    # measurements:   do regular measurements for x minutes
+    # initialize procedures interacting with hardware:
+    #   system_check:   logging system statistics and reporting hardware/system errors
+    #   calibration:    using the two reference gas bottles to calibrate the CO2 sensor
+    #   measurements:   do regular measurements for x minutes
 
     logger.info("Initializing procedures.", config=config)
 
     try:
-        system_check_prodecure = procedures.SystemCheckProcedure(
+        system_check_procedure = procedures.SystemCheckProcedure(
             config, hardware_interface
         )
-        calibration_prodecure = procedures.CalibrationProcedure(
+        calibration_procedure = procedures.CalibrationProcedure(
             config, hardware_interface
         )
-        wind_measurement_prodecure = procedures.WindMeasurementProcedure(
+        wind_measurement_procedure = procedures.WindMeasurementProcedure(
             config, hardware_interface
         )
-        CO2_measurement_prodecure = procedures.CO2MeasurementProcedure(
+        co2_measurement_procedure = procedures.CO2MeasurementProcedure(
             config, hardware_interface
         )
     except Exception as e:
@@ -136,6 +136,7 @@ def run() -> None:
 
     logger.info("Successfully finished setup, starting mainloop.", config=config)
 
+    last_successful_mainloop_iteration_time = 0.0
     while True:
         try:
             logger.info("Starting mainloop iteration.")
@@ -143,20 +144,20 @@ def run() -> None:
             # -----------------------------------------------------------------
             # SYSTEM CHECKS
 
-            utils.set_alarm(MAX_SYSTEM_CHECK_TIME, "system check")
+            utils.set_alarm(max_system_check_time, "system check")
 
             logger.info("Running system checks.")
-            system_check_prodecure.run()
+            system_check_procedure.run()
 
             # -----------------------------------------------------------------
             # CALIBRATION
 
-            utils.set_alarm(MAX_CALIBRATION_TIME, "calibration")
+            utils.set_alarm(max_calibration_time, "calibration")
 
             if config.active_components.run_calibration_procedures:
-                if calibration_prodecure.is_due():
+                if calibration_procedure.is_due():
                     logger.info("Running calibration procedure.", config=config)
-                    calibration_prodecure.run()
+                    calibration_procedure.run()
                 else:
                     logger.info("Calibration procedure is not due.")
             else:
@@ -165,26 +166,27 @@ def run() -> None:
             # -----------------------------------------------------------------
             # MEASUREMENTS
 
-            utils.set_alarm(MAX_MEASUREMENT_TIME, "measurement")
+            utils.set_alarm(max_measurement_time, "measurement")
 
             # if messages are empty, run regular measurements
             logger.info("Running measurements.")
-            wind_measurement_prodecure.run()
-            CO2_measurement_prodecure.run()
+            wind_measurement_procedure.run()
+            co2_measurement_procedure.run()
 
             # -----------------------------------------------------------------
             # CONFIGURATION
 
-            utils.set_alarm(MAX_CONFIG_UPDATE_TIME, "config update")
+            utils.set_alarm(max_config_update_time, "config update")
 
             logger.info("Checking for new config messages.")
-            new_config_message = procedures.MQTTAgent.get_config_message()
+            new_config_message: Optional[
+                custom_types.MQTTConfigurationRequest] = procedures.MQTTAgent.get_config_message()
 
             if new_config_message is not None:
                 # run config update procedure
                 logger.info("Running configuration procedure.", config=config)
                 try:
-                    configuration_prodecure.run(new_config_message)
+                    configuration_procedure.run(new_config_message)
                     # -> Exit, Restarts via Cron Job to load new config
                 except Exception:
                     # reinitialize hardware if configuration failed

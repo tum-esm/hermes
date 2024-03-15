@@ -1,6 +1,8 @@
-import gpiozero
 import time
 from typing import Optional
+
+import gpiozero
+
 from src import utils, custom_types
 
 UPS_READY_PIN_IN = 5
@@ -56,7 +58,9 @@ class UPSInterface:
         """
         UPS_STATUS_READY is HIGH when the battery is fully charged
         UPS_STATUS_READY is LOW when the battery is not fully charged
-        (UPS_STATUS_READY is HIGH & UPS_BATTERY_MODE_PIN_IN is HIGH) when the system is powered by the system and the battery voltage has dropped to a minimum
+        (UPS_STATUS_READY is HIGH & UPS_BATTERY_MODE_PIN_IN is HIGH)
+        when the system is powered by the system and the battery voltage
+        has dropped to a minimum
         """
 
         battery_state = gpiozero.DigitalInputDevice(
@@ -77,7 +81,7 @@ class UPSInterface:
             self.battery_is_fully_charged = False
 
         # this is probably never reached as the power is shut down in this case
-        if battery_state.is_active & (power_mode.is_active):
+        if battery_state.is_active & power_mode.is_active:
             self.logger.info(
                 "the battery voltage has dropped below the minimum threshold"
             )

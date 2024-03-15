@@ -1,8 +1,10 @@
 import time
-from typing import Literal, Optional
-from src import utils, custom_types
+from typing import Optional
+
 import gpiozero
 import gpiozero.pins.pigpio
+
+from src import utils, custom_types
 
 times_REGEX = r"\d+\.\d+"
 STARTUP_REGEX = (
@@ -62,8 +64,8 @@ class CO2SensorInterface:
         update pressure, humidity in sensor
         for its internal compensation.
 
-        the internal temperature compensation is enabled by de-
-        fault and uses the built-in temperature sensor.
+        the internal temperature compensation is enabled by default
+        and uses the built-in temperature sensor.
         """
 
         assert 0 <= humidity <= 100, f"invalid humidity ({humidity} not in [0, 100])"
@@ -87,15 +89,9 @@ class CO2SensorInterface:
     ) -> None:
         """update the filter settings on the CO2 probe"""
 
-        assert (
-            average >= 0 and average <= 60
-        ), "invalid calibration setting, average not in [0, 60]"
-        assert (
-            smooth >= 0 and smooth <= 255
-        ), "invalid calibration setting, smooth not in [0, 255]"
-        assert (
-            median >= 0 and median <= 13
-        ), "invalid calibration setting, median not in [0, 13]"
+        assert (0 <= average <= 60),    "invalid calibration setting, average not in [0, 60]"
+        assert (0 <= smooth <= 255),    "invalid calibration setting, smooth not in [0, 255]"
+        assert (0 <= median <= 13),     "invalid calibration setting, median not in [0, 13]"
 
         self._set_sensor_parameter(parameter="average", value=average)
         self._set_sensor_parameter(parameter="smooth", value=smooth)
@@ -175,7 +171,7 @@ class CO2SensorInterface:
         """Allows to send a full text command to the GMP343 CO2 Sensor.
         Please refer to the user manual for valid commands."""
 
-        answer = self.serial_interface.send_command(command)
+        answer = self.serial_interface.send_command(command, expected_regex, timeout)
 
         if answer[0] == "success":
             return self._format_raw_answer(answer[1])
@@ -192,10 +188,10 @@ class CO2SensorInterface:
         timeout: float = 8,
     ) -> str:
         """Allows to change a parameter in the GMP343 CO2 Sensor.
-        The sensor response is checked. In case of a uncompleted
+        The sensor response is checked. In case of an uncompleted
         request the parameter is sent again to finish to parameter
         change.
-        In case the sensor does not respond a timeout will retrigger
+        In case the sensor does not respond a timeout will re-trigger
         the request to the sensor.
         At success the sensor answer is returned.
         In all other cases a Communication Error is raised.
@@ -290,8 +286,6 @@ class CO2SensorInterface:
     def _reset_sensor(self) -> None:
         """reset the sensors default settings by turning it off and on and
         sending the initial settings again"""
-        setting: bool = False
-
         self.logger.info("Initializing the sensor with measurement settings.")
 
         self.logger.debug("Powering down sensor.")

@@ -1,13 +1,13 @@
 import os
-from typing import TypedDict, Optional
+from typing import TypedDict
 
 import filelock
-from src import custom_types, utils
 
-from .co2_sensor import CO2SensorInterface
+from src import custom_types, utils
 from .bme280_sensor import BME280SensorInterface
-from .sht45_sensor import SHT45SensorInterface
+from .co2_sensor import CO2SensorInterface
 from .pump import PumpInterface
+from .sht45_sensor import SHT45SensorInterface
 from .ups import UPSInterface
 from .valves import ValveInterface
 from .wind_sensor import WindSensorInterface
@@ -20,6 +20,16 @@ class HwLock(TypedDict):
 global_hw_lock: HwLock = {
     "lock": filelock.FileLock("")
 }
+
+
+def acquire_hardware_lock() -> None:
+    """make sure that there is only one initialized hardware connection"""
+    try:
+        global_hw_lock["lock"].acquire()
+    except filelock.Timeout:
+        raise HardwareInterface.HardwareOccupiedException(
+            "hardware occupied by another process"
+        )
 
 
 class HardwareInterface:
@@ -43,7 +53,7 @@ class HardwareInterface:
             write_to_file=(not testing),
         )
         self.testing = testing
-        self.acquire_hardare_lock()
+        acquire_hardware_lock()
 
         # measurement sensors
         self.wind_sensor = WindSensorInterface(config, testing=self.testing)
@@ -97,7 +107,7 @@ class HardwareInterface:
         """reinitialize after an unsuccessful update"""
         self.config = config
         self.logger.info("running hardware reinitialization")
-        self.acquire_hardare_lock()
+        acquire_hardware_lock()
 
         # measurement sensors
         self.air_inlet_bme280_sensor = BME280SensorInterface(
@@ -116,12 +126,3 @@ class HardwareInterface:
             config, variant="mainboard", testing=self.testing
         )
         self.ups = UPSInterface(config, testing=self.testing)
-
-    def acquire_hardare_lock(self) -> None:
-        """make sure that there is only one initialized hardware connection"""
-        try:
-            global_hw_lock["lock"].acquire()
-        except filelock.Timeout:
-            raise HardwareInterface.HardwareOccupiedException(
-                "hardware occupied by another process"
-            )
