@@ -10,7 +10,7 @@ import app.validation as validation
 
 
 @pytest.mark.parametrize(
-    "value", ["x", "x-x", "x-x-x", "x" * 64, "12345678", "example", "12345678-abc"]
+    "value", ["x", "x-x", "x-x-x", "x" * 64, "example"]
 )
 def test_validate_type_name_pass(value):
     pydantic.TypeAdapter(validation.types.Name).validate_python(value)
@@ -36,6 +36,8 @@ def test_validate_type_name_pass(value):
         "饭",
         '"',
         ".;",
+        "12345678",
+        "12345678-abc",
     ],
 )
 def test_validate_type_name_fail(value):
