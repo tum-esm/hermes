@@ -45,7 +45,7 @@ def test_validate_type_name_fail(value):
         pydantic.TypeAdapter(validation.types.Name).validate_python(value)
 
 
-@pytest.mark.parametrize("value", ["x", "x_x", "x_x_x", "x" * 64, "abc", "example_abc"])
+@pytest.mark.parametrize("value", ["x", "x_x", "x_x_x", "x" * 64, "abc", "example_abc", "example_123"])
 def test_validate_type_key_pass(value):
     pydantic.TypeAdapter(validation.types.Key).validate_python(value)
 
@@ -71,7 +71,7 @@ def test_validate_type_key_pass(value):
         '"',
         ".;",
         "12345678",
-        "example_123",
+        "12example_123",
     ],
 )
 def test_validate_type_key_fail(value):
