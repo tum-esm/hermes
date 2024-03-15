@@ -2,7 +2,7 @@ import { SENSOR_IDS } from "@/src/utils/constants";
 import { ICONS } from "@/src/components/icons";
 import Link from "next/link";
 import { useState } from "react";
-import { useNetworkStore } from "@/src/utils/state";
+import { useSensorsStore } from "@/src/utils/state";
 import { determinSensorStatus, renderTimeString } from "@/src/utils/functions";
 import { maxBy } from "lodash";
 import { VARIANT_TO_PILL_COLOR } from "@/src/utils/colors";
@@ -65,7 +65,7 @@ export default function Page({ sensorName }: { sensorName: string }) {
   const sensorId = SENSOR_IDS[sensorName];
   const [tab, setTab] = useState<"data" | "logs" | "logs (aggregated)">("data");
 
-  const networkState = useNetworkStore((state) => state.state);
+  const networkState = useSensorsStore((state) => state.state);
   const sensorState = networkState.filter(
     (sensor) => sensor.sensorId === SENSOR_IDS[sensorName]
   )[0];

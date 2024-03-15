@@ -1,5 +1,4 @@
-import { SENSOR_IDS } from "@/src/utils/constants";
-import { useNetworkStore } from "@/src/utils/state";
+import { useSensorsStore } from "@/src/utils/state";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { maxBy } from "lodash";
@@ -7,9 +6,10 @@ import { determinSensorStatus, renderTimeString } from "@/src/utils/functions";
 import { VARIANT_TO_BG_COLOR } from "@/src/utils/colors";
 
 function SensorListItem({ sensorName }: { sensorName: string }) {
-  const networkState = useNetworkStore((state) => state.state);
+  const networkState = useSensorsStore((state) => state.state);
   const sensorState = networkState.filter(
-    (sensor) => sensor.sensorId === SENSOR_IDS[sensorName]
+    //(sensor) => sensor.sensorId === networkState. [sensorName]
+      (sensor)=>true
   )[0];
 
   const sensorStatus = determinSensorStatus(sensorState);
@@ -66,9 +66,10 @@ function SensorListItem({ sensorName }: { sensorName: string }) {
 }
 
 export function SensorList() {
+  let sensors = useSensorsStore((state) => state.state);
   return (
     <ul>
-      {Object.keys(SENSOR_IDS).map((sensorName) => (
+      {Object.keys(sensors).map((sensorName) => (
         <Link
           key={sensorName}
           href={`/sensor/${sensorName}`}

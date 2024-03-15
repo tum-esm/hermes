@@ -2,8 +2,8 @@ import {Rubik} from "next/font/google";
 import {SensorList} from "@/src/components/layout/sensorList";
 import {Header} from "@/src/components/layout/header";
 import {useEffect, useRef} from "react";
-import {useServerStore, useNetworkStore, useAuthStore} from "@/src/utils/state";
-import {SENSOR_IDS, SERVER_URL} from "@/src/utils/constants";
+import {useServerStore, useSensorsStore, useAuthStore, useNetworksStore, useClientStore} from "@/src/utils/state";
+import {SERVER_URL} from "@/src/utils/constants";
 import Head from "next/head";
 import {usePathname} from "next/navigation";
 
@@ -13,9 +13,9 @@ export default function Layout({children}: { children: React.ReactNode }) {
     const setServerState = useServerStore((state) => state.setState);
     const isLoggedIn = useAuthStore((state) => state.loggedIn);
     const authToken = useAuthStore((state) => state.token);
-    const setSensorData = useNetworkStore((state) => state.setData);
-    const setSensorLogs = useNetworkStore((state) => state.setLogs);
-    const setSensorAggregatedLogs = useNetworkStore(
+    const setSensorData = useSensorsStore((state) => state.setData);
+    const setSensorLogs = useSensorsStore((state) => state.setLogs);
+    const setSensorAggregatedLogs = useSensorsStore(
         (state) => state.setAggregatedLogs
     );
 
@@ -25,6 +25,10 @@ export default function Layout({children}: { children: React.ReactNode }) {
                 console.log("setting auth state from local storage")
                 let auth = JSON.parse(window.localStorage.getItem("auth") as string);
                 useAuthStore.getState().setAuthState(auth.token, auth.username, auth.loggedIn);
+            }else{
+                console.log("no auth state in local storage")
+                if(window.location.pathname !== "/login")
+                    window.location.href = "/login";
             }
         }
     }
@@ -138,10 +142,16 @@ function updateSensorData(
         })
         .then(async networks => {
             console.log("got networks: ", networks);
+            // update networksstore
+            useNetworksStore.getState().setNetworks(networks);
+            // set selected network
+            if(useClientStore.getState().selectedNetwork === null && networks.length > 0){
+                useClientStore.getState().setSelectedNetwork(networks[0].network_identifier);
+            }
             if(networks.length === 0){
                 throw "No networks available";
             }
-            return fetch(`${SERVER_URL}/networks/${networks[0].identifier}/sensors`, {
+            return fetch(`${SERVER_URL}/networks/${networks[0].network_identifier}/sensors`, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${useAuthStore.getState().token}`
@@ -154,6 +164,8 @@ function updateSensorData(
                 throw "Failed to fetch sensors";
             } else {
                 console.log("got sensors: ", data);
+                // update sensorsstore
+                useSensorsStore.getState().setState(data);
             }
         });
 

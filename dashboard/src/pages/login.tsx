@@ -8,14 +8,7 @@ export default function Page() {
     let isLoggedIn = useAuthStore((state) => state.loggedIn);
 
     if (isLoggedIn){
-        return (
-            <div>
-                <h1>You are already logged in</h1>
-                <div >
-                    <a href="/">Go to home</a>
-                </div>
-            </div>
-        )
+        window.location.href = "/";
     }
     function login() {
         const username = (document.getElementById("username") as HTMLInputElement).value;

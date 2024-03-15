@@ -1,6 +1,6 @@
 import { VARIANT_TO_BG_COLOR, VARIANT_TO_TEXT_COLOR } from "@/src/utils/colors";
 import { determinSensorStatus } from "@/src/utils/functions";
-import { useNetworkStore } from "@/src/utils/state";
+import { useSensorsStore } from "@/src/utils/state";
 
 const variantToDescription = {
   online: (
@@ -56,7 +56,7 @@ function NetworkActivityItem(props: {
 }
 
 export function NetworkActivity() {
-  const networkState = useNetworkStore((state) => state.state);
+  const networkState = useSensorsStore((state) => state.state);
 
   const sensorCountOnline = networkState.filter(
     (sensor) => determinSensorStatus(sensor) === "online"
