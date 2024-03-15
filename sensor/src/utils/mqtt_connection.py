@@ -1,7 +1,9 @@
 import os
-import time
-import paho.mqtt.client
 import ssl
+import time
+
+import paho.mqtt.client
+
 from src import custom_types
 
 

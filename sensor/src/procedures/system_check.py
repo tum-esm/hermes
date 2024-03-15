@@ -1,7 +1,8 @@
 import time
+
 import psutil
+
 from src import hardware, custom_types, utils
-from .mqtt_agent import MQTTAgent
 
 
 class SystemCheckProcedure:
@@ -99,10 +100,10 @@ class SystemCheckProcedure:
                     raspi_disk_usage=round(disk_usage.percent / 100, 4),
                     raspi_cpu_usage=round(cpu_usage_percent / 100, 4),
                     raspi_memory_usage=round(memory_usage_percent / 100, 4),
-                    ups_powered_by_grid = 1.0 if self.hardware_interface.ups.powered_by_grid else 0.0,
-                    ups_battery_is_fully_charged = 1.0 if self.hardware_interface.ups.battery_is_fully_charged else 0.0,
-                    ups_battery_error_detected = 1.0 if self.hardware_interface.ups.battery_error_detected else 0.0,
-                    ups_battery_above_voltage_threshold = 1.0 if self.hardware_interface.ups.battery_above_voltage_threshold else 0.0,
+                    ups_powered_by_grid=1.0 if self.hardware_interface.ups.powered_by_grid else 0.0,
+                    ups_battery_is_fully_charged=1.0 if self.hardware_interface.ups.battery_is_fully_charged else 0.0,
+                    ups_battery_error_detected=1.0 if self.hardware_interface.ups.battery_error_detected else 0.0,
+                    ups_battery_above_voltage_threshold=1.0 if self.hardware_interface.ups.battery_above_voltage_threshold else 0.0,
                 ),
             ),
         )

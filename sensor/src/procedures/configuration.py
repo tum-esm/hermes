@@ -21,6 +21,7 @@ import re
 import shutil
 import time
 from typing import Callable, Literal
+
 from src import custom_types, utils, hardware
 
 NAME = "hermes"
@@ -161,9 +162,7 @@ class ConfigurationProcedure:
 
             self._run_pytests(
                 new_version,
-                scope=(
-                    "parameter-change" if (has_same_directory) else "version-change"
-                ),
+                scope="parameter-change" if has_same_directory else "version-change",
             )
 
             self.logger.info(
@@ -243,7 +242,7 @@ class ConfigurationProcedure:
             self.logger.info("code directory already exists")
             return
 
-        # download release using the github cli
+        # download release using the GitHub cli
         self.logger.info("downloading code from GitHub")
         utils.run_shell_command(
             f"wget https://github.com/tum-esm/hermes/archive/refs/tags/{tarball_name(version)}"
@@ -287,7 +286,7 @@ class ConfigurationProcedure:
         self,
         config_request: custom_types.MQTTConfigurationRequest,
     ) -> None:
-        """write new config config to json file"""
+        """write new config to json file"""
 
         # config.json
         self.logger.info("dumping config.json file")
@@ -350,14 +349,14 @@ class ConfigurationProcedure:
         venvs_to_be_removed: list[str] = []
         version_regex_pattern = re.compile(r"^\d+\.\d+\.\d+(-(alpha|beta)\.\d+)?$")
         for old_version in os.listdir(ROOT_PATH):
-            venv_path = os.path.join(ROOT_PATH, old_version, ".venv")
-            if not os.path.isdir(venv_path):
+            old_venv_path = os.path.join(ROOT_PATH, old_version, ".venv")
+            if not os.path.isdir(old_venv_path):
                 continue
             if not version_regex_pattern.match(old_version):
                 continue
             if old_version == self.config.version:
                 continue
-            venvs_to_be_removed.append(venv_path)
+            venvs_to_be_removed.append(old_venv_path)
 
         for p in venvs_to_be_removed:
             self.logger.debug(f'removing old .venv at path "{p}"')

@@ -1,12 +1,13 @@
-from datetime import datetime
-import time
-import pytz
 import json
-import sqlite3
 import os
+import sqlite3
+import time
+from datetime import datetime
 from os.path import dirname
 from typing import Any, Literal, Optional
+
 import filelock
+
 from src import custom_types
 
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
@@ -109,7 +110,7 @@ class MessageQueue:
         return len(self.__read_sql("SELECT Count(internal_id) FROM QUEUE;"))
 
     def update_records(self, records: list[custom_types.SQLMQTTRecord]) -> None:
-        """Records distinguished by `interal_id`. Used for:
+        """Records distinguished by `internal_id`. Used for:
         * "Message has been `sent`"
         * "Message has been `delivered`" """
 
@@ -134,7 +135,7 @@ class MessageQueue:
         )
 
     def remove_records_by_id(self, record_ids: list[int]) -> None:
-        """Records distinguished by `interal_id`. Used for:
+        """Records distinguished by `internal_id`. Used for:
         * "Message has been `sent`"
         * "Message has been `delivered`" """
 
@@ -160,7 +161,7 @@ class MessageQueue:
         )
         new_message: custom_types.MQTTMessage
 
-        #TODO: refactor
+        # TODO: refactor
         if isinstance(message_body, custom_types.MQTTLogMessageBody):
             new_message = custom_types.MQTTLogMessage(
                 header=new_header, body=message_body

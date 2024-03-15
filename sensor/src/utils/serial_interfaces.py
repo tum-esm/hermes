@@ -1,8 +1,9 @@
 import fcntl
-from typing import Literal
-import serial
 import re
 import time
+from typing import Literal
+
+import serial
 
 
 class SerialCO2SensorInterface:
@@ -25,7 +26,7 @@ class SerialCO2SensorInterface:
         Returns the sensor answer as tuple (indicator, answer).
         """
         self.flush_receiver_stream()  # empty input queue
-        self.serial_interface.write((f"{message}\r\n").encode("utf-8"))  # send command
+        self.serial_interface.write(f"{message}\r\n".encode("utf-8"))  # send command
         self.serial_interface.flush()  # wait until data is written
         return self.wait_for_answer(
             expected_regex=expected_regex, timeout=timeout
@@ -49,16 +50,16 @@ class SerialCO2SensorInterface:
 
                 # return successful answer as it matches expected regex
                 if re.search(expected_regex, answer):
-                    return ("success", answer)
+                    return "success", answer
 
                 # return answer that is requesting to set the new value in another message
                 # this can happen if only "p" is received instead of "p 1000"
                 # Example answer: "PRESSURE (hPa) : 1000.000 ?"
                 if re.search(r".*\?.*", answer):
-                    return ("uncomplete", answer)
+                    return "uncomplete", answer
 
             if (time.time() - start_time) > timeout:
-                return ("timeout", answer)
+                return "timeout", answer
             else:
                 time.sleep(0.05)
 
@@ -69,7 +70,7 @@ class SerialOneDirectionalInterface:
         port: str,
         baudrate: Literal[19200, 9600],
         encoding: Literal["cp1252", "utf-8"] = "utf-8",
-        line_endling: str = "\n",
+        line_ending: str = "\n",
     ) -> None:
         self.serial_interface = serial.Serial(
             port=port,
@@ -80,7 +81,7 @@ class SerialOneDirectionalInterface:
         )
         self.current_input_stream = ""
         self.encoding = encoding
-        self.line_ending = line_endling
+        self.line_ending = line_ending
 
     def get_messages(self) -> list[str]:
         new_input_bytes = self.serial_interface.read_all()

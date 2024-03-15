@@ -1,9 +1,8 @@
-import multiprocessing
-import queue
 import time
-from typing import Literal, Optional
+
 import gpiozero
 import gpiozero.pins.pigpio
+
 from src import utils, custom_types
 
 PUMP_CONTROL_PIN_OUT = 19
@@ -62,7 +61,8 @@ class PumpInterface:
         self.control_pin.value = pwm_duty_cycle
 
     def flush_system(self, duration: int, duty_cycle: float) -> None:
-        """flushed the system by setting the pump to max speed and waiting the duration in seconds. At the end the pump speed is set to the duty cycle defined in the config file."""
+        """flushed the system by setting the pump to max speed and waiting the duration in seconds.
+        At the end the pump speed is set to the duty cycle defined in the config file."""
         assert 0 <= duty_cycle <= 1
         self.set_desired_pump_speed(pwm_duty_cycle=duty_cycle)
         time.sleep(duration)

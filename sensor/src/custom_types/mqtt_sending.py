@@ -1,5 +1,7 @@
 from typing import Literal, Optional, Union
+
 import pydantic
+
 
 # -----------------------------------------------------------------------------
 # MQTT Config (read from env variables)
@@ -88,7 +90,8 @@ class MQTTWindData(pydantic.BaseModel):
     wxt532_speed_avg: float
     wxt532_speed_max: float
     wxt532_last_update_time: float
-    
+
+
 class MQTTWindSensorInfo(pydantic.BaseModel):
     wxt532_temperature: float
     wxt532_heating_voltage: float

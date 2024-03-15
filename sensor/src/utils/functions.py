@@ -3,11 +3,11 @@ import random
 import signal
 import string
 import subprocess
-from typing import Any, Optional
 import time
-import pigpio
-import gpiozero.pins.pigpio
+from typing import Any, Optional
 
+import gpiozero.pins.pigpio
+import pigpio
 
 pigpio.exceptions = False
 
@@ -53,8 +53,8 @@ class ExponentialBackOff:
 
 
 def run_shell_command(
-    command: str,
-    working_directory: Optional[str] = None,
+        command: str,
+        working_directory: Optional[str] = None,
 ) -> str:
     """runs a shell command and raises a CommandLineException if the
     return code is not zero, returns the stdout"""
@@ -114,9 +114,8 @@ def get_gpio_pin_factory() -> gpiozero.pins.pigpio.PiGPIOFactory:
 def get_random_string(length: int, forbidden: list[str] = []) -> str:
     """a random string from lowercase letter, the strings from
     the list passed as `forbidden` will not be generated"""
-    output: str = ""
     while True:
-        output = "".join(random.choices(string.ascii_lowercase, k=length))
+        output: str = "".join(random.choices(string.ascii_lowercase, k=length))
         if output not in forbidden:
             break
     return output
@@ -130,7 +129,7 @@ def get_cpu_temperature() -> Optional[float]:
 def set_alarm(timeout: int, label: str) -> None:
     """Set an alarm that will raise a `TimeoutError` after `timeout` seconds"""
 
-    def alarm_handler(*args: Any) -> None:
+    def alarm_handler(*_args: Any) -> None:
         raise TimeoutError(f"{label} took too long (timed out after {timeout} seconds)")
 
     signal.signal(signal.SIGALRM, alarm_handler)
