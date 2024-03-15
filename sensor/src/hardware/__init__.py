@@ -1,5 +1,5 @@
 import os
-from typing import TypedDict, Optional
+from typing import TypedDict
 
 import filelock
 
