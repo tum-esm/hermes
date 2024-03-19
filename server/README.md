@@ -124,7 +124,7 @@ This directory contains the necessary files to deploy the hermes server and asso
    HERMES_MQTT_USERNAME=server
    HERMES_MQTT_BASE_TOPIC=sensortopic/
    
-   HERMES_MOSQUITTO_PWFILE=mosquitto_password
+   HERMES_MOSQUITTO_PWFILE=./mosquitto_password
    HERMES_MOSQUITTO_DATA_PATH=<path-to-data-dir>/mosquitto
    HERMES_POSTGRESQL_DATA_PATH=<path-to-data-dir>/postgresql
    ````
