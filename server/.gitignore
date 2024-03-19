@@ -1,2 +1,9 @@
 notebooks
 scripts/deploy
+
+# output from docker/gen_cert.sh script
+*self_signed_cert*
+
+# mqtt-password file
+**mqtt_password*
+**mosquitto_password*
