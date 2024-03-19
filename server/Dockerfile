@@ -22,7 +22,7 @@ EXPOSE 8000
 # Read commit hash and branch name as build arguments
 ARG commit_sha branch_name
 LABEL commit_sha=${commit_sha} branch_name=${branch_name}
-ENV COMMIT_SHA=${commit_sha} BRANCH_NAME=${branch_name}
+ENV HERMES_COMMIT_SHA=${commit_sha} HERMES_BRANCH_NAME=${branch_name}
 
 COPY /app /app
 
