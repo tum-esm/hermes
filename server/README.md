@@ -134,7 +134,12 @@ This directory contains the necessary files to deploy the hermes server and asso
    source .env && docker-compose up
    ````
    
-6. If the logs look healthy and everything is working as intended, launch in detached mode
+6. If running the server for the first time, you will need to initialize the postgres database
+    ````
+    server/scripts/initialize
+    ````
+   
+7. If the logs look healthy and everything is working as intended, launch in detached mode
     ````
     source .env && docker-compose up -d
     ````
