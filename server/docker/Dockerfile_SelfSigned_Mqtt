@@ -1,0 +1,15 @@
+FROM eclipse-mosquitto:latest
+
+LABEL maintainer="Lars Froelich <lars.froelich@tum.de>"
+LABEL source="https://github.com/tum-esm/hermes"
+
+# install dependencies
+RUN apk update && apk add openssl
+
+COPY mosquitto.conf /mosquitto/config/mosquitto.conf
+COPY gen_cert.sh /root/gen_cert.sh
+
+RUN mkdir -p /etc/mosquitto/certs
+WORKDIR /etc/mosquitto/certs
+RUN chmod +x ~/gen_cert.sh && /bin/sh ~/gen_cert.sh TumEsm
+RUN chmod a+r -R /etc/mosquitto/certs

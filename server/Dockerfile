@@ -26,4 +26,9 @@ ENV HERMES_COMMIT_SHA=${commit_sha} HERMES_BRANCH_NAME=${branch_name}
 
 COPY /app /app
 
-CMD poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info
+## Add the wait script to the image
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.5.0/wait /wait
+RUN chmod +x /wait
+
+# wait for dependencies, then launch the server
+CMD /wait && poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info

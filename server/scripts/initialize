@@ -5,5 +5,10 @@ set -o errexit -o pipefail -o nounset
 # Change into the project's directory
 cd "$(dirname "$0")/.."
 
+export $(grep -v '^#' .env | xargs)
+
+export HERMES_COMMIT_SHA=$(git rev-parse --verify HEAD)
+export HERMES_BRANCH_NAME=$(git branch --show-current)
+
 # Initialize the database
 poetry run python -m scripts.initialize "$@"
