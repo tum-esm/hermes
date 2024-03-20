@@ -1,9 +1,7 @@
-import { useSensorsStore } from "@/src/utils/state";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useSensorsStore } from "../../utils/state";
 import { maxBy } from "lodash";
-import { determinSensorStatus, renderTimeString } from "@/src/utils/functions";
-import { VARIANT_TO_BG_COLOR } from "@/src/utils/colors";
+import { determinSensorStatus, renderTimeString } from "../../utils/functions";
+import { VARIANT_TO_BG_COLOR } from "../../utils/colors";
 
 function SensorListItem({ sensorName }: { sensorName: string }) {
   const networkState = useSensorsStore((state) => state.state);
@@ -22,8 +20,7 @@ function SensorListItem({ sensorName }: { sensorName: string }) {
     (log) => log.creation_timestamp
   )?.creation_timestamp;
 
-  const pathname = usePathname();
-  const isSelected = pathname === `/sensor/${sensorName}`;
+  const isSelected = false;
 
   return (
     <li
@@ -70,13 +67,12 @@ export function SensorList() {
   return (
     <ul>
       {Object.keys(sensors).map((sensorName) => (
-        <Link
-          key={sensorName}
+        <a
           href={`/sensor/${sensorName}`}
           className="block border-b group border-slate-100 last:border-none hover:bg-slate-50"
         >
           <SensorListItem sensorName={sensorName} />
-        </Link>
+        </a>
       ))}
     </ul>
   );

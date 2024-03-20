@@ -1,11 +1,11 @@
-import { SENSOR_IDS } from "@/src/utils/constants";
-import { ICONS } from "@/src/components/icons";
-import Link from "next/link";
+import { ICONS } from "../../components/icons";
 import { useState } from "react";
-import { useSensorsStore } from "@/src/utils/state";
-import { determinSensorStatus, renderTimeString } from "@/src/utils/functions";
+import { useSensorsStore } from "../../utils/state";
+import { determinSensorStatus, renderTimeString } from "../../utils/functions";
 import { maxBy } from "lodash";
-import { VARIANT_TO_PILL_COLOR } from "@/src/utils/colors";
+import { VARIANT_TO_PILL_COLOR } from "../../utils/colors";
+
+const SENSOR_IDS = {"sensor": "sensor1"};
 
 function Tab(props: { visible: boolean; children: React.ReactNode }) {
   return (
@@ -40,7 +40,7 @@ function Card(props: {
 
 export function getStaticPaths() {
   return {
-    paths: Object.keys(SENSOR_IDS).map((sensorName) => ({
+    paths: Object.keys({}).map((sensorName) => ({
       params: { sensorName },
     })),
     fallback: false,
@@ -62,11 +62,13 @@ const TAB_NAMES: ("data" | "logs" | "logs (aggregated)")[] = [
 ];
 
 export default function Page({ sensorName }: { sensorName: string }) {
+    // @ts-ignore
   const sensorId = SENSOR_IDS[sensorName];
   const [tab, setTab] = useState<"data" | "logs" | "logs (aggregated)">("data");
 
   const networkState = useSensorsStore((state) => state.state);
   const sensorState = networkState.filter(
+      // @ts-ignore
     (sensor) => sensor.sensorId === SENSOR_IDS[sensorName]
   )[0];
 
@@ -82,13 +84,13 @@ export default function Page({ sensorName }: { sensorName: string }) {
 
   return (
     <>
-      <Link
+      <a
         href="/"
         className="inline-flex flex-row items-center justify-center p-1 text-sm font-medium gap-x-1 text-slate-800 hover:text-rose-600"
       >
         <div className="h-3.5 w-3.5 rotate-180">{ICONS.chevronRight}</div>
         <p>back to overview</p>
-      </Link>
+      </a>
 
       <h2 className="px-4 mt-3 text-2xl text-slate-800">
         <span className="font-semibold text-black">{sensorName}</span>

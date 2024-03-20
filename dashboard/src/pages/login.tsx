@@ -1,9 +1,8 @@
-import Link from "next/link";
-import {SERVER_URL} from "@/src/utils/constants";
-import {useAuthStore} from "@/src/utils/state";
+import {SERVER_URL} from "../utils/constants";
+import {useAuthStore} from "../utils/state";
 
 // Login-Page
-export default function Page() {
+export default function loginPage() {
     let setAuthState = useAuthStore((state) => state.setAuthState);
     let isLoggedIn = useAuthStore((state) => state.loggedIn);
 

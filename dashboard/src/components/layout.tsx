@@ -1,13 +1,9 @@
-import {Rubik} from "next/font/google";
-import {SensorList} from "@/src/components/layout/sensorList";
-import {Header} from "@/src/components/layout/header";
-import {useEffect, useRef} from "react";
-import {useServerStore, useSensorsStore, useAuthStore, useNetworksStore, useClientStore} from "@/src/utils/state";
-import {SERVER_URL} from "@/src/utils/constants";
-import Head from "next/head";
-import {usePathname} from "next/navigation";
-
-const RUBIK = Rubik({subsets: ["latin"]});
+import {SensorList} from "../components/layout/sensorList";
+import {Header} from "../components/layout/header";
+import {useEffect} from "react";
+import {useServerStore, useSensorsStore, useAuthStore, useNetworksStore, useClientStore} from "../utils/state";
+import {SERVER_URL} from "../utils/constants";
+import {Footer} from "../components/layout/footer";
 
 export default function Layout({children}: { children: React.ReactNode }) {
     const setServerState = useServerStore((state) => state.setState);
@@ -33,30 +29,13 @@ export default function Layout({children}: { children: React.ReactNode }) {
         }
     }
 
-    const pathname = usePathname();
-    const pageDivRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        if (pageDivRef.current !== null) {
-            pageDivRef.current.scroll({top: 0, behavior: "smooth"});
-        }
-    }, [pathname, pageDivRef.current === null]);
 
     useEffect(() => {
         updateSensorData(setServerState, setSensorData, setSensorLogs, setSensorAggregatedLogs);
     }, []);
 
     return (
-        <div className={RUBIK.className}>
-            <Head>
-                <title>Acropolis Sensor Network</title>
-                <link rel="shortcut icon" href="/favicon.ico"/>
-                <meta property="og:title" content="Acropolis Sensor Network"/>
-                <meta
-                    property="og:description"
-                    content="Acropolis Sensor Network | Professorship of Environmental Sensing And Modeling"
-                />
-                <meta property="og:image" content="/favicon.ico"/>
-            </Head>
+        <>
             <div className="flex h-screen w-screen items-center justify-center text-lg xl:hidden">
                 Please use a larger screen
             </div>
@@ -68,23 +47,22 @@ export default function Layout({children}: { children: React.ReactNode }) {
                         <SensorList/>
                     </nav>
                     <div
-                        className="h-full flex-grow overflow-y-scroll bg-slate-50 p-6 pb-32 "
-                        ref={pageDivRef}
-                    >
+                        className="h-full flex-grow overflow-y-scroll bg-slate-50 p-6 pb-32 ">
                         {children}
                     </div>
                 </main>
+                <Footer/>
             </div>
-        </div>
+        </>
     );
 }
 
 
 function updateSensorData(
-    setServerState: (data: any)=>void,
+    setServerState: (data: any) => void,
     setSensorData: (sensorId: string, newData: any) => void,
     setSensorLogs: (sensorId: string, newLogs: any) => void,
-    setSensorAggregatedLogs: (sensorId: string, newAggregatedLogs: any) => void ){
+    setSensorAggregatedLogs: (sensorId: string, newAggregatedLogs: any) => void) {
     console.log("start fetching");
 
     fetch(`${SERVER_URL}/status`, {

@@ -1,9 +1,6 @@
-
-
-// Admin-Page
-import {useAuthStore, useClientStore, useNetworksStore, useSensorsStore} from "@/src/utils/state";
-import {not_logged_in} from "@/src/components/not_logged_in";
-import {SERVER_URL} from "@/src/utils/constants";
+import {useAuthStore, useClientStore, useNetworksStore, useSensorsStore} from "../../utils/state";
+import {not_logged_in} from "../../components/not_logged_in";
+import {SERVER_URL} from "../../utils/constants";
 
 export default function Page() {
     let auth_token = useAuthStore((state) => state.token);
