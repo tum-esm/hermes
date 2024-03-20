@@ -6,8 +6,7 @@ GLOBAL_HERMES_DEPLOYMENT_ROOT_PATH=${HERMES_DEPLOYMENT_ROOT_PATH}
 HERMES_DEPLOYMENT_ROOT_PATH=/root/deployment
 
 # Run the docker image
-docker run -d --rm --name hermes_sensor \
-  --restart unless-stopped \
+docker run -d --restart unless-stopped --name hermes_sensor \
   -e HERMES_MQTT_IDENTIFIER="$HERMES_MQTT_IDENTIFIER" \
   -e HERMES_DEPLOYMENT_ROOT_PATH="$HERMES_DEPLOYMENT_ROOT_PATH" \
   --env-file .env \
