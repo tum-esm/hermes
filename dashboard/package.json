@@ -3,10 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "develop": "export NEXT_PUBLIC_BUILD_TIMESTAMP=$(date +%s) && export NEXT_PUBLIC_COMMIT_SHA=$(git rev-parse HEAD) && next dev -p 3001",
-    "build": "export NEXT_PUBLIC_BUILD_TIMESTAMP=$(date +%s) && export NEXT_PUBLIC_COMMIT_SHA=$(git rev-parse HEAD) && next build && next export",
-    "start": "next start",
-    "lint": "next lint"
+    "develop": "vite dev --port 3001",
+    "build": "vite build",
+    "start": "vite preview"
   },
   "dependencies": {
     "@types/node": "18.15.11",
