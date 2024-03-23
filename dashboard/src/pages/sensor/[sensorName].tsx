@@ -71,8 +71,15 @@ export default function sensorPage() {
     const sensorId = identifier;
     const [tab, setTab] = useState<"data" | "logs" | "logs (aggregated)">("data");
 
-    const networkState = useSensorsStore((state) => state.state);
-    const sensorState = networkState.filter(
+    const sensors = useSensorsStore((state) => state.state);
+    if(window?.localStorage && sensors.length > 80){
+        let previous_selected = window.localStorage.selectedSensor;
+        window.localStorage.selectedSensor = sensorId;
+        if(previous_selected !== sensorId){
+            window.location.reload();
+        }
+    }
+    const sensorState = sensors.filter(
         // @ts-ignore
         (sensor) => sensor.sensorId === sensorId
     )[0];

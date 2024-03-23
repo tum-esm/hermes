@@ -168,6 +168,11 @@ function updateSensorData(
                     if (SENSOR_IDS.length > 30) {
                         await new Promise(r => setTimeout(r, 150));
                     }
+                    if (SENSOR_IDS.length > 80) {
+                        if(!window?.localStorage || sensorId !== window.localStorage.selectedSensor){
+                            continue;
+                        }
+                    }
                     console.log(`start fetching data/logs for sensor id ${sensorId}`);
                     fetch(
                         `${SERVER_URL}/networks/${selectedNetwork}/sensors/${sensorId}/measurements?direction=previous`,
