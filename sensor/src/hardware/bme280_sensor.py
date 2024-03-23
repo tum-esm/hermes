@@ -29,6 +29,7 @@ class BME280SensorInterface:
 
         if self.simulate:
             self.sensor_connected = True
+            self.logger.info("Simulating BME280 sensor.")
             return
 
         # set up connection to BME280 sensor
