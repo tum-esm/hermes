@@ -2,6 +2,7 @@ import { useSensorsStore } from "../../utils/state";
 import { maxBy } from "lodash";
 import { determineSensorStatus, renderTimeString } from "../../utils/functions";
 import { VARIANT_TO_BG_COLOR } from "../../utils/colors";
+import {Link} from "react-router-dom";
 
 function SensorListItem({ sensorIdentifier }: { sensorIdentifier: string }) {
   const networkState = useSensorsStore((state) => state.state);
@@ -65,13 +66,14 @@ export function SensorList() {
   let sensors = useSensorsStore((state) => state.state);
   return (
     <ul>
-      {Object.values(sensors).map((sensor) => (
-        <a
-          href={`/sensor/${sensor.sensorId}`}
+      {Object.values(sensors).map((sensor, index) => (
+        <Link
+          key={index}
+          to={`/sensor/${sensor.sensorId}`}
           className="block border-b group border-slate-100 last:border-none hover:bg-slate-50"
         >
           <SensorListItem sensorIdentifier={sensor.sensorId} />
-        </a>
+        </Link>
       ))}
     </ul>
   );

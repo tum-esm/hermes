@@ -11,12 +11,13 @@ export default function Layout({children}: { children: React.ReactNode }) {
     const authToken = useAuthStore((state) => state.token);
     const setSensorData = useSensorsStore((state) => state.setData);
     const setSensorLogs = useSensorsStore((state) => state.setLogs);
+    let selectedNetwork = useClientStore((state) => state.selectedNetwork);
     const setSensorAggregatedLogs = useSensorsStore(
         (state) => state.setAggregatedLogs
     );
 
-    if(!isLoggedIn){
-        if (typeof window !== "undefined") {
+    if (typeof window !== "undefined") {
+        if(!isLoggedIn){
             if (window.localStorage.getItem("auth") !== null) {
                 console.log("setting auth state from local storage")
                 let auth = JSON.parse(window.localStorage.getItem("auth") as string);
@@ -27,12 +28,17 @@ export default function Layout({children}: { children: React.ReactNode }) {
                     window.location.href = "/login";
             }
         }
+
+        if (window.localStorage.getItem("selectedNetwork") !== null){
+            console.log("setting selected network from local storage")
+            useClientStore.getState().setSelectedNetwork(window.localStorage.getItem("selectedNetwork") as string);
+        }
     }
 
 
     useEffect(() => {
-        updateSensorData(setServerState, setSensorData, setSensorLogs, setSensorAggregatedLogs);
-    }, []);
+        updateSensorData(setServerState, setSensorData, setSensorLogs, setSensorAggregatedLogs, selectedNetwork);
+    }, [selectedNetwork]);
 
     return (
         <>
@@ -62,7 +68,8 @@ function updateSensorData(
     setServerState: (data: any) => void,
     setSensorData: (sensorId: string, newData: any) => void,
     setSensorLogs: (sensorId: string, newLogs: any) => void,
-    setSensorAggregatedLogs: (sensorId: string, newAggregatedLogs: any) => void) {
+    setSensorAggregatedLogs: (sensorId: string, newAggregatedLogs: any) => void,
+    selectedNetwork:string ) {
     console.log("start fetching");
 
     fetch(`${SERVER_URL}/status`, {
@@ -84,9 +91,6 @@ function updateSensorData(
         .catch((err) => {
             console.error("could not load server state");
         });
-
-
-    let selectedNetwork = "";
 
     fetch(`${SERVER_URL}/networks`, {
         headers: {
@@ -143,7 +147,7 @@ function updateSensorData(
                 }).then((res) => res?.json())
             }
         })
-        .then((data) => {
+        .then(async (data) => {
             if (data === undefined || !data.map){
                 throw "Failed to fetch sensors";
             } else {
@@ -160,7 +164,10 @@ function updateSensorData(
                 }));
 
                 let SENSOR_IDS = data.map((sensor: any) => sensor.sensor_identifier);
-                SENSOR_IDS.forEach((sensorId:string) => {
+                for(let sensorId of SENSOR_IDS){
+                    if (SENSOR_IDS.length > 30) {
+                        await new Promise(r => setTimeout(r, 150));
+                    }
                     console.log(`start fetching data/logs for sensor id ${sensorId}`);
                     fetch(
                         `${SERVER_URL}/networks/${selectedNetwork}/sensors/${sensorId}/measurements?direction=previous`,
@@ -228,7 +235,7 @@ function updateSensorData(
                         .catch((err) => {
                             console.error(`could not load sensor logs for sensor id ${sensorId}`);
                         });
-                })
+                }
             }
         });
 

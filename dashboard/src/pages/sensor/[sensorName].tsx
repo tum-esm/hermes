@@ -5,6 +5,7 @@ import {determineSensorStatus, renderTimeString} from "../../utils/functions";
 import {maxBy} from "lodash";
 import {VARIANT_TO_PILL_COLOR} from "../../utils/colors";
 import {useParams} from "react-router";
+import {Link} from "react-router-dom";
 
 const SENSOR_IDS = {"sensor": "sensor1"};
 
@@ -88,13 +89,13 @@ export default function sensorPage() {
 
     return (
         <>
-            <a
-                href="/"
+            <Link
+                to="/"
                 className="inline-flex flex-row items-center justify-center p-1 text-sm font-medium gap-x-1 text-slate-800 hover:text-rose-600"
             >
                 <div className="h-3.5 w-3.5 rotate-180">{ICONS.chevronRight}</div>
                 <p>back to overview</p>
-            </a>
+            </Link>
 
             <h2 className="px-4 mt-3 text-2xl text-slate-800">
                 <span className="font-semibold text-black">{sensorId}</span>
@@ -152,13 +153,13 @@ export default function sensorPage() {
             {sensorStatus === undefined && <p className="px-4">loading...</p>}
             {sensorStatus !== undefined && (
                 <>
-                    <Tab visible={tab == "data"}>
+                    <Tab key="tab1" visible={tab == "data"}>
                         {sensorState.data
                             ?.sort((a, b) => b.creation_timestamp - a.creation_timestamp)
-                            .map((data) => (
+                            .map((data, index) => (
                                 <>
                                     <Card
-                                        key={data.creation_timestamp}
+                                        key={index + "data" + data.creation_timestamp}
                                         title={
                                             <>
                                                 <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-sm"/>
@@ -177,12 +178,12 @@ export default function sensorPage() {
                             ))}
                     </Tab>
 
-                    <Tab visible={tab == "logs"}>
+                    <Tab key="tab2" visible={tab == "logs"}>
                         {sensorState.logs
                             ?.sort((a, b) => b.creation_timestamp - a.creation_timestamp)
-                            .map((log) => (
+                            .map((log, index) => (
                                 <Card
-                                    key={log.creation_timestamp}
+                                    key={index + "logs" + log.creation_timestamp}
                                     title={
                                         <>
                                             <div
@@ -208,14 +209,14 @@ export default function sensorPage() {
                             ))}
                     </Tab>
 
-                    <Tab visible={tab == "logs (aggregated)"}>
+                    <Tab  key="tab3" visible={tab == "logs (aggregated)"}>
                         {sensorState.aggregatedLogs
                             ?.sort(
                                 (a, b) => b.max_creation_timestamp - a.max_creation_timestamp
                             )
-                            .map((log) => (
+                            .map((log, index) => (
                                 <Card
-                                    key={log.subject}
+                                    key={index + "logsa" + log.subject}
                                     title={
                                         <>
                                             <div

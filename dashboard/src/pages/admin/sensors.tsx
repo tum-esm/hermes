@@ -9,11 +9,14 @@ export default function adminSensorsPage() {
     let selected_network = useClientStore((state) => state.selectedNetwork)
     if(!isLoggedIn){return not_logged_in()}
 
-    function addSensor(selected_network: string) {
+    async function addSensor(selected_network: string) {
         console.log("addSensor")
         let sensor_name = (document.getElementById("new_sensor_name") as HTMLInputElement).value
+        await addNamedSensor(selected_network, sensor_name);
+    }
 
-        fetch(`${SERVER_URL}/networks/${selected_network}/sensors`, {
+    async function addNamedSensor(selected_network: string, sensor_name: string) {
+        return fetch(`${SERVER_URL}/networks/${selected_network}/sensors`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

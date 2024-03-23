@@ -11,15 +11,15 @@ import sensorPage from "@/src/pages/sensor/[sensorName]";
 
 export default function App() {
     return (
-        <Layout>
-            <BrowserRouter>
+        <BrowserRouter>
+            <Layout>
                 <Routes>
                     <Route path="/" Component={indexPage} />
                     <Route path="/login" Component={loginPage} />
                     <Route path="/admin*" Component={adminPage} />
-                    <Route path="/sensor/:identifier" Component={sensorPage} />
+                    <Route path="/sensor/:identifier" Component={sensorPage}/>
                 </Routes>
-            </BrowserRouter>
-        </Layout>
+            </Layout>
+        </BrowserRouter>
     );
 }

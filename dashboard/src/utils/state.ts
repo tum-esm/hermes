@@ -38,7 +38,12 @@ type ClientState = {
 }
 export const useClientStore = create<ClientState>((set) => ({
     selectedNetwork: "",
-    setSelectedNetwork: (newNetwork) => set((state) => ({selectedNetwork: newNetwork})),
+    setSelectedNetwork: (newNetwork) => {
+        if(window?.localStorage){
+            window.localStorage.setItem("selectedNetwork", newNetwork);
+        }
+        set((_) => ({selectedNetwork: newNetwork}))
+    },
 }));
 
 type ServerState = {

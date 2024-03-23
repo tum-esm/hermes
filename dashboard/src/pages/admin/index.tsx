@@ -1,6 +1,6 @@
 import {useAuthStore} from "../../utils/state";
 import {not_logged_in} from "../../components/not_logged_in";
-import {Route, Routes} from "react-router-dom";
+import {Link, Route, Routes} from "react-router-dom";
 import indexPage from "@/src/pages";
 import loginPage from "@/src/pages/login";
 import sensorPage from "@/src/pages/sensor/[sensorName]";
@@ -22,16 +22,16 @@ export default function adminPage() {
                     </div>
                     <div className="flex h-full w-full flex-col items-center justify-center gap-y-2">
                         <div>
-                            <a href="/admin/networks">Networks</a>
+                            <Link to="/admin/networks">Networks</Link>
                         </div>
                         <div>
-                            <a href="/admin/sensors">Sensors</a>
+                            <Link to="/admin/sensors">Sensors</Link>
                         </div>
                         <div>
-                            <a href="/admin/users">Users</a>
+                            <Link to="/admin/users">Users</Link>
                         </div>
                         <div>
-                            <a href="/admin/logs">Logs</a>
+                            <Link to="/admin/logs">Logs</Link>
                         </div>
                     </div>
                 </div>
@@ -39,7 +39,7 @@ export default function adminPage() {
             <Route path="networks" Component={adminNetworksPage}/>
             <Route path="sensors" Component={adminSensorsPage}/>
             <Route path="users" Component={adminUsersPage}/>
-            <Route path="logs" element={<><h1>Not implemented.</h1><a href="/admin">go back</a></>}/>
+            <Route path="logs" element={<><h1>Not implemented.</h1><Link to="/admin">go back</Link></>}/>
         </Routes>
 
 
