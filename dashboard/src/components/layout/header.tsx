@@ -4,6 +4,7 @@ import {useAuthStore, useClientStore, useNetworksStore} from "../../utils/state"
 export function Header() {
     let isLoggedIn = useAuthStore((state) => state.loggedIn);
     let networks = useNetworksStore((state) => state.networks);
+    let selectedNetwork = useClientStore((state) => state.selectedNetwork);
     let setSelectedNetwork = useClientStore((state) => state.setSelectedNetwork);
 
     function logOut() {
@@ -50,12 +51,19 @@ export function Header() {
                     isLoggedIn ? (
                         <select
                             className="ml-1 form-select mr-2"
+                            value={selectedNetwork}
                             onChange={(e) => {
+                                console.log(`setting selected network to ${e.target.value}`);
                                 setSelectedNetwork(e.target.value);
                             }}
-                            value={useClientStore((state) => state.selectedNetwork)}
+                            disabled={networks.length == 0}
                         >
-                            {networks.map((network) => (
+                            {
+                                networks.length == 0 && <option selected key={"none"} value={undefined}>
+                                    * no networks available *
+                                </option>
+                            }
+                            {networks.map((network, index) => (
                                 <option key={network.network_name} value={network.network_identifier}>
                                     {network.network_name}
                                 </option>
@@ -68,7 +76,7 @@ export function Header() {
                 {
                     isLoggedIn ? (
                         <a href="/admin">
-                            <div
+                        <div
                                 className="flex h-full w-[5.5rem] items-center justify-center border-l px-6 text-slate-800">
                                 {ICONS.admin}
                             </div>

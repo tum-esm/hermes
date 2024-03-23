@@ -1,16 +1,15 @@
 import { useSensorsStore } from "../../utils/state";
 import { maxBy } from "lodash";
-import { determinSensorStatus, renderTimeString } from "../../utils/functions";
+import { determineSensorStatus, renderTimeString } from "../../utils/functions";
 import { VARIANT_TO_BG_COLOR } from "../../utils/colors";
 
-function SensorListItem({ sensorName }: { sensorName: string }) {
+function SensorListItem({ sensorIdentifier }: { sensorIdentifier: string }) {
   const networkState = useSensorsStore((state) => state.state);
   const sensorState = networkState.filter(
-    //(sensor) => sensor.sensorId === networkState. [sensorName]
-      (sensor)=>true
+    (sensor) => sensor.sensorId === sensorIdentifier
   )[0];
 
-  const sensorStatus = determinSensorStatus(sensorState);
+  const sensorStatus = determineSensorStatus(sensorState);
   const lastDataTime = maxBy(
     sensorState?.data,
     (data) => data.creation_timestamp
@@ -24,7 +23,7 @@ function SensorListItem({ sensorName }: { sensorName: string }) {
 
   return (
     <li
-      key={sensorName}
+      key={sensorIdentifier}
       className={
         "flex w-full flex-row items-center justify-start gap-x-4 px-5 py-4 " +
         (isSelected
@@ -48,7 +47,7 @@ function SensorListItem({ sensorName }: { sensorName: string }) {
             : "text-slate-800 group-hover:text-slate-900")
         }
       >
-        <p className="mr-2 font-medium">{sensorName}</p>
+        <p className="mr-2 font-medium">{sensorState.name}</p>
         <p className="text-xs">
           <span className="inline-block w-14">last data:</span>{" "}
           {renderTimeString(lastDataTime)}
@@ -66,12 +65,12 @@ export function SensorList() {
   let sensors = useSensorsStore((state) => state.state);
   return (
     <ul>
-      {Object.keys(sensors).map((sensorName) => (
+      {Object.values(sensors).map((sensor) => (
         <a
-          href={`/sensor/${sensorName}`}
+          href={`/sensor/${sensor.sensorId}`}
           className="block border-b group border-slate-100 last:border-none hover:bg-slate-50"
         >
-          <SensorListItem sensorName={sensorName} />
+          <SensorListItem sensorIdentifier={sensor.sensorId} />
         </a>
       ))}
     </ul>

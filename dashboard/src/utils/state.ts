@@ -1,4 +1,3 @@
-import {SENSOR_IDS} from "@/src/utils/constants";
 import {create} from "zustand";
 
 namespace StateObjects {
@@ -96,6 +95,7 @@ export type SensorState = {
     data: null | StateObjects.SensorData[];
     logs: null | StateObjects.SensorLog[];
     aggregatedLogs: null | StateObjects.SensorAggregatedLog[];
+    name: null|string;
 };
 
 type SensorsState = {

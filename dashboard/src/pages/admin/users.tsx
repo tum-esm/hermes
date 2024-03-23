@@ -1,7 +1,7 @@
 import {useAuthStore} from "../../utils/state";
 import {not_logged_in} from "../../components/not_logged_in";
 
-export default function Page() {
+export default function adminUsersPage() {
     let isLoggedIn = useAuthStore((state) => state.loggedIn);
     if(!isLoggedIn){return not_logged_in()}
 

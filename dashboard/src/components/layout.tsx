@@ -86,6 +86,8 @@ function updateSensorData(
         });
 
 
+    let selectedNetwork = "";
+
     fetch(`${SERVER_URL}/networks`, {
         headers: {
             "Content-Type": "application/json",
@@ -108,7 +110,7 @@ function updateSensorData(
         })
         .then((res) => res?.json())
         .then((data) => {
-            if (data === undefined) {
+            if (data === undefined || data.hasOwnProperty("details")){
                 throw "Failed to fetch networks";
             } else {
                 return data;
@@ -120,30 +122,113 @@ function updateSensorData(
         })
         .then(async networks => {
             console.log("got networks: ", networks);
-            // update networksstore
+            // update networks-store
             useNetworksStore.getState().setNetworks(networks);
             // set selected network
-            if(useClientStore.getState().selectedNetwork === null && networks.length > 0){
-                useClientStore.getState().setSelectedNetwork(networks[0].network_identifier);
+            if(!useClientStore.getState().selectedNetwork && networks.length > 0){
+                console.log("setting selected network to first network")
+                selectedNetwork = networks[0].network_identifier;
+                useClientStore.getState().setSelectedNetwork(selectedNetwork);
             }
-            if(networks.length === 0){
-                throw "No networks available";
+            if(!selectedNetwork || networks.length === 0){
+                console.log("No networks available");
+                return {};
+            }else{
+                return fetch(`${SERVER_URL}/networks/${selectedNetwork}/sensors`, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${useAuthStore.getState().token}`
+                    },
+                    cache: "no-cache",
+                }).then((res) => res?.json())
             }
-            return fetch(`${SERVER_URL}/networks/${networks[0].network_identifier}/sensors`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${useAuthStore.getState().token}`
-                },
-                cache: "no-cache",
-            })
-        }).then((res) => res?.json())
+        })
         .then((data) => {
-            if (data === undefined) {
+            if (data === undefined || !data.map){
                 throw "Failed to fetch sensors";
             } else {
                 console.log("got sensors: ", data);
-                // update sensorsstore
-                useSensorsStore.getState().setState(data);
+                // update sensors-store
+                useSensorsStore.getState().setState(data.map((sensor: any) => {
+                    return {
+                        sensorId: sensor.sensor_identifier,
+                        data: null,
+                        logs: null,
+                        aggregatedLogs: null,
+                        name: sensor.sensor_name
+                    }
+                }));
+
+                let SENSOR_IDS = data.map((sensor: any) => sensor.sensor_identifier);
+                SENSOR_IDS.forEach((sensorId:string) => {
+                    console.log(`start fetching data/logs for sensor id ${sensorId}`);
+                    fetch(
+                        `${SERVER_URL}/networks/${selectedNetwork}/sensors/${sensorId}/measurements?direction=previous`,
+                        {
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            cache: "no-cache",
+                        }
+                    )
+                        .then((res) => res?.json())
+                        .then((data) => {
+                            if (data === undefined) {
+                                throw "";
+                            } else {
+                                setSensorData(sensorId, data);
+                                console.log(`loaded sensor data for sensor id ${sensorId}`);
+                            }
+                        })
+                        .catch((err) => {
+                            console.error(`could not load sensor data for sensor id ${sensorId}`);
+                        });
+
+                    fetch(
+                        `${SERVER_URL}/networks/${selectedNetwork}/sensors/${sensorId}/logs?direction=previous`,
+                        {
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            cache: "no-cache",
+                        }
+                    )
+                        .then((res) => res?.json())
+                        .then((data) => {
+                            if (data === undefined) {
+                                throw "";
+                            } else {
+                                setSensorLogs(sensorId, data);
+                                console.log(`loaded sensor logs for sensor id ${sensorId}`);
+                                console.log(`sensor logs: ${data}`);
+                            }
+                        })
+                        .catch((err) => {
+                            console.error(`could not load sensor logs for sensor id ${sensorId}`);
+                        });
+
+                    fetch(
+                        `${SERVER_URL}/networks/${selectedNetwork}/sensors/${sensorId}/logs/aggregates`,
+                        {
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            cache: "no-cache",
+                        }
+                    )
+                        .then((res) => res?.json())
+                        .then((data) => {
+                            if (data === undefined) {
+                                throw "";
+                            } else {
+                                setSensorAggregatedLogs(sensorId, data);
+                                console.log(`loaded sensor logs for sensor id ${sensorId}`);
+                            }
+                        })
+                        .catch((err) => {
+                            console.error(`could not load sensor logs for sensor id ${sensorId}`);
+                        });
+                })
             }
         });
 

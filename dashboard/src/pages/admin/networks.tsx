@@ -2,7 +2,7 @@ import {useAuthStore, useNetworksStore, useSensorsStore} from "../../utils/state
 import {not_logged_in} from "../../components/not_logged_in";
 import {SERVER_URL} from "../../utils/constants";
 
-export default function Page() {
+export default function adminNetworksPage() {
     let auth_token = useAuthStore((state) => state.token);
     let isLoggedIn = useAuthStore((state) => state.loggedIn);
     let networks = useNetworksStore((state) => state.networks);

@@ -17,10 +17,11 @@ export function renderTimeString(time: number | undefined): string {
   }
 }
 
-export function determinSensorStatus(
+export function determineSensorStatus(
   sensor: SensorState
 ): "online" | "unstable" | "error" | "offline" | undefined {
   if (
+    !sensor ||
     sensor.data === null ||
     sensor.logs === null ||
     sensor.aggregatedLogs === null

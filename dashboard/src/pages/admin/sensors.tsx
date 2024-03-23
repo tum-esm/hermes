@@ -2,7 +2,7 @@ import {useAuthStore, useClientStore, useNetworksStore, useSensorsStore} from ".
 import {not_logged_in} from "../../components/not_logged_in";
 import {SERVER_URL} from "../../utils/constants";
 
-export default function Page() {
+export default function adminSensorsPage() {
     let auth_token = useAuthStore((state) => state.token);
     let isLoggedIn = useAuthStore((state) => state.loggedIn);
     let sensors = useSensorsStore((state) => state.state);
@@ -58,9 +58,9 @@ export default function Page() {
             }
             <div className="flex w-full justify-center flex-col">
                 {
-                    sensors.map((sensor, index) => {
+                    Object.values(sensors).map((sensor) => {
                         return (
-                            <div key={index} className="flex w-full justify-center m-2">
+                            <div key={sensor.sensorId} className="flex w-full justify-center m-2">
                                 <h1>{sensor.sensorId}</h1>
                             </div>
                         )
