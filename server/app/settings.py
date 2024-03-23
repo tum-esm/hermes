@@ -25,4 +25,5 @@ MQTT_PORT = int(os.environ["HERMES_MQTT_PORT"])
 MQTT_IDENTIFIER = os.environ["HERMES_MQTT_IDENTIFIER"]
 MQTT_USERNAME = os.environ["HERMES_MQTT_USERNAME"]
 MQTT_PASSWORD = os.environ["HERMES_MQTT_PASSWORD"]
+MQTT_BASE_TOPIC = os.environ.get("HERMES_MQTT_BASE_TOPIC") or ""
 MQTT_CERT_REQUIREMENTS = os.environ.get("HERMES_MQTT_CERT_REQUIREMENTS") or "none"  # none [default], verify

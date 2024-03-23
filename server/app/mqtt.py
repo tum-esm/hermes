@@ -66,7 +66,7 @@ async def publish_configuration(
             try:
                 # Try to publish the configuration
                 await mqttc.publish(
-                    topic=f"configurations/{sensor_identifier}",
+                    topic=f"{settings.MQTT_BASE_TOPIC}configurations/{sensor_identifier}",
                     payload=_encode_payload(
                         {"revision": revision, "configuration": configuration}
                     ),
@@ -175,10 +175,14 @@ SUBSCRIPTIONS = {
 async def listen(mqttc, dbpool):
     """Listen to and handle incoming MQTT messages from sensors."""
     async with mqttc.messages() as messages:
+        # ensure base topic ends with a trailing slash
+        if len(settings.MQTT_BASE_TOPIC) > 0 and settings.MQTT_BASE_TOPIC[-1] != "/":
+            settings.MQTT_BASE_TOPIC += "/"
+
         # Subscribe to all topics
         for wildcard in SUBSCRIPTIONS.keys():
-            await mqttc.subscribe(wildcard, qos=1, timeout=10)
-            logger.info(f"Subscribed to: {wildcard}")
+            await mqttc.subscribe(settings.MQTT_BASE_TOPIC + wildcard, qos=1, timeout=10)
+            logger.info(f"Subscribed to: {settings.MQTT_BASE_TOPIC + wildcard}")
         # Loop through incoming messages
         async for message in messages:
             # TODO: Remove condition when there's no more logs limit
@@ -191,7 +195,7 @@ async def listen(mqttc, dbpool):
             sensor_identifier = str(message.topic).split("/")[-1]
             # Call the appropriate processor; First match wins
             for wildcard, (process, validator) in SUBSCRIPTIONS.items():
-                if message.topic.matches(wildcard):
+                if message.topic.matches(settings.MQTT_BASE_TOPIC + wildcard):
                     try:
                         payload = validator.validate_json(message.payload)
                         await process(sensor_identifier, payload, dbpool)
