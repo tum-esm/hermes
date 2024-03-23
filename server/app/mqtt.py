@@ -24,6 +24,10 @@ task_references = set()
 
 @contextlib.asynccontextmanager
 async def client():
+    ssl_cert_requirements = (
+        ssl.CERT_NONE if settings.MQTT_CERT_REQUIREMENTS == "none"
+        else ssl.CERT_REQUIRED
+    )
     """Context manager to manage aiomqtt client with custom settings."""
     async with aiomqtt.Client(
         hostname=settings.MQTT_URL,
@@ -32,7 +36,7 @@ async def client():
         username=settings.MQTT_USERNAME,
         password=settings.MQTT_PASSWORD,
         tls_params=(
-            aiomqtt.TLSParameters(certfile=None, keyfile=None, tls_version=ssl.PROTOCOL_TLS_CLIENT, cert_reqs=ssl.CERT_NONE)
+            aiomqtt.TLSParameters(certfile=None, keyfile=None, tls_version=ssl.PROTOCOL_TLS_CLIENT, cert_reqs=ssl_cert_requirements)
             if settings.ENVIRONMENT == "production"
             else None
         ),
