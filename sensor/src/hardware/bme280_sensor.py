@@ -131,9 +131,14 @@ class BME280SensorInterface:
             self.compensation_params = None
 
     def _reset_sensor(self) -> None:
+        if self.simulate:
+            self.sensor_connected = True
+            return
+        
         try:
             self.compensation_params = None
-            self.bus.close()
+            if self.bus:
+                self.bus.close()
             time.sleep(1)
             self.bus = smbus2.SMBus(1)
             self.address = 0x77 if (self.variant == "mainboard") else 0x76
