@@ -30,5 +30,13 @@ COPY /app /app
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.5.0/wait /wait
 RUN chmod +x /wait
 
+# generate self-signed SSL certs
+COPY docker/gen_cert.sh /gen_cert.sh
+RUN chmod +x /gen_cert.sh && /gen_cert.sh tumesm
+
+# set environment variables for SSL-cert and keyfile (which can later be overwritten)
+ENV HERMES_SERVER_SSL_KEYFILE="/self_signed_cert.key"
+ENV HERMES_SERVER_SSL_CERTFILE="/self_signed_cert.crt"
+
 # wait for dependencies, then launch the server
-CMD /wait && poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info
+CMD /wait && poetry run uvicorn app.main:app --ssl-keyfile="$HERMES_SERVER_SSL_KEYFILE" --ssl-certfile="$HERMES_SERVER_SSL_CERTFILE" --host 0.0.0.0 --port 8000 --log-level info
