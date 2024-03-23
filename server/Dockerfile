@@ -36,11 +36,11 @@ RUN chmod +x /gen_cert.sh && /gen_cert.sh tumesm
 
 # set environment variables for SSL-cert and keyfile if not set
 RUN if [ -z "$HERMES_SERVER_SSL_KEYFILE" ]; then \
-    export HERMES_SERVER_SSL_KEYFILE="./self_signed_cert.key"; \
+    HERMES_SERVER_SSL_KEYFILE="./self_signed_cert.key"; \
 fi
 
 RUN if [ -z "$HERMES_SERVER_SSL_CERTFILE" ]; then \
-    export HERMES_SERVER_SSL_CERTFILE="./self_signed_cert.crt"; \
+    HERMES_SERVER_SSL_CERTFILE="./self_signed_cert.crt"; \
 fi
 
 ENV HERMES_SERVER_SSL_KEYFILE=${HERMES_SERVER_SSL_KEYFILE}
