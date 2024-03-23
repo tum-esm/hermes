@@ -1,1 +1,1 @@
-export const SERVER_URL = "http://142.93.164.41:8000";
+export const SERVER_URL = import.meta.env.VITE_SERVER_URL;
