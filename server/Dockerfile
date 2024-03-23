@@ -43,5 +43,8 @@ RUN if [ -z "$HERMES_SERVER_SSL_CERTFILE" ]; then \
     export HERMES_SERVER_SSL_CERTFILE="./self_signed_cert.crt"; \
 fi
 
+ENV HERMES_SERVER_SSL_KEYFILE=${HERMES_SERVER_SSL_KEYFILE}
+ENV HERMES_SERVER_SSL_CERTFILE=${HERMES_SERVER_SSL_CERTFILE}
+
 # wait for dependencies, then launch the server
 CMD /wait && poetry run uvicorn app.main:app --ssl-keyfile="$HERMES_SERVER_SSL_KEYFILE" --ssl-certfile="$HERMES_SERVER_SSL_CERTFILE" --host 0.0.0.0 --port 8000 --log-level info
