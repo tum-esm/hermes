@@ -1,18 +1,16 @@
-import { SENSOR_IDS } from "@/src/utils/constants";
-import { useNetworkStore } from "@/src/utils/state";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useSensorsStore } from "../../utils/state";
 import { maxBy } from "lodash";
-import { determinSensorStatus, renderTimeString } from "@/src/utils/functions";
-import { VARIANT_TO_BG_COLOR } from "@/src/utils/colors";
+import { determineSensorStatus, renderTimeString } from "../../utils/functions";
+import { VARIANT_TO_BG_COLOR } from "../../utils/colors";
+import {Link} from "react-router-dom";
 
-function SensorListItem({ sensorName }: { sensorName: string }) {
-  const networkState = useNetworkStore((state) => state.state);
+function SensorListItem({ sensorIdentifier }: { sensorIdentifier: string }) {
+  const networkState = useSensorsStore((state) => state.state);
   const sensorState = networkState.filter(
-    (sensor) => sensor.sensorId === SENSOR_IDS[sensorName]
+    (sensor) => sensor.sensorId === sensorIdentifier
   )[0];
 
-  const sensorStatus = determinSensorStatus(sensorState);
+  const sensorStatus = determineSensorStatus(sensorState);
   const lastDataTime = maxBy(
     sensorState?.data,
     (data) => data.creation_timestamp
@@ -22,12 +20,11 @@ function SensorListItem({ sensorName }: { sensorName: string }) {
     (log) => log.creation_timestamp
   )?.creation_timestamp;
 
-  const pathname = usePathname();
-  const isSelected = pathname === `/sensor/${sensorName}`;
+  const isSelected = false;
 
   return (
     <li
-      key={sensorName}
+      key={sensorIdentifier}
       className={
         "flex w-full flex-row items-center justify-start gap-x-4 px-5 py-4 " +
         (isSelected
@@ -51,7 +48,7 @@ function SensorListItem({ sensorName }: { sensorName: string }) {
             : "text-slate-800 group-hover:text-slate-900")
         }
       >
-        <p className="mr-2 font-medium">{sensorName}</p>
+        <p className="mr-2 font-medium">{sensorState.name}</p>
         <p className="text-xs">
           <span className="inline-block w-14">last data:</span>{" "}
           {renderTimeString(lastDataTime)}
@@ -66,15 +63,16 @@ function SensorListItem({ sensorName }: { sensorName: string }) {
 }
 
 export function SensorList() {
+  let sensors = useSensorsStore((state) => state.state);
   return (
     <ul>
-      {Object.keys(SENSOR_IDS).map((sensorName) => (
+      {Object.values(sensors).map((sensor, index) => (
         <Link
-          key={sensorName}
-          href={`/sensor/${sensorName}`}
+          key={index}
+          to={`/sensor/${sensor.sensorId}`}
           className="block border-b group border-slate-100 last:border-none hover:bg-slate-50"
         >
-          <SensorListItem sensorName={sensorName} />
+          <SensorListItem sensorIdentifier={sensor.sensorId} />
         </Link>
       ))}
     </ul>

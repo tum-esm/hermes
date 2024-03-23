@@ -1,5 +1,5 @@
-import { renderTimeString } from "@/src/utils/functions";
-import { useServerStore } from "@/src/utils/state";
+import { renderTimeString } from "../../utils/functions";
+import { useServerStore } from "../../utils/state";
 
 export function ServerStatus() {
   const serverStatus = useServerStore((state) => state.state);

@@ -3,22 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "develop": "export NEXT_PUBLIC_BUILD_TIMESTAMP=$(date +%s) && export NEXT_PUBLIC_COMMIT_SHA=$(git rev-parse HEAD) && next dev -p 3001",
-    "build": "export NEXT_PUBLIC_BUILD_TIMESTAMP=$(date +%s) && export NEXT_PUBLIC_COMMIT_SHA=$(git rev-parse HEAD) && next build && next export",
-    "start": "next start",
-    "lint": "next lint"
+    "develop": "vite dev --port 3001",
+    "build": "vite build",
+    "start": "vite preview"
   },
   "dependencies": {
     "@types/node": "18.15.11",
     "@types/react": "18.0.33",
     "@types/react-dom": "18.0.11",
+    "@vitejs/plugin-react": "^4.2.1",
     "eslint": "8.37.0",
     "eslint-config-next": "13.2.4",
     "lodash": "^4.17.21",
-    "next": "13.3.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-router-dom": "^6.22.3",
     "typescript": "5.0.3",
+    "vite": "^5.2.1",
     "zustand": "^4.3.7"
   },
   "devDependencies": {
