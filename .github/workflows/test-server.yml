@@ -39,4 +39,9 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: scripts/setup
       - name: Run tests
+        env:
+          HERMES_MQTT_URL: ${{ secrets.HERMES_MQTT_URL }}
+          HERMES_MQTT_PORT: ${{ secrets.HERMES_MQTT_PORT }}
+          HERMES_MQTT_USERNAME: ${{ secrets.HERMES_MQTT_USERNAME }}
+          HERMES_MQTT_PASSWORD: ${{ secrets.HERMES_MQTT_PASSWORD }}
         run: scripts/test
