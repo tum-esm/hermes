@@ -25,8 +25,11 @@ class BME280SensorInterface:
         self.simulate = simulate
         self.logger.info("starting initialization")
         self.compensation_params: Optional[bme280.params] = None
-        self.simulate = simulate
         self.bus = None
+
+        if self.simulate:
+            self.sensor_connected = True
+            return
 
         # set up connection to BME280 sensor
         self.sensor_connected = False
