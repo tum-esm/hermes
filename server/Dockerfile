@@ -34,17 +34,9 @@ RUN chmod +x /wait
 COPY docker/gen_cert.sh /gen_cert.sh
 RUN chmod +x /gen_cert.sh && /gen_cert.sh tumesm
 
-# set environment variables for SSL-cert and keyfile if not set
-RUN if [ -z "$HERMES_SERVER_SSL_KEYFILE" ]; then \
-    HERMES_SERVER_SSL_KEYFILE=/self_signed_cert.key; \
-fi
-
-RUN if [ -z "$HERMES_SERVER_SSL_CERTFILE" ]; then \
-    HERMES_SERVER_SSL_CERTFILE=/self_signed_cert.crt; \
-fi
-
-ENV HERMES_SERVER_SSL_KEYFILE=${HERMES_SERVER_SSL_KEYFILE}
-ENV HERMES_SERVER_SSL_CERTFILE=${HERMES_SERVER_SSL_CERTFILE}
+# set environment variables for SSL-cert and keyfile (which can later be overwritten)
+ENV HERMES_SERVER_SSL_KEYFILE="/self_signed_cert.key"
+ENV HERMES_SERVER_SSL_CERTFILE="/self_signed_cert.crt"
 
 # wait for dependencies, then launch the server
 CMD /wait && poetry run uvicorn app.main:app --ssl-keyfile="$HERMES_SERVER_SSL_KEYFILE" --ssl-certfile="$HERMES_SERVER_SSL_CERTFILE" --host 0.0.0.0 --port 8000 --log-level info
