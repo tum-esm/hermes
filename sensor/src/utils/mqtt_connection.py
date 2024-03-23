@@ -24,10 +24,14 @@ class MQTTConnection:
         self.client.username_pw_set(
             self.config.mqtt_username, self.config.mqtt_password
         )
+        # HERMES_MQTT_CERT_REQUIREMENTS = none (default), verify
+        ssl_cert_requirements = ssl.CERT_NONE if ((os.environ.get("HERMES_MQTT_CERT_REQUIREMENTS") or "none") == "none") \
+            else ssl.CERT_REQUIRED
+
         self.client.tls_set(
             certfile=None,
             keyfile=None,
-            cert_reqs=ssl.CERT_NONE,
+            cert_reqs=ssl_cert_requirements,
             tls_version=ssl.PROTOCOL_TLS_CLIENT,
         )
         self.client.connect(
