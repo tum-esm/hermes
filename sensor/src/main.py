@@ -26,8 +26,9 @@ def run() -> None:
     - Procedure: Measurements (CO2, Wind)
     - Check for configuration update
     """
+    simulate = os.environ.get("HERMES_MODE") == "simulate"
 
-    logger = utils.Logger(origin="main", print_to_console=True)
+    logger = utils.Logger(origin="main", print_to_console=simulate)
     logger.horizontal_line()
 
     try:
@@ -35,7 +36,6 @@ def run() -> None:
     except Exception as e:
         logger.exception(e, label="could not load local config.json")
         raise e
-    simulate = os.environ.get("HERMES_MODE") == "simulate"
 
     logger.info(
         f"Started new automation process with SW version {config.version} and PID {os.getpid()}.",
