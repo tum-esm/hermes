@@ -2,7 +2,7 @@ import {SensorList} from "../components/layout/sensorList";
 import {Header} from "../components/layout/header";
 import {useEffect} from "react";
 import {useServerStore, useSensorsStore, useAuthStore, useNetworksStore, useClientStore} from "../utils/state";
-import {SERVER_URL} from "../utils/constants";
+import {SERVER_URL, URL_BASE_NAME} from "../utils/constants";
 import {Footer} from "../components/layout/footer";
 
 export default function Layout({children}: { children: React.ReactNode }) {
@@ -24,8 +24,8 @@ export default function Layout({children}: { children: React.ReactNode }) {
                 useAuthStore.getState().setAuthState(auth.token, auth.username, auth.loggedIn);
             }else{
                 console.log("no auth state in local storage")
-                if(window.location.pathname !== "/login")
-                    window.location.href = "/login";
+                if(window.location.pathname !== URL_BASE_NAME + "/login")
+                    window.location.href = URL_BASE_NAME + "/login";
             }
         }
 
@@ -106,8 +106,8 @@ function updateSensorData(
                 }
                 useAuthStore.getState().setAuthState(null, null, false);
                 // redirect to login page if not on login page
-                if (window.location.pathname !== "/login")
-                    window.location.href = "/login";
+                if (window.location.pathname !== URL_BASE_NAME + "/login")
+                    window.location.href = URL_BASE_NAME + "/login";
                 throw "Unauthorized"
             }
             return res;
