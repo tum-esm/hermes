@@ -50,7 +50,7 @@ jobs:
           VITE_URL_BASE_NAME: ${{ vars.VITE_URL_BASE_NAME }}
         run: npm run build
       - name: Create 404.html for github pages routing
-        run: cp dashboard/dist/index.html dashboard/dist/404.html
+        run: cp dist/index.html dist/404.html
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
