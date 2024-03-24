@@ -1,4 +1,4 @@
-import {SERVER_URL} from "../utils/constants";
+import {SERVER_URL, URL_BASE_NAME} from "../utils/constants";
 import {useAuthStore} from "../utils/state";
 
 // Login-Page
@@ -7,7 +7,7 @@ export default function loginPage() {
     let isLoggedIn = useAuthStore((state) => state.loggedIn);
 
     if (isLoggedIn){
-        window.location.href = "/";
+        window.location.href = URL_BASE_NAME + "/";
     }
     function login() {
         const username = (document.getElementById("username") as HTMLInputElement).value;
