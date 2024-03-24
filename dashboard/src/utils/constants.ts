@@ -5,3 +5,4 @@ if (!import.meta.env.VITE_SERVER_URL) {
 }
 
 export const SERVER_URL = import.meta.env.VITE_SERVER_URL;
+export const URL_BASE_NAME = import.meta.env.VITE_URL_BASE_NAME || '/';
