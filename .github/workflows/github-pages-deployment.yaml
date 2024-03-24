@@ -46,6 +46,8 @@ jobs:
         run: yarn install
       - name: Build
         run: npm run build
+      - name: Create 404.html for github pages routing
+        run: cp dashboard/dist/index.html dashboard/dist/404.html
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
