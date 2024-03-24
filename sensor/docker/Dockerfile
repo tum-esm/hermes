@@ -19,7 +19,7 @@ COPY README.md .
 
 # install dependencies through poetry
 RUN poetry config installer.max-workers 1
-RUN poetry install --with=dev
+RUN poetry install --no-root
 
 COPY config ./config
 COPY config/config.template.json ./config/config.json
