@@ -121,7 +121,9 @@ def get_random_string(length: int, forbidden: list[str] = []) -> str:
     return output
 
 
-def get_cpu_temperature() -> Optional[float]:
+def get_cpu_temperature(simulate: bool = False) -> Optional[float]:
+    if simulate:
+        return random.uniform(40, 60)
     s = os.popen("vcgencmd measure_temp").readline()
     return float(s.replace("temp=", "").replace("'C\n", ""))
 

@@ -14,9 +14,11 @@ class WindMeasurementProcedure:
         self,
         config: custom_types.Config,
         hardware_interface: hardware.HardwareInterface,
+        simulate: bool = False,
     ) -> None:
         self.logger, self.config = utils.Logger(origin="measurement-procedure"), config
         self.hardware_interface = hardware_interface
+        self.simulate = simulate
 
         # state variables
         self.wind_data: Optional[custom_types.WindSensorData] = None
@@ -110,9 +112,11 @@ class CO2MeasurementProcedure:
         self,
         config: custom_types.Config,
         hardware_interface: hardware.HardwareInterface,
+        simulate: bool = False,
     ) -> None:
         self.logger, self.config = utils.Logger(origin="measurement-procedure"), config
         self.hardware_interface = hardware_interface
+        self.simulate = simulate
 
         # state variables
         self.active_air_inlet: Optional[Literal[1, 2, 3, 4]] = None

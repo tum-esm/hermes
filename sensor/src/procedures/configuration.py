@@ -26,7 +26,7 @@ from src import custom_types, utils, hardware
 
 NAME = "hermes"
 REPOSITORY = f"tum-esm/{NAME}"
-ROOT_PATH = f"{os.environ['HOME']}/Documents/{NAME}"
+ROOT_PATH = os.environ.get('HERMES_DEPLOYMENT_ROOT_PATH', f"{os.environ['HOME']}/Documents/{NAME}")
 
 tarball_name: Callable[[str], str] = lambda version: f"v{version}.tar.gz"
 tarball_content_name: Callable[[str], str] = lambda version: f"{NAME}-{version}"
@@ -59,14 +59,14 @@ def restore_current_config() -> None:
 class ConfigurationProcedure:
     """runs when a config change has been requested"""
 
-    def __init__(self, config: custom_types.Config) -> None:
+    def __init__(self, config: custom_types.Config, simulate: bool = False) -> None:
         self.logger = utils.Logger(origin="configuration-procedure")
         self.config = config
         self._remove_old_venvs()
         self.message_queue = utils.MessageQueue()
 
         try:
-            self.hardware_interface = hardware.HardwareInterface(config)
+            self.hardware_interface = hardware.HardwareInterface(config, simulate=simulate)
         except Exception as e:
             self.logger.exception(
                 e, label="could not initialize hardware interface", config=config

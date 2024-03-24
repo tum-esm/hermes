@@ -13,6 +13,7 @@ class BME280SensorInterface:
         config: custom_types.Config,
         variant: Literal["mainboard", "air-inlet"],
         testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
             "mainboard-bme280" if (variant == "mainboard") else "air-inlet-bme280",
@@ -21,8 +22,15 @@ class BME280SensorInterface:
         )
         self.config = config
         self.variant = variant
+        self.simulate = simulate
         self.logger.info("starting initialization")
         self.compensation_params: Optional[bme280.params] = None
+        self.bus = None
+
+        if self.simulate:
+            self.sensor_connected = True
+            self.logger.info("Simulating BME280 sensor.")
+            return
 
         # set up connection to BME280 sensor
         self.sensor_connected = False
@@ -59,6 +67,13 @@ class BME280SensorInterface:
 
     def get_data(self, retries: int = 1) -> custom_types.BME280SensorData:
         """Reads temperature,humidity and pressure on mainboard and air inlet"""
+
+        if self.simulate:
+            return custom_types.BME280SensorData(
+                temperature=20.0,
+                humidity=50.0,
+                pressure=1013.25,
+            )
 
         # initialize output
         output = custom_types.BME280SensorData(
@@ -116,9 +131,14 @@ class BME280SensorInterface:
             self.compensation_params = None
 
     def _reset_sensor(self) -> None:
+        if self.simulate:
+            self.sensor_connected = True
+            return
+        
         try:
             self.compensation_params = None
-            self.bus.close()
+            if self.bus:
+                self.bus.close()
             time.sleep(1)
             self.bus = smbus2.SMBus(1)
             self.address = 0x77 if (self.variant == "mainboard") else 0x76
@@ -143,4 +163,5 @@ class BME280SensorInterface:
 
     def teardown(self) -> None:
         """Ends all hardware/system connections"""
-        self.bus.close()
+        if self.bus:
+            self.bus.close()

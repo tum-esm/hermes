@@ -15,6 +15,7 @@ class UPSInterface:
         self,
         config: custom_types.Config,
         testing: bool = False,
+        simulate: bool = False,
     ):
         self.logger = utils.Logger(
             origin="ups",
@@ -22,6 +23,7 @@ class UPSInterface:
             write_to_file=(not testing),
         )
         self.config = config
+        self.simulate = simulate
 
         self.logger.info("Starting initialization")
 
@@ -30,8 +32,9 @@ class UPSInterface:
         self.battery_error_detected: Optional[bool] = None
         self.battery_above_voltage_threshold: Optional[bool] = None
 
-        # use underlying pigpio library
-        self.pin_factory = utils.get_gpio_pin_factory()
+        if not simulate:
+            # use underlying pigpio library
+            self.pin_factory = utils.get_gpio_pin_factory()
 
         self.logger.info("Finished initialization")
 
@@ -40,6 +43,11 @@ class UPSInterface:
         UPS_BATTERY_MODE_PIN_IN is HIGH when the system is powered by the battery
         UPS_BATTERY_MODE_PIN_IN is LOW when the system is powered by the grid
         """
+
+        if self.simulate:
+            self.logger.info("simulating power mode 'grid'")
+            self.powered_by_grid = True
+            return
 
         power_mode = gpiozero.DigitalInputDevice(
             UPS_BATTERY_MODE_PIN_IN,
@@ -62,6 +70,11 @@ class UPSInterface:
         when the system is powered by the system and the battery voltage
         has dropped to a minimum
         """
+
+        if self.simulate:
+            self.logger.info("simulating battery state 'fully charged'")
+            self.battery_is_fully_charged = True
+            return
 
         battery_state = gpiozero.DigitalInputDevice(
             UPS_READY_PIN_IN, bounce_time=0.3, pin_factory=self.pin_factory
@@ -96,6 +109,11 @@ class UPSInterface:
         UPS_ALARM_PIN_IN is LOW when the battery status is okay
         """
 
+        if self.simulate:
+            self.logger.info("simulating battery error 'False'")
+            self.battery_error_detected = False
+            return
+
         alarm_state = gpiozero.DigitalInputDevice(
             UPS_ALARM_PIN_IN, bounce_time=0.3, pin_factory=self.pin_factory
         )
@@ -122,4 +140,7 @@ class UPSInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
+        if self.simulate:
+            return
+
         self.pin_factory.close()
