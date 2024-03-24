@@ -8,10 +8,11 @@ import {
 import loginPage from "@/src/pages/login";
 import adminPage from "@/src/pages/admin";
 import sensorPage from "@/src/pages/sensor/[sensorName]";
+import {URL_BASE_NAME} from "@/src/utils/constants";
 
 export default function App() {
     return (
-        <BrowserRouter>
+        <BrowserRouter basename={URL_BASE_NAME}>
             <Layout>
                 <Routes>
                     <Route path="/" Component={indexPage} />
