@@ -45,6 +45,9 @@ jobs:
       - name: Install dependencies
         run: yarn install
       - name: Build
+        env:
+          VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
+          VITE_URL_BASE_NAME: ${{ vars.VITE_URL_BASE_NAME }}
         run: npm run build
       - name: Create 404.html for github pages routing
         run: cp dashboard/dist/index.html dashboard/dist/404.html
