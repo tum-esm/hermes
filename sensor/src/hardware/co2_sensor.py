@@ -44,20 +44,23 @@ class CO2SensorInterface:
         self.logger.info("Starting initialization.")
         self.last_powerup_time: float = time.time()
 
-        if not simulate:
-            # power pin to power up/down CO2 sensor
-            self.pin_factory = utils.get_gpio_pin_factory()
-            self.power_pin = gpiozero.OutputDevice(
-                pin=CO2_SENSOR_POWER_PIN_OUT, pin_factory=self.pin_factory
-            )
+        if simulate:
+            self.logger.info("Finished simulated CO2 sensor initialization.")
+            return
 
-            # serial connection to receive data from CO2 sensor
-            self.serial_interface = utils.serial_interfaces.SerialCO2SensorInterface(
-                port=CO2_SENSOR_SERIAL_PORT
-            )
+        # power pin to power up/down CO2 sensor
+        self.pin_factory = utils.get_gpio_pin_factory()
+        self.power_pin = gpiozero.OutputDevice(
+            pin=CO2_SENSOR_POWER_PIN_OUT, pin_factory=self.pin_factory
+        )
 
-            # turn the sensor off and on and set it to our default settings
-            self._reset_sensor()
+        # serial connection to receive data from CO2 sensor
+        self.serial_interface = utils.serial_interfaces.SerialCO2SensorInterface(
+            port=CO2_SENSOR_SERIAL_PORT
+        )
+
+        # turn the sensor off and on and set it to our default settings
+        self._reset_sensor()
 
         self.logger.info("Finished initialization.")
 
