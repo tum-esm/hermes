@@ -20,7 +20,7 @@ async def _connection():
         connection = await asyncpg.connect(
             host=os.environ["HERMES_POSTGRESQL_URL"],
             port=os.environ["HERMES_POSTGRESQL_PORT"],
-            user=os.environ["HERMES_POSTGRESQL_IDENTIFIER"],
+            user=os.environ["HERMES_POSTGRESQL_USERNAME"],
             password=os.environ["HERMES_POSTGRESQL_PASSWORD"],
             database=os.environ["HERMES_POSTGRESQL_DATABASE"],
         )

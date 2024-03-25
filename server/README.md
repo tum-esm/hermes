@@ -114,7 +114,7 @@ This directory contains the necessary files to deploy the hermes server and asso
    HERMES_POSTGRESQL_PASSWORD=<your-postgresql-password>
    HERMES_POSTGRESQL_URL=127.0.0.1
    HERMES_POSTGRESQL_PORT=5432
-   HERMES_POSTGRESQL_IDENTIFIER=postgres
+   HERMES_POSTGRESQL_USERNAME=postgres
    HERMES_POSTGRESQL_DATABASE=database
    
    HERMES_MQTT_PASSWORD=<your-mosquitto-password>

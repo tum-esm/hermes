@@ -16,7 +16,7 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     environment:
-      - POSTGRES_USER=${HERMES_POSTGRESQL_IDENTIFIER}
+      - POSTGRES_USER=${HERMES_POSTGRESQL_USERNAME}
       - POSTGRES_PASSWORD=${HERMES_POSTGRESQL_PASSWORD}
       - POSTGRES_DB=${HERMES_POSTGRESQL_DATABASE}
       - PGDATA=/var/lib/postgresql/data/pgdata
