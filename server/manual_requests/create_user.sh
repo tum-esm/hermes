@@ -9,4 +9,4 @@ echo "Enter password: "
 read password
 
 # Create a new user
-curl -X POST -H "Content-Type: application/json" -d '{"user_name": "'$username'", "password": "'$password'"}' $server/users
+curl --insecure -X POST -H "Content-Type: application/json" -d '{"user_name": "'$username'", "password": "'$password'"}' $server/users
