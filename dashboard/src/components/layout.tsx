@@ -165,7 +165,7 @@ function updateSensorData(
 
                 let SENSOR_IDS = data.map((sensor: any) => sensor.sensor_identifier);
                 for(let sensorId of SENSOR_IDS){
-                    if (SENSOR_IDS.length > 30) {
+                    if (SENSOR_IDS.length > 30 && SENSOR_IDS.length <= 80) {
                         await new Promise(r => setTimeout(r, 150));
                     }
                     if (SENSOR_IDS.length > 80) {
