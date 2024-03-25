@@ -31,6 +31,6 @@ services:
     ports:
       - 0.0.0.0:1883:1883
     volumes:
-      - "${HERMES_MOSQUITTO_PWFILE}:/etc/mosquitto/mosquitto_password"
-      - "${HERMES_MOSQUITTO_DATA_PATH}:/var/lib/mosquitto/"
+      - "${HERMES_MQTT_PASSWORD_FILE}:/etc/mosquitto/mosquitto_password"
+      - "${HERMES_MQTT_DATA_PATH}:/var/lib/mosquitto/"
 
