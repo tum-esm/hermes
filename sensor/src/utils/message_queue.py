@@ -174,6 +174,11 @@ class MessageQueue:
             new_message = custom_types.MQTTAcknowledgmentMessage(
                 header=new_header, body=message_body
             )
+        elif isinstance(message_body, custom_types.MQTTProvisioningMessageBody):
+            new_header.mqtt_topic = "/provision/request"
+            new_message = custom_types.MQTTProvisioningMessage(
+                header=new_header, body=message_body
+            )
         else:
             raise ValueError(f"Unknown message type: {message_body}")
 

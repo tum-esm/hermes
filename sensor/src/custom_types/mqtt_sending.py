@@ -55,6 +55,12 @@ class MQTTMeasurementData(pydantic.BaseModel):
     sht45_humidity: Optional[float]
 
 
+class MQTTProvisioningMessageBody(pydantic.BaseModel):
+    deviceName: str
+    provisionDeviceKey: str
+    provisionDeviceSecret: str
+
+
 class MQTTCalibrationData(pydantic.BaseModel):
     cal_bottle_id: float
     cal_gmp343_raw: float
@@ -169,6 +175,16 @@ class MQTTAcknowledgmentMessage(pydantic.BaseModel):
 
     header: MQTTMessageHeader
     body: MQTTAcknowledgmentMessageBody
+
+    class Config:
+        extra = "forbid"
+
+
+class MQTTProvisioningMessage(pydantic.BaseModel):
+    """element in local message queue"""
+
+    header: MQTTMessageHeader
+    body: MQTTProvisioningMessageBody
 
     class Config:
         extra = "forbid"

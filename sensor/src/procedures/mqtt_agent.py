@@ -114,8 +114,9 @@ class MQTTAgent:
                 f"{mqtt_config.mqtt_base_topic}configurations"
                 + f"/{mqtt_config.station_identifier}"
             )
-            mqtt_client.on_message = MQTTAgent.__on_config_message(config_request_queue)
+            mqtt_client.on_message = MQTTAgent.__on_mqtt_message(config_request_queue)
             mqtt_client.subscribe(config_topic, qos=1)
+            mqtt_client.callback
         except Exception as e:
             logger.exception(
                 e,
@@ -257,7 +258,7 @@ class MQTTAgent:
                 )
 
     @staticmethod
-    def __on_config_message(
+    def __on_mqtt_message(
         config_request_queue: queue.Queue[custom_types.MQTTConfigurationRequest],
     ) -> Callable[[paho.mqtt.client.Client, Any, paho.mqtt.client.MQTTMessage], None]:
         logger = utils.Logger(origin="message-communication")
@@ -267,6 +268,10 @@ class MQTTAgent:
             _userdata: Any,
             msg: paho.mqtt.client.MQTTMessage,
         ) -> None:
+            # skip messages that are not coming from a config topic
+            if "configurations" not in msg.topic:
+                return
+
             logger.info(f"received message on config topic: {msg.payload.decode()}")
             try:
                 config_request_queue.put(

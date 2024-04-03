@@ -12,6 +12,7 @@ from .mqtt_sending import (
     MQTTSystemData,
     MQTTWindData,
     MQTTWindSensorInfo,
+    MQTTProvisioningMessageBody,
     # different message bodies
     MQTTLogMessageBody,
     MQTTMeasurementMessageBody,

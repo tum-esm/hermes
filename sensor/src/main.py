@@ -76,6 +76,11 @@ def run() -> None:
         )
 
     # -------------------------------------------------------------------------
+    # provision device through thingsboard if needed
+    
+
+
+    # -------------------------------------------------------------------------
     # initialize all hardware interfaces
     # tear down hardware on program termination
 
