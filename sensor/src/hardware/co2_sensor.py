@@ -44,8 +44,8 @@ class CO2SensorInterface:
         self.logger.info("Starting initialization.")
         self.last_powerup_time: float = time.time()
 
-        if simulate:
-            self.logger.info("Finished simulated CO2 sensor initialization.")
+        if self.simulate:
+            self.logger.info("Simulating CO2 sensor.")
             return
 
         # power pin to power up/down CO2 sensor

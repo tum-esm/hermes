@@ -32,9 +32,12 @@ class UPSInterface:
         self.battery_error_detected: Optional[bool] = None
         self.battery_above_voltage_threshold: Optional[bool] = None
 
-        if not simulate:
-            # use underlying pigpio library
-            self.pin_factory = utils.get_gpio_pin_factory()
+        if simulate:
+            self.logger.info("Simulating UPS.")
+            return
+
+        # use underlying pigpio library
+        self.pin_factory = utils.get_gpio_pin_factory()
 
         self.logger.info("Finished initialization")
 
