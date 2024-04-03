@@ -44,8 +44,8 @@ class CO2SensorInterface:
         self.logger.info("Starting initialization.")
         self.last_powerup_time: float = time.time()
 
-        if simulate:
-            self.logger.info("Finished simulated CO2 sensor initialization.")
+        if self.simulate:
+            self.logger.info("Simulating CO2 sensor.")
             return
 
         # power pin to power up/down CO2 sensor
@@ -367,14 +367,17 @@ class CO2SensorInterface:
     def check_errors(self) -> None:
         """checks whether the CO2 probe reports any errors. Possibly raises
         the CO2SensorInterface.CommunicationError exception"""
-        if not self.simulate:
-            answer = self._send_command_to_sensor("errs")
+        if self.simulate:
+            self.logger.info("The CO2 sensor check doesn't report any errors.")
+            return
 
-            if not ("OK: No errors detected." in answer):
-                self.logger.warning(
-                    f"The CO2 sensor reported errors: {answer}",
-                    config=self.config,
-                )
+        answer = self._send_command_to_sensor("errs")
+
+        if not ("OK: No errors detected." in answer):
+            self.logger.warning(
+                f"The CO2 sensor reported errors: {answer}",
+                config=self.config,
+            )
 
         self.logger.info("The CO2 sensor check doesn't report any errors.")
 

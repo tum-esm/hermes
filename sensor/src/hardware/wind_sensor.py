@@ -41,22 +41,25 @@ class WindSensorInterface:
         self.wind_measurement: Optional[custom_types.WindSensorData] = None
         self.device_status: Optional[custom_types.WindSensorStatus] = None
 
-        if not simulate:
-            # power pin to power up/down wind sensor
-            self.pin_factory = utils.get_gpio_pin_factory()
-            self.power_pin = gpiozero.OutputDevice(
-                pin=WIND_SENSOR_POWER_PIN_OUT,
-                pin_factory=self.pin_factory,
-            )
-            self.power_pin.on()
+        if self.simulate:
+            self.logger.info("Simulating wind sensor.")
+            return
 
-            # serial connection to receive data from wind sensor
-            self.wxt532_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
-                port=WIND_SENSOR_SERIAL_PORT,
-                baudrate=19200,
-                encoding="cp1252",
-                line_ending="\r\n",
-            )
+        # power pin to power up/down wind sensor
+        self.pin_factory = utils.get_gpio_pin_factory()
+        self.power_pin = gpiozero.OutputDevice(
+            pin=WIND_SENSOR_POWER_PIN_OUT,
+            pin_factory=self.pin_factory,
+        )
+        self.power_pin.on()
+
+        # serial connection to receive data from wind sensor
+        self.wxt532_interface = utils.serial_interfaces.SerialOneDirectionalInterface(
+            port=WIND_SENSOR_SERIAL_PORT,
+            baudrate=19200,
+            encoding="cp1252",
+            line_ending="\r\n",
+        )
 
         self.logger.info("Finished initialization")
 
@@ -169,22 +172,25 @@ class WindSensorInterface:
         if self.device_status is not None:
             # only consider values less than 5 minutes old
             if (now - self.device_status.last_update_time) < 300:
-                if not self.simulate:
-                    if not (22 <= self.device_status.heating_voltage <= 26):
-                        raise WindSensorInterface.DeviceFailure(
-                            "the heating voltage is off by more than 2 volts"
-                            + f" ({self.device_status})"
-                        )
-                    if not (22 <= self.device_status.supply_voltage <= 26):
-                        raise WindSensorInterface.DeviceFailure(
-                            "the supply voltage is off by more than 2 volts"
-                            + f" ({self.device_status})"
-                        )
-                    if not (3.2 <= self.device_status.reference_voltage <= 4.0):
-                        raise WindSensorInterface.DeviceFailure(
-                            "the reference voltage is off by more than 0.4 volts"
-                            + f" ({self.device_status})"
-                        )
+                if self.simulate:
+                    self.logger.info("the wind sensor check doesn't report any errors")
+                    return
+
+                if not (22 <= self.device_status.heating_voltage <= 26):
+                    raise WindSensorInterface.DeviceFailure(
+                        "the heating voltage is off by more than 2 volts"
+                        + f" ({self.device_status})"
+                    )
+                if not (22 <= self.device_status.supply_voltage <= 26):
+                    raise WindSensorInterface.DeviceFailure(
+                        "the supply voltage is off by more than 2 volts"
+                        + f" ({self.device_status})"
+                    )
+                if not (3.2 <= self.device_status.reference_voltage <= 4.0):
+                    raise WindSensorInterface.DeviceFailure(
+                        "the reference voltage is off by more than 0.4 volts"
+                        + f" ({self.device_status})"
+                    )
 
                 self.logger.info("the wind sensor check doesn't report any errors")
         else:

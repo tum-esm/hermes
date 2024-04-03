@@ -25,7 +25,7 @@ class SHT45SensorInterface:
         self.simulate = simulate
         self.logger.info("Starting initialization.")
 
-        if simulate:
+        if self.simulate:
             self.sensor_connected = True
             self.logger.info("Simulating SHT45 sensor.")
             return
