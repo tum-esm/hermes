@@ -172,22 +172,25 @@ class WindSensorInterface:
         if self.device_status is not None:
             # only consider values less than 5 minutes old
             if (now - self.device_status.last_update_time) < 300:
-                if not self.simulate:
-                    if not (22 <= self.device_status.heating_voltage <= 26):
-                        raise WindSensorInterface.DeviceFailure(
-                            "the heating voltage is off by more than 2 volts"
-                            + f" ({self.device_status})"
-                        )
-                    if not (22 <= self.device_status.supply_voltage <= 26):
-                        raise WindSensorInterface.DeviceFailure(
-                            "the supply voltage is off by more than 2 volts"
-                            + f" ({self.device_status})"
-                        )
-                    if not (3.2 <= self.device_status.reference_voltage <= 4.0):
-                        raise WindSensorInterface.DeviceFailure(
-                            "the reference voltage is off by more than 0.4 volts"
-                            + f" ({self.device_status})"
-                        )
+                if self.simulate:
+                    self.logger.info("the wind sensor check doesn't report any errors")
+                    return
+
+                if not (22 <= self.device_status.heating_voltage <= 26):
+                    raise WindSensorInterface.DeviceFailure(
+                        "the heating voltage is off by more than 2 volts"
+                        + f" ({self.device_status})"
+                    )
+                if not (22 <= self.device_status.supply_voltage <= 26):
+                    raise WindSensorInterface.DeviceFailure(
+                        "the supply voltage is off by more than 2 volts"
+                        + f" ({self.device_status})"
+                    )
+                if not (3.2 <= self.device_status.reference_voltage <= 4.0):
+                    raise WindSensorInterface.DeviceFailure(
+                        "the reference voltage is off by more than 0.4 volts"
+                        + f" ({self.device_status})"
+                    )
 
                 self.logger.info("the wind sensor check doesn't report any errors")
         else:
