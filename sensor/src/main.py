@@ -77,8 +77,8 @@ def run() -> None:
 
     # -------------------------------------------------------------------------
     # provision device through thingsboard if needed
-    
 
+    procedures.thingsboard_provisioning_procedure(config)
 
     # -------------------------------------------------------------------------
     # initialize all hardware interfaces

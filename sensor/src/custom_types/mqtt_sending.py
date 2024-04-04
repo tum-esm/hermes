@@ -191,7 +191,7 @@ class MQTTProvisioningMessage(pydantic.BaseModel):
 
 
 MQTTMessageBody = Union[
-    MQTTLogMessageBody, MQTTMeasurementMessageBody, MQTTAcknowledgmentMessageBody
+    MQTTLogMessageBody, MQTTMeasurementMessageBody, MQTTAcknowledgmentMessageBody, MQTTProvisioningMessageBody
 ]
 MQTTMessage = Union[MQTTLogMessage, MQTTMeasurementMessage, MQTTAcknowledgmentMessage]
 

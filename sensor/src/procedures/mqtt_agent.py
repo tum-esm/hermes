@@ -116,7 +116,7 @@ class MQTTAgent:
             )
             mqtt_client.on_message = MQTTAgent.__on_mqtt_message(config_request_queue)
             mqtt_client.subscribe(config_topic, qos=1)
-            mqtt_client.callback
+
         except Exception as e:
             logger.exception(
                 e,

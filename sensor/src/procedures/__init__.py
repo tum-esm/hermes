@@ -3,3 +3,4 @@ from .configuration import ConfigurationProcedure
 from .measurement import WindMeasurementProcedure, CO2MeasurementProcedure
 from .mqtt_agent import MQTTAgent
 from .system_check import SystemCheckProcedure
+from .thingsboard_provisioning import thingsboard_provisioning_procedure

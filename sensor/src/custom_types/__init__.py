@@ -12,14 +12,15 @@ from .mqtt_sending import (
     MQTTSystemData,
     MQTTWindData,
     MQTTWindSensorInfo,
-    MQTTProvisioningMessageBody,
     # different message bodies
+    MQTTProvisioningMessageBody,
     MQTTLogMessageBody,
     MQTTMeasurementMessageBody,
     MQTTAcknowledgmentMessageBody,
     MQTTMessageBody,
     # message structure
     MQTTMessageHeader,
+    MQTTProvisioningMessage,
     MQTTLogMessage,
     MQTTMeasurementMessage,
     MQTTAcknowledgmentMessage,

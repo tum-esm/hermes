@@ -3,9 +3,9 @@
 import os
 import time
 
-from sensor.src import utils, custom_types
+from src import utils, custom_types
 
-logger = utils.Logger(origin="thingsboard_provisioning")
+logger = utils.Logger(origin="thingsboard_provisioning", print_to_console=os.environ.get("HERMES_MODE") == "simulate")
 message_queue = utils.MessageQueue()
 
 
