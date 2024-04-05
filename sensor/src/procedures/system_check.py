@@ -12,10 +12,12 @@ class SystemCheckProcedure:
         self,
         config: custom_types.Config,
         hardware_interface: hardware.HardwareInterface,
+        simulate: bool = False,
     ) -> None:
         self.logger, self.config = utils.Logger(origin="system-check-procedure"), config
         self.hardware_interface = hardware_interface
         self.message_queue = utils.MessageQueue()
+        self.simulate = simulate
 
     def run(self) -> None:
         """runs system check procedure
@@ -32,7 +34,7 @@ class SystemCheckProcedure:
 
         mainboard_bme280_data = self.hardware_interface.mainboard_sensor.get_data()
         mainboard_temperature = mainboard_bme280_data.temperature
-        cpu_temperature = utils.get_cpu_temperature()
+        cpu_temperature = utils.get_cpu_temperature(self.simulate)
         self.logger.debug(
             f"mainboard temp. = {mainboard_temperature} °C, "
             + f"raspi cpu temp. = {cpu_temperature} °C"

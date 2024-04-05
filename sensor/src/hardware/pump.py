@@ -17,6 +17,7 @@ class PumpInterface:
         self,
         config: custom_types.Config,
         testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
             origin="pump",
@@ -24,8 +25,12 @@ class PumpInterface:
             write_to_file=(not testing),
         )
         self.config = config
+        self.simulate = simulate
         self.logger.info("Starting initialization")
 
+        if self.simulate:
+            self.logger.info("Simulating pump.")
+            return
         # ---------------------------------------------------------------------
         # INITIALIZING THE PUMP CONTROL PIN
 
@@ -72,6 +77,9 @@ class PumpInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
+        if self.simulate:
+            return
+
         self.set_desired_pump_speed(pwm_duty_cycle=0)
         self.pin_factory.close()
 

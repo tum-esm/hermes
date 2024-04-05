@@ -1,4 +1,5 @@
 import time
+from random import random
 from typing import Optional
 
 import gpiozero
@@ -31,6 +32,7 @@ class CO2SensorInterface:
         self,
         config: custom_types.Config,
         testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
             origin="co2-sensor",
@@ -38,8 +40,13 @@ class CO2SensorInterface:
             write_to_file=(not testing),
         )
         self.config = config
+        self.simulate = simulate
         self.logger.info("Starting initialization.")
         self.last_powerup_time: float = time.time()
+
+        if self.simulate:
+            self.logger.info("Simulating CO2 sensor.")
+            return
 
         # power pin to power up/down CO2 sensor
         self.pin_factory = utils.get_gpio_pin_factory()
@@ -138,6 +145,8 @@ class CO2SensorInterface:
 
     def get_param_info(self) -> str:
         """runs the "param" command to get a full sensor parameter report"""
+        if self.simulate:
+            return "Simulated CO2 Sensor"
         try:
             return self._send_command_to_sensor("param")
         except Exception:
@@ -146,6 +155,8 @@ class CO2SensorInterface:
 
     def get_device_info(self) -> str:
         """runs the "??" command to get a full sensor parameter report"""
+        if self.simulate:
+            return "Simulated CO2 Sensor"
         try:
             return self._send_command_to_sensor("??")
         except Exception:
@@ -154,6 +165,8 @@ class CO2SensorInterface:
 
     def get_correction_info(self) -> str:
         """runs the "corr" command to get a full sensor parameter report"""
+        if self.simulate:
+            return "Simulated CO2 Sensor"
         try:
             return self._send_command_to_sensor("corr")
         except Exception:
@@ -197,6 +210,9 @@ class CO2SensorInterface:
         In all other cases a Communication Error is raised.
         """
         command = f"{parameter} {value}"
+
+        if self.simulate:
+            return f"{value}"
 
         answer = self.serial_interface.send_command(
             message=command, expected_regex=expected_regex, timeout=timeout
@@ -244,6 +260,19 @@ class CO2SensorInterface:
         At success the sensor answer is returned.
         In all other cases a Communication Error is raised.
         """
+
+        if self.simulate:
+            simulated_co2 = 450 + random() * 30
+            # raw=sensor_data[0],compensated=sensor_data[1],filtered=sensor_data[2],temperature=sensor_data[3],
+            return str.join(
+                "",
+                [
+                    f"{round(simulated_co2, 2)}\t",
+                    f"{round(simulated_co2 + random()*3, 2)}\t",
+                    f"{round(simulated_co2 + random()*3, 2)}\t",
+                    f"{round(20 + random() * 10, 2)}",
+                ]
+            )
 
         answer = self.serial_interface.send_command(
             "send", expected_regex=CO2_MEASUREMENT_REGEX, timeout=30
@@ -338,6 +367,10 @@ class CO2SensorInterface:
     def check_errors(self) -> None:
         """checks whether the CO2 probe reports any errors. Possibly raises
         the CO2SensorInterface.CommunicationError exception"""
+        if self.simulate:
+            self.logger.info("The CO2 sensor check doesn't report any errors.")
+            return
+
         answer = self._send_command_to_sensor("errs")
 
         if not ("OK: No errors detected." in answer):
@@ -350,6 +383,9 @@ class CO2SensorInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
+        if self.simulate:
+            return
+
         self.pin_factory.close()
 
         # I don't know why this is needed sometimes, just to make sure

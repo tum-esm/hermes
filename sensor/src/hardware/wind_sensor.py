@@ -1,3 +1,4 @@
+import random
 import re
 import time
 from typing import Optional, Tuple
@@ -26,6 +27,7 @@ class WindSensorInterface:
         self,
         config: custom_types.Config,
         testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
             origin="wind-sensor",
@@ -33,10 +35,15 @@ class WindSensorInterface:
             write_to_file=(not testing),
         )
         self.config = config
+        self.simulate = simulate
 
         self.logger.info("Starting initialization")
         self.wind_measurement: Optional[custom_types.WindSensorData] = None
         self.device_status: Optional[custom_types.WindSensorStatus] = None
+
+        if self.simulate:
+            self.logger.info("Simulating wind sensor.")
+            return
 
         # power pin to power up/down wind sensor
         self.pin_factory = utils.get_gpio_pin_factory()
@@ -130,6 +137,29 @@ class WindSensorInterface:
         Optional[custom_types.WindSensorData],
         Optional[custom_types.WindSensorStatus],
     ]:
+        if self.simulate:
+            wind_dir = 60 + random.random()*120
+            wind_speed = 3 + random.random()*8
+            return (
+                custom_types.WindSensorData(
+                    # generate random wind data
+                    direction_min=wind_dir - 30,
+                    direction_avg=wind_dir,
+                    direction_max=wind_dir + 30,
+                    speed_min=wind_speed-3,
+                    speed_avg=wind_speed,
+                    speed_max=wind_speed+3,
+                    last_update_time=round(time.time()),
+                ),
+                custom_types.WindSensorStatus(
+                    # generate random device status
+                    temperature=20 + random.random()*10,
+                    heating_voltage=24 + random.random()*2,
+                    supply_voltage=24 + random.random()*2,
+                    reference_voltage=3.6 + random.random()*0.4,
+                    last_update_time=round(time.time()),
+                ),
+            )
         self._update_current_values()
         return self.wind_measurement, self.device_status
 
@@ -142,6 +172,10 @@ class WindSensorInterface:
         if self.device_status is not None:
             # only consider values less than 5 minutes old
             if (now - self.device_status.last_update_time) < 300:
+                if self.simulate:
+                    self.logger.info("the wind sensor check doesn't report any errors")
+                    return
+
                 if not (22 <= self.device_status.heating_voltage <= 26):
                     raise WindSensorInterface.DeviceFailure(
                         "the heating voltage is off by more than 2 volts"
@@ -164,6 +198,9 @@ class WindSensorInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
+        if self.simulate:
+            return
+        
         self.power_pin.off()
         self.pin_factory.close()
 

@@ -16,6 +16,7 @@ class ValveInterface:
         self,
         config: custom_types.Config,
         testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
             origin="valves",
@@ -23,7 +24,12 @@ class ValveInterface:
             write_to_file=(not testing),
         )
         self.config = config
+        self.simulate = simulate
         self.logger.info("Starting initialization")
+
+        if self.simulate:
+            self.logger.info("Simulating valves.")
+            return
 
         # set up valve control pin connections
         self.pin_factory = utils.get_gpio_pin_factory()
@@ -74,6 +80,9 @@ class ValveInterface:
 
     def teardown(self) -> None:
         """ends all hardware/system connections"""
+        if self.simulate:
+            return
+
         self.set_active_input(1)
         self.pin_factory.close()
 

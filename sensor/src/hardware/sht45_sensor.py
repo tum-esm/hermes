@@ -1,3 +1,4 @@
+import random
 import time
 
 import adafruit_sht4x
@@ -13,6 +14,7 @@ class SHT45SensorInterface:
         self,
         config: custom_types.Config,
         testing: bool = False,
+        simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
             origin="sht45-sensor",
@@ -20,8 +22,13 @@ class SHT45SensorInterface:
             write_to_file=(not testing),
         )
         self.config = config
-
+        self.simulate = simulate
         self.logger.info("Starting initialization.")
+
+        if self.simulate:
+            self.sensor_connected = True
+            self.logger.info("Simulating SHT45 sensor.")
+            return
 
         # set up connection to SHT45 sensor
         self.sensor_connected = False
@@ -54,6 +61,12 @@ class SHT45SensorInterface:
 
     def get_data(self, retries: int = 1) -> custom_types.SHT45SensorData:
         """Reads temperature and humidity in the air inlet"""
+
+        if self.simulate:
+            return custom_types.SHT45SensorData(
+                temperature=round(5.0 + 25.0 * random.random(), 2),
+                humidity=round(10.0 + 85.0 * random.random(), 2),
+            )
 
         # initialize output
         output = custom_types.SHT45SensorData(
