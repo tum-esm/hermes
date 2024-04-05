@@ -134,6 +134,9 @@ class MQTTAgent:
         # -----------------------------------------------------------------
 
         def _publish_record(_record: custom_types.SQLMQTTRecord) -> None:
+            # TODO: overwriting the mqtt-topic should not be necessary here, as it is already set in the header
+            #   This should be removed in the future, and the record object should be used directly.
+
             if _record.content.header.mqtt_topic is None:
                 _record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
 
