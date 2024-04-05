@@ -1,6 +1,7 @@
 import json
 import multiprocessing
 import multiprocessing.synchronize
+import os
 import queue
 import signal
 import time
@@ -155,6 +156,31 @@ class MQTTAgent:
             )
             current_records[_record.internal_id] = message_info
             _record.status = "in-progress"
+
+        # -----------------------------------------------------------------
+        # Provisioning the device in thingsboard if necessary
+        if os.environ.get("HERMES_THINGSBOARD_ACCESS_TOKEN") is None:
+            logger.info("Provisioning device in thingsboard...", config=config)
+            _publish_record(
+                custom_types.SQLMQTTRecord(
+                    status="pending",
+                    content=custom_types.MQTTProvisioningMessage(
+                        header=custom_types.MQTTMessageHeader(
+                            mqtt_topic="/provision/request",
+                            mqtt_qos=1,
+                        ),
+                        body=custom_types.MQTTProvisioningMessageBody(
+                            deviceName=os.environ.get("HERMES_DEVICE_NAME"),
+                            provisionDeviceKey=os.environ.get(
+                                "HERMES_THINGSBOARD_PROVISION_DEVICE_KEY"
+                            ),
+                            provisionDeviceSecret=os.environ.get(
+                                "HERMES_THINGSBOARD_PROVISION_DEVICE_SECRET"
+                            ),
+                        ),
+                    )
+                )
+            )
 
         # -----------------------------------------------------------------
 

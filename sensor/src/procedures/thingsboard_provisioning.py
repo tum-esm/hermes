@@ -25,16 +25,6 @@ def thingsboard_provisioning_procedure(config: custom_types.Config):
         logger.error("No device name found for provisioning in thingsboard!")
         return
 
-    # Provisioning the device in thingsboard
-    message_queue.enqueue_message(
-        config,
-        custom_types.MQTTProvisioningMessageBody(
-            deviceName=os.environ.get("HERMES_DEVICE_NAME"),
-            provisionDeviceKey=os.environ.get("HERMES_THINGSBOARD_PROVISION_DEVICE_KEY"),
-            provisionDeviceSecret=os.environ.get("HERMES_THINGSBOARD_PROVISION_DEVICE_SECRET"),
-        ),
-    )
-
     for i in range(20):
         if os.environ.get("HERMES_THINGSBOARD_ACCESS_TOKEN") is not None:
             logger.info("Successfully provisioned device in thingsboard!", config=config)

@@ -77,13 +77,12 @@ def run() -> None:
 
     # -------------------------------------------------------------------------
     # provision device through thingsboard if needed
-
+    # (this only waits for provisioning to complete, see procedures/mqtt_agent.py for the actual provisioning)
     procedures.thingsboard_provisioning_procedure(config)
 
     # -------------------------------------------------------------------------
     # initialize all hardware interfaces
     # tear down hardware on program termination
-
     logger.info("Initializing hardware interfaces.", config=config)
 
     try:
