@@ -6,6 +6,7 @@ from src import main
 
 ROOT_DIR = dirname(dirname(os.path.abspath(__file__)))
 PROJECT_DIR = dirname(os.path.abspath(__file__))
+DOTENV_PATH = os.path.join(PROJECT_DIR, "config", ".env")
 
 
 # Modifies the dotenv file to add the prefix "HERMES_" to all keys that don't have it,
@@ -52,8 +53,8 @@ def update_dotenv(dotenv_path: str) -> None:
 
 
 if __name__ == "__main__":
-    update_dotenv(os.path.join(PROJECT_DIR, "config", ".env"))
-    dotenv.load_dotenv(os.path.join(PROJECT_DIR, "config", ".env"))
+    update_dotenv(DOTENV_PATH)
+    dotenv.load_dotenv(DOTENV_PATH)
     lock = filelock.FileLock(os.path.join(ROOT_DIR, "run_automation.lock"), timeout=2)
 
     try:

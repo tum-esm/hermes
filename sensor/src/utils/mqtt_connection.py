@@ -15,8 +15,8 @@ class MQTTConnection:
             station_identifier=os.environ.get("HERMES_MQTT_IDENTIFIER"),
             mqtt_url=os.environ.get("HERMES_MQTT_URL"),
             mqtt_port=os.environ.get("HERMES_MQTT_PORT"),
-            mqtt_username=os.environ.get("HERMES_MQTT_USERNAME"),
-            mqtt_password=os.environ.get("HERMES_MQTT_PASSWORD"),
+            mqtt_username=os.environ.get("HERMES_THINGSBOARD_ACCESS_TOKEN") or "provision",
+            mqtt_password="",
             mqtt_base_topic=os.environ.get("HERMES_MQTT_BASE_TOPIC"),
         )
 
@@ -28,12 +28,13 @@ class MQTTConnection:
         ssl_cert_requirements = ssl.CERT_NONE if ((os.environ.get("HERMES_MQTT_CERT_REQUIREMENTS") or "none") == "none") \
             else ssl.CERT_REQUIRED
 
-        self.client.tls_set(
-            certfile=None,
-            keyfile=None,
-            cert_reqs=ssl_cert_requirements,
-            tls_version=ssl.PROTOCOL_TLS_CLIENT,
-        )
+        if os.environ.get("HERMES_MQTT_TLS") == "true":
+            self.client.tls_set(
+                certfile=None,
+                keyfile=None,
+                cert_reqs=ssl_cert_requirements,
+                tls_version=ssl.PROTOCOL_TLS_CLIENT,
+            )
         self.client.connect(
             self.config.mqtt_url,
             port=int(self.config.mqtt_port),

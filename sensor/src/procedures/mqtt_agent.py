@@ -4,12 +4,15 @@ import multiprocessing.synchronize
 import os
 import queue
 import signal
+import sys
+import threading
 import time
 from typing import Any, Callable, Optional
 
 import paho.mqtt.client
 import pydantic
 
+from run_automation import DOTENV_PATH
 from src import custom_types, utils
 
 
@@ -64,7 +67,7 @@ class MQTTAgent:
         """takes messages from the queue file and processes them;
         this function is blocking and should be called in a thread
         os subprocess"""
-        logger = utils.Logger(origin="message-communication")
+        logger = utils.Logger(origin="message-communication", print_to_console=os.environ.get("HERMES_MODE") == "simulate")
         logger.info("starting loop")
 
         try:
@@ -103,6 +106,7 @@ class MQTTAgent:
 
             logger.info("starting graceful shutdown")
             mqtt_connection.teardown()
+            MQTTAgent.communication_loop_process = None
             logger.info("finished graceful shutdown")
             exit(0)
 
@@ -117,6 +121,7 @@ class MQTTAgent:
             )
             mqtt_client.on_message = MQTTAgent.__on_mqtt_message(config_request_queue)
             mqtt_client.subscribe(config_topic, qos=1)
+            mqtt_client.subscribe("/provision/response", qos=1)
 
         except Exception as e:
             logger.exception(
@@ -127,6 +132,7 @@ class MQTTAgent:
             raise e
 
         logger.info(f"subscribed to topic {config_topic}")
+        logger.info(f"subscribed to topic /provision/response")
 
         # this queue is necessary because paho-mqtt does not support
         # a function that answers the question "has this message id
@@ -165,27 +171,23 @@ class MQTTAgent:
         # -----------------------------------------------------------------
         # Provisioning the device in thingsboard if necessary
         if os.environ.get("HERMES_THINGSBOARD_ACCESS_TOKEN") is None:
-            logger.info("Provisioning device in thingsboard...", config=config)
-            _publish_record(
-                custom_types.SQLMQTTRecord(
-                    status="pending",
-                    content=custom_types.MQTTProvisioningMessage(
-                        header=custom_types.MQTTMessageHeader(
-                            mqtt_topic="/provision/request",
-                            mqtt_qos=1,
-                        ),
-                        body=custom_types.MQTTProvisioningMessageBody(
-                            deviceName=os.environ.get("HERMES_DEVICE_NAME"),
-                            provisionDeviceKey=os.environ.get(
-                                "HERMES_THINGSBOARD_PROVISION_DEVICE_KEY"
-                            ),
-                            provisionDeviceSecret=os.environ.get(
-                                "HERMES_THINGSBOARD_PROVISION_DEVICE_SECRET"
-                            ),
-                        ),
-                    )
-                )
+            logger.info("Sending thingsboard provisioning request...", config=config)
+            mqtt_client.publish(
+                topic="/provision/request",
+                payload=json.dumps({
+                    "deviceName": os.environ.get("HERMES_DEVICE_NAME"),
+                    "provisionDeviceKey":os.environ.get(
+                        "HERMES_THINGSBOARD_PROVISION_DEVICE_KEY"
+                    ),
+                    "provisionDeviceSecret": os.environ.get(
+                        "HERMES_THINGSBOARD_PROVISION_DEVICE_SECRET"
+                    ),
+                }),
+                qos=1,
             )
+            logger.info("Sent thingsboard provisioning request", config=config)
+            while True:
+                time.sleep(1)
 
         # -----------------------------------------------------------------
 
@@ -292,7 +294,7 @@ class MQTTAgent:
     def __on_mqtt_message(
         config_request_queue: queue.Queue[custom_types.MQTTConfigurationRequest],
     ) -> Callable[[paho.mqtt.client.Client, Any, paho.mqtt.client.MQTTMessage], None]:
-        logger = utils.Logger(origin="message-communication")
+        logger = utils.Logger(origin="message-communication", print_to_console=os.environ.get("HERMES_MODE") == "simulate")
 
         def _f(
             _client: paho.mqtt.client.Client,
@@ -300,18 +302,35 @@ class MQTTAgent:
             msg: paho.mqtt.client.MQTTMessage,
         ) -> None:
             # skip messages that are not coming from a config topic
-            if "configurations" not in msg.topic:
-                return
-
-            logger.info(f"received message on config topic: {msg.payload.decode()}")
-            try:
-                config_request_queue.put(
-                    custom_types.MQTTConfigurationRequest(
-                        **json.loads(msg.payload.decode())
+            if "configurations" in msg.topic:
+                logger.info(f"received message on config topic: {msg.payload.decode()}")
+                try:
+                    config_request_queue.put(
+                        custom_types.MQTTConfigurationRequest(
+                            **json.loads(msg.payload.decode())
+                        )
                     )
-                )
-                logger.debug(f"put config message into the message queue")
-            except (json.JSONDecodeError, pydantic.ValidationError):
-                logger.warning(f"could not decode message payload on message: {msg}")
+                    logger.debug(f"put config message into the message queue")
+                except (json.JSONDecodeError, pydantic.ValidationError):
+                    logger.warning(f"could not decode message payload on message: {msg}")
+            elif "/provision/response" in msg.topic:
+                thingsboard_response = json.loads(msg.payload.decode())
+                if not thingsboard_response["status"].lower() == "success":
+                    logger.error(f"failed to provision device in thingsboard: {thingsboard_response}")
+                    exit(1)
+                access_token = thingsboard_response["credentialsValue"]
+                logger.info(f"received access token from thingsboard.")
+                os.environ["HERMES_THINGSBOARD_ACCESS_TOKEN"] = access_token
+                dotenv_data = []
+                with open(DOTENV_PATH) as env_file:
+                    dotenv_data += env_file.readlines()
+                    dotenv_data.append(f"\nHERMES_THINGSBOARD_ACCESS_TOKEN={access_token}\n")
+                with open(DOTENV_PATH, "w") as env_file:
+                    env_file.writelines(''.join(dotenv_data))
+                logger.info(f"added access token to .env file.")
+                sys.exit(0)
+
+            else:
+                logger.warning(f"received message on unknown topic: {msg.topic} with payload: {msg.payload.decode()}")
 
         return _f

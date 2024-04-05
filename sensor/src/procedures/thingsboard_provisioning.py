@@ -3,6 +3,7 @@
 import os
 import time
 
+import procedures
 from src import utils, custom_types
 
 logger = utils.Logger(origin="thingsboard_provisioning", print_to_console=os.environ.get("HERMES_MODE") == "simulate")
@@ -25,11 +26,12 @@ def thingsboard_provisioning_procedure(config: custom_types.Config):
         logger.error("No device name found for provisioning in thingsboard!")
         return
 
+    logger.info("Waiting for thingsboard provisioning...", config=config)
     for i in range(20):
-        if os.environ.get("HERMES_THINGSBOARD_ACCESS_TOKEN") is not None:
-            logger.info("Successfully provisioned device in thingsboard!", config=config)
-            return
-        time.sleep(1)
+        if procedures.MQTTAgent.communication_loop_process is not None:
+            time.sleep(1)
+        else:
+            exit(0)
 
     logger.error("Failed to provision device in thingsboard!", config=config)
     raise TimeoutError("Failed to provision device in thingsboard!")
