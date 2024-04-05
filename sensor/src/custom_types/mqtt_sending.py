@@ -198,7 +198,9 @@ MQTTMessage = Union[MQTTLogMessage, MQTTMeasurementMessage, MQTTAcknowledgmentMe
 # -----------------------------------------------------------------------------
 # SQL
 
-
+# TODO: the record object is typed too strictly, and should allow for arbitrary messages.
+#   Type verification is not useful here, as the codebase is not shared with other projects where
+#   type checking would make sense to ensure consistency between different projects.
 class SQLMQTTRecord(pydantic.BaseModel):
     internal_id: int
     status: Literal["pending", "in-progress"]
