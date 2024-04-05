@@ -114,7 +114,7 @@ This directory contains the necessary files to deploy the hermes server and asso
    HERMES_POSTGRESQL_PASSWORD=<your-postgresql-password>
    HERMES_POSTGRESQL_URL=127.0.0.1
    HERMES_POSTGRESQL_PORT=5432
-   HERMES_POSTGRESQL_IDENTIFIER=postgres
+   HERMES_POSTGRESQL_USERNAME=postgres
    HERMES_POSTGRESQL_DATABASE=database
    
    HERMES_MQTT_PASSWORD=<your-mosquitto-password>
@@ -124,8 +124,8 @@ This directory contains the necessary files to deploy the hermes server and asso
    HERMES_MQTT_USERNAME=server
    HERMES_MQTT_BASE_TOPIC=sensortopic/
    
-   HERMES_MOSQUITTO_PWFILE=./mosquitto_password
-   HERMES_MOSQUITTO_DATA_PATH=<path-to-data-dir>/mosquitto
+   HERMES_MQTT_PASSWORD_FILE=./mosquitto_password
+   HERMES_MQTT_DATA_PATH=<path-to-data-dir>/mosquitto
    HERMES_POSTGRESQL_DATA_PATH=<path-to-data-dir>/postgresql
    ````
    

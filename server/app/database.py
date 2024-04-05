@@ -82,7 +82,7 @@ async def pool():
     async with asyncpg.create_pool(
         host=settings.POSTGRESQL_URL,
         port=settings.POSTGRESQL_PORT,
-        user=settings.POSTGRESQL_IDENTIFIER,
+        user=settings.POSTGRESQL_USERNAME,
         password=settings.POSTGRESQL_PASSWORD,
         database=settings.POSTGRESQL_DATABASE,
         min_size=2,

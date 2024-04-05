@@ -134,15 +134,20 @@ class MQTTAgent:
         # -----------------------------------------------------------------
 
         def _publish_record(_record: custom_types.SQLMQTTRecord) -> None:
-            _record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
+            # TODO: overwriting the mqtt-topic should not be necessary here, as it is already set in the header
+            #   This should be removed in the future, and the record object should be used directly.
 
-            _record.content.header.mqtt_topic += {
-                custom_types.MQTTLogMessage: "logs/",
-                custom_types.MQTTMeasurementMessage: "measurements/",
-                custom_types.MQTTAcknowledgmentMessage: "acknowledgments/",
-            }[type(_record.content)]
+            if _record.content.header.mqtt_topic is None:
+                _record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
 
-            _record.content.header.mqtt_topic += mqtt_config.station_identifier
+                _record.content.header.mqtt_topic += {
+                    custom_types.MQTTLogMessage: "logs/",
+                    custom_types.MQTTMeasurementMessage: "measurements/",
+                    custom_types.MQTTAcknowledgmentMessage: "acknowledgments/",
+                }[type(_record.content)]
+
+                _record.content.header.mqtt_topic += mqtt_config.station_identifier
+
             assert mqtt_client.is_connected(), "mqtt client is not connected anymore"
 
             payload: list[Any] = [_record.content.body.dict()]

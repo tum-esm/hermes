@@ -27,13 +27,23 @@ def update_dotenv(dotenv_path: str) -> None:
             if line.strip() and not line.endswith("\n"):
                 line += "\n"
 
+            # keep existing lines in the config file, we're only adding new ones if necessary
             new_file.append(line)
+
+            # add HERMES_MQTT_ variables if they don't exist (and leave the original HERMES_MOSQUITTO_ variables)
+            if line.startswith("HERMES_MOSQUITTO_"):
+                fixed_mqtt_line = line.replace("HERMES_MOSQUITTO_", "HERMES_MQTT_")
+                if fixed_mqtt_line not in hermes_vars:
+                    new_file.append(fixed_mqtt_line)
+
+            # skip lines that already have the prefix
             if line.startswith("HERMES_"):
                 continue
-            # skip lines with whitespace or comments
+            # skip lines consisting only of whitespace or comments
             if not line.strip() or line.strip().startswith("#"):
                 continue
 
+            # the remaining lines are missing the prefix
             if not ("HERMES_" + line) in hermes_vars:
                 new_file.append("HERMES_" + line)
 
@@ -51,6 +61,3 @@ if __name__ == "__main__":
             main.run()
     except filelock.Timeout:
         raise TimeoutError("automation is already running")
-
-
-
