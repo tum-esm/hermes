@@ -3,7 +3,7 @@
 import os
 import time
 
-import procedures
+from src import procedures
 from src import utils, custom_types
 
 logger = utils.Logger(origin="thingsboard_provisioning", print_to_console=os.environ.get("HERMES_MODE") == "simulate")
