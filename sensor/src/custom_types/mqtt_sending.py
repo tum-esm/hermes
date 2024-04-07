@@ -1,4 +1,5 @@
 from typing import Literal, Optional, Union
+from src.custom_types import sensor_answers
 
 import pydantic
 
@@ -34,7 +35,6 @@ class MQTTLogMessageBodyLog(pydantic.BaseModel):
 class MQTTLogMessageBody(pydantic.BaseModel):
     """message body which is sent to server"""
     revision: int = pydantic.Field(..., ge=0)
-    ts: float = pydantic.Field(..., ge=1_640_991_600)
     log: MQTTLogMessageBodyLog
 
     class Config:
@@ -91,39 +91,13 @@ class MQTTSystemData(pydantic.BaseModel):
     ups_battery_above_voltage_threshold: float
 
 
-class MQTTWindData(pydantic.BaseModel):
-    wxt532_direction_min: float
-    wxt532_direction_avg: float
-    wxt532_direction_max: float
-    wxt532_speed_min: float
-    wxt532_speed_avg: float
-    wxt532_speed_max: float
-    wxt532_last_update_time: float
-
-
-class MQTTWindSensorInfo(pydantic.BaseModel):
-    wxt532_temperature: float
-    wxt532_heating_voltage: float
-    wxt532_supply_voltage: float
-    wxt532_reference_voltage: float
-    wxt532_last_update_time: float
-
-
-class MQTTMeasurementMessageBody(pydantic.BaseModel):
-    """message body which is sent to server"""
-
-    revision: int = pydantic.Field(..., ge=0)
-    ts: float = pydantic.Field(..., ge=1_640_991_600)
-    value: Union[
-        MQTTMeasurementData,
-        MQTTCalibrationData,
-        MQTTSystemData,
-        MQTTWindData,
-        MQTTWindSensorInfo,
-    ]
-
-    class Config:
-        extra = "forbid"
+MQTTMeasurementMessageBody = Union[
+    MQTTMeasurementData,
+    MQTTCalibrationData,
+    MQTTSystemData,
+    sensor_answers.WindSensorData,
+    sensor_answers.WindSensorStatus,
+]
 
 
 # -----------------------------------------------------------------------------
@@ -134,7 +108,6 @@ class MQTTAcknowledgmentMessageBody(pydantic.BaseModel):
     """message body which is sent to server"""
 
     revision: int = pydantic.Field(..., ge=0)
-    ts: float = pydantic.Field(..., ge=1_640_991_600)
     success: bool
 
     class Config:
@@ -148,6 +121,8 @@ class MQTTAcknowledgmentMessageBody(pydantic.BaseModel):
 class MQTTMessageHeader(pydantic.BaseModel):
     mqtt_topic: Optional[str]
     sending_skipped: bool
+    ts: float = pydantic.Field(..., ge=1_640_991_600)
+    revision: int = pydantic.Field(..., ge=0)
 
     class Config:
         extra = "forbid"

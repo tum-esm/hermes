@@ -8,6 +8,7 @@ from typing import Any, Literal, Optional
 
 import filelock
 
+import utils
 from src import custom_types
 
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
@@ -156,8 +157,11 @@ class MessageQueue:
         message_body: custom_types.MQTTMessageBody,
         mqtt_topic: Optional[str],
     ) -> None:
+        state = utils.StateInterface.read()
         new_header = custom_types.MQTTMessageHeader(
+            ts=round(time.time(), 2),
             mqtt_topic=None,
+            revision=state.current_config_revision,
             sending_skipped=(not config.active_components.send_messages_over_mqtt),
         )
         new_message: custom_types.MQTTMessage

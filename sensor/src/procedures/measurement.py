@@ -39,22 +39,18 @@ class WindMeasurementProcedure:
         if self.wind_data is not None:
             self.logger.info(f"latest wind sensor measurement: {self.wind_data}")
 
-            state = utils.StateInterface.read()
+
 
             self.message_queue.enqueue_message(
                 self.config,
-                custom_types.MQTTMeasurementMessageBody(
-                    revision=state.current_config_revision,
-                    ts=round(time.time(), 2),
-                    value=custom_types.MQTTWindData(
-                        wxt532_direction_min=self.wind_data.direction_min,
-                        wxt532_direction_avg=self.wind_data.direction_avg,
-                        wxt532_direction_max=self.wind_data.direction_max,
-                        wxt532_speed_min=self.wind_data.speed_min,
-                        wxt532_speed_avg=self.wind_data.speed_avg,
-                        wxt532_speed_max=self.wind_data.speed_max,
-                        wxt532_last_update_time=self.wind_data.last_update_time,
-                    ),
+                custom_types.WindSensorData(
+                    direction_min=self.wind_data.direction_min,
+                    direction_avg=self.wind_data.direction_avg,
+                    direction_max=self.wind_data.direction_max,
+                    speed_min=self.wind_data.speed_min,
+                    speed_avg=self.wind_data.speed_avg,
+                    speed_max=self.wind_data.speed_max,
+                    last_update_time=self.wind_data.last_update_time,
                 ),
                 "v1/devices/me/telemetry"
             )
@@ -69,16 +65,12 @@ class WindMeasurementProcedure:
 
             self.message_queue.enqueue_message(
                 self.config,
-                custom_types.MQTTMeasurementMessageBody(
-                    revision=state.current_config_revision,
-                    ts=round(time.time(), 2),
-                    value=custom_types.MQTTWindSensorInfo(
-                        wxt532_temperature=self.device_info.temperature,
-                        wxt532_heating_voltage=self.device_info.heating_voltage,
-                        wxt532_supply_voltage=self.device_info.supply_voltage,
-                        wxt532_reference_voltage=self.device_info.reference_voltage,
-                        wxt532_last_update_time=self.device_info.last_update_time,
-                    ),
+                custom_types.WindSensorStatus(
+                    temperature=self.device_info.temperature,
+                    heating_voltage=self.device_info.heating_voltage,
+                    supply_voltage=self.device_info.supply_voltage,
+                    reference_voltage=self.device_info.reference_voltage,
+                    last_update_time=self.device_info.last_update_time,
                 ),
                 "v1/devices/me/telemetry"
             )
@@ -143,9 +135,7 @@ class CO2MeasurementProcedure:
         # Add to ring buffer to calculate moving average of low-cost sensor
         self.rb_pressure.append(self.air_inlet_bme280_data.pressure)
 
-        self.air_inlet_sht45_data = (
-            self.hardware_interface.air_inlet_sht45_sensor.get_data()
-        )
+        self.air_inlet_sht45_data = (self.hardware_interface.air_inlet_sht45_sensor.get_data())
 
         # Add to ring buffer to calculate moving average of low-cost sensor
         self.rb_humidity.append(self.air_inlet_sht45_data.humidity)
@@ -173,9 +163,7 @@ class CO2MeasurementProcedure:
                 - (time.time() - self.last_measurement_time),
                 0,
             )
-            self.logger.debug(
-                f"sleeping {round(seconds_to_wait_for_next_measurement, 3)} seconds"
-            )
+            self.logger.debug(f"sleeping {round(seconds_to_wait_for_next_measurement, 3)} seconds")
             time.sleep(seconds_to_wait_for_next_measurement)
             self.last_measurement_time = time.time()
 
@@ -194,20 +182,16 @@ class CO2MeasurementProcedure:
             # send out MQTT measurement message
             self.message_queue.enqueue_message(
                 self.config,
-                custom_types.MQTTMeasurementMessageBody(
-                    revision=state.current_config_revision,
-                    ts=round(time.time(), 2),
-                    value=custom_types.MQTTMeasurementData(
-                        gmp343_raw=current_sensor_data.raw,
-                        gmp343_compensated=current_sensor_data.compensated,
-                        gmp343_filtered=current_sensor_data.filtered,
-                        gmp343_temperature=current_sensor_data.temperature,
-                        bme280_temperature=self.air_inlet_bme280_data.temperature,
-                        bme280_humidity=self.air_inlet_bme280_data.humidity,
-                        bme280_pressure=self.air_inlet_bme280_data.pressure,
-                        sht45_temperature=self.air_inlet_sht45_data.temperature,
-                        sht45_humidity=self.air_inlet_sht45_data.humidity,
-                    ),
+                custom_types.MQTTMeasurementData(
+                    gmp343_raw=current_sensor_data.raw,
+                    gmp343_compensated=current_sensor_data.compensated,
+                    gmp343_filtered=current_sensor_data.filtered,
+                    gmp343_temperature=current_sensor_data.temperature,
+                    bme280_temperature=self.air_inlet_bme280_data.temperature,
+                    bme280_humidity=self.air_inlet_bme280_data.humidity,
+                    bme280_pressure=self.air_inlet_bme280_data.pressure,
+                    sht45_temperature=self.air_inlet_sht45_data.temperature,
+                    sht45_humidity=self.air_inlet_sht45_data.humidity,
                 ),
                 "v1/devices/me/telemetry"
             )

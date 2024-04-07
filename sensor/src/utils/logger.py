@@ -223,7 +223,6 @@ class Logger:
                     severity=level,
                     message=subject + " " + details,
                 ),
-                ts=round(time.time(), 2),
                 revision=state.current_config_revision,
             ),
             "v1/devices/me/telemetry",

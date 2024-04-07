@@ -91,22 +91,18 @@ class SystemCheckProcedure:
 
         self.message_queue.enqueue_message(
             self.config,
-            custom_types.MQTTMeasurementMessageBody(
-                revision=state.current_config_revision,
-                ts=round(time.time(), 2),
-                value=custom_types.MQTTSystemData(
-                    enclosure_bme280_temperature=mainboard_temperature,
-                    enclosure_bme280_humidity=mainboard_bme280_data.humidity,
-                    enclosure_bme280_pressure=mainboard_bme280_data.pressure,
-                    raspi_cpu_temperature=cpu_temperature,
-                    raspi_disk_usage=round(disk_usage.percent / 100, 4),
-                    raspi_cpu_usage=round(cpu_usage_percent / 100, 4),
-                    raspi_memory_usage=round(memory_usage_percent / 100, 4),
-                    ups_powered_by_grid=1.0 if self.hardware_interface.ups.powered_by_grid else 0.0,
-                    ups_battery_is_fully_charged=1.0 if self.hardware_interface.ups.battery_is_fully_charged else 0.0,
-                    ups_battery_error_detected=1.0 if self.hardware_interface.ups.battery_error_detected else 0.0,
-                    ups_battery_above_voltage_threshold=1.0 if self.hardware_interface.ups.battery_above_voltage_threshold else 0.0,
-                ),
+            custom_types.MQTTSystemData(
+                enclosure_bme280_temperature=mainboard_temperature,
+                enclosure_bme280_humidity=mainboard_bme280_data.humidity,
+                enclosure_bme280_pressure=mainboard_bme280_data.pressure,
+                raspi_cpu_temperature=cpu_temperature,
+                raspi_disk_usage=round(disk_usage.percent / 100, 4),
+                raspi_cpu_usage=round(cpu_usage_percent / 100, 4),
+                raspi_memory_usage=round(memory_usage_percent / 100, 4),
+                ups_powered_by_grid=1.0 if self.hardware_interface.ups.powered_by_grid else 0.0,
+                ups_battery_is_fully_charged=1.0 if self.hardware_interface.ups.battery_is_fully_charged else 0.0,
+                ups_battery_error_detected=1.0 if self.hardware_interface.ups.battery_error_detected else 0.0,
+                ups_battery_above_voltage_threshold=1.0 if self.hardware_interface.ups.battery_above_voltage_threshold else 0.0,
             ),
             "v1/devices/me/telemetry",
         )

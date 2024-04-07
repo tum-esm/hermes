@@ -94,7 +94,6 @@ class MQTTAgent:
                 config,
                 custom_types.MQTTAcknowledgmentMessageBody(
                     revision=state.current_config_revision,
-                    ts=time.time(),
                     success=True,
                 ),
                 "v1/devices/me/telemetry"
@@ -151,7 +150,12 @@ class MQTTAgent:
 
             assert mqtt_client.is_connected(), "mqtt client is not connected anymore"
 
-            payload: list[Any] = [_record.content.body.dict()]
+            payload: list[Any] = [
+                {
+                    "ts": _record.content.header.ts,
+                    "values": _record.content.body.dict()
+                }
+            ]
 
             message_info = mqtt_client.publish(
                 topic=_record.content.header.mqtt_topic,

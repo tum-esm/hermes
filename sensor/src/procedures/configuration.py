@@ -216,7 +216,6 @@ class ConfigurationProcedure:
                 self.config,
                 custom_types.MQTTAcknowledgmentMessageBody(
                     revision=new_revision,
-                    timestamp=time.time(),
                     success=False,
                 ),
             )
