@@ -30,7 +30,15 @@ def thingsboard_provisioning_procedure(config: custom_types.Config):
     for i in range(20):
         if procedures.MQTTAgent.communication_loop_process is not None:
             time.sleep(1)
+            try:
+                # call check_errors to update procedures.MQTTAgent.communication_loop_process
+                procedures.MQTTAgent.check_errors()
+            except Exception:
+                # catch exceptions to exit gracefully instead
+                pass
         else:
+            logger.info("MQTT-process has quit - exiting....", config=config)
+            time.sleep(3)
             exit(0)
 
     logger.error("Failed to provision device in thingsboard!", config=config)

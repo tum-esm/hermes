@@ -5,7 +5,6 @@ import os
 import queue
 import signal
 import sys
-import threading
 import time
 from typing import Any, Callable, Optional
 
@@ -102,24 +101,28 @@ class MQTTAgent:
 
         # tear down connection on program termination
         def _graceful_teardown(*_args: Any) -> None:
-            utils.set_alarm(10, "graceful teardown")
-
             logger.info("starting graceful shutdown")
             mqtt_connection.teardown()
             MQTTAgent.communication_loop_process = None
             logger.info("finished graceful shutdown")
-            exit(0)
 
         signal.signal(signal.SIGINT, _graceful_teardown)
         signal.signal(signal.SIGTERM, _graceful_teardown)
         logger.info("established graceful teardown hook")
+
+        quit_signal = False
+
+        def quit_now():
+            nonlocal quit_signal
+            quit_signal = True
+            _graceful_teardown()
 
         try:
             config_topic = (
                 f"{mqtt_config.mqtt_base_topic}configurations"
                 + f"/{mqtt_config.station_identifier}"
             )
-            mqtt_client.on_message = MQTTAgent.__on_mqtt_message(config_request_queue)
+            mqtt_client.on_message = MQTTAgent.__on_mqtt_message(config_request_queue, quit_now)
             mqtt_client.subscribe(config_topic, qos=1)
             mqtt_client.subscribe("/provision/response", qos=1)
 
@@ -186,14 +189,15 @@ class MQTTAgent:
                 qos=1,
             )
             logger.info("Sent thingsboard provisioning request", config=config)
-            while True:
+            while not quit_signal:
                 time.sleep(1)
+            return
 
         # -----------------------------------------------------------------
 
         last_heartbeat_timestamp: float = 0
 
-        while True:
+        while not quit_signal:
             # send heartbeat message every 5 minutes
             now = time.time()
             if (now - last_heartbeat_timestamp) > 300:
@@ -283,9 +287,9 @@ class MQTTAgent:
     def check_errors() -> None:
         """Checks whether the loop processes is still running. Possibly
         raises an `MQTTAgent.CommunicationOutage` exception."""
-
         if MQTTAgent.communication_loop_process is not None:
             if not MQTTAgent.communication_loop_process.is_alive():
+                MQTTAgent.communication_loop_process = None
                 raise MQTTAgent.CommunicationOutage(
                     "communication loop process is not running"
                 )
@@ -293,6 +297,7 @@ class MQTTAgent:
     @staticmethod
     def __on_mqtt_message(
         config_request_queue: queue.Queue[custom_types.MQTTConfigurationRequest],
+        quit_now: Callable[[], None],
     ) -> Callable[[paho.mqtt.client.Client, Any, paho.mqtt.client.MQTTMessage], None]:
         logger = utils.Logger(origin="message-communication", print_to_console=os.environ.get("HERMES_MODE") == "simulate")
 
@@ -317,7 +322,8 @@ class MQTTAgent:
                 thingsboard_response = json.loads(msg.payload.decode())
                 if not thingsboard_response["status"].lower() == "success":
                     logger.error(f"failed to provision device in thingsboard: {thingsboard_response}")
-                    exit(1)
+                    return quit_now()
+
                 access_token = thingsboard_response["credentialsValue"]
                 logger.info(f"received access token from thingsboard.")
                 os.environ["HERMES_THINGSBOARD_ACCESS_TOKEN"] = access_token
@@ -328,7 +334,7 @@ class MQTTAgent:
                 with open(DOTENV_PATH, "w") as env_file:
                     env_file.writelines(''.join(dotenv_data))
                 logger.info(f"added access token to .env file.")
-                sys.exit(0)
+                return quit_now()
 
             else:
                 logger.warning(f"received message on unknown topic: {msg.topic} with payload: {msg.payload.decode()}")
