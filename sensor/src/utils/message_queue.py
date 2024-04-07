@@ -154,6 +154,7 @@ class MessageQueue:
         self,
         config: custom_types.Config,
         message_body: custom_types.MQTTMessageBody,
+        mqtt_topic: Optional[str],
     ) -> None:
         new_header = custom_types.MQTTMessageHeader(
             mqtt_topic=None,
@@ -161,7 +162,9 @@ class MessageQueue:
         )
         new_message: custom_types.MQTTMessage
 
-        # TODO: refactor
+        if mqtt_topic is not None:
+            new_header.mqtt_topic = mqtt_topic
+
         if isinstance(message_body, custom_types.MQTTLogMessageBody):
             new_message = custom_types.MQTTLogMessage(
                 header=new_header, body=message_body

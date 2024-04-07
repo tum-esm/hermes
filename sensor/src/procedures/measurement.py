@@ -45,7 +45,7 @@ class WindMeasurementProcedure:
                 self.config,
                 custom_types.MQTTMeasurementMessageBody(
                     revision=state.current_config_revision,
-                    timestamp=round(time.time(), 2),
+                    ts=round(time.time(), 2),
                     value=custom_types.MQTTWindData(
                         wxt532_direction_min=self.wind_data.direction_min,
                         wxt532_direction_avg=self.wind_data.direction_avg,
@@ -56,6 +56,7 @@ class WindMeasurementProcedure:
                         wxt532_last_update_time=self.wind_data.last_update_time,
                     ),
                 ),
+                "v1/devices/me/telemetry"
             )
         else:
             self.logger.info(f"did not receive any wind sensor measurement")
@@ -70,7 +71,7 @@ class WindMeasurementProcedure:
                 self.config,
                 custom_types.MQTTMeasurementMessageBody(
                     revision=state.current_config_revision,
-                    timestamp=round(time.time(), 2),
+                    ts=round(time.time(), 2),
                     value=custom_types.MQTTWindSensorInfo(
                         wxt532_temperature=self.device_info.temperature,
                         wxt532_heating_voltage=self.device_info.heating_voltage,
@@ -79,6 +80,7 @@ class WindMeasurementProcedure:
                         wxt532_last_update_time=self.device_info.last_update_time,
                     ),
                 ),
+                "v1/devices/me/telemetry"
             )
         else:
             self.logger.info(f"did not receive any wind sensor device info")
@@ -194,7 +196,7 @@ class CO2MeasurementProcedure:
                 self.config,
                 custom_types.MQTTMeasurementMessageBody(
                     revision=state.current_config_revision,
-                    timestamp=round(time.time(), 2),
+                    ts=round(time.time(), 2),
                     value=custom_types.MQTTMeasurementData(
                         gmp343_raw=current_sensor_data.raw,
                         gmp343_compensated=current_sensor_data.compensated,
@@ -207,6 +209,7 @@ class CO2MeasurementProcedure:
                         sht45_humidity=self.air_inlet_sht45_data.humidity,
                     ),
                 ),
+                "v1/devices/me/telemetry"
             )
 
             # stop loop after defined measurement interval

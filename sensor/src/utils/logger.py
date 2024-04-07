@@ -218,10 +218,13 @@ class Logger:
 
         self.message_queue.enqueue_message(
             config,
-            message_body=custom_types.MQTTLogMessageBody(
-                severity=level,
-                message=subject + " " + details,
-                timestamp=round(time.time(), 2),
+            custom_types.MQTTLogMessageBody(
+                log=custom_types.MQTTLogMessageBodyLog(
+                    severity=level,
+                    message=subject + " " + details,
+                ),
+                ts=round(time.time(), 2),
                 revision=state.current_config_revision,
             ),
+            "v1/devices/me/telemetry",
         )

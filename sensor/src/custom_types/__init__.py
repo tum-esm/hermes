@@ -15,6 +15,7 @@ from .mqtt_sending import (
     # different message bodies
     MQTTProvisioningMessageBody,
     MQTTLogMessageBody,
+    MQTTLogMessageBodyLog,
     MQTTMeasurementMessageBody,
     MQTTAcknowledgmentMessageBody,
     MQTTMessageBody,

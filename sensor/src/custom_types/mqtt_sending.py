@@ -26,17 +26,20 @@ class MQTTConfig(pydantic.BaseModel):
 # -----------------------------------------------------------------------------
 # MQTT Log Message
 
+class MQTTLogMessageBodyLog(pydantic.BaseModel):
+    message: str = pydantic.Field(..., min_length=0)
+    severity: Literal["info", "warning", "error"]
+
 
 class MQTTLogMessageBody(pydantic.BaseModel):
     """message body which is sent to server"""
-
-    severity: Literal["info", "warning", "error"]
     revision: int = pydantic.Field(..., ge=0)
-    timestamp: float = pydantic.Field(..., ge=1_640_991_600)
-    message: str = pydantic.Field(..., min_length=0)
+    ts: float = pydantic.Field(..., ge=1_640_991_600)
+    log: MQTTLogMessageBodyLog
 
     class Config:
         extra = "forbid"
+
 
 
 # -----------------------------------------------------------------------------
@@ -110,7 +113,7 @@ class MQTTMeasurementMessageBody(pydantic.BaseModel):
     """message body which is sent to server"""
 
     revision: int = pydantic.Field(..., ge=0)
-    timestamp: float = pydantic.Field(..., ge=1_640_991_600)
+    ts: float = pydantic.Field(..., ge=1_640_991_600)
     value: Union[
         MQTTMeasurementData,
         MQTTCalibrationData,
@@ -131,7 +134,7 @@ class MQTTAcknowledgmentMessageBody(pydantic.BaseModel):
     """message body which is sent to server"""
 
     revision: int = pydantic.Field(..., ge=0)
-    timestamp: float = pydantic.Field(..., ge=1_640_991_600)
+    ts: float = pydantic.Field(..., ge=1_640_991_600)
     success: bool
 
     class Config:

@@ -94,9 +94,10 @@ class MQTTAgent:
                 config,
                 custom_types.MQTTAcknowledgmentMessageBody(
                     revision=state.current_config_revision,
-                    timestamp=time.time(),
+                    ts=time.time(),
                     success=True,
                 ),
+                "v1/devices/me/telemetry"
             )
 
         # tear down connection on program termination
@@ -145,19 +146,8 @@ class MQTTAgent:
         # -----------------------------------------------------------------
 
         def _publish_record(_record: custom_types.SQLMQTTRecord) -> None:
-            # TODO: overwriting the mqtt-topic should not be necessary here, as it is already set in the header
-            #   This should be removed in the future, and the record object should be used directly.
-
             if _record.content.header.mqtt_topic is None:
-                _record.content.header.mqtt_topic = mqtt_config.mqtt_base_topic
-
-                _record.content.header.mqtt_topic += {
-                    custom_types.MQTTLogMessage: "logs/",
-                    custom_types.MQTTMeasurementMessage: "measurements/",
-                    custom_types.MQTTAcknowledgmentMessage: "acknowledgments/",
-                }[type(_record.content)]
-
-                _record.content.header.mqtt_topic += mqtt_config.station_identifier
+                raise ValueError("mqtt topic is not set in the record")
 
             assert mqtt_client.is_connected(), "mqtt client is not connected anymore"
 
@@ -179,7 +169,7 @@ class MQTTAgent:
                 topic="/provision/request",
                 payload=json.dumps({
                     "deviceName": os.environ.get("HERMES_DEVICE_NAME"),
-                    "provisionDeviceKey":os.environ.get(
+                    "provisionDeviceKey": os.environ.get(
                         "HERMES_THINGSBOARD_PROVISION_DEVICE_KEY"
                     ),
                     "provisionDeviceSecret": os.environ.get(

@@ -93,7 +93,7 @@ class SystemCheckProcedure:
             self.config,
             custom_types.MQTTMeasurementMessageBody(
                 revision=state.current_config_revision,
-                timestamp=round(time.time(), 2),
+                ts=round(time.time(), 2),
                 value=custom_types.MQTTSystemData(
                     enclosure_bme280_temperature=mainboard_temperature,
                     enclosure_bme280_humidity=mainboard_bme280_data.humidity,
@@ -108,6 +108,7 @@ class SystemCheckProcedure:
                     ups_battery_above_voltage_threshold=1.0 if self.hardware_interface.ups.battery_above_voltage_threshold else 0.0,
                 ),
             ),
+            "v1/devices/me/telemetry",
         )
 
         # check for errors
