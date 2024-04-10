@@ -160,7 +160,6 @@ class CalibrationProcedure:
                     self.config,
                     custom_types.MQTTMeasurementMessageBody(
                         revision=state.current_config_revision,
-                        timestamp=round(time.time(), 2),
                         value=custom_types.MQTTCalibrationData(
                             cal_bottle_id=float(gas.bottle_id),
                             cal_gmp343_raw=current_sensor_data.raw,
@@ -174,6 +173,7 @@ class CalibrationProcedure:
                             cal_gmp343_temperature=current_sensor_data.temperature,
                         ),
                     ),
+                    "v1/devices/me/telemetry"
                 )
 
                 if (
