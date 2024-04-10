@@ -105,16 +105,16 @@ class MQTTAgent:
             MQTTAgent.communication_loop_process = None
             logger.info("finished graceful shutdown")
 
-        signal.signal(signal.SIGINT, _graceful_teardown)
-        signal.signal(signal.SIGTERM, _graceful_teardown)
-        logger.info("established graceful teardown hook")
-
         quit_signal = False
 
-        def quit_now():
+        def quit_now(*_args: Any):
             nonlocal quit_signal
             quit_signal = True
             _graceful_teardown()
+
+        signal.signal(signal.SIGINT, quit_now)
+        signal.signal(signal.SIGTERM, quit_now)
+        logger.info("established graceful teardown hook")
 
         try:
             config_topic = (
