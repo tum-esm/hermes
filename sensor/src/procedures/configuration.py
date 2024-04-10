@@ -265,14 +265,14 @@ class ConfigurationProcedure:
         shutil.rmtree(tarball_content_name(version))
 
     def _set_up_venv(self, version: str) -> None:
-        """set up a virtual python3.9 environment inside the version subdirectory"""
+        """set up a virtual python3.10 environment inside the version subdirectory"""
         if os.path.isdir(venv_path(version)):
             self.logger.info("venv already exists")
             return
 
         self.logger.info(f"setting up new venv")
         utils.run_shell_command(
-            f"python3.9 -m venv .venv",
+            f"python3.10 -m venv .venv",
             working_directory=code_path(version),
         )
 
