@@ -6,7 +6,7 @@ import click
 
 dirname = os.path.dirname
 PROJECT_DIR = dirname(dirname(os.path.abspath(__file__)))
-INTERPRETER_PATH = os.path.join(PROJECT_DIR, ".venv", "bin", "python")
+INTERPRETER_PATH = os.path.join(PROJECT_DIR, ".venv", "bin", "python3")
 SCRIPT_PATH = os.path.join(PROJECT_DIR, "run_automation.py")
 
 
