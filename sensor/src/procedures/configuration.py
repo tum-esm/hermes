@@ -26,12 +26,12 @@ from src import custom_types, utils, hardware
 
 NAME = "hermes"
 REPOSITORY = f"tum-esm/{NAME}"
-ROOT_PATH = os.environ.get('HERMES_DEPLOYMENT_ROOT_PATH', f"{os.environ['HOME']}/Documents/{NAME}")
+root_path = lambda: os.environ.get('HERMES_DEPLOYMENT_ROOT_PATH', f"{os.environ['HOME']}/Documents/{NAME}")
 
 tarball_name: Callable[[str], str] = lambda version: f"v{version}.tar.gz"
 tarball_content_name: Callable[[str], str] = lambda version: f"{NAME}-{version}"
-code_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}"
-venv_path: Callable[[str], str] = lambda version: f"{ROOT_PATH}/{version}/.venv"
+code_path: Callable[[str], str] = lambda version: f"{root_path()}/{version}"
+venv_path: Callable[[str], str] = lambda version: f"{root_path()}/{version}/.venv"
 
 dirname = os.path.dirname
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
@@ -338,7 +338,7 @@ class ConfigurationProcedure:
 
     def _update_cli_pointer(self, version: str) -> None:
         """make the file pointing to the used cli to the new version's cli"""
-        with open(f"{ROOT_PATH}/{NAME}-cli.sh", "w") as f:
+        with open(f"{root_path()}/{NAME}-cli.sh", "w") as f:
             f.write(
                 "set -o errexit\n\n"
                 + f"{venv_path(version)}/bin/python "
@@ -348,8 +348,8 @@ class ConfigurationProcedure:
     def _remove_old_venvs(self) -> None:
         venvs_to_be_removed: list[str] = []
         version_regex_pattern = re.compile(r"^\d+\.\d+\.\d+(-(alpha|beta)\.\d+)?$")
-        for old_version in os.listdir(ROOT_PATH):
-            old_venv_path = os.path.join(ROOT_PATH, old_version, ".venv")
+        for old_version in os.listdir(root_path()):
+            old_venv_path = os.path.join(root_path(), old_version, ".venv")
             if not os.path.isdir(old_venv_path):
                 continue
             if not version_regex_pattern.match(old_version):
