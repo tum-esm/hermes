@@ -39,8 +39,6 @@ class WindMeasurementProcedure:
         if self.wind_data is not None:
             self.logger.info(f"latest wind sensor measurement: {self.wind_data}")
 
-
-
             self.message_queue.enqueue_message(
                 self.config,
                 custom_types.WindSensorData(

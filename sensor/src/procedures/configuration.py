@@ -193,9 +193,9 @@ class ConfigurationProcedure:
                 self.config,
                 custom_types.MQTTAcknowledgmentMessageBody(
                     revision=new_revision,
-                    timestamp=time.time(),
                     success=True,
                 ),
+                "v1/devices/me/telemetry"
             )
 
             # stop execution and wait for restart by cron job
@@ -218,6 +218,7 @@ class ConfigurationProcedure:
                     revision=new_revision,
                     success=False,
                 ),
+                "v1/devices/me/telemetry"
             )
 
             if has_same_directory:

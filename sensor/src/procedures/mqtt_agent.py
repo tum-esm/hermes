@@ -124,6 +124,8 @@ class MQTTAgent:
             mqtt_client.on_message = MQTTAgent.__on_mqtt_message(config_request_queue, quit_now)
             mqtt_client.subscribe(config_topic, qos=1)
             mqtt_client.subscribe("/provision/response", qos=1)
+            mqtt_client.subscribe("v1/devices/me/attributes", qos=1)
+            mqtt_client.subscribe("v1/devices/me/attributes/response/+", qos=1)
 
         except Exception as e:
             logger.exception(
@@ -185,8 +187,17 @@ class MQTTAgent:
             while not quit_signal:
                 time.sleep(1)
             return
-
         # -----------------------------------------------------------------
+
+        topic = f'v1/devices/me/attributes/request/{random.randint(1000 * 1000, 9999 * 1000)}'
+        # request the current configuration from the broker
+        mqtt_client.publish(
+            topic=topic,
+            payload=json.dumps({
+                "sharedKeys": ["config"]
+            }),
+            qos=1,
+        )
 
         last_heartbeat_timestamp: float = 0
 
@@ -300,17 +311,25 @@ class MQTTAgent:
             msg: paho.mqtt.client.MQTTMessage,
         ) -> None:
             # skip messages that are not coming from a config topic
-            if "configurations" in msg.topic:
-                logger.info(f"received message on config topic: {msg.payload.decode()}")
-                try:
+            if "/me/attributes" in msg.topic:
+                payload_raw = msg.payload.decode()
+                payload_dict = json.loads(payload_raw)
+                if "shared" in payload_dict and "config" in payload_dict["shared"]:
+                    payload_dict["config"] = payload_dict["shared"]["config"]
+
+                if "config" in payload_dict \
+                        and ("configuration" in payload_dict["config"] and "revision" in payload_dict["config"]):
+                    logger.info(f"received config message: {payload_raw}")
                     config_request_queue.put(
                         custom_types.MQTTConfigurationRequest(
-                            **json.loads(msg.payload.decode())
+                            revision=payload_dict["config"]["revision"],
+                            configuration=payload_dict["config"]["configuration"],
                         )
                     )
                     logger.debug(f"put config message into the message queue")
-                except (json.JSONDecodeError, pydantic.ValidationError):
-                    logger.warning(f"could not decode message payload on message: {msg}")
+                else:
+                    logger.info(f"received attribute update: {payload_raw}")
+
             elif "/provision/response" in msg.topic:
                 thingsboard_response = json.loads(msg.payload.decode())
                 if not thingsboard_response["status"].lower() == "success":
