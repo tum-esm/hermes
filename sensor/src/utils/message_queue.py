@@ -159,7 +159,7 @@ class MessageQueue:
     ) -> None:
         state = utils.StateInterface.read()
         new_header = custom_types.MQTTMessageHeader(
-            ts=round(time.time(), 2),
+            ts=round(time.time(), 2)*1000,
             mqtt_topic=None,
             revision=state.current_config_revision,
             sending_skipped=(not config.active_components.send_messages_over_mqtt),
