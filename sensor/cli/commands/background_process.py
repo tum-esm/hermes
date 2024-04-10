@@ -22,6 +22,18 @@ def _start() -> None:
             utils.print_green(f"Started background process with PID(s) {new_pids}")
 
 
+def _run() -> None:
+    print("Running the automation in the current shell")
+    os.system(f"{utils.INTERPRETER_PATH} {utils.SCRIPT_PATH}")
+
+
+@click.command(
+    help="Run the automation in the current shell."
+)
+def run() -> None:
+    _run()
+
+
 def _stop() -> None:
     termination_pids = utils.terminate_processes()
     if len(termination_pids) == 0:
