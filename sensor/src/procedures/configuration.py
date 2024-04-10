@@ -60,7 +60,7 @@ class ConfigurationProcedure:
     """runs when a config change has been requested"""
 
     def __init__(self, config: custom_types.Config, simulate: bool = False) -> None:
-        self.logger = utils.Logger(origin="configuration-procedure")
+        self.logger = utils.Logger(origin="configuration-procedure", print_to_console=os.environ.get("HERMES_MODE") == "simulate")
         self.config = config
         self._remove_old_venvs()
         self.message_queue = utils.MessageQueue()
