@@ -185,8 +185,10 @@ class MessageQueue:
     def wait_until_queue_is_empty(self, timeout: int) -> None:
         start_time = time.time()
         while True:
-            if self.get_row_count() == 0:
+            pending_messages = self.get_rows_by_status("in-progress").__len__()
+            if pending_messages == 0:
                 break
+            print(f"Waiting for queue to empty. Currently {pending_messages} messages pending.")
             if (time.time() - start_time) > timeout:
                 raise TimeoutError()
             time.sleep(1)
