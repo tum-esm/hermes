@@ -3,13 +3,12 @@ import multiprocessing
 import multiprocessing.synchronize
 import os
 import queue
+import random
 import signal
-import sys
 import time
 from typing import Any, Callable, Optional
 
 import paho.mqtt.client
-import pydantic
 
 from run_automation import DOTENV_PATH
 from src import custom_types, utils

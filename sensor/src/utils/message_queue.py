@@ -8,7 +8,7 @@ from typing import Any, Literal, Optional
 
 import filelock
 
-import utils
+from src import utils
 from src import custom_types
 
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))

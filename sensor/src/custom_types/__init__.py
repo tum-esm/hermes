@@ -1,6 +1,7 @@
 from .config import Config, CalibrationGasConfig
 from .mqtt_receiving import (
     MQTTConfigurationRequest,
+    MQTTConfigurationRequestConfig
 )
 from .mqtt_sending import (
     # config and queue files
