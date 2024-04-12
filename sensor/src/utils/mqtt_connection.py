@@ -12,12 +12,12 @@ class MQTTConnection:
 
     def __init__(self) -> None:
         self.config = custom_types.MQTTConfig(
-            station_identifier=os.environ.get("HERMES_MQTT_IDENTIFIER"),
+            station_identifier=os.environ.get("HERMES_MQTT_IDENTIFIER") or "",
             mqtt_url=os.environ.get("HERMES_MQTT_URL"),
             mqtt_port=os.environ.get("HERMES_MQTT_PORT"),
             mqtt_username=os.environ.get("HERMES_THINGSBOARD_ACCESS_TOKEN") or "provision",
             mqtt_password="",
-            mqtt_base_topic=os.environ.get("HERMES_MQTT_BASE_TOPIC"),
+            mqtt_base_topic=os.environ.get("HERMES_MQTT_BASE_TOPIC") or "",
         )
 
         self.client = paho.mqtt.client.Client(client_id=self.config.station_identifier)

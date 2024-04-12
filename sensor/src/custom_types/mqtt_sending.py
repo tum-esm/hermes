@@ -11,13 +11,13 @@ import pydantic
 class MQTTConfig(pydantic.BaseModel):
     """fixed params loaded from the environment"""
 
-    station_identifier: str = pydantic.Field(..., min_length=3, max_length=256)
+    station_identifier: str = pydantic.Field(..., min_length=0, max_length=256)
     mqtt_url: str = pydantic.Field(..., min_length=3, max_length=256)
     mqtt_port: int = pydantic.Field(..., ge=1, le=65535)
     mqtt_username: str = pydantic.Field(..., min_length=4, max_length=256)
     mqtt_password: str = pydantic.Field(..., min_length=0, max_length=256)
     mqtt_base_topic: str = pydantic.Field(
-        ..., max_length=256, regex=r"^([a-z0-9_-]+\/)*$"
+        ..., min_length=0, max_length=256, regex=r"^([a-z0-9_-]+\/)*$"
     )
 
     class Config:
