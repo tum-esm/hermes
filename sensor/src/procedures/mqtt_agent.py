@@ -291,12 +291,15 @@ class MQTTAgent:
     def check_errors() -> None:
         """Checks whether the loop processes is still running. Possibly
         raises an `MQTTAgent.CommunicationOutage` exception."""
-        if MQTTAgent.communication_loop_process is not None:
-            if not MQTTAgent.communication_loop_process.is_alive():
-                MQTTAgent.communication_loop_process = None
-                raise MQTTAgent.CommunicationOutage(
-                    "communication loop process is not running"
-                )
+        if MQTTAgent.communication_loop_process is None \
+                or (
+                    MQTTAgent.communication_loop_process is not None
+                    and not MQTTAgent.communication_loop_process.is_alive()
+            ):
+            MQTTAgent.communication_loop_process = None
+            raise MQTTAgent.CommunicationOutage(
+                "communication loop process is not running"
+            )
 
     @staticmethod
     def __on_mqtt_message(
