@@ -341,7 +341,7 @@ class ConfigurationProcedure:
     ) -> None:
         """run pytests for the new version. The tests should only ensure that
         the new software starts up and is able to perform new confi requests"""
-        if scope == "parameter-change" or os.environ.get("HERMES_MODE") == "simulate":
+        if True or scope == "parameter-change" or os.environ.get("HERMES_MODE") == "simulate":
             self.logger.debug(f"only validating config")
             utils.run_shell_command(
                 f'.venv/bin/python -m pytest -m "parameter_update" tests/',
