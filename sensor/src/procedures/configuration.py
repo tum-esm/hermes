@@ -76,6 +76,7 @@ class ConfigurationProcedure:
     def run(self, config_request: custom_types.MQTTConfigurationRequest) -> None:
         new_revision = config_request.revision
         new_version = config_request.configuration.version
+        url = config_request.configuration.url
 
         # validate that upgrade is executed by latest sw version
         # TODO: why is this needed?
@@ -134,7 +135,18 @@ class ConfigurationProcedure:
                 store_current_config()
             # version update (+ parameter update)
             else:
-                self._download_code(new_version)
+                if url:
+                    self.logger.info(
+                        f"updating to version {new_version} from {url}",
+                        config=self.config,
+                    )
+                    self._download_code(new_version, url)
+                else:
+                    self.logger.info(
+                        f"updating to version {new_version} from github",
+                        config=self.config,
+                    )
+                    self._download_code(new_version, url)
 
                 self.logger.info(
                     f"download was successful",
@@ -236,17 +248,23 @@ class ConfigurationProcedure:
 
             raise e
 
-    def _download_code(self, version: str) -> None:
+    def _download_code(self, version: str, url: str) -> None:
         """uses the GitHub CLI to download the code for a specific release"""
         if os.path.isdir(code_path(version)):
             self.logger.info("code directory already exists")
             return
 
-        # download release using the GitHub cli
-        self.logger.info("downloading code from GitHub")
-        utils.run_shell_command(
-            f"wget https://github.com/tum-esm/hermes/archive/refs/tags/{tarball_name(version)}"
-        )
+        if url:
+            self.logger.info("downloading code from URL")
+            utils.run_shell_command(
+                f"wget {url} -O {tarball_name(version)}"
+            )
+        else:
+            # download release using the GitHub cli
+            self.logger.info("downloading code from GitHub")
+            utils.run_shell_command(
+                f"wget https://github.com/tum-esm/hermes/archive/refs/tags/{tarball_name(version)}"
+            )
 
         # extract code archive
         self.logger.info("extracting tarball")

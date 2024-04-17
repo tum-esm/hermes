@@ -1,8 +1,10 @@
 import pydantic
+from pydantic.types import Optional
 
 
 class MQTTConfigurationRequestConfig(pydantic.BaseModel):
     version: str = pydantic.Field(..., min_length=5)
+    url: str = Optional[str]
 
     class Config:
         extra = "allow"
