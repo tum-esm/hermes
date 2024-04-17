@@ -38,6 +38,11 @@ def run() -> None:
         raise e
 
     logger.info(
+        f"HELLO WORLD!",
+        config=config,
+    )
+
+    logger.info(
         f"Started new automation process with SW version {config.version} and PID {os.getpid()}.",
         config=config,
     )

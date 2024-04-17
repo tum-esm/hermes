@@ -36,7 +36,7 @@ class CalibrationConfig(pydantic.BaseModel):
     system_flushing_seconds: int = pydantic.Field(..., ge=0, le=600)
 
     class Config:
-        extra = "forbid"
+        extra = "allow"
 
 
 # -----------------------------------------------------------------------------
@@ -92,6 +92,7 @@ class MeasurementConfig(pydantic.BaseModel):
 class Config(pydantic.BaseModel):
     """The config.json for each sensor"""
 
+    url: Optional[str]
     revision: Optional[int]
     version: str = pydantic.Field(
         regex=r"^\d+\.\d+\.\d+(?:-(?:alpha|beta)\.\d+)?$"
