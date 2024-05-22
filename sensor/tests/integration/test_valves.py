@@ -14,7 +14,9 @@ def test_valves() -> None:
     config = utils.ConfigInterface.read()
     valves = hardware.ValveInterface(config)
 
-    for valve_no in [1, 2, 3, 4]:
+    valve_nos: list[Literal[1, 2, 3, 4]] = [1, 2, 3, 4]
+
+    for valve_no in valve_nos:
         valves.set_active_input(valve_no)
         time.sleep(2)
 
