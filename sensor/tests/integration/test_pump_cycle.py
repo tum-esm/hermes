@@ -13,9 +13,10 @@ def test_pump_cycle() -> None:
     config = utils.ConfigInterface.read()
     pump = hardware.PumpInterface(config)
 
-    for duty_cycle in [0, 0.05, 0.1, 0.15, 0.2, 0]:
+    for duty_cycle in [0, 0.05, 0.15, 0]:
         print(f"setting duty cycle to {duty_cycle}")
         pump.set_desired_pump_speed(pwm_duty_cycle=duty_cycle)
         time.sleep(3)
 
+    pump.flush_system(duration=5, duty_cycle=0.1)
     pump.teardown()
