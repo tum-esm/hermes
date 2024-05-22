@@ -4,7 +4,7 @@ from src import utils, hardware
 
 
 @pytest.mark.integration
-def test_wind_sensor(log_files: None) -> None:
+def test_wind_sensor() -> None:
     config = utils.ConfigInterface.read()
     wind_sensor = hardware.WindSensorInterface(config)
 

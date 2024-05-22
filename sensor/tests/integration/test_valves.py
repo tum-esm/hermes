@@ -10,7 +10,7 @@ from src import utils, hardware
 
 
 @pytest.mark.integration
-def test_valve_cycle(log_files: None) -> None:
+def test_valve_cycle() -> None:
     config = utils.ConfigInterface.read()
     valves = hardware.ValveInterface(config)
 
