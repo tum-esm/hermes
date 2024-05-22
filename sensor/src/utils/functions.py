@@ -147,9 +147,9 @@ def avg_list(input_list: list[float], round_digits: int = 2) -> float:
 
 def read_os_uptime() -> int:
     """Reads OS system uptime from terminal and returns time in seconds."""
-    uptime = subprocess.check_output("uptime -s", shell=True)
-    uptime = str(uptime.decode("utf-8").strip())
-    uptime = datetime.strptime(uptime, "%Y-%m-%d %H:%M:%S")
-    uptime = time.time() - uptime.timestamp()
+    uptime_date = subprocess.check_output("uptime -s", shell=True)
+    uptime_string = uptime_date.decode("utf-8").strip()
+    uptime_datetime = datetime.strptime(uptime_string, "%Y-%m-%d %H:%M:%S")
+    uptime_seconds = int(time.time() - uptime_datetime.timestamp())
 
-    return uptime
+    return uptime_seconds
