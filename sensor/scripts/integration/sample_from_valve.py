@@ -20,7 +20,7 @@ valves.set_active_input(valve_no)
 co2_sensor = hardware.CO2SensorInterface(config)
 air_inlet_bme280_sensor = hardware.BME280SensorInterface(config, variant="air-inlet")
 air_inlet_sht45_sensor = hardware.SHT45SensorInterface(config)
-mainboard_bme280_sensor = hardware.BME280SensorInterface(config, variant="mainboard")
+mainboard_bme280_sensor = hardware.BME280SensorInterface(config, variant="ioboard")
 
 try:
     while True:

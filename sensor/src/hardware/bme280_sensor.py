@@ -11,12 +11,12 @@ class BME280SensorInterface:
     def __init__(
         self,
         config: custom_types.Config,
-        variant: Literal["mainboard", "air-inlet"],
+        variant: Literal["ioboard", "air-inlet"],
         testing: bool = False,
         simulate: bool = False,
     ) -> None:
         self.logger = utils.Logger(
-            "mainboard-bme280" if (variant == "mainboard") else "air-inlet-bme280",
+            "ioboard-bme280" if (variant == "ioboard") else "air-inlet-bme280",
             print_to_console=testing,
             write_to_file=(not testing),
         )
@@ -37,7 +37,7 @@ class BME280SensorInterface:
         for _ in range(2):
             try:
                 self.bus = smbus2.SMBus(1)
-                self.address = 0x77 if (variant == "mainboard") else 0x76
+                self.address = 0x77 if (variant == "ioboard") else 0x76
 
                 # test if the sensor data can be read
                 bme280.sample(
@@ -66,7 +66,7 @@ class BME280SensorInterface:
         self.logger.info("Finished initialization")
 
     def get_data(self, retries: int = 1) -> custom_types.BME280SensorData:
-        """Reads temperature,humidity and pressure on mainboard and air inlet"""
+        """Reads temperature,humidity and pressure on ioboard and air inlet"""
 
         if self.simulate:
             return custom_types.BME280SensorData(
@@ -134,14 +134,14 @@ class BME280SensorInterface:
         if self.simulate:
             self.sensor_connected = True
             return
-        
+
         try:
             self.compensation_params = None
             if self.bus:
                 self.bus.close()
             time.sleep(1)
             self.bus = smbus2.SMBus(1)
-            self.address = 0x77 if (self.variant == "mainboard") else 0x76
+            self.address = 0x77 if (self.variant == "ioboard") else 0x76
 
             # test if the sensor data can be read
             bme280.sample(
