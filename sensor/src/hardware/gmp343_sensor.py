@@ -7,11 +7,8 @@ import gpiozero.pins.pigpio
 
 from src import utils, custom_types
 
-times_REGEX = r"\d+\.\d+"
-STARTUP_REGEX = (
-    f"GMP343 - Version STD {times_REGEX}\\r\\n"
-    + f"Copyright: Vaisala Oyj \\d{{4}} - \\d{{4}}"
-)
+CO2_SENSOR_POWER_PIN_OUT = 20
+CO2_SENSOR_SERIAL_PORT = "/dev/ttySC0"
 CO2_MEASUREMENT_REGEX = (
     r"\d+\.\d+\s+"  # raw
     + r"\d+\.\d+\s+"  # compensated
@@ -19,9 +16,11 @@ CO2_MEASUREMENT_REGEX = (
     + r"\d+\.\d+\s+"  # temperature
     + r"\(R C C\+F T\)"
 )
-
-CO2_SENSOR_POWER_PIN_OUT = 20
-CO2_SENSOR_SERIAL_PORT = "/dev/ttySC0"
+TIMES_REGEX = r"\d+\.\d+"
+STARTUP_REGEX = (
+    f"GMP343 - Version STD {TIMES_REGEX}\\r\\n"
+    + f"Copyright: Vaisala Oyj \\d{{4}} - \\d{{4}}"
+)
 
 
 class CO2SensorInterface:
@@ -96,9 +95,9 @@ class CO2SensorInterface:
     ) -> None:
         """update the filter settings on the CO2 probe"""
 
-        assert (0 <= average <= 60),    "invalid calibration setting, average not in [0, 60]"
-        assert (0 <= smooth <= 255),    "invalid calibration setting, smooth not in [0, 255]"
-        assert (0 <= median <= 13),     "invalid calibration setting, median not in [0, 13]"
+        assert 0 <= average <= 60, "invalid calibration setting, average not in [0, 60]"
+        assert 0 <= smooth <= 255, "invalid calibration setting, smooth not in [0, 255]"
+        assert 0 <= median <= 13, "invalid calibration setting, median not in [0, 13]"
 
         self._set_sensor_parameter(parameter="average", value=average)
         self._set_sensor_parameter(parameter="smooth", value=smooth)
@@ -271,7 +270,7 @@ class CO2SensorInterface:
                     f"{round(simulated_co2 + random()*3, 2)}\t",
                     f"{round(simulated_co2 + random()*3, 2)}\t",
                     f"{round(20 + random() * 10, 2)}",
-                ]
+                ],
             )
 
         answer = self.serial_interface.send_command(
