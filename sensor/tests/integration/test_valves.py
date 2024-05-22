@@ -10,14 +10,12 @@ from src import utils, hardware
 
 
 @pytest.mark.integration
-def test_valve_cycle() -> None:
+def test_valves() -> None:
     config = utils.ConfigInterface.read()
     valves = hardware.ValveInterface(config)
 
-    valve_nos: list[Literal[1, 2, 3, 4]] = [1, 2, 3, 4]
-
-    for valve_no in valve_nos:
+    for valve_no in [1, 2, 3, 4]:
         valves.set_active_input(valve_no)
-        time.sleep(3)
+        time.sleep(2)
 
     valves.teardown()
