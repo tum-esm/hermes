@@ -4,6 +4,7 @@ import signal
 import string
 import subprocess
 import time
+from datetime import datetime
 from typing import Any, Optional
 
 import gpiozero.pins.pigpio
@@ -53,8 +54,8 @@ class ExponentialBackOff:
 
 
 def run_shell_command(
-        command: str,
-        working_directory: Optional[str] = None,
+    command: str,
+    working_directory: Optional[str] = None,
 ) -> str:
     """runs a shell command and raises a CommandLineException if the
     return code is not zero, returns the stdout"""
@@ -142,3 +143,13 @@ def avg_list(input_list: list[float], round_digits: int = 2) -> float:
     """Averages a list of float.
     Returns a float rounded to defined digits."""
     return round(sum(input_list) / len(input_list), round_digits)
+
+
+def read_os_uptime() -> int:
+    """Reads OS system uptime from terminal and returns time in seconds."""
+    uptime = subprocess.check_output("uptime -s", shell=True)
+    uptime = uptime.decode("utf-8").strip()
+    uptime = datetime.strptime(uptime, "%Y-%m-%d %H:%M:%S")
+    uptime = time.time() - uptime.timestamp()
+
+    return uptime

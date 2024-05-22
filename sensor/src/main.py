@@ -52,10 +52,10 @@ def run() -> None:
     max_config_update_time = 1200
     max_system_check_time = 180
     max_calibration_time = (
-            (len(config.calibration.gas_cylinders) + 1)
-            * config.calibration.sampling_per_cylinder_seconds
-            + 300  # flush time
-            + 180  # extra time
+        (len(config.calibration.gas_cylinders) + 1)
+        * config.calibration.sampling_per_cylinder_seconds
+        + 300  # flush time
+        + 180  # extra time
     )
     max_measurement_time = config.measurement.procedure_seconds + 180  # extra time
     utils.set_alarm(max_setup_time, "setup")
@@ -82,8 +82,9 @@ def run() -> None:
     logger.info("Initializing hardware interfaces.", config=config)
 
     try:
-        hardware_interface = hardware.HardwareInterface(config=config,
-                                                        simulate=simulate)
+        hardware_interface = hardware.HardwareInterface(
+            config=config, simulate=simulate
+        )
     except Exception as e:
         logger.exception(
             e, label="Could not initialize hardware interface.", config=config
@@ -107,7 +108,9 @@ def run() -> None:
     # initialize procedures
 
     # initialize config procedure
-    configuration_procedure = procedures.ConfigurationProcedure(config, simulate=simulate)
+    configuration_procedure = procedures.ConfigurationProcedure(
+        config, simulate=simulate
+    )
 
     # initialize procedures interacting with hardware:
     #   system_check:   logging system statistics and reporting hardware/system errors
@@ -181,8 +184,9 @@ def run() -> None:
             utils.set_alarm(max_config_update_time, "config update")
 
             logger.info("Checking for new config messages.")
-            new_config_message: Optional[
-                custom_types.MQTTConfigurationRequest] = procedures.MQTTAgent.get_config_message()
+            new_config_message: Optional[custom_types.MQTTConfigurationRequest] = (
+                procedures.MQTTAgent.get_config_message()
+            )
 
             if new_config_message is not None:
                 # run config update procedure
@@ -264,11 +268,16 @@ def run() -> None:
 
             # reboot if exception lasts longer than 12 hours
             if (time.time() - last_successful_mainloop_iteration_time) >= 86400:
-                logger.info(
-                    "Rebooting because no successful mainloop iteration for 24 hours.",
-                    config=config,
-                )
-                os.system("sudo reboot")
+                if utils.read_os_uptime() >= 86400:
+                    logger.info(
+                        "Rebooting because no successful mainloop iteration for 24 hours.",
+                        config=config,
+                    )
+                    os.system("sudo reboot")
+                else:
+                    logger.info(
+                        "System is offline. Last reboot is less than 24h ago. No action."
+                    )
 
             try:
                 # check timer with exponential backoff
