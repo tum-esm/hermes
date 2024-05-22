@@ -8,7 +8,7 @@ from src import utils, hardware
 
 
 @pytest.mark.integration
-def test_sht45_sensor(log_files: None) -> None:
+def test_sht45_sensor() -> None:
     config = utils.ConfigInterface.read()
     sensor = hardware.SHT45SensorInterface(config)
     data = sensor.get_data()
