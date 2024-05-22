@@ -1,20 +1,18 @@
+from os.path import dirname, abspath
+import sys
+import pytest
+
+PROJECT_DIR = dirname(dirname(abspath(__file__)))
+sys.path.append(PROJECT_DIR)
+from src import utils, hardware
+
+
+@pytest.mark.integration
 def test_initialize_and_teardown() -> None:
-    pass
+    config = utils.ConfigInterface.read()
+    hardware_interface = hardware.HardwareInterface(config=config)
 
-    # TODO: initialize
-    # TODO: assertions
-    # TODO: teardown
-    # TODO: assertions
-    # TODO: reinitialize
-    # TODO: assertions
-    # TODO: teardown
-
-
-def test_hardware_interface() -> None:
-    pass
-
-    # TODO: initialize
-    # TODO: assertions
-    # TODO: hardware_interface
-    # TODO: assertions
-    # TODO: teardown
+    hardware_interface.check_errors()
+    hardware_interface.teardown()
+    hardware_interface.reinitialize(config)
+    hardware_interface.teardown()
