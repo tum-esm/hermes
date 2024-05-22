@@ -9,7 +9,7 @@ from src import utils, hardware
 
 
 @pytest.mark.integration
-def test_pump_cycle() -> None:
+def test_pump_interface() -> None:
     config = utils.ConfigInterface.read()
     pump = hardware.PumpInterface(config)
 

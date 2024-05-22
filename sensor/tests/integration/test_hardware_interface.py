@@ -8,7 +8,7 @@ from src import utils, hardware
 
 
 @pytest.mark.integration
-def test_initialize_and_teardown() -> None:
+def test_hardware_interface() -> None:
     config = utils.ConfigInterface.read()
     hardware_interface = hardware.HardwareInterface(config=config)
 

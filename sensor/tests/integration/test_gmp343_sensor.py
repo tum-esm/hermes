@@ -8,7 +8,7 @@ from src import utils, hardware
 
 
 @pytest.mark.integration
-def test_co2_sensor() -> None:
+def test_gmp343_sensor() -> None:
     config = utils.ConfigInterface.read()
     sensor = hardware.CO2SensorInterface(config)
 
