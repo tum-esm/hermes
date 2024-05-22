@@ -10,7 +10,9 @@ from src import hardware, utils
 @pytest.mark.integration
 def test_bme280_sensor(log_files: None) -> None:
     """Two BME280 sensors are present in the system.
-    BME280 sensor measure temperature, humidity and pressure."""
+    BME280 sensor measure temperature, humidity and pressure.
+
+    The test verifies that both BME280 sensors can be read."""
 
     config = utils.ConfigInterface.read()
     s1 = hardware.BME280SensorInterface(config, variant="ioboard")
