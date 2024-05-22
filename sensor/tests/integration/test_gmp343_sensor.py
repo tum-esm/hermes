@@ -12,8 +12,12 @@ def test_co2_sensor(log_files: None) -> None:
     config = utils.ConfigInterface.read()
     sensor = hardware.CO2SensorInterface(config)
 
-    sensor.get_correction_info()
+    # test high level functions
+    sensor.set_compensation_values(pressure=950.0, humidity=20.0)
+    sensor.set_filter_setting()
     sensor.get_current_concentration()
+    sensor.get_param_info()
     sensor.get_device_info()
+    sensor.get_correction_info()
     sensor.check_errors()
     sensor.teardown()
