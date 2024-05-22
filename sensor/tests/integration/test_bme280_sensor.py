@@ -8,7 +8,7 @@ from src import hardware, utils
 
 
 @pytest.mark.integration
-def test_bme280_sensor(log_files: None) -> None:
+def test_bme280_sensor() -> None:
     """Two BME280 sensors are present in the system.
     BME280 sensor measure temperature, humidity and pressure.
 
