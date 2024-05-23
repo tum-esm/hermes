@@ -31,11 +31,11 @@ jobs:
 
       # load cached venv if cache exists
       - name: Load cached venv
-       id: cached-poetry-dependencies
-       uses: actions/cache@v4
-       with:
-         path: sensor/.venv
-         key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('sensor/poetry.lock') }}
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: sensor/.venv
+          key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('sensor/poetry.lock') }}
 
       # install poetry if venv not in cache
       - name: Install Poetry
