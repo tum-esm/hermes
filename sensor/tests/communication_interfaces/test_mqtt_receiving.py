@@ -19,7 +19,7 @@ from src import custom_types, utils, procedures
 # this test has to run last because it fucks up something to mqtt tests afterwards won't work ...
 
 
-@pytest.mark.version_update
+@pytest.mark.over_the_air_update
 @pytest.mark.ci
 @pytest.mark.last
 def test_mqtt_receiving(
