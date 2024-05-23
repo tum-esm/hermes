@@ -13,7 +13,6 @@ CLI_PATH = os.path.join(PROJECT_DIR, "cli", "main.py")
 
 @pytest.mark.parameter_update
 @pytest.mark.version_update
-@pytest.mark.integration
 def test_cli_startup() -> None:
     """run the hermes-cli info command"""
     stdout = utils.run_shell_command(

@@ -1,9 +1,8 @@
 import pytest
-from ..pytest_utils import wait_for_condition
 from src import utils, hardware
 
 
-@pytest.mark.integration
+@pytest.mark.hardware_interface
 def test_wind_sensor() -> None:
     """This tests if the current configuration with or without a
     wind sensor present will cause any problems."""

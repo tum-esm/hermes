@@ -8,7 +8,7 @@ sys.path.append(PROJECT_DIR)
 from src import utils, hardware
 
 
-@pytest.mark.integration
+@pytest.mark.hardware_interface
 def test_pump_interface() -> None:
     config = utils.ConfigInterface.read()
     pump = hardware.PumpInterface(config)
