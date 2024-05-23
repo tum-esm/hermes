@@ -1,8 +1,6 @@
 import os
 import pytest
-import os
 from os.path import dirname
-import pytest
 from src import utils
 
 
@@ -11,8 +9,7 @@ INTERPRETER_PATH = os.path.join(PROJECT_DIR, ".venv", "bin", "python")
 CLI_PATH = os.path.join(PROJECT_DIR, "cli", "main.py")
 
 
-@pytest.mark.parameter_update
-@pytest.mark.version_update
+@pytest.mark.over_the_air_update
 def test_cli_startup() -> None:
     """run the hermes-cli info command"""
     stdout = utils.run_shell_command(
