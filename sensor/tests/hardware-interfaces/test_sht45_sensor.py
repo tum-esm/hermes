@@ -7,7 +7,7 @@ sys.path.append(PROJECT_DIR)
 from src import utils, hardware
 
 
-@pytest.mark.integration
+@pytest.mark.hardware_interface
 def test_sht45_sensor() -> None:
     config = utils.ConfigInterface.read()
     sensor = hardware.SHT45SensorInterface(config)

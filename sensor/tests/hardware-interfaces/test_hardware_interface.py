@@ -7,7 +7,7 @@ sys.path.append(PROJECT_DIR)
 from src import utils, hardware
 
 
-@pytest.mark.integration
+@pytest.mark.hardware_interface
 def test_hardware_interface() -> None:
     config = utils.ConfigInterface.read()
     hardware_interface = hardware.HardwareInterface(config=config)

@@ -9,7 +9,7 @@ sys.path.append(PROJECT_DIR)
 from src import utils, hardware
 
 
-@pytest.mark.integration
+@pytest.mark.hardware_interface
 def test_valves() -> None:
     config = utils.ConfigInterface.read()
     valves = hardware.ValveInterface(config)

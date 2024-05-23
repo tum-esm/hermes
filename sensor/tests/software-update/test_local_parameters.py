@@ -13,7 +13,6 @@ CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.json")
 
 @pytest.mark.parameter_update
 @pytest.mark.version_update
-@pytest.mark.integration
 def test_local_config() -> None:
     """checks whether the local config/config.json makes sense:"""
 
@@ -41,7 +40,6 @@ def test_local_config() -> None:
 
 
 @pytest.mark.version_update
-@pytest.mark.integration
 def test_local_env_vars() -> None:
     """checks whether the local config/.env can be loaded"""
 
@@ -60,7 +58,6 @@ def test_local_env_vars() -> None:
 
 
 @pytest.mark.version_update
-@pytest.mark.integration
 def test_local_libraries() -> None:
     """checks whether the raspberry pi specific libraries can be loaded"""
 
