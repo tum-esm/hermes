@@ -25,17 +25,17 @@ jobs:
         uses: actions/checkout@v4
       - name: Set up Python 3.9.16
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.9.16"
 
       # load cached venv if cache exists
-      #- name: Load cached venv
-      #  id: cached-poetry-dependencies
-      #  uses: actions/cache@v3
-      #  with:
-      #    path: sensor/.venv
-      #    key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('sensor/poetry.lock') }}
+      - name: Load cached venv
+       id: cached-poetry-dependencies
+       uses: actions/cache@v4
+       with:
+         path: sensor/.venv
+         key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('sensor/poetry.lock') }}
 
       # install poetry if venv not in cache
       - name: Install Poetry
