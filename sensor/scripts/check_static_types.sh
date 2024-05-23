@@ -11,9 +11,6 @@ rm -rf .mypy_cache
 echo "Checking run_automation.py"
 mypy run_automation.py
 
-echo "Checking run_pump_cycle.py"
-mypy run_pump_cycle.py
-
 # *********************************************************
 # other
 
