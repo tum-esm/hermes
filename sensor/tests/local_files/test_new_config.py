@@ -8,7 +8,7 @@ PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 CONFIG_PATH = os.path.join(PROJECT_DIR, "config", "config.json")
 
 
-@pytest.mark.over_the_air_update
+@pytest.mark.remote_update
 def test_new_config() -> None:
     """checks whether the local config/config.json makes sense:"""
 

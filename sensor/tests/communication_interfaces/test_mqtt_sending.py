@@ -23,13 +23,13 @@ MESSAGE_ARCHIVE_FILE = join(
 )
 
 
-@pytest.mark.version_update
+@pytest.mark.remote_update
 @pytest.mark.ci
 def test_message_sending_without_sending(messaging_agent_without_sending: None) -> None:
     _test_message_sending(mqtt_communication_enabled=False)
 
 
-@pytest.mark.version_update
+@pytest.mark.remote_update
 @pytest.mark.ci
 def test_message_sending_with_sending(messaging_agent_with_sending: None) -> None:
     _test_message_sending(mqtt_communication_enabled=True)
