@@ -294,6 +294,14 @@ class ConfigurationProcedure:
             f'.venv/bin/python -m pytest -m "remote_update" tests/',
             working_directory=code_path(version),
         )
+
+        if self.config.active_components.run_hardware_tests:
+            self.logger.debug(f"running all hardware interface pytests")
+            utils.run_shell_command(
+                f'.venv/bin/python -m pytest -m "hardware_interface" tests/',
+                working_directory=code_path(version),
+            )
+
         self.logger.info(
             f"tests were successful",
             config=self.config,
