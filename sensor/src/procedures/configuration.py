@@ -26,7 +26,9 @@ from src import custom_types, utils, hardware
 
 NAME = "hermes"
 REPOSITORY = f"tum-esm/{NAME}"
-ROOT_PATH = os.environ.get('HERMES_DEPLOYMENT_ROOT_PATH', f"{os.environ['HOME']}/Documents/{NAME}")
+ROOT_PATH = os.environ.get(
+    "HERMES_DEPLOYMENT_ROOT_PATH", f"{os.environ['HOME']}/Documents/{NAME}"
+)
 
 tarball_name: Callable[[str], str] = lambda version: f"v{version}.tar.gz"
 tarball_content_name: Callable[[str], str] = lambda version: f"{NAME}-{version}"
@@ -66,7 +68,9 @@ class ConfigurationProcedure:
         self.message_queue = utils.MessageQueue()
 
         try:
-            self.hardware_interface = hardware.HardwareInterface(config, simulate=simulate)
+            self.hardware_interface = hardware.HardwareInterface(
+                config, simulate=simulate
+            )
         except Exception as e:
             self.logger.exception(
                 e, label="could not initialize hardware interface", config=config
@@ -254,10 +258,23 @@ class ConfigurationProcedure:
 
         # move sensor subdirectory
         self.logger.info("copying sensor code")
-        shutil.move(
-            f"{tarball_content_name(version)}/sensor",
-            code_path(version),
-        )
+
+        if os.path.exists(f"{tarball_content_name(version)}/sensor"):
+            shutil.move(
+                f"{tarball_content_name(version)}/sensor",
+                code_path(version),
+            )
+        elif os.path.exists(f"{tarball_content_name(version)}/edge-device"):
+            shutil.move(
+                f"{tarball_content_name(version)}/edge-device",
+                code_path(version),
+            )
+        else:
+            self.logger.info(
+                message=f"Failed to extract edge device software from download.",
+                config=self.config,
+            )
+            exit(1)
 
         # remove download assets
         self.logger.info("removing artifacts")
