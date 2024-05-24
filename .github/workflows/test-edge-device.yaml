@@ -42,7 +42,7 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
         with:
-          version: 1.3.2
+          version: 1.8.2
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true

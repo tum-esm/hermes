@@ -1,9 +1,10 @@
 [tool.poetry]
-name = "edge_device"
+name = "edge-device"
 version = "3"
 description = ""
 authors = ["Moritz Makowski <moritz.makowski@tum.de>", "Patrick Aigner <patrick.aigner@tum.de>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -40,6 +41,7 @@ matplotlib = "^3.6.3"
 notebook = "^6.5.2"
 pendulum = "^2.1.2"
 asyncpg = "^0.27.0"
+deptry = "^0.16.1"
 
 
 [tool.poetry.group.deb.dependencies]
