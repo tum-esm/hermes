@@ -7,7 +7,7 @@ from src import custom_types
 PROJECT_DIR = dirname(dirname(dirname(os.path.abspath(__file__))))
 
 
-@pytest.mark.over_the_air_update
+@pytest.mark.remote_update
 def test_env_vars() -> None:
     """checks whether the local config/.env can be loaded"""
 
