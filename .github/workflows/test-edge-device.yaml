@@ -30,12 +30,12 @@ jobs:
           python-version: "3.9.16"
 
       # load cached venv if cache exists
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: edge-device/.venv
-          key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('edge-device/poetry.lock') }}
+      # - name: Load cached venv
+      #   id: cached-poetry-dependencies
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: edge-device/.venv
+      #     key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('edge-device/poetry.lock') }}
 
       # install poetry if venv not in cache
       - name: Install Poetry
