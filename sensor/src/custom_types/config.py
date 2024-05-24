@@ -8,6 +8,7 @@ import pydantic
 class ActiveComponentsConfig(pydantic.BaseModel):
     run_calibration_procedures: bool
     send_messages_over_mqtt: bool
+    run_hardware_tests: bool
 
     class Config:
         extra = "forbid"
