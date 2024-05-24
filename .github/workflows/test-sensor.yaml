@@ -63,4 +63,4 @@ jobs:
           HERMES_MQTT_PASSWORD: ${{ secrets.HERMES_MQTT_PASSWORD }}
         run: |
           source .venv/bin/activate
-          pytest -m "ci" --cov=src --cov=cli tests/
+          pytest -m "github_action" --cov=src --cov=cli tests/
