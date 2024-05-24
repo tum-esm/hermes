@@ -22,7 +22,7 @@ jobs:
     steps:
       # check-out repo and install python 3.9.16
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python 3.9.16
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         uses: actions/setup-python@v4
