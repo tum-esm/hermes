@@ -2,7 +2,8 @@
     "version": "0.2.3-beta.1",
     "active_components": {
         "run_calibration_procedures": false,
-        "send_messages_over_mqtt": true
+        "send_messages_over_mqtt": true,
+        "run_hardware_tests": false
     },
     "calibration": {
         "average_air_inlet_measurements": 15,
