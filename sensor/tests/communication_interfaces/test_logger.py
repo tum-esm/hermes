@@ -13,19 +13,19 @@ sys.path.append(PROJECT_DIR)
 from src import utils, custom_types
 
 
-@pytest.mark.version_update
+@pytest.mark.remote_update
 @pytest.mark.ci
 def test_logger_without_sending(messaging_agent_without_sending: None) -> None:
     _test_logger(mqtt_communication_enabled=False)
 
 
-@pytest.mark.version_update
+@pytest.mark.remote_update
 @pytest.mark.ci
 def test_logger_with_sending(messaging_agent_with_sending: None) -> None:
     _test_logger(mqtt_communication_enabled=True)
 
 
-@pytest.mark.version_update
+@pytest.mark.remote_update
 @pytest.mark.ci
 def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None:
     config = utils.ConfigInterface.read()
@@ -45,7 +45,11 @@ def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None
         + f"{details}\n"
         + "------------------------------\n"
     )
-    expected_mqtt_message = f"pytests - {message[: (256 - 31)]} ... CUT (310 -> 256)" + ' ' + f"{details[: (16384 - 25)]} ... CUT (20249 -> 16384)"
+    expected_mqtt_message = (
+        f"pytests - {message[: (256 - 31)]} ... CUT (310 -> 256)"
+        + " "
+        + f"{details[: (16384 - 25)]} ... CUT (20249 -> 16384)"
+    )
 
     assert len(message_queue.get_rows_by_status("pending")) == 0
     expect_log_file_contents(forbidden_content_blocks=[expected_log_file_content])
@@ -170,7 +174,7 @@ def _test_logger(mqtt_communication_enabled: bool) -> None:
 
     # -------------------------------------------------------------------------
     # check whether archive contains correct messages
-    
+
     archived_log_messages = []
 
     with open(MESSAGE_ARCHIVE_FILE, "r") as f:
