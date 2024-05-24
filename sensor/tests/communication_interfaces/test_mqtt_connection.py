@@ -11,7 +11,7 @@ from src import utils
 
 
 @pytest.mark.remote_update
-@pytest.mark.ci
+@pytest.mark.github_action
 def test_mqtt_connection(mqtt_client_environment: None) -> None:
     mqtt_connection = utils.MQTTConnection()
     mqtt_config = mqtt_connection.config

@@ -14,19 +14,19 @@ from src import utils, custom_types
 
 
 @pytest.mark.remote_update
-@pytest.mark.ci
+@pytest.mark.github_action
 def test_logger_without_sending(messaging_agent_without_sending: None) -> None:
     _test_logger(mqtt_communication_enabled=False)
 
 
 @pytest.mark.remote_update
-@pytest.mark.ci
+@pytest.mark.github_action
 def test_logger_with_sending(messaging_agent_with_sending: None) -> None:
     _test_logger(mqtt_communication_enabled=True)
 
 
 @pytest.mark.remote_update
-@pytest.mark.ci
+@pytest.mark.github_action
 def test_very_long_exception_cutting(messaging_agent_with_sending: None) -> None:
     config = utils.ConfigInterface.read()
     config.active_components.send_messages_over_mqtt = True
