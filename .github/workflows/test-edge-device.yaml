@@ -1,24 +1,24 @@
-name: "test-sensor"
+name: "test-edge-device"
 on:
   push:
     branches:
       - main
     paths:
-      - "sensor/**"
-      - ".github/workflows/test-sensor.yaml"
+      - "edge-device/**"
+      - ".github/workflows/test-edge-device.yaml"
   pull_request:
     branches:
       - main
     paths:
-      - "sensor/**"
-      - ".github/workflows/test-sensor.yaml"
+      - "edge-device/**"
+      - ".github/workflows/test-edge-device.yaml"
 
 jobs:
-  test-sensor-codebase:
+  test-edge-device-codebase:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: sensor
+        working-directory: edge-device
     steps:
       # check-out repo and install python 3.9.16
       - name: Check out repository
@@ -34,8 +34,8 @@ jobs:
         id: cached-poetry-dependencies
         uses: actions/cache@v3
         with:
-          path: sensor/.venv
-          key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('sensor/poetry.lock') }}
+          path: edge-device/.venv
+          key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('edge-device/poetry.lock') }}
 
       # install poetry if venv not in cache
       - name: Install Poetry

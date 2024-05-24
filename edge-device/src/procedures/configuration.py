@@ -209,9 +209,9 @@ class ConfigurationProcedure:
         utils.run_shell_command(f"tar -xf {tarball_name(version)}")
 
         # move sensor subdirectory
-        self.logger.info("copying sensor code")
+        self.logger.info("copying edge device software")
         shutil.move(
-            f"{tarball_content_name(version)}/sensor",
+            f"{tarball_content_name(version)}/edge-device",
             code_path(version),
         )
 

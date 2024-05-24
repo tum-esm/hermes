@@ -1,9 +1,10 @@
 [tool.poetry]
-name = "sensor"
-version = "2"
+name = "edge_device"
+version = "3"
 description = ""
 authors = ["Moritz Makowski <moritz.makowski@tum.de>", "Patrick Aigner <patrick.aigner@tum.de>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.9"
