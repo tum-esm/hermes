@@ -26,7 +26,9 @@ from src import custom_types, utils, hardware
 
 NAME = "hermes"
 REPOSITORY = f"tum-esm/{NAME}"
-ROOT_PATH = os.environ.get('HERMES_DEPLOYMENT_ROOT_PATH', f"{os.environ['HOME']}/Documents/{NAME}")
+ROOT_PATH = os.environ.get(
+    "HERMES_DEPLOYMENT_ROOT_PATH", f"{os.environ['HOME']}/Documents/{NAME}"
+)
 
 tarball_name: Callable[[str], str] = lambda version: f"v{version}.tar.gz"
 tarball_content_name: Callable[[str], str] = lambda version: f"{NAME}-{version}"
@@ -66,7 +68,9 @@ class ConfigurationProcedure:
         self.message_queue = utils.MessageQueue()
 
         try:
-            self.hardware_interface = hardware.HardwareInterface(config, simulate=simulate)
+            self.hardware_interface = hardware.HardwareInterface(
+                config, simulate=simulate
+            )
         except Exception as e:
             self.logger.exception(
                 e, label="could not initialize hardware interface", config=config
@@ -74,8 +78,6 @@ class ConfigurationProcedure:
             raise e
 
     def run(self, config_request: custom_types.MQTTConfigurationRequest) -> None:
-        new_revision = config_request.revision
-        new_version = config_request.configuration.version
 
         # validate that upgrade is executed by latest sw version
         # TODO: why is this needed?
@@ -92,6 +94,8 @@ class ConfigurationProcedure:
 
         state = utils.StateInterface.read()
         current_revision = state.current_config_revision
+        new_revision = config_request.revision
+        new_version = config_request.configuration.version
 
         # check if config has a newer revision
         if current_revision >= new_revision:
@@ -100,6 +104,11 @@ class ConfigurationProcedure:
                 details=f"received revision = {new_revision}, current revision = {current_revision}",
             )
             return
+
+        self.logger.info(
+            message=f"upgrading to revision {new_revision}. using config {json.dumps(config_request.configuration.dict(), indent=4)}",
+            config=self.config,
+        )
 
         # shut down hardware interface before config update
         # this allows the pytests to test the new config on local hardware
@@ -117,76 +126,23 @@ class ConfigurationProcedure:
         # False: version update (+ parameter update)
         has_same_directory = PROJECT_DIR == code_path(new_version)
 
-        self.logger.info(
-            message=f"upgrading to revision {new_revision}",
-            config=self.config,
-        )
-
-        self.logger.info(
-            message=f"using config {json.dumps(config_request.configuration.dict(), indent=4)}",
-            config=self.config,
-        )
-
         try:
             # parameter update without version update
             if has_same_directory:
                 # create a tmp file to store current config
                 store_current_config()
+                self._update_state_file(new_revision)
+                self._set_up_local_files(config_request)
+                self._run_pytests(new_version)
             # version update (+ parameter update)
             else:
                 self._download_code(new_version)
-
-                self.logger.info(
-                    f"download was successful",
-                    config=self.config,
-                )
                 self._set_up_venv(new_version)
-
-                self.logger.info(
-                    f"set up new virtual environment was successful",
-                    config=self.config,
-                )
-
-            # Update revision in state file
-            state = utils.StateInterface.read()
-            state.current_config_revision = new_revision
-            utils.StateInterface.write(state)
-
-            self.logger.info(
-                f"Updated state file to new revision: {new_revision}",
-                config=self.config,
-            )
-
-            # copy config, state file, .env file
-            self._dump_new_config(config_request)
-
-            self._run_pytests(
-                new_version,
-                scope="parameter-change" if has_same_directory else "version-change",
-            )
-
-            self.logger.info(
-                f"tests were successful",
-                config=self.config,
-            )
-
-            # -------------------------------------------------------------------------
-            # version update (+ parameter update)
-            if not has_same_directory:
+                self._update_state_file(new_revision)
+                self._set_up_local_files(config_request)
+                self._run_pytests(new_version)
                 self._update_cli_pointer(new_version)
-                self.logger.info(
-                    f"switched CLI pointer successfully",
-                    config=self.config,
-                )
-                self.logger.debug("waiting to send out remaining messages")
-                try:
-                    self.message_queue.wait_until_queue_is_empty(timeout=120)
-                    self.logger.debug("successfully sent out remaining messages")
-                except TimeoutError:
-                    self.logger.debug(
-                        "sending out remaining messages took more the "
-                        + "2 minutes continuing anyway",
-                    )
+                self._empty_message_queue()
 
             # send UPGRADE SUCCESS message
             self.message_queue.enqueue_message(
@@ -205,10 +161,23 @@ class ConfigurationProcedure:
         # This exception is reached if the config update fails and returns
         # to calling function
         except Exception as e:
+            if has_same_directory:
+                restore_current_config()
+
+            # Revert to last valid revision in state file
+            state = utils.StateInterface.read()
+            state.current_config_revision = current_revision
+            utils.StateInterface.write(state)
+
             self.logger.exception(
                 e,
                 label=f"exception during upgrade",
                 config=self.config,
+            )
+
+            self.logger.info(
+                f"continuing with current revision {state.current_config_revision} "
+                + f"and version {self.config.version}"
             )
 
             # send UPGRADE FAILED message
@@ -219,19 +188,6 @@ class ConfigurationProcedure:
                     timestamp=time.time(),
                     success=False,
                 ),
-            )
-
-            if has_same_directory:
-                restore_current_config()
-
-            # Revert to last valid revision in state file
-            state = utils.StateInterface.read()
-            state.current_config_revision = current_revision
-            utils.StateInterface.write(state)
-
-            self.logger.info(
-                f"continuing with current revision {state.current_config_revision} "
-                + f"and version {self.config.version}"
             )
 
             raise e
@@ -264,6 +220,11 @@ class ConfigurationProcedure:
         os.remove(tarball_name(version))
         shutil.rmtree(tarball_content_name(version))
 
+        self.logger.info(
+            f"download was successful",
+            config=self.config,
+        )
+
     def _set_up_venv(self, version: str) -> None:
         """set up a virtual python3.9 environment inside the version subdirectory"""
         if os.path.isdir(venv_path(version)):
@@ -282,11 +243,16 @@ class ConfigurationProcedure:
             working_directory=code_path(version),
         )
 
-    def _dump_new_config(
+        self.logger.info(
+            f"set up new virtual environment was successful",
+            config=self.config,
+        )
+
+    def _set_up_local_files(
         self,
         config_request: custom_types.MQTTConfigurationRequest,
     ) -> None:
-        """write new config to json file"""
+        """write new config to json file, copy .env, copy state file"""
 
         # config.json
         self.logger.info("dumping config.json file")
@@ -319,22 +285,19 @@ class ConfigurationProcedure:
     def _run_pytests(
         self,
         version: str,
-        scope: Literal["version-change", "parameter-change"],
     ) -> None:
         """run pytests for the new version. The tests should only ensure that
         the new software starts up and is able to perform new confi requests"""
-        if scope == "parameter-change":
-            self.logger.debug(f"only validating config")
-            utils.run_shell_command(
-                f'.venv/bin/python -m pytest -m "parameter_update" tests/',
-                working_directory=code_path(version),
-            )
-        else:
-            self.logger.debug(f"running all upgrading pytests")
-            utils.run_shell_command(
-                f'.venv/bin/python -m pytest -m "version_update" tests/',
-                working_directory=code_path(version),
-            )
+
+        self.logger.debug(f"running all upgrading pytests")
+        utils.run_shell_command(
+            f'.venv/bin/python -m pytest -m "remote_update" tests/',
+            working_directory=code_path(version),
+        )
+        self.logger.info(
+            f"tests were successful",
+            config=self.config,
+        )
 
     def _update_cli_pointer(self, version: str) -> None:
         """make the file pointing to the used cli to the new version's cli"""
@@ -344,6 +307,10 @@ class ConfigurationProcedure:
                 + f"{venv_path(version)}/bin/python "
                 + f"{code_path(version)}/cli/main.py $*"
             )
+        self.logger.info(
+            f"switched CLI pointer successfully",
+            config=self.config,
+        )
 
     def _remove_old_venvs(self) -> None:
         venvs_to_be_removed: list[str] = []
@@ -363,3 +330,27 @@ class ConfigurationProcedure:
             shutil.rmtree(p)
 
         self.logger.info(f"successfully removed all old .venvs")
+
+    def _update_state_file(self, new_revision: int) -> None:
+        "Update revision in the state file."
+
+        # Update revision in state file
+        state = utils.StateInterface.read()
+        state.current_config_revision = new_revision
+        utils.StateInterface.write(state)
+
+        self.logger.info(
+            f"Updated state file to new revision: {new_revision}",
+            config=self.config,
+        )
+
+    def _empty_message_queue(self) -> None:
+        try:
+            self.logger.debug("waiting to send out remaining messages")
+            self.message_queue.wait_until_queue_is_empty(timeout=120)
+            self.logger.debug("successfully sent out remaining messages")
+        except TimeoutError:
+            self.logger.debug(
+                "sending out remaining messages took more the "
+                + "2 minutes continuing anyway",
+            )
