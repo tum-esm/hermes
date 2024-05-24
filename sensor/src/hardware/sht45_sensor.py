@@ -36,9 +36,10 @@ class SHT45SensorInterface:
             try:
                 self.i2c = busio.I2C(board.SCL, board.SDA)
                 self.sht = adafruit_sht4x.SHT4x(self.i2c)
-                self.logger.debug(f"Found SHT4x with serial number {hex(self.sht.serial_number)}")
+                self.logger.debug(
+                    f"Found SHT4x with serial number {hex(self.sht.serial_number)}"
+                )
                 self.sht.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
-
                 # sensor didn't raise any issue during connection
                 self.sensor_connected = True
                 break
@@ -50,13 +51,13 @@ class SHT45SensorInterface:
                 )
 
             time.sleep(1)
-            
+
         if not self.sensor_connected:
             self.logger.warning(
                 "Could not connect to SHT45 sensor.",
                 config=self.config,
             )
-            
+
         self.logger.info("finished initialization.")
 
     def get_data(self, retries: int = 1) -> custom_types.SHT45SensorData:
