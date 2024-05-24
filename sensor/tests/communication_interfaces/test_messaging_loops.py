@@ -12,7 +12,7 @@ from src import custom_types, utils, procedures
 
 
 @pytest.mark.remote_update
-@pytest.mark.ci
+@pytest.mark.github_action
 def test_messaging_loops_function(
     mqtt_client_environment: None,
     mqtt_data_files: None,
@@ -30,7 +30,7 @@ def test_messaging_loops_function(
 
 
 @pytest.mark.remote_update
-@pytest.mark.ci
+@pytest.mark.github_action
 def test_messaging_loops_with_sending(
     mqtt_client_environment: None,
     mqtt_data_files: None,
@@ -50,7 +50,7 @@ def test_messaging_loops_with_sending(
 
 
 @pytest.mark.remote_update
-@pytest.mark.ci
+@pytest.mark.github_action
 def test_messaging_loops_without_sending(
     mqtt_client_environment: None,
     mqtt_data_files: None,

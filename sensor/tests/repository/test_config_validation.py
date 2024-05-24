@@ -34,13 +34,13 @@ class ValidationPassedException(Exception):
     """raise when validation does not catch some validation error"""
 
 
-@pytest.mark.ci
+@pytest.mark.github_action
 def test_config_validation() -> None:
     # some valid configs
     Config(**VALID_CONFIG)
-    
+
     for modification in [
-        {"general": 30}, # parameter does not exist
+        {"general": 30},  # parameter does not exist
         {
             "measurement": {
                 "air_inlets": [
@@ -58,7 +58,7 @@ def test_config_validation() -> None:
                     },  # invalid type of "number"
                 ]
             }
-        }
+        },
     ]:
         try:
             invalid_config = merge_dicts(deepcopy(VALID_CONFIG), modification)
