@@ -301,7 +301,7 @@ class ConfigurationProcedure:
 
         self.logger.debug(f"running all upgrading pytests")
         utils.run_shell_command(
-            f'.venv/bin/python -m pytest -m "remote_update" tests/',
+            f'.venv/bin/python -m pytest -m "version_update" tests/',
             working_directory=code_path(version),
         )
 

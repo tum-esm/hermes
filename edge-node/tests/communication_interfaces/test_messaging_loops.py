@@ -11,7 +11,7 @@ sys.path.append(PROJECT_DIR)
 from src import custom_types, utils, procedures
 
 
-@pytest.mark.remote_update
+@pytest.mark.version_update
 @pytest.mark.github_action
 def test_messaging_loops_function(
     mqtt_client_environment: None,
@@ -29,7 +29,7 @@ def test_messaging_loops_function(
     )
 
 
-@pytest.mark.remote_update
+@pytest.mark.version_update
 @pytest.mark.github_action
 def test_messaging_loops_with_sending(
     mqtt_client_environment: None,
@@ -49,7 +49,7 @@ def test_messaging_loops_with_sending(
     procedures.MQTTAgent.deinit()
 
 
-@pytest.mark.remote_update
+@pytest.mark.version_update
 @pytest.mark.github_action
 def test_messaging_loops_without_sending(
     mqtt_client_environment: None,
