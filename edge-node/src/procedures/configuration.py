@@ -208,6 +208,9 @@ class ConfigurationProcedure:
         self.logger.info("extracting tarball")
         utils.run_shell_command(f"tar -xf {tarball_name(version)}")
 
+        # move sensor subdirectory
+        self.logger.info("copying sensor code")
+
         if os.path.exists(f"{tarball_content_name(version)}/sensor"):
             shutil.move(
                 f"{tarball_content_name(version)}/sensor",
