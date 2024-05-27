@@ -208,12 +208,22 @@ class ConfigurationProcedure:
         self.logger.info("extracting tarball")
         utils.run_shell_command(f"tar -xf {tarball_name(version)}")
 
-        # move sensor subdirectory
-        self.logger.info("copying edge device software")
-        shutil.move(
-            f"{tarball_content_name(version)}/edge-device",
-            code_path(version),
-        )
+        if os.path.exists(f"{tarball_content_name(version)}/sensor"):
+            shutil.move(
+                f"{tarball_content_name(version)}/sensor",
+                code_path(version),
+            )
+        elif os.path.exists(f"{tarball_content_name(version)}/edge-node"):
+            shutil.move(
+                f"{tarball_content_name(version)}/edge-node",
+                code_path(version),
+            )
+        else:
+            self.logger.info(
+                message=f"Failed to extract edge node software from download.",
+                config=self.config,
+            )
+            exit(1)
 
         # remove download assets
         self.logger.info("removing artifacts")
