@@ -1,24 +1,24 @@
-name: "test-edge-device"
+name: "test-edge-node"
 on:
   push:
     branches:
       - main
     paths:
-      - "edge-device/**"
-      - ".github/workflows/test-edge-device.yaml"
+      - "edge-node/**"
+      - ".github/workflows/test-edge-node.yaml"
   pull_request:
     branches:
       - main
     paths:
-      - "edge-device/**"
-      - ".github/workflows/test-edge-device.yaml"
+      - "edge-node/**"
+      - ".github/workflows/test-edge-node.yaml"
 
 jobs:
-  test-edge-device-codebase:
+  test-edge-node-codebase:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: edge-device
+        working-directory: edge-node
     steps:
       # check-out repo and install python 3.9.16
       - name: Check out repository
@@ -34,8 +34,8 @@ jobs:
         id: cached-poetry-dependencies
         uses: actions/cache@v4
         with:
-          path: edge-device/.venv
-          key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('edge-device/poetry.lock') }}
+          path: edge-node/.venv
+          key: venv-${{ runner.os }}-3.9.16-${{ hashFiles('edge-node/poetry.lock') }}
 
       # install poetry if venv not in cache
       - name: Install Poetry
