@@ -271,7 +271,7 @@ class ConfigurationProcedure:
             )
         else:
             self.logger.info(
-                message=f"Failed to extract edge device software from download.",
+                message=f"Failed to extract edge node software from download.",
                 config=self.config,
             )
             exit(1)
