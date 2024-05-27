@@ -264,9 +264,9 @@ class ConfigurationProcedure:
                 f"{tarball_content_name(version)}/sensor",
                 code_path(version),
             )
-        elif os.path.exists(f"{tarball_content_name(version)}/edge-device"):
+        elif os.path.exists(f"{tarball_content_name(version)}/edge-node"):
             shutil.move(
-                f"{tarball_content_name(version)}/edge-device",
+                f"{tarball_content_name(version)}/edge-node",
                 code_path(version),
             )
         else:
