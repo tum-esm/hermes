@@ -19,6 +19,7 @@ from src import custom_types, utils, procedures
 # this test has to run last because it fucks up something to mqtt tests afterwards won't work ...
 
 
+@pytest.mark.remote_update
 @pytest.mark.version_update
 @pytest.mark.github_action
 @pytest.mark.last
