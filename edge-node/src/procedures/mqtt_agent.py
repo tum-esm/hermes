@@ -15,8 +15,7 @@ from src import custom_types, utils
 class MQTTAgent:
     communication_loop_process: Optional[multiprocessing.Process] = None
     config_request_queue: queue.Queue[
-        custom_types.MQTTConfigurationRequest
-    ] = multiprocessing.Queue()
+        custom_types.MQTTConfigurationRequest] = multiprocessing.Queue()
 
     class CommunicationOutage(Exception):
         """raised when the communication loop has stopped unexpectedly"""
@@ -57,7 +56,8 @@ class MQTTAgent:
     @staticmethod
     def communication_loop(
         config: custom_types.Config,
-        config_request_queue: queue.Queue[custom_types.MQTTConfigurationRequest],
+        config_request_queue: queue.Queue[
+            custom_types.MQTTConfigurationRequest],
         end_after_one_loop: bool = False,
     ) -> None:
         """takes messages from the queue file and processes them;
@@ -80,8 +80,7 @@ class MQTTAgent:
             raise e
 
         logger.info(
-            "established connection to mqtt broker and active mqtt queue",
-        )
+            "established connection to mqtt broker and active mqtt queue", )
 
         # periodically send a heartbeat message
         state = utils.StateInterface.read()
@@ -100,21 +99,19 @@ class MQTTAgent:
         def _graceful_teardown(*_args: Any) -> None:
             utils.set_alarm(10, "graceful teardown")
 
-            logger.info("starting graceful shutdown")
+            logger.info("starting MQTT agent graceful shutdown")
             mqtt_connection.teardown()
-            logger.info("finished graceful shutdown")
-            exit(0)
+            logger.info("finished MQTT agent graceful shutdown")
 
         signal.signal(signal.SIGINT, _graceful_teardown)
         signal.signal(signal.SIGTERM, _graceful_teardown)
         logger.info("established graceful teardown hook")
 
         try:
-            config_topic = (
-                f"{mqtt_config.mqtt_base_topic}configurations"
-                + f"/{mqtt_config.station_identifier}"
-            )
-            mqtt_client.on_message = MQTTAgent.__on_config_message(config_request_queue)
+            config_topic = (f"{mqtt_config.mqtt_base_topic}configurations" +
+                            f"/{mqtt_config.station_identifier}")
+            mqtt_client.on_message = MQTTAgent.__on_config_message(
+                config_request_queue)
             mqtt_client.subscribe(config_topic, qos=1)
         except Exception as e:
             logger.exception(
@@ -148,7 +145,8 @@ class MQTTAgent:
 
                 _record.content.header.mqtt_topic += mqtt_config.station_identifier
 
-            assert mqtt_client.is_connected(), "mqtt client is not connected anymore"
+            assert mqtt_client.is_connected(
+            ), "mqtt client is not connected anymore"
 
             payload: list[Any] = [_record.content.body.dict()]
 
@@ -177,7 +175,8 @@ class MQTTAgent:
             records_ids_to_be_removed: list[int] = []
 
             try:
-                assert mqtt_client.is_connected(), "mqtt client is not connected"
+                assert mqtt_client.is_connected(
+                ), "mqtt client is not connected"
 
                 # -----------------------------------------------------------------
                 # CHECK DELIVERY STATUS OF SENT MESSAGES
@@ -190,7 +189,8 @@ class MQTTAgent:
                         if current_records[record.internal_id].is_published():
                             delivered_record_count += 1
                             del current_records[record.internal_id]
-                            records_ids_to_be_removed.append(record.internal_id)
+                            records_ids_to_be_removed.append(
+                                record.internal_id)
 
                     # resending is required, when current_messages are
                     # lost due to restarting the program
@@ -206,21 +206,18 @@ class MQTTAgent:
 
                 max_send_count = 100
                 open_sending_slots = max(
-                    max_send_count - (len(sent_records) - delivered_record_count), 0
-                )
+                    max_send_count -
+                    (len(sent_records) - delivered_record_count), 0)
                 if open_sending_slots == 0:
                     logger.warning(
-                        f"sending queue is full ({max_send_count} "
-                        + "items not processed by broker yet)"
-                    )
+                        f"sending queue is full ({max_send_count} " +
+                        "items not processed by broker yet)")
 
                 records_to_be_sent = message_queue.get_rows_by_status(
-                    "pending", limit=open_sending_slots
-                )
+                    "pending", limit=open_sending_slots)
                 if len(records_to_be_sent) > 0:
                     records_to_be_sent = message_queue.get_rows_by_status(
-                        "pending", limit=open_sending_slots
-                    )
+                        "pending", limit=open_sending_slots)
                     for record in records_to_be_sent:
                         _publish_record(record)
                         sent_record_count += 1
@@ -229,19 +226,24 @@ class MQTTAgent:
                 time.sleep(3)
 
             except Exception as e:
-                logger.exception(e, label="sending loop has stopped", config=config)
+                logger.exception(
+                    e,
+                    label="Unhandled issue in commmunication loop.",
+                    config=config)
                 mqtt_connection.teardown()
-                raise e
+                break
 
             if end_after_one_loop:
                 break
 
     @staticmethod
-    def get_config_message() -> Optional[custom_types.MQTTConfigurationRequest]:
+    def get_config_message(
+    ) -> Optional[custom_types.MQTTConfigurationRequest]:
         new_config_messages: list[custom_types.MQTTConfigurationRequest] = []
         while True:
             try:
-                new_config_messages.append(MQTTAgent.config_request_queue.get_nowait())
+                new_config_messages.append(
+                    MQTTAgent.config_request_queue.get_nowait())
             except queue.Empty:
                 break
 
@@ -258,13 +260,14 @@ class MQTTAgent:
         if MQTTAgent.communication_loop_process is not None:
             if not MQTTAgent.communication_loop_process.is_alive():
                 raise MQTTAgent.CommunicationOutage(
-                    "communication loop process is not running"
-                )
+                    "communication loop process is not running")
 
     @staticmethod
     def __on_config_message(
-        config_request_queue: queue.Queue[custom_types.MQTTConfigurationRequest],
-    ) -> Callable[[paho.mqtt.client.Client, Any, paho.mqtt.client.MQTTMessage], None]:
+        config_request_queue: queue.Queue[
+            custom_types.MQTTConfigurationRequest],
+    ) -> Callable[[paho.mqtt.client.Client, Any, paho.mqtt.client.MQTTMessage],
+                  None]:
         logger = utils.Logger(origin="message-communication")
 
         def _f(
@@ -272,15 +275,15 @@ class MQTTAgent:
             _userdata: Any,
             msg: paho.mqtt.client.MQTTMessage,
         ) -> None:
-            logger.info(f"received message on config topic: {msg.payload.decode()}")
+            logger.info(
+                f"received message on config topic: {msg.payload.decode()}")
             try:
                 config_request_queue.put(
                     custom_types.MQTTConfigurationRequest(
-                        **json.loads(msg.payload.decode())
-                    )
-                )
+                        **json.loads(msg.payload.decode())))
                 logger.debug(f"put config message into the message queue")
             except (json.JSONDecodeError, pydantic.ValidationError):
-                logger.warning(f"could not decode message payload on message: {msg}")
+                logger.warning(
+                    f"could not decode message payload on message: {msg}")
 
         return _f
