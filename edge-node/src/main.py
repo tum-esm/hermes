@@ -218,7 +218,7 @@ def run() -> None:
             last_successful_mainloop_iteration_time = time.time()
 
         except procedures.MQTTAgent.CommunicationOutage as e:
-            logger.exception(e, label="exception in mainloop", config=config)
+            logger.exception(e, label="exception in mainloop")
 
             # cancel the alarm for too long mainloops
             signal.alarm(0)
@@ -249,22 +249,13 @@ def run() -> None:
                 if time.time() > ebo.next_try_timer():
                     ebo.set_next_timer()
                     # try to establish mqtt connection
-                    logger.info(
-                        f"Restarting messaging agent.",
-                        config=config,
-                    )
+                    logger.info(f"Restarting messaging agent.")
                     procedures.MQTTAgent.deinit()
                     procedures.MQTTAgent.init(config)
                     logger.info(
-                        f"Successfully restarted messaging agent.",
-                        config=config,
-                    )
+                        f"Performed attempt to restart messaging agent.")
             except Exception as e:
-                logger.exception(
-                    e,
-                    label="Failed to restart messaging agent.",
-                    config=config,
-                )
+                logger.exception(e, label="Failed to restart messaging agent.")
 
         except Exception as e:
             logger.exception(e, label="exception in mainloop", config=config)
