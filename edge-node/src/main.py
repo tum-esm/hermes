@@ -110,7 +110,6 @@ def run() -> None:
 
         logger.info("Finished graceful teardown.")
         logger.info("Performing clean program exit.")
-        exit(0)
 
     signal.signal(signal.SIGINT, _graceful_teardown)
     signal.signal(signal.SIGTERM, _graceful_teardown)
@@ -250,7 +249,7 @@ def run() -> None:
                         config=config,
                     )
                     os.system("sudo reboot")
-                    # teardown routine will exit program
+                    exit(0)
                 else:
                     logger.info(
                         "System is offline. Last reboot is less than 24h ago. No action."
@@ -285,7 +284,8 @@ def run() -> None:
                         config=config,
                     )
                     os.system("sudo reboot")
-                    # teardown routine will exit program
+                    exit(0)
+
                 else:
                     logger.info(
                         "Persisting exception. Last reboot is less than 24h ago. No action."
