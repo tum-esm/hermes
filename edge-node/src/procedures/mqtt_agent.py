@@ -99,9 +99,12 @@ class MQTTAgent:
         def _graceful_teardown(*_args: Any) -> None:
             utils.set_alarm(10, "graceful teardown")
 
-            logger.info("starting MQTT agent graceful shutdown")
-            mqtt_connection.teardown()
-            logger.info("finished MQTT agent graceful shutdown")
+            logger.info("Start: Disconnect MQTT client.")
+            try:
+                mqtt_connection.teardown()
+            except Exception as e:
+                logger.exception(e, label="MQTT client disconnect failed.")
+            logger.info("Stop: Disconnect MQTT client.")
 
         signal.signal(signal.SIGINT, _graceful_teardown)
         signal.signal(signal.SIGTERM, _graceful_teardown)

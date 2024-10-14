@@ -93,23 +93,26 @@ def run() -> None:
     def _graceful_teardown(*_args: Any) -> None:
         utils.set_alarm(10, "graceful teardown")
 
-        logger.info("Starting graceful teardown.")
+        logger.info("Start: Graceful teardown.")
         try:
+            logger.info("Start: Hardware teardown.")
             hardware_interface.teardown()
+            logger.info("Stop: Hardware teardown.")
         except Exception as e:
             logger.exception(e,
                              label="Issue while hardware interface teardown.",
                              config=config)
 
         try:
+            logger.info("Start: MQTT Agent deinit.")
             procedures.MQTTAgent.deinit()
+            logger.info("Stop: MQTT Agent deinit.")
         except Exception as e:
             logger.exception(e,
                              label="Issue while MQTT Agent deinit.",
                              config=config)
 
-        logger.info("Finished graceful teardown.")
-        logger.info("Performing clean program exit.")
+        logger.info("Stop: Graceful teardown.")
 
     signal.signal(signal.SIGINT, _graceful_teardown)
     signal.signal(signal.SIGTERM, _graceful_teardown)
