@@ -11,7 +11,7 @@ The systems run autonomously and communicate with the server via MQTT. The serve
 ## 🎯 Main goals
 
 1. Observe system status and measurements in real-time
-2. Update the system configuratuon remotely
+2. Update the system configuration remotely
 3. Update the system software remotely
 4. Easy setup and deployment of Hermes Infrastructure
 
