@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Aigner"
+  given-names: "Patrick"
+  orcid: "https://orcid.org/0000-0002-1530-415X"
+- family-names: "Böhm"
+  given-names: "Felix"
+  orcid: "https://orcid.org/0009-0002-2179-9934"
+- family-names: "Frölich"
+  given-names: "Lars"
+  orcid: "https://orcid.org/0009-0000-1579-7727"
+- family-names: "Makowski"
+  given-names: "Moritz"
+  orcid: "https://orcid.org/0000-0002-2948-2993"
+- family-names: "Schmitt"
+  given-names: "Adrian"
+title: "Hermes"
+version: 1.0.1
+doi: 10.5281/zenodo.16747031
+Aug 5, 2025
+date-released: 2025-08-05
+url: "https://github.com/tum-esm/hermes"
